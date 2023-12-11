@@ -36,17 +36,17 @@
 
             {% if user.is_authenticated %}
                 <a href="{% url 'bom:home' %}" title="IndaBOM | Home" class="brand-logo left hide-on-med-and-down">
-                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="IndaBOM Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute; width: 190px;">درخت محصول</span>
+                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="IndaBOM Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute;">برگ</span>
                 </a>
                 <a href="{% url 'bom:home' %}" title="IndaBOM | Home" class="brand-logo left hide-on-large-only" style="left: 2.5rem;">
-                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="IndaBOM Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute; width: 190px;">درخت محصول</span>
+                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="IndaBOM Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute;">برگ</span>
                 </a>
             {% else %}
                 <a href="{% url 'login' %}" title="IndaBOM | Home" class="brand-logo left hide-on-med-and-down">
-                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="IndaBOM Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute; width: 190px;">درخت محصول</span>
+                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="IndaBOM Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute;">برگ</span>
                 </a>
                 <a href="{% url 'login' %}" title="IndaBOM | Home" class="brand-logo left hide-on-large-only" style="left: 2.5rem;">
-                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="IndaBOM Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute; width: 190px;">درخت محصول</span>
+                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="IndaBOM Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute;">برگ</span>
                 </a>
             {% endif %}
 
@@ -94,27 +94,23 @@
 <footer class="page-footer green lighten-1">
     <div class="container">
         <div class="row">
-            <div class="col l6 s12">
-                <h5 class="white-text">Help django-bom Grow</h5>
-                <p class="grey-text text-lighten-4">We hope you are as excited about django-bom as we are! Please reach out if you'd like to learn more at <a href="mailto:info@indabom.com">info@indabom.com</a>,
-                    and check out the hosted version, <a href="https://www.indabom.com">IndaBOM</a>!</p>
+            <div class="col l6 s12" dir="rtl">
+                <h5 class="white-text">سیستم مدیریت BOM و بهای تمام شده اپن سورس برگ</h5>
+                <p class="grey-text text-lighten-4">بر پایه <a href="https://www.djangoproject.com">django</a>
+                    و منشعب شده از <a href="https://github.com/mpkasp/django-bom">django-bom</a></p>
             </div>
             <div class="col l4 offset-l2 s12">
-                <h5 class="white-text">Links</h5>
+                <h5 class="white-text">لینک‌ها</h5>
                 <ul>
-                    <li><a class="grey-text text-lighten-3" title="IndaBOM | Feedback" href="https://forms.gle/4CUQuBcfBJ4eGXDW8" target="_blank">Feedback</a></li>
+                    <li><a class="github-button" href="https://github.com/s-diaco/django-bom" data-size="large" data-show-count="true" aria-label="Star mpkasp/django-bom on GitHub">Star</a></li>
                 </ul>
             </div>
-        </div>
-        <div class="row center">
-            <!-- Place this tag where you want the button to render. -->
-            <a class="github-button" href="https://github.com/mpkasp/django-bom" data-size="large" data-show-count="true" aria-label="Star mpkasp/django-bom on GitHub">Star</a>
         </div>
     </div>
     <div class="footer-copyright">
         <div class="container">
-            django-bom is a django open source project.
-            <!-- <a class="grey-text text-lighten-4 right" href="#!">More Links</a> -->
+            <!-- django-bom is a django open source project.
+            <a class="grey-text text-lighten-4 right" href="#!">More Links</a> -->
         </div>
     </div>
 </footer>
