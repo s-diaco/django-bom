@@ -32,15 +32,15 @@
                     <i class="material-icons prefix">search</i>
                     <input type="search" id="autocomplete-input" autocomplete="off" class="text autocomplete" name="q" value="{% if query %}{{ query }}{% endif %}">
                     {% if part_class %}
-                        <label for="autocomplete-input">Search for parts within selected part class:</label>
+                        <label for="autocomplete-input">جستجوی متریال در کلاس انتخاب شده</label>
                     {% elif part_assembly %}
-                        <label for="autocomplete-input">Search for parts within selected part assembly:</label>
+                        <label for="autocomplete-input">جستجوی متریال در ترکیب انتخاب شده:</label>
                     {% else %}
-                        <label for="autocomplete-input">Search for parts:</label>
+                        <label for="autocomplete-input">جستجوی متریال:</label>
                     {% endif %}
                 </div>
                 <div class="col s12 m2 text-center">
-                    <button type="submit" class="waves-effect waves-green btn green lighten-1 input-field" name="action">Submit</button>
+                    <button type="submit" class="waves-effect waves-green btn green lighten-1 input-field" name="action">تأیید</button>
                     <a class="waves-effect waves-green btn-flat input-field btn-icon-round tooltipped" data-position="bottom" data-tooltip="Help with search" href="{% url 'bom:search-help' %}"><i
                             class="material-icons">help</i></a>
                     {% if part_class or query %}
@@ -67,7 +67,7 @@
                                 <span><a class="btn-flat waves-green" href="#" onclick="disableActionCheckboxColumn()">Hide</a></span>
                             </div>
                         </div>
-                        <span><a class="btn-flat action-checkbox-show" href="#" onclick="enableActionCheckboxColumn()">Actions</a></span>
+                        <span><a class="btn-flat action-checkbox-show" href="#" onclick="enableActionCheckboxColumn()">اکشن‌ها</a></span>
                     {% endif %}
                 </div>
                 <div class="col s6 right-align">
@@ -85,21 +85,21 @@
                                 <th class="text-normal td-small action-checkbox-column" style="display: none;"><label><input type="checkbox" id="action-select-all"><span></span></label></th>
                             {% endif %}
 
-                            <th class="text-normal td-med">Part Number</th>
+                            <th class="text-normal td-med">کد متریال</th>
 
                             {% if organization.number_scheme == 'S' %}
                                 <th class="text-normal td-small">Category</th>
                             {% endif %}
 
-                            <th class="text-normal td-large">Synopsis</th>
+                            <th class="text-normal td-large">متریال</th>
 
-                            <th class="text-normal td-small">Revision</th>
+                            <th class="text-normal td-small">بازبینی</th>
 
-                            <th class="text-normal td-med">Manufacturer</th>
+                            <th class="text-normal td-med">تولید کننده</th>
 
-                            <th class="text-normal td-med">MPN</th>
+                            <th class="text-normal td-med">کد تأمین کننده</th>
 
-                            <th class="text-normal td-med">Options</th>
+                            <th class="text-normal td-med">گزینه‌ها</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -116,7 +116,7 @@
                                     <td class="text-normal td-small">{{ part_rev.part.number_class.name }}</td>
                                 {% endif %}
 
-                                <td class="text-normal td-large">{{ part_rev.synopsis }}</td>
+                                <td class="text-normal td-large">{{ part_rev.متریال }}</td>
 
                                 <td class="text-normal td-small">{{ part_rev.revision }}</td>
 
