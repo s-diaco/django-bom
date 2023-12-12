@@ -120,7 +120,7 @@ def home(request):
         part_class = None
 
     if part_class or query:
-        title += f' - تنایج جستجو'
+        title += f' - نتایج جستجو'
     else:
         title = f'لیست متریال {title}'
 
@@ -1053,7 +1053,7 @@ def create_part(request):
     profile = user.bom_profile()
     organization = profile.organization
 
-    title = 'Create New Part'
+    title = 'ایجاد متریال جدید'
 
     PartForm = part_form_from_organization(organization)
 

@@ -777,7 +777,7 @@ class PartFormIntelligent(forms.ModelForm):
         model = Part
         exclude = ['number_class', 'number_variation', 'organization', 'google_drive_parent', ]
         help_texts = {
-            'number_item': _('Enter a part number.'),
+            'number_item': _('کد متریال را وارد کنید.'),
         }
 
     def __init__(self, *args, **kwargs):
@@ -799,8 +799,8 @@ class PartFormSemiIntelligent(forms.ModelForm):
         model = Part
         exclude = ['organization', 'google_drive_parent', ]
         help_texts = {
-            'number_item': _('Auto generated if blank.'),
-            'number_variation': 'Auto generated if blank.',
+            'number_item': _('در صورت خالی بودن اتوماتیک ایجاد می‌شود.'),
+            'number_variation': 'در صورت خالی بودن اتوماتیک ایجاد می‌شود.',
         }
 
     def __init__(self, *args, **kwargs):
@@ -897,9 +897,9 @@ class PartRevisionForm(forms.ModelForm):
         model = PartRevision
         exclude = ['timestamp', 'assembly', 'part']
         help_texts = {
-            'description': _('Additional part info, special instructions, etc.'),
-            'attribute': _('Additional part attributes (free form)'),
-            'value': _('Number or text'),
+            'description': _('نوع متریال'),
+            'attribute': _('اطلاعات اضافه متریال'),
+            'value': _('عدد یا تکست'),
         }
 
     def __init__(self, *args, **kwargs):
