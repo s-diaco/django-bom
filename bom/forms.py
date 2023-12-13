@@ -911,12 +911,21 @@ class PartRevisionForm(forms.ModelForm):
         self.fields['tolerance'].initial = '%'
 
         # Fix up field labels to be succinct for use in rendered form:
+        # TODO: fileds are:
+        # 'configuration, revision, description, value_units, value, attribute, pin_count,
+        # tolerance, package, material, finish, color, length_units, length, width_units,
+        # width, height_units, height, weight_units, weight, temperature_rating_units,
+        # temperature_rating, temperature_rating_range_max, temperature_rating_range_min,
+        # wavelength_units, wavelength, frequency_units, frequency, memory_units, memory,
+        # interface, power_rating_units, power_rating, supply_voltage_units, supply_voltage,
+        # voltage_rating_units, voltage_rating, current_rating_units, current_rating'
         for f in self.fields.values():
             if 'units' in f.label: f.label = 'Units'
             f.label.replace('rating', '')
             # f.value = strip_trailing_zeros(f.value) # Harmless if field is not a number
         self.fields['supply_voltage'].label = 'Vsupply'
         self.fields['attribute'].label = ''
+        self.fields['revision'].label='بازبینی'
 
         for _, value in self.fields.items():
             value.widget.attrs['placeholder'] = value.help_text
