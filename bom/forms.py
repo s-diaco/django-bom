@@ -925,7 +925,7 @@ class PartRevisionForm(forms.ModelForm):
             # f.value = strip_trailing_zeros(f.value) # Harmless if field is not a number
         self.fields['supply_voltage'].label = 'Vsupply'
         self.fields['attribute'].label = ''
-        self.fields['revision'].label='وزژن'
+        self.fields['revision'].label='ورژن'
 
         for _, value in self.fields.items():
             value.widget.attrs['placeholder'] = value.help_text
