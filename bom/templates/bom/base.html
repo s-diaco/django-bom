@@ -35,18 +35,18 @@
         <div class="nav-wrapper">
 
             {% if user.is_authenticated %}
-                <a href="{% url 'bom:home' %}" title="IndaBOM | Home" class="brand-logo left hide-on-med-and-down">
-                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="IndaBOM Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute;">برگ</span>
+                <a href="{% url 'bom:home' %}" title="برگ | Home" class="brand-logo left hide-on-med-and-down">
+                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="برگ Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute;">برگ</span>
                 </a>
-                <a href="{% url 'bom:home' %}" title="IndaBOM | Home" class="brand-logo left hide-on-large-only" style="left: 2.5rem;">
-                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="IndaBOM Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute;">برگ</span>
+                <a href="{% url 'bom:home' %}" title="برگ | Home" class="brand-logo left hide-on-large-only" style="left: 2.5rem;">
+                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="برگ Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute;">برگ</span>
                 </a>
             {% else %}
-                <a href="{% url 'login' %}" title="IndaBOM | Home" class="brand-logo left hide-on-med-and-down">
-                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="IndaBOM Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute;">برگ</span>
+                <a href="{% url 'login' %}" title="برگ | Home" class="brand-logo left hide-on-med-and-down">
+                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="برگ Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute;">برگ</span>
                 </a>
-                <a href="{% url 'login' %}" title="IndaBOM | Home" class="brand-logo left hide-on-large-only" style="left: 2.5rem;">
-                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="IndaBOM Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute;">برگ</span>
+                <a href="{% url 'login' %}" title="برگ | Home" class="brand-logo left hide-on-large-only" style="left: 2.5rem;">
+                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="برگ Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute;">برگ</span>
                 </a>
             {% endif %}
 
@@ -60,7 +60,7 @@
         </div>
     </nav>
 </div>
-<div class="printer-show"><p>IndaBOM | www.indabom.com | {{ title|safe }}</p></div>
+<div class="printer-show"><p>برگ | https://github.com/s-diaco/django-bom | {{ title|safe }}</p></div>
 
 <!-- Make sure this is not in navbar-fixed or it will be disabled -->
 <ul class="sidenav" id="mobile-menu">
@@ -73,7 +73,8 @@
     {% endblock main %}
     {% if title %}
         <div class="container">
-            <h1 class="col s12 light header center">{{ title|safe }}</h1>
+            <h1 class="col s12 light header">{{ title|safe }}</h1>
+            <hr>
         </div>
     {% endif %}
     {% if messages %}

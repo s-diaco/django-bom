@@ -282,6 +282,8 @@ class ManufacturerPartForm(forms.ModelForm):
         self.fields['manufacturer_part_number'].required = False
         self.fields['manufacturer'].queryset = Manufacturer.objects.filter(organization=self.organization).order_by('name')
         self.fields['mouser_disable'].initial = True
+        self.fields['manufacturer_part_number'].label = 'کد تولید کننده'
+        self.fields['manufacturer'].label = 'انتخاب تولید کننده'
 
 
 class SellerForm(forms.ModelForm):
@@ -786,6 +788,7 @@ class PartFormIntelligent(forms.ModelForm):
         self.ignore_unique_constraint = kwargs.pop('ignore_unique_constraint', False)
         super(PartFormIntelligent, self).__init__(*args, **kwargs)
         self.fields['number_item'].required = True
+        self.fields['number_item'].label='کد متریال'
         if self.instance and self.instance.id:
             self.fields['primary_manufacturer_part'].queryset = ManufacturerPart.objects.filter(part__id=self.instance.id).order_by('manufacturer_part_number')
         else:
@@ -926,6 +929,8 @@ class PartRevisionForm(forms.ModelForm):
         self.fields['supply_voltage'].label = 'Vsupply'
         self.fields['attribute'].label = ''
         self.fields['revision'].label='ورژن'
+        self.fields['description'].label='شرح'
+        self.fields['tolerance'].label='پرت'
 
         for _, value in self.fields.items():
             value.widget.attrs['placeholder'] = value.help_text
