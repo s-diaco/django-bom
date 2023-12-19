@@ -297,14 +297,14 @@ class SellerPartForm(forms.ModelForm):
         model = SellerPart
         exclude = ['manufacturer_part', 'data_source', ]
 
-    new_seller = forms.CharField(max_length=128, label='-or- Create new seller (leave blank if selecting)', required=False)
+    new_seller = forms.CharField(max_length=128, label='-یا- تعریف تأمین کننده جدید (در صورت موجود بودن خالی بگذارید)', required=False)
     field_order = ['seller', 'new_seller', 'unit_cost', 'nre_cost', 'lead_time_days', 'minimum_order_quantity', 'minimum_pack_quantity', ]
 
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop('organization', None)
         self.manufacturer_part = kwargs.pop('manufacturer_part', None)
-        self.base_fields['unit_cost'] = forms.DecimalField(required=True, decimal_places=4, max_digits=17)
-        self.base_fields['nre_cost'] = forms.DecimalField(required=True, decimal_places=4, max_digits=17, label='NRE cost')
+        self.base_fields['unit_cost'] = forms.DecimalField(required=True, decimal_places=0, max_digits=17, label='قیمت')
+        self.base_fields['nre_cost'] = forms.DecimalField(required=False, decimal_places=4, max_digits=17, label='NRE cost')
 
         instance = kwargs.get('instance')
         if instance:
@@ -788,7 +788,7 @@ class PartFormIntelligent(forms.ModelForm):
         self.ignore_unique_constraint = kwargs.pop('ignore_unique_constraint', False)
         super(PartFormIntelligent, self).__init__(*args, **kwargs)
         self.fields['number_item'].required = True
-        self.fields['number_item'].label='کد متریال'
+        self.fields['number_item'].label='کد'
         if self.instance and self.instance.id:
             self.fields['primary_manufacturer_part'].queryset = ManufacturerPart.objects.filter(part__id=self.instance.id).order_by('manufacturer_part_number')
         else:
@@ -903,6 +903,7 @@ class PartRevisionForm(forms.ModelForm):
             'description': _('نوع متریال'),
             'attribute': _('اطلاعات اضافه متریال'),
             'value': _('عدد یا تکست'),
+            'tolerance': _('درصد پرت (LOI)')
         }
 
     def __init__(self, *args, **kwargs):
@@ -910,8 +911,6 @@ class PartRevisionForm(forms.ModelForm):
 
         self.fields['revision'].initial = 1
         self.fields['configuration'].required = False
-
-        self.fields['tolerance'].initial = '%'
 
         # Fix up field labels to be succinct for use in rendered form:
         # TODO: fileds are:
