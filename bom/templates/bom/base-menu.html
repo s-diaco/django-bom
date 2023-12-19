@@ -1,6 +1,6 @@
-{% if user.is_superuser and user.is_authenticated %}<li><a title="IndaBOM | Admin" href="/admin/" target="_blank">ادمین</a></li>{% endif %}
-{% if user.is_authenticated %}<li><a title="IndaBOM | Log Out" href="{% url 'logout' %}">خروج [{{ user.username}}]</a></li>{% endif %}
+{% if user.is_superuser and user.is_authenticated %}<li><a title="Admin" href="/admin/" target="_blank">ادمین</a></li>{% endif %}
+{% if user.is_authenticated %}<li><a title="خروج" href="{% url 'logout' %}" class="narrow-padding">{{user.username}}<i class="material-icons right">logout</i></a></li>{% endif %}
 {% if not user.is_authenticated %}
-    <li><a title="IndaBOM | Log In" href="{% url 'login' %}">ورود</a></li>
-    <li><a title="IndaBOM | Sign Up" href="{% url 'signup' %}">ایجاد حساب جدید</a></li>
+    <li><a title="ورود" href="{% url 'login' %}">ورود</a></li>
+    <li><a title="عضویت" href="{% url 'signup' %}">عضویت</a></li>
 {% endif %}

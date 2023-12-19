@@ -35,17 +35,23 @@
         <div class="nav-wrapper">
 
             {% if user.is_authenticated %}
-                <a href="{% url 'bom:home' %}" title="برگ | Home" class="brand-logo right hide-on-med-and-down">
-                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="برگ Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute;">برگ</span>
+                <a href="{% url 'bom:home' %}" title="برگ | خانه" class="brand-logo right hide-on-med-and-down">
+                    <img style="margin: 5px;" width="52" alt="برگ Logo" src="{% static 'bom/img/indabom.png' %}"/>
                 </a>
-                <a href="{% url 'bom:home' %}" title="برگ | Home" class="brand-logo right hide-on-large-only" style="right: 2.5rem;">
-                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="برگ Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute;">برگ</span>
+                {% if title %}
+                    <span class="menu_tile hide-on-med-and-down">{{ title|safe }}</span>
+                {% endif %}
+                <a href="{% url 'bom:home' %}" title="برگ | خانه" class="brand-logo right hide-on-large-only" style="right: 2.5rem;">
+                    <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="برگ Logo" src="{% static 'bom/img/indabom.png' %}"/>
                 </a>
+                {% if title %}
+                    <span class="menu_tile hide-on-large-only">{{ title|safe }}</span>
+                {% endif %}
             {% else %}
-                <a href="{% url 'login' %}" title="برگ | Home" class="brand-logo right hide-on-med-and-down">
+                <a href="{% url 'login' %}" title="برگ | خانه" class="brand-logo right hide-on-med-and-down">
                     <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="برگ Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute;">برگ</span>
                 </a>
-                <a href="{% url 'login' %}" title="برگ | Home" class="brand-logo right hide-on-large-only" style="right: 2.5rem;">
+                <a href="{% url 'login' %}" title="برگ | خانه" class="brand-logo right hide-on-large-only" style="right: 2.5rem;">
                     <img style="margin-top: 2px; margin-right: 6px;" width="52" alt="برگ Logo" src="{% static 'bom/img/indabom.png' %}"/><span style="position: absolute;">برگ</span>
                 </a>
             {% endif %}
@@ -71,12 +77,6 @@
 <main>
     {% block main %}
     {% endblock main %}
-    {% if title %}
-        <div class="container">
-            <h1 class="col s12 light header">{{ title|safe }}</h1>
-            <hr>
-        </div>
-    {% endif %}
     {% if messages %}
         <div id="content" class="container">
             <ul class="messages">
