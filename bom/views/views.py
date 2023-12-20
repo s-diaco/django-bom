@@ -728,6 +728,9 @@ def part_info(request, part_id, part_revision_id=None):
 
     part = get_object_or_404(Part, pk=part_id)
 
+    if part:
+        title=part.full_part_number
+        
     part_revision = None
     if part_revision_id is None:
         part_revision = part.latest()
@@ -1326,10 +1329,10 @@ def add_sellerpart(request, manufacturer_part_id):
     user = request.user
     profile = user.bom_profile()
     organization = profile.organization
-    title = 'Add Seller Part'
+    title = 'افزودن تأمین کننده'
 
     manufacturer_part = get_object_or_404(ManufacturerPart, pk=manufacturer_part_id)
-    title = "Add Seller Part to {}".format(manufacturer_part)
+    title = "مشخصات تأمین کننده {}".format(manufacturer_part)
 
     if request.method == 'POST':
         form = SellerPartForm(request.POST, manufacturer_part=manufacturer_part, organization=organization)
@@ -1340,7 +1343,7 @@ def add_sellerpart(request, manufacturer_part_id):
     else:
         form = SellerPartForm(organization=organization)
 
-    return TemplateResponse(request, 'bom/bom-form.html', locals())
+    return TemplateResponse(request, 'bom/add-sellerpart.html', locals())
 
 
 @login_required(login_url=BOM_LOGIN_URL)

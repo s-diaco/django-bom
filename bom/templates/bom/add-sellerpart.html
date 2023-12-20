@@ -24,27 +24,25 @@
                 {{ form.non_field_errors }}
 
                 <div class="row">
-                    <div class="fieldWrapper col m6 s12">
-                        <label for="{{ form.seller.id_for_label }}"><b>Seller:</b></label>
+                    <div class="fieldWrapper col m5 s12">
+                        <label for="{{ form.seller.id_for_label }}"><b>تأمین کننده:</b></label>
                         {{ form.seller.errors }}
                         {{ form.seller }}
                     </div>
-                    <div class="fieldWrapper col m6 s12">
-                        <label for="{{ form.new_seller.id_for_label }}"><b>-or- New Seller:</b></label>
+                    <div class="fieldWrapper col m5 s12">
+                        <label for="{{ form.new_seller.id_for_label }}"><b>-یا - تأمین کننده جدید:</b></label>
                         {{ form.new_seller.errors }}
                         {{ form.new_seller }}
                     </div>
-                </div>
-                <div class="row">
-                    <div class="fieldWrapper col m3 s12">
-                        <label for="{{ form.seller_part_number.id_for_label }}">Seller Part Number:</label>
+                    <div class="fieldWrapper col m2 s12">
+                        <label for="{{ form.seller_part_number.id_for_label }}">کد تأمین کننده:</label>
                         {{ form.seller_part_number.errors }}
                         {{ form.seller_part_number }}
                     </div>
                 </div>
                 <div class="row">
                     <div class="fieldWrapper col m3 s12">
-                        <label for="{{ form.unit_cost.id_for_label }}"><b>Unit Cost:</b></label>
+                        <label for="{{ form.unit_cost.id_for_label }}"><b>قیمت واحد:</b></label>
                         {{ form.unit_cost.errors }}
                         {{ form.unit_cost }}
                     </div>

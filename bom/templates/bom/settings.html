@@ -14,9 +14,9 @@
     <div class="row container-app">
         <div class="col s12">
             <ul id="tabs" class="tabs tabs-fixed-width">
-                <li class="tab"><a id="user-tab" href="#user">User</a></li>
-                <li class="tab"><a id="indabom-tab" href="#indabom">IndaBOM</a></li>
-                <li class="tab"><a id="organization-tab" href="#organization">Organization</a></li>
+                <li class="tab"><a id="user-tab" href="#user">کاربر</a></li>
+                <li class="tab"><a id="indabom-tab" href="#indabom">ساختار کد</a></li>
+                <li class="tab"><a id="organization-tab" href="#organization">شرکت</a></li>
             </ul>
         </div>
 
@@ -143,14 +143,14 @@
                 <ul class="browser-default">
                     {% if organization.number_scheme == 'S'  or organization_parts_count == 0 %}
                         <li style="padding-bottom: 16px;"><b>Semi-intelligent</b> e.g. CCC-NNNN-YY<br>Consists of 3 components: a 3-digit part class, a N-digit part number, and a 2-digit variation.
-                            IndaBOM
+                            Barg
                             part numbers are designed to be simple to assign and simple to subsequently write, type, or speak. You define the part classes in your organization, and how long your
                             N-digit
                             part number is below.
                         </li>
                     {% endif %}
                     {% if organization.number_scheme == 'I' or organization_parts_count == 0 %}
-                        <li><b>Intelligent</b> You control your numbers.<br>Intelligent part numbering on IndaBOM allows the user to assign any part number to a part. The part number contains
+                        <li><b>Intelligent</b> You control your numbers.<br>Intelligent part numbering on Barg allows the user to assign any part number to a part. The part number contains
                             descriptive details embedded within that provides noteworthy information about the part. For example, a capacitor may be named C0402X5R33PF to indicate that it is a
                             capacitor of size "0402", using a X5R dialectric, and is 33pF.
                         </li>
@@ -160,7 +160,7 @@
                 {% if organization_parts_count > 0 %}
                     <p><b>You've already created {{ organization_parts_count }} part{{ organization_parts_count|pluralize }}.</b> Since changing your organization number scheme requires changing your
                         parts numbers, please manually delete your parts then come back here to change your organization number scheme. Alternatively we can
-                        help delete your parts if you reach out to info@indabom.com.</p>
+                        help delete your parts if you reach out to Barg.</p>
                 {% else %}
                     <form name="number-scheme" action="{% url 'bom:settings' tab_anchor=INDABOM_TAB %}" method="post" class="col s12">
                         {% csrf_token %}
@@ -235,7 +235,7 @@
                                         </button>
                                     </div>
                                     <div class="col s6 left-align">
-                                        {% include 'bom/bom-form-modal.html' with modal_title='Add User' form=user_add_form action=user_add_form_action name='submit-add-user' modal_description='Adding users to your organization is a paid feature, but is free for a limited time while we are still developing the tool. Contact <a href="mailto:info@indabom.com">info@indabom.com</a> if you are interested.' %}
+                                        {% include 'bom/bom-form-modal.html' with modal_title='Add User' form=user_add_form action=user_add_form_action name='submit-add-user' modal_description='Adding users to your organization is a paid feature, but is free for a limited time while we are still developing the tool. Contact <a href="mailto:infomailaddress">infomailaddress</a> if you are interested.' %}
                                     </div>
                                 </div>
                             </form>
@@ -244,7 +244,7 @@
                                 <div class="col s12">
                                     <p>There are no additional users in this organization: {{ organization }}.</p>
                                     {% if organization.subscription == 'F' %}
-                                        {% include 'bom/bom-form-modal.html' with modal_title='Add User' name='submit-add-user-free' modal_description='Adding users to your organization is a paid feature, but is free for a limited time while we are still developing the tool. Contact <a href="mailto:info@indabom.com">info@indabom.com</a> if you are interested.' %}
+                                        {% include 'bom/bom-form-modal.html' with modal_title='Add User' name='submit-add-user-free' modal_description='Adding users to your organization is a paid feature, but is free for a limited time while we are still developing the tool. Contact <a href="mailto:infomailaddress">infomailaddress</a> if you are interested.' %}
                                     {% else %}
                                         {% if organization.subscription_quantity == 0 or users_in_organization.count < organization.subscription_quantity %}
                                             {% include 'bom/bom-form-modal.html' with modal_title='Add User' form=user_add_form action=user_add_form_action name='submit-add-user' modal_description='Add a user to your organization.' %}
@@ -266,13 +266,13 @@
                                 {% if not organization.google_drive_parent %}Organization owners can enable file storage using Google Drive. {% if organization.owner == user %} Since you are the
                                     owner, you are able to enable
                                     file storage!{% else %}Contact your organization owner to enable.{% endif %}{% endif %}<p>
-                            <p>When you connect, we will create a folder called <b>IndaBOM Part Files</b> in your root of Google drive (and can be moved anywhere in your drive). To add files to a
+                            <p>When you connect, we will create a folder called <b>BOM Part Files</b> in your root of Google drive (and can be moved anywhere in your drive). To add files to a
                                 part,
-                                navigate to the part in IndaBOM, and on the part's <b>Specifications</b> tab, click the <img title="Via Google Drive" style="width: 16px; vertical-align: middle;"
+                                navigate to the part in BOM, and on the part's <b>Specifications</b> tab, click the <img title="Via Google Drive" style="width: 16px; vertical-align: middle;"
                                                                                                                              src="{% static 'bom/img/google_drive_logo.svg' %}">&nbsp;Google Drive link.
-                                This will create a folder for your part in your root IndaBOM directory, or take you there if it already exists.
+                                This will create a folder for your part in your root BOM directory, or take you there if it already exists.
                             <p>
-                            <p>You'll be able to access the files directly through Google Drive, and through IndaBOM.</p>
+                            <p>You'll be able to access the files directly through Google Drive, and through BOM.</p>
                         {% else %}
                             <p>You're connected with Google and can access Google Drive features.</p>
                         {% endif %}
@@ -296,7 +296,7 @@
                         <h3>Automagic Sourcing via Mouser <img title="Sourcing via Mouser.com" style="height: 2.5rem; padding-bottom: 8px; vertical-align: middle;"
                                                                src="{% static 'bom/img/mouser.png' %}">
                         </h3>
-                        <p>No connection required. To enable sourcing via mouser, select which part classes you'd like enabled on the Settings INDABOM tab. Once enabled, sourcing information will
+                        <p>No connection required. To enable sourcing via mouser, select which part classes you'd like enabled on the Settings Number Scheme tab. Once enabled, sourcing information will
                             appear on
                             part detail pages in which there are parts sourced via Mouser.</p>
                     </div>

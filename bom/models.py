@@ -618,6 +618,9 @@ class PartRevision(models.Model):
             return int(self.revision) + 1
         except ValueError:
             return increment_str(self.revision)
+        
+    def description_str(self):
+        return f'{self.description}'
 
     def __str__(self):
         return u'{}, Rev {}'.format(self.part.full_part_number(), self.revision)
