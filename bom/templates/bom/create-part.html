@@ -54,6 +54,34 @@
                         </div>
                         -->
                     </div>
+                    <h2>تأمین کننده</h2>
+                    <p><i>The below fields are optional.</i></p>
+                    <p>Skip this form if your part is a custom part. Leave the manufacturer field unselected if creating a new manufacturer.</p>
+                    <div class="row">
+                        {{ seller_form.non_field_errors }}
+                        <div class="fieldWrapper col m5 s12">
+                            <label for="{{ form.seller.id_for_label }}"><b>تأمین کننده:</b></label>
+                            {{ seller_form.name.errors }}
+                            {{ seller_form.name }}
+                        </div>
+                        <div class="fieldWrapper col m5 s12">
+                            <label for="{{ form.new_seller.id_for_label }}"><b>-یا - تأمین کننده جدید:</b></label>
+                            {{ seller_part_form.new_seller.errors }}
+                            {{ seller_part_form.new_seller }}
+                        </div>
+                        <div class="fieldWrapper col m2 s12">
+                            <label for="{{ form.seller_part_number.id_for_label }}">کد تأمین کننده:</label>
+                            {{ seller_part_form.seller_part_number.errors }}
+                            {{ seller_part_form.seller_part_number }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="fieldWrapper col m3 s12">
+                            <label for="{{ form.unit_cost.id_for_label }}"><b>قیمت واحد:</b></label>
+                            {{ seller_part_form.unit_cost.errors }}
+                            {{ seller_part_form.unit_cost }}
+                        </div>
+                    </div>
                     <div class="row">
                         <div class="col s6">
                             <a href="javascript:history.back()" class="waves-effect waves-light btn-flat grey-text lighten-1" style="margin-left: -16px;">انصراف</a>
