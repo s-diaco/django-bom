@@ -345,7 +345,7 @@ class ManufacturerPartForm(forms.ModelForm):
         ).order_by("name")
         self.fields["mouser_disable"].initial = True
         self.fields["manufacturer_part_number"].label = "کد تولید کننده"
-        self.fields["manufacturer"].label = "انتخاب تولید کننده"
+        self.fields["manufacturer"].label = "تولید کننده"
 
 
 class SellerForm(forms.ModelForm):
@@ -402,8 +402,8 @@ class SellerPartForm(forms.ModelForm):
             organization=self.organization
         ).order_by("name")
         self.fields["seller"].required = False
-        self.fields["seller_part_number"].label = "کد فروشنده"
-        self.fields["seller"].label = "فروشنده"
+        self.fields["seller_part_number"].label = "کد تأمین کننده"
+        self.fields["seller"].label = "تأمین کننده"
 
     def clean(self):
         cleaned_data = super(SellerPartForm, self).clean()
@@ -1132,9 +1132,6 @@ class PartFormIntelligent(forms.ModelForm):
             "organization",
             "google_drive_parent",
         ]
-        help_texts = {
-            "number_item": _("کد متریال را وارد کنید."),
-        }
 
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
@@ -1154,7 +1151,7 @@ class PartFormIntelligent(forms.ModelForm):
         else:
             del self.fields["primary_manufacturer_part"]
         for _, value in self.fields.items():
-            value.widget.attrs["placeholder"] = value.help_text
+            # value.widget.attrs["placeholder"] = value.help_text
             value.help_text = ""
 
 
@@ -1198,7 +1195,7 @@ class PartFormSemiIntelligent(forms.ModelForm):
         else:
             del self.fields["primary_manufacturer_part"]
         for _, value in self.fields.items():
-            value.widget.attrs["placeholder"] = value.help_text
+            # value.widget.attrs["placeholder"] = value.help_text
             value.help_text = ""
 
         if self.initial.get("number_class"):
@@ -1312,7 +1309,6 @@ class PartRevisionForm(forms.ModelForm):
             required=True,
             label="نوع",
             widget=AutocompleteTextInput(
-                attrs={"placeholder": "نوع متریال"},
                 queryset=PartRevision.objects.values_list(
                     "displayable_synopsis", flat=True
                 ),
@@ -1321,7 +1317,7 @@ class PartRevisionForm(forms.ModelForm):
         )  # TODO: delete
 
         for _, value in self.fields.items():
-            value.widget.attrs["placeholder"] = value.help_text
+            # value.widget.attrs["placeholder"] = value.help_text
             value.help_text = ""
 
         if (
