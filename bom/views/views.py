@@ -1375,11 +1375,12 @@ def create_part(request):
 
     if request.method == "POST":
         part_form = PartForm(request.POST, organization=organization)
+        seller_form = SellerForm(request.POST)
+        seller_part_form = SellerPartForm(request.POST, organization=organization)
         manufacturer_form = ManufacturerForm(request.POST)
         manufacturer_part_form = ManufacturerPartForm(
             request.POST, organization=organization
         )
-        seller_part_form = SellerPartForm(request.POST, organization=organization)
         part_revision_form = PartRevisionForm(request.POST)
         # Checking if part form is valid checks for number uniqueness
         if (
@@ -1388,6 +1389,31 @@ def create_part(request):
             and manufacturer_part_form.is_valid()
             and seller_part_form.is_valid()
         ):
+            spn = seller_part_form.cleaned_data["seller_part_number"]
+            old_seller = seller_part_form.cleaned_data["seller"]
+            new_seller_name = seller_form.cleaned_data["name"]
+
+            seller = None
+            if spn:
+                if old_seller and new_seller_name == "":
+                    seller = old_seller
+                elif new_seller_name and new_seller_name != "" and not old_seller:
+                    seller, seller_created = Seller.objects.get_or_create(
+                        name__iexact=new_seller_name,
+                        organization=organization,
+                        defaults={"name": new_seller_name},
+                    )
+                else:
+                    messages.error(
+                        request,
+                        "یک تأمین کننده جدید بسازید یا از لیست تأمین کنندگان انتخاب کنید.",
+                    )
+                    return TemplateResponse(request, "bom/create-part.html", locals())
+            elif old_seller or new_seller_name != "":
+                messages.warning(
+                    request,
+                    "هیچ تأمین کننده‌ای انتخاب یا ایجاد نشده است. کد تأمین کننده اختصاص داده نشد.",
+                )
             mpn = manufacturer_part_form.cleaned_data["manufacturer_part_number"]
             old_manufacturer = manufacturer_part_form.cleaned_data["manufacturer"]
             new_manufacturer_name = manufacturer_form.cleaned_data["name"]
@@ -1401,7 +1427,10 @@ def create_part(request):
                     and new_manufacturer_name != ""
                     and not old_manufacturer
                 ):
-                    manufacturer, created = Manufacturer.objects.get_or_create(
+                    (
+                        manufacturer,
+                        manufacturer_created,
+                    ) = Manufacturer.objects.get_or_create(
                         name__iexact=new_manufacturer_name,
                         organization=organization,
                         defaults={"name": new_manufacturer_name},
@@ -1409,13 +1438,13 @@ def create_part(request):
                 else:
                     messages.error(
                         request,
-                        "Either create a new manufacturer, or select an existing manufacturer.",
+                        "یک تولید کننده جدید بسازید یا از لیست تولید کنندگان انتخاب کنید.",
                     )
                     return TemplateResponse(request, "bom/create-part.html", locals())
             elif old_manufacturer or new_manufacturer_name != "":
                 messages.warning(
                     request,
-                    "No manufacturer was selected or created, no manufacturer part number was assigned.",
+                    "هیچ تولید کننده‌ای انتخاب یا ایجاد نشده است. کد تولید کننده اختصاص داده نشد.",
                 )
             new_part = part_form.save(commit=False)
             new_part.organization = organization
@@ -1447,9 +1476,22 @@ def create_part(request):
                 messages.error(request, part_revision_form.errors)
                 return TemplateResponse(request, "bom/create-part.html", locals())
 
+            seller_part = None
+            if seller is not None:
+                seller_part, seller_created = SellerPart.objects.get_or_create(
+                    part=new_part,
+                    seller_part_number="" if spn == "" else spn,
+                    seller=seller,
+                )
+
+                new_part.primary_seller_part = seller_part
+                new_part.save()
             manufacturer_part = None
             if manufacturer is not None:
-                manufacturer_part, created = ManufacturerPart.objects.get_or_create(
+                (
+                    manufacturer_part,
+                    manufacturer_created,
+                ) = ManufacturerPart.objects.get_or_create(
                     part=new_part,
                     manufacturer_part_number="" if mpn == "" else mpn,
                     manufacturer=manufacturer,

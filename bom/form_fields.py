@@ -5,23 +5,23 @@ from json import dumps
 
 class AutocompleteTextInput(forms.TextInput):
     def __init__(self, *args, **kwargs):
-        self.queryset = kwargs.pop('queryset')
-        self.autocomplete_limit = kwargs.pop('autocomplete_limit', None)
-        self.autocomplete_min_length = kwargs.pop('autocomplete_min_length', 0)
-        self.autocomplete_submit = kwargs.pop('autocomplete_submit', False)
-        self.form_name = kwargs.pop('form_name', 'form')
-        self.verbose_string_function = kwargs.pop('verbose_string_function', str)
+        self.queryset = kwargs.pop("queryset")
+        self.autocomplete_limit = kwargs.pop("autocomplete_limit", None)
+        self.autocomplete_min_length = kwargs.pop("autocomplete_min_length", 0)
+        self.autocomplete_submit = kwargs.pop("autocomplete_submit", False)
+        self.form_name = kwargs.pop("form_name", "form")
+        self.verbose_string_function = kwargs.pop("verbose_string_function", str)
         super().__init__(*args, **kwargs)
 
     def render(self, name, value, attrs=None, renderer=None):
         # verbose_string_function is used if we want to show verbose strings in the dropdown,
         # but autocomplete to something simpler
 
-        # Disable chrome autocomplete..we dont want double duty here!
+        # Disable chrome autocomplete. We dont want double duty here!
         if attrs is not None:
-            attrs.update({'autocomplete': 'off'})
+            attrs.update({"autocomplete": "off"})
         else:
-            attrs['autocomplete'] = "off"
+            attrs["autocomplete"] = "off"
 
         html = super().render(name, value, attrs)
 

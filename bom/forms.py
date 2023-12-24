@@ -362,6 +362,8 @@ class SellerPartForm(forms.ModelForm):
         exclude = [
             "manufacturer_part",
             "data_source",
+            "minimum_order_quantity",
+            "minimum_pack_quantity",
         ]
 
     new_seller = forms.CharField(
@@ -375,8 +377,6 @@ class SellerPartForm(forms.ModelForm):
         "unit_cost",
         "nre_cost",
         "lead_time_days",
-        "minimum_order_quantity",
-        "minimum_pack_quantity",
     ]
 
     def __init__(self, *args, **kwargs):
@@ -415,9 +415,9 @@ class SellerPartForm(forms.ModelForm):
             raise forms.ValidationError("Invalid unit cost.", code="invalid")
         self.instance.unit_cost = Money(unit_cost, self.organization.currency)
 
-        if nre_cost is None:
-            raise forms.ValidationError("Invalid NRE cost.", code="invalid")
-        self.instance.nre_cost = Money(nre_cost, self.organization.currency)
+        # if nre_cost is None:
+        #     raise forms.ValidationError("Invalid NRE cost.", code="invalid")
+        # self.instance.nre_cost = Money(nre_cost, self.organization.currency)
 
         if seller and new_seller:
             raise forms.ValidationError(
@@ -1304,15 +1304,14 @@ class PartRevisionForm(forms.ModelForm):
         self.fields["supply_voltage"].label = "Vsupply"
         self.fields["attribute"].label = ""
         self.fields["revision"].label = "ورژن"
-        self.fields["tolerance"].label = "پرت"
+        self.fields["tolerance"].label = "درصد پرت (LOI)"
         self.fields["description"] = forms.CharField(
             required=True,
             label="نوع",
             widget=AutocompleteTextInput(
-                queryset=PartRevision.objects.values_list(
-                    "displayable_synopsis", flat=True
-                ),
-                verbose_string_function=str,
+                queryset=PartRevision.objects.values_list("description", flat=True),
+                autocomplete_min_length=1,
+                autocomplete_limit=8,
             ),
         )  # TODO: delete
 
