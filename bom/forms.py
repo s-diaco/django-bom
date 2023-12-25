@@ -1144,6 +1144,7 @@ class PartFormIntelligent(forms.ModelForm):
         super(PartFormIntelligent, self).__init__(*args, **kwargs)
         self.fields["number_item"].required = True
         self.fields["number_item"].label = "کد"
+        self.fields["number_item"].widget.attrs["oninput"] = "updateTargetInput()"
         if self.instance and self.instance.id:
             self.fields[
                 "primary_manufacturer_part"

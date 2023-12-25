@@ -1374,6 +1374,9 @@ def create_part(request):
         )
 
     if request.method == "POST":
+        # TODO: get values from config file
+        default_manufacturer_name = "انتخاب نشده (پیش فرض)"
+        default_seller_name = "انتخاب نشده (پیش فرض)"
         part_form = PartForm(request.POST, organization=organization)
         seller_form = SellerForm(request.POST)
         seller_part_form = SellerPartForm(request.POST, organization=organization)
@@ -1405,10 +1408,12 @@ def create_part(request):
                         defaults={"name": new_seller_name},
                     )
                 else:
-                    messages.error(
-                        request,
-                        "یک تأمین کننده جدید بسازید یا از لیست تأمین کنندگان انتخاب کنید.",
+                    seller, seller_created = Seller.objects.get_or_create(
+                        name__iexact=default_seller_name,
+                        organization=organization,
+                        defaults={"name": default_seller_name},
                     )
+                    # messages.error(request, "یک تأمین کننده جدید بسازید یا از لیست تأمین کنندگان انتخاب کنید.")
                     return TemplateResponse(request, "bom/create-part.html", locals())
             elif old_seller or new_seller_name != "":
                 messages.warning(
@@ -1437,10 +1442,15 @@ def create_part(request):
                         defaults={"name": new_manufacturer_name},
                     )
                 else:
-                    messages.error(
-                        request,
-                        "یک تولید کننده جدید بسازید یا از لیست تولید کنندگان انتخاب کنید.",
+                    (
+                        manufacturer,
+                        manufacturer_created,
+                    ) = Manufacturer.objects.get_or_create(
+                        name__iexact=default_manufacturer_name,
+                        organization=organization,
+                        defaults={"name": default_manufacturer_name},
                     )
+                    # messages.error(request, "یک تولید کننده جدید بسازید یا از لیست تولید کنندگان انتخاب کنید.")
                     return TemplateResponse(request, "bom/create-part.html", locals())
             elif old_manufacturer or new_manufacturer_name != "":
                 messages.warning(
@@ -1515,6 +1525,7 @@ def create_part(request):
         manufacturer_form = ManufacturerForm(initial={"organization": organization})
         manufacturer_part_form = ManufacturerPartForm(organization=organization)
         seller_part_form = SellerPartForm(organization=organization)
+        seller_form = SellerForm(initial={"organization": organization})
 
     return TemplateResponse(request, "bom/create-part.html", locals())
 

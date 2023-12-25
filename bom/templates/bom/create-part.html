@@ -37,6 +37,7 @@
                     <p>Skip this form if your part is a custom part. Leave the manufacturer field unselected if creating a new manufacturer.</p>
                     <div class="row">
                         {{ manufacturer_form.non_field_errors }}
+                        {{ manufacturer_part_form.non_field_errors }}
                         {{ manufacturer_part_form.manufacturer_part_number.errors }}
                         {{ manufacturer_part_form.manufacturer_part_number|materializecss:'l3 m4 s12' }}
                         {{ manufacturer_part_form.manufacturer.errors }}
@@ -58,6 +59,7 @@
                     <p><i>The below fields are optional.</i></p>
                     <p>Skip this form if your part is a custom part. Leave the manufacturer field unselected if creating a new manufacturer.</p>
                     <div class="row">
+                        {{ seller_form.non_field_errors }}
                         {{ seller_part_form.non_field_errors }}
                         {{ seller_part_form.seller_part_number.errors }}
                         {{ seller_part_form.seller_part_number|materializecss:'l3 m4 s12'  }}
@@ -66,7 +68,7 @@
                         <div class="input-field col l3 m4 s12">
                             {{ seller_form.name.errors }}
                             {{ seller_form.name }}
-                            <label for="{{ seller_part_form.new_seller.id_for_label }}">یا تعریف تأمین کننده جدید:</label>
+                            <label for="{{ seller_form.new_seller.id_for_label }}">یا تعریف تأمین کننده جدید:</label>
                         </div>
                     </div>
                     <div class="row">
@@ -81,6 +83,29 @@
                             <button class="waves-effect waves-light btn green lighten-1" type="submit" name="action">ذخیره</button>
                         </div>
                     </div>
+                    <script>
+                        function updateTargetInput() {
+                            const sourceInputValue = document.getElementById('id_number_item').value;
+                            initManuDestVal = document.getElementById('id_manufacturer_part_number').value;
+                            if (initManuDestVal == "") {
+                                document.getElementById("id_manufacturer_part_number").focus();
+                                document.getElementById('id_manufacturer_part_number').value = sourceInputValue;
+                                document.getElementById("id_number_item").focus();
+                            }
+                            else {
+                                document.getElementById('id_manufacturer_part_number').value = sourceInputValue;
+                            }
+                            initSellerDestVal = document.getElementById('id_seller_part_number').value;
+                            if (initSellerDestVal == "") {
+                                document.getElementById("id_seller_part_number").focus();
+                                document.getElementById('id_seller_part_number').value = sourceInputValue;
+                                document.getElementById("id_number_item").focus();
+                            }
+                            else {
+                                document.getElementById('id_seller_part_number').value = sourceInputValue;
+                            }
+                        }
+                    </script>
                 </form>
             </div>
         {% else %}
