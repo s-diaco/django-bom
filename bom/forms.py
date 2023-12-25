@@ -355,6 +355,10 @@ class SellerForm(forms.ModelForm):
             "organization",
         ]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["name"].required = False
+
 
 class SellerPartForm(forms.ModelForm):
     class Meta:

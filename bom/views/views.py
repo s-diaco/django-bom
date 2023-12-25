@@ -1388,6 +1388,7 @@ def create_part(request):
             and manufacturer_form.is_valid()
             and manufacturer_part_form.is_valid()
             and seller_part_form.is_valid()
+            and seller_form.is_valid()
         ):
             spn = seller_part_form.cleaned_data["seller_part_number"]
             old_seller = seller_part_form.cleaned_data["seller"]
@@ -1465,7 +1466,7 @@ def create_part(request):
                 except IntegrityError as err:
                     messages.error(
                         request,
-                        "Error! Already created a part with part number {0}-{1}-{3}}".format(
+                        "خطا! متریال با کد {0}-{1}-{3} قبلاً‌ایجاد شده است.}".format(
                             new_part.number_class.code,
                             new_part.number_item,
                             new_part.number_variation,
