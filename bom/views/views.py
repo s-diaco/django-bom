@@ -1451,7 +1451,7 @@ def create_part(request):
                         defaults={"name": default_manufacturer_name},
                     )
                     # messages.error(request, "یک تولید کننده جدید بسازید یا از لیست تولید کنندگان انتخاب کنید.")
-                    return TemplateResponse(request, "bom/create-part.html", locals())
+                    # return TemplateResponse(request, "bom/create-part.html", locals())
             elif old_manufacturer or new_manufacturer_name != "":
                 messages.warning(
                     request,

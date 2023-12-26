@@ -368,6 +368,8 @@ class SellerPartForm(forms.ModelForm):
             "data_source",
             "minimum_order_quantity",
             "minimum_pack_quantity",
+            "nre_cost",
+            "lead_time_days",
         ]
 
     new_seller = forms.CharField(
@@ -379,8 +381,6 @@ class SellerPartForm(forms.ModelForm):
         "seller",
         "new_seller",
         "unit_cost",
-        "nre_cost",
-        "lead_time_days",
     ]
 
     def __init__(self, *args, **kwargs):
