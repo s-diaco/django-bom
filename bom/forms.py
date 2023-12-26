@@ -1,5 +1,6 @@
 import codecs
 import csv
+from decimal import Decimal
 import logging
 from typing import Type, TypeVar
 
@@ -368,8 +369,8 @@ class SellerPartForm(forms.ModelForm):
             "data_source",
             "minimum_order_quantity",
             "minimum_pack_quantity",
-            "nre_cost",
             "lead_time_days",
+            "nre_cost",
         ]
 
     new_seller = forms.CharField(
@@ -419,9 +420,10 @@ class SellerPartForm(forms.ModelForm):
             raise forms.ValidationError("Invalid unit cost.", code="invalid")
         self.instance.unit_cost = Money(unit_cost, self.organization.currency)
 
-        # if nre_cost is None:
-        #     raise forms.ValidationError("Invalid NRE cost.", code="invalid")
-        # self.instance.nre_cost = Money(nre_cost, self.organization.currency)
+        if nre_cost is None:
+            # raise forms.ValidationError("Invalid NRE cost.", code="invalid")
+            nre_cost = Decimal(0)
+        self.instance.nre_cost = Money(nre_cost, self.organization.currency)
 
         if seller and new_seller:
             raise forms.ValidationError(
@@ -435,7 +437,15 @@ class SellerPartForm(forms.ModelForm):
             )
             self.cleaned_data["seller"] = obj
         elif not seller:
-            raise forms.ValidationError("Must specify a seller.", code="invalid")
+            # raise forms.ValidationError("Must specify a seller.", code="invalid")
+
+            # TODO: get values from config file
+            default_seller_name = "انتخاب نشده (پیش فرض)"
+            obj, created = Seller.objects.get_or_create(
+                name__iexact=default_seller_name,
+                organization=self.organization,
+                defaults={"name": default_seller_name},
+            )
 
 
 class PartClassForm(forms.ModelForm):

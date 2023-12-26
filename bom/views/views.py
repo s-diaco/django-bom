@@ -1414,11 +1414,11 @@ def create_part(request):
                         defaults={"name": default_seller_name},
                     )
                     # messages.error(request, "یک تأمین کننده جدید بسازید یا از لیست تأمین کنندگان انتخاب کنید.")
-                    return TemplateResponse(request, "bom/create-part.html", locals())
+                    # return TemplateResponse(request, "bom/create-part.html", locals())
             elif old_seller or new_seller_name != "":
                 messages.warning(
                     request,
-                    "هیچ تأمین کننده‌ای انتخاب یا ایجاد نشده است. کد تأمین کننده اختصاص داده نشد.",
+                    "کد تأمین کننده اختصاص داده نشده است. هیچ تأمین کننده‌ای انتخاب یا ایجاد نشد.",
                 )
             mpn = manufacturer_part_form.cleaned_data["manufacturer_part_number"]
             old_manufacturer = manufacturer_part_form.cleaned_data["manufacturer"]
@@ -1487,16 +1487,6 @@ def create_part(request):
                 messages.error(request, part_revision_form.errors)
                 return TemplateResponse(request, "bom/create-part.html", locals())
 
-            seller_part = None
-            if seller is not None:
-                seller_part, seller_created = SellerPart.objects.get_or_create(
-                    part=new_part,
-                    seller_part_number="" if spn == "" else spn,
-                    seller=seller,
-                )
-
-                new_part.primary_seller_part = seller_part
-                new_part.save()
             manufacturer_part = None
             if manufacturer is not None:
                 (
@@ -1510,6 +1500,20 @@ def create_part(request):
 
                 new_part.primary_manufacturer_part = manufacturer_part
                 new_part.save()
+
+            # TODO: delete
+            seller_part = None
+            if seller is not None:
+                (
+                    seller_part,
+                    seller_created,
+                ) = SellerPart.objects.get_or_create(
+                    manufacturer_part=manufacturer_part,
+                    seller_part_number="" if spn == "" else spn,
+                    seller=seller,
+                    unit_cost=seller_part_form.instance.unit_cost,
+                    nre_cost=seller_part_form.instance.nre_cost,
+                )
 
             return HttpResponseRedirect(
                 reverse("bom:part-info", kwargs={"part_id": str(new_part.id)})
