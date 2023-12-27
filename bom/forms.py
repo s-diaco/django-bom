@@ -1165,9 +1165,9 @@ class PartFormIntelligent(forms.ModelForm):
             )
         else:
             del self.fields["primary_manufacturer_part"]
-        for _, value in self.fields.items():
-            # value.widget.attrs["placeholder"] = value.help_text
-            value.help_text = ""
+        # for _, value in self.fields.items():
+        # value.widget.attrs["placeholder"] = value.help_text
+        # value.help_text = ""
 
 
 class PartFormSemiIntelligent(forms.ModelForm):
