@@ -261,6 +261,17 @@ nav ul {
     font-size: inherit;
 }
 
+ul.errorlist {
+    padding-right: 0;
+}
+
+blockquote{
+    margin: 20px 0;
+    padding-right: 1.5rem;
+    border-left: 0;
+    border-right: 5px solid #ee6e73;
+}
+
 /* Printer friendly */
 .printer-show {
     display: none;

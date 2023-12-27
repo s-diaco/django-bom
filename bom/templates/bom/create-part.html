@@ -28,7 +28,6 @@
                                 href="{% url 'bom:settings' tab_anchor='indabom' %}">Settings</a> page, and create them in the IndaBOM tab.</p>
                     {% endif %}
                     <div class="row">
-                        {{ part_form.non_field_errors }}
                         {{ part_form|materializecss:'l3 m4 s12' }}
                         {% include 'bom/part-revision-display.html' with part_revision_form=part_revision_form %}
                     </div>
@@ -40,13 +39,8 @@
                         {{ manufacturer_part_form.non_field_errors }}
                         {{ manufacturer_part_form.manufacturer_part_number.errors }}
                         {{ manufacturer_part_form.manufacturer_part_number|materializecss:'l3 m4 s12' }}
-                        {{ manufacturer_part_form.manufacturer.errors }}
-                        {{ manufacturer_part_form.manufacturer|materializecss:'l3 m4 s12' }}
-                        <div class="input-field col l3 m4 s12">
-                            {{ manufacturer_form.name.errors }}
-                            {{ manufacturer_form.name }}
-                            <label for="{{ manufacturer_form.name.id_for_label }}">یا تعریف تولیدکننده جدید:</label>
-                        </div>
+                        {{ manufacturer_form.man_name_ac.errors }}
+                        {{ manufacturer_form.man_name_ac|materializecss:'l3 m4 s12' }}
                         <!--
                         <div class="input-field col m4 s12 materialize-checkbox-padding">
                             <span>Select for parts that aren't found on Mouser.com</span>
@@ -62,14 +56,9 @@
                         {{ seller_form.non_field_errors }}
                         {{ seller_part_form.non_field_errors }}
                         {{ seller_part_form.seller_part_number.errors }}
-                        {{ seller_part_form.seller_part_number|materializecss:'l3 m4 s12'  }}
-                        {{ seller_part_form.seller.errors }}
-                        {{ seller_part_form.seller|materializecss:'l3 m4 s12'  }}
-                        <div class="input-field col l3 m4 s12">
-                            {{ seller_form.name.errors }}
-                            {{ seller_form.name }}
-                            <label for="{{ seller_form.new_seller.id_for_label }}">یا تعریف تأمین کننده جدید:</label>
-                        </div>
+                        {{ seller_part_form.seller_part_number|materializecss:'l3 m4 s12' }}
+                        {{ seller_form.name_ac.errors }}
+                        {{ seller_form.name_ac|materializecss:'l3 m4 s12' }}
                     </div>
                     <div class="row">
                         {{ seller_part_form.unit_cost.errors }}

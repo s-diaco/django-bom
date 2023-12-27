@@ -2,7 +2,7 @@ import codecs
 import csv
 from decimal import Decimal
 import logging
-from typing import Type, TypeVar
+from typing import Any, Type, TypeVar
 
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
@@ -323,8 +323,20 @@ class ManufacturerForm(forms.ModelForm):
         ]
 
     def __init__(self, *args, **kwargs):
+        self.organization = kwargs.pop("organization", None)
         super().__init__(*args, **kwargs)
         self.fields["name"].required = False
+        self.fields["man_name_ac"] = forms.CharField(
+            required=False,
+            label="تولید کننده",
+            widget=AutocompleteTextInput(
+                queryset=Manufacturer.objects.filter(
+                    organization=self.organization
+                ).order_by("name"),
+                autocomplete_min_length=0,
+                autocomplete_limit=8,
+            ),
+        )
 
 
 class ManufacturerPartForm(forms.ModelForm):
@@ -357,8 +369,20 @@ class SellerForm(forms.ModelForm):
         ]
 
     def __init__(self, *args, **kwargs):
+        self.organization = kwargs.pop("organization", None)
         super().__init__(*args, **kwargs)
         self.fields["name"].required = False
+        self.fields["name_ac"] = forms.CharField(
+            required=False,
+            label="تأمین کننده",
+            widget=AutocompleteTextInput(
+                queryset=Seller.objects.filter(organization=self.organization).order_by(
+                    "name"
+                ),
+                autocomplete_min_length=0,
+                autocomplete_limit=8,
+            ),
+        )
 
 
 class SellerPartForm(forms.ModelForm):
@@ -1169,6 +1193,38 @@ class PartFormIntelligent(forms.ModelForm):
         # value.widget.attrs["placeholder"] = value.help_text
         # value.help_text = ""
 
+    def clean(self):
+        cleaned_data = super(PartFormIntelligent, self).clean()
+        number_item = cleaned_data.get("number_item")
+
+        try:
+            if number_item is not None and number_item != "":
+                Part.verify_format_number_item(number_item, self.organization)
+        except AttributeError as e:
+            validation_error = forms.ValidationError(str(e), code="invalid")
+            self.add_error("number_item", validation_error)
+
+        if self.ignore_unique_constraint:
+            return cleaned_data
+
+        part = Part.objects.filter(
+            number_item=number_item,
+            organization=self.organization,
+        )
+
+        try:
+            part = part.exclude(pk=self.id)
+        except AttributeError:
+            pass
+
+        if part.count() > 0:
+            validation_error = forms.ValidationError(
+                ("Part number {0} already in use.".format(number_item)),
+                code="invalid",
+            )
+            self.add_error(None, validation_error)
+        return cleaned_data
+
 
 class PartFormSemiIntelligent(forms.ModelForm):
     class Meta:
@@ -1301,7 +1357,6 @@ class PartRevisionForm(forms.ModelForm):
             "description": _("نوع متریال"),
             "attribute": _("اطلاعات اضافه متریال"),
             "value": _("عدد یا تکست"),
-            "tolerance": _("درصد پرت (LOI)"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -1320,6 +1375,7 @@ class PartRevisionForm(forms.ModelForm):
         self.fields["attribute"].label = ""
         self.fields["revision"].label = "ورژن"
         self.fields["tolerance"].label = "درصد پرت (LOI)"
+        self.fields["tolerance"].initial = 0
         self.fields["description"] = forms.CharField(
             required=True,
             label="نوع",
@@ -1328,11 +1384,11 @@ class PartRevisionForm(forms.ModelForm):
                 autocomplete_min_length=1,
                 autocomplete_limit=8,
             ),
-        )  # TODO: delete
+        )
 
-        for _, value in self.fields.items():
-            # value.widget.attrs["placeholder"] = value.help_text
-            value.help_text = ""
+        # for _, value in self.fields.items():
+        # value.widget.attrs["placeholder"] = value.help_text
+        # value.help_text = ""
 
         if (
             self.instance

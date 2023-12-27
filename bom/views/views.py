@@ -1394,14 +1394,11 @@ def create_part(request):
             and seller_form.is_valid()
         ):
             spn = seller_part_form.cleaned_data["seller_part_number"]
-            old_seller = seller_part_form.cleaned_data["seller"]
-            new_seller_name = seller_form.cleaned_data["name"]
+            new_seller_name = seller_form.cleaned_data["name_ac"]
 
             seller = None
             if spn:
-                if old_seller and new_seller_name == "":
-                    seller = old_seller
-                elif new_seller_name and new_seller_name != "" and not old_seller:
+                if new_seller_name and new_seller_name != "":
                     seller, seller_created = Seller.objects.get_or_create(
                         name__iexact=new_seller_name,
                         organization=organization,
@@ -1415,24 +1412,17 @@ def create_part(request):
                     )
                     # messages.error(request, "یک تأمین کننده جدید بسازید یا از لیست تأمین کنندگان انتخاب کنید.")
                     # return TemplateResponse(request, "bom/create-part.html", locals())
-            elif old_seller or new_seller_name != "":
+            elif new_seller_name != "":
                 messages.warning(
                     request,
                     "کد تأمین کننده اختصاص داده نشده است. هیچ تأمین کننده‌ای انتخاب یا ایجاد نشد.",
                 )
             mpn = manufacturer_part_form.cleaned_data["manufacturer_part_number"]
-            old_manufacturer = manufacturer_part_form.cleaned_data["manufacturer"]
-            new_manufacturer_name = manufacturer_form.cleaned_data["name"]
+            new_manufacturer_name = manufacturer_form.cleaned_data["man_name_ac"]
 
             manufacturer = None
             if mpn:
-                if old_manufacturer and new_manufacturer_name == "":
-                    manufacturer = old_manufacturer
-                elif (
-                    new_manufacturer_name
-                    and new_manufacturer_name != ""
-                    and not old_manufacturer
-                ):
+                if new_manufacturer_name and new_manufacturer_name != "":
                     (
                         manufacturer,
                         manufacturer_created,
@@ -1452,10 +1442,10 @@ def create_part(request):
                     )
                     # messages.error(request, "یک تولید کننده جدید بسازید یا از لیست تولید کنندگان انتخاب کنید.")
                     # return TemplateResponse(request, "bom/create-part.html", locals())
-            elif old_manufacturer or new_manufacturer_name != "":
+            elif new_manufacturer_name != "":
                 messages.warning(
                     request,
-                    "هیچ تولید کننده‌ای انتخاب یا ایجاد نشده است. کد تولید کننده اختصاص داده نشد.",
+                    "کد تولید کننده اختصاص داده نشده است. هیچ تولید کننده‌ای انتخاب یا ایجاد نشد.",
                 )
             new_part = part_form.save(commit=False)
             new_part.organization = organization
@@ -1526,10 +1516,10 @@ def create_part(request):
         part_revision_form = PartRevisionForm(
             initial={"revision": 1, "organization": organization}
         )
-        manufacturer_form = ManufacturerForm(initial={"organization": organization})
+        manufacturer_form = ManufacturerForm(organization=organization)
         manufacturer_part_form = ManufacturerPartForm(organization=organization)
         seller_part_form = SellerPartForm(organization=organization)
-        seller_form = SellerForm(initial={"organization": organization})
+        seller_form = SellerForm(organization=organization)
 
     return TemplateResponse(request, "bom/create-part.html", locals())
 
