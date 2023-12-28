@@ -412,7 +412,7 @@ class SellerPartForm(forms.ModelForm):
         self.organization = kwargs.pop("organization", None)
         self.manufacturer_part = kwargs.pop("manufacturer_part", None)
         self.base_fields["unit_cost"] = forms.DecimalField(
-            required=True, decimal_places=0, max_digits=17, label="قیمت"
+            required=True, decimal_places=0, max_digits=17, label="قیمت یا هزینه سربار"
         )
         self.base_fields["nre_cost"] = forms.DecimalField(
             required=False, decimal_places=4, max_digits=17, label="NRE cost"

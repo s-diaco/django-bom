@@ -28,17 +28,17 @@
                                 href="{% url 'bom:settings' tab_anchor='indabom' %}">Settings</a> page, and create them in the IndaBOM tab.</p>
                     {% endif %}
                     <div class="row">
-                        {{ part_form|materializecss:'l3 m4 s12' }}
+                        {{ part_form|materializecss:'l2 m3 s12' }}
                         {% include 'bom/part-revision-display.html' with part_revision_form=part_revision_form %}
                     </div>
                     <h2>تولید کننده</h2>
-                    <p><i>The below fields are optional.</i></p>
-                    <p>Skip this form if your part is a custom part. Leave the manufacturer field unselected if creating a new manufacturer.</p>
+                    <!--<p><i>The below fields are optional.</i></p>-->
+                    <p>در صورت محصول بودن "کیمیا رازی" را به عنوان تولید کننده انتخاب کنید.</p>
                     <div class="row">
                         {{ manufacturer_form.non_field_errors }}
                         {{ manufacturer_part_form.non_field_errors }}
                         {{ manufacturer_part_form.manufacturer_part_number.errors }}
-                        {{ manufacturer_part_form.manufacturer_part_number|materializecss:'l3 m4 s12' }}
+                        {{ manufacturer_part_form.manufacturer_part_number|materializecss:'l2 m3 s12' }}
                         {{ manufacturer_form.man_name_ac.errors }}
                         {{ manufacturer_form.man_name_ac|materializecss:'l3 m4 s12' }}
                         <!--
@@ -50,25 +50,23 @@
                         -->
                     </div>
                     <h2>تأمین کننده</h2>
-                    <p><i>The below fields are optional.</i></p>
-                    <p>Skip this form if your part is a custom part. Leave the manufacturer field unselected if creating a new manufacturer.</p>
+                    <!--<p><i>The below fields are optional.</i></p>-->
+                    <p>در صورت محصول بودن "کیمیا رازی" را به عنوان تأمین کننده انتخاب کنید.</p>
                     <div class="row">
                         {{ seller_form.non_field_errors }}
                         {{ seller_part_form.non_field_errors }}
                         {{ seller_part_form.seller_part_number.errors }}
-                        {{ seller_part_form.seller_part_number|materializecss:'l3 m4 s12' }}
+                        {{ seller_part_form.seller_part_number|materializecss:'l2 m3 s12' }}
                         {{ seller_form.name_ac.errors }}
                         {{ seller_form.name_ac|materializecss:'l3 m4 s12' }}
-                    </div>
-                    <div class="row">
                         {{ seller_part_form.unit_cost.errors }}
-                        {{ seller_part_form.unit_cost|materializecss:'l3 m4 s12' }}
+                        {{ seller_part_form.unit_cost|materializecss:'l2 m3 s12' }}
                     </div>
                     <div class="row">
-                        <div class="col s6">
+                        <div class="col l3 m5 s6">
                             <a href="javascript:history.back()" class="waves-effect waves-light btn-flat grey-text lighten-1" style="margin-left: -16px;">انصراف</a>
                         </div>
-                        <div class="col s6 left-align">
+                        <div class="col l4 m5 s6 left-align">
                             <button class="waves-effect waves-light btn green lighten-1" type="submit" name="action">ذخیره</button>
                         </div>
                     </div>
