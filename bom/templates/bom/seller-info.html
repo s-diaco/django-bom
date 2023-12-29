@@ -24,7 +24,7 @@
                 <div style="margin-top: 1.5rem;">
                     <!-- Dropdown Trigger -->
                     <button class='dropdown-trigger hide-on-small-and-down waves-effect waves-light grey lighten-4 btn-flat'
-                            href='#' data-target='dropdown-revision'><i class="material-icons right">arrow_drop_down</i>مدیریت
+                            href='#' data-target='dropdown-revision'><i class="material-icons right">settings</i><i class="material-icons left">arrow_drop_down</i>مدیریت
                     </button>
                     <a class='dropdown-trigger hide-on-med-and-up' href='#' data-target='dropdown-revision'><i
                             class="material-icons green-text text-lighten-1">more_vert</i></a>
@@ -33,12 +33,12 @@
                         <li>
                             <a class="green-text text-lighten-1"
                                href="{% url 'bom:seller-edit' seller_id=seller.id %}">
-                                <i class="material-icons green-text text-lighten-1">edit</i>ویرایش</a>
+                                <i class="material-icons green-text text-lighten-1 right">edit</i>ویرایش</a>
                         </li>
                         <li class="divider" tabindex="-1"></li>
                         <li>
                             <a class="red-text text-lighten-1" onclick="deleteSeller()">
-                                <i class="material-icons red-text text-lighten-1">delete</i>Delete</a>
+                                <i class="material-icons red-text text-lighten-1 right">delete</i>حذف</a>
                         </li>
                     </ul>
                 </div>

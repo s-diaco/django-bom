@@ -272,6 +272,18 @@ blockquote{
     border-right: 5px solid #ee6e73;
 }
 
+ul#dropdown-revision.dropdown-content{
+    padding-inline-start: 0;
+}
+
+ul#dropdown-revision.dropdown-content li{
+    padding-left: 40px;
+}
+
+.text-lighten-1 {
+    text-align: right;
+}
+
 /* Printer friendly */
 .printer-show {
     display: none;
