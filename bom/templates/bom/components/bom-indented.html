@@ -9,13 +9,13 @@
 {% endblock %}
 
 <div class="row printer-hide" style="padding-top: 16px;">
-    <div class="col s6">
+    <div class="col s6 left left-align">
         <a class="waves-effect waves-green btn-flat btn-icon-round button-expand tooltipped" data-position="bottom" data-tooltip="Expand BOM" onclick="expandTree()"><i class="material-icons">unfold_more</i></a>
         <a class="waves-effect waves-green btn-flat btn-icon-round button-collapse tooltipped" data-position="bottom" data-tooltip="Collapse BOM" onclick="collapseTree()"><i class="material-icons">unfold_less</i></a>
         <a class="waves-effect waves-green btn-flat btn-icon-round button-reset-filter-indented tooltipped" data-position="bottom" data-tooltip="Reset filter" onclick="refreshTableSorterIndented()"><i
                 class="material-icons">refresh</i></a>
     </div>
-    <div class="col s6 left-align">
+    <div class="col s6 right-align">
         {% if manage and profile.role == 'A' %}
             <a class="btn waves-effect waves-green grey lighten-4 btn-flat red-text"
                href="{% url 'bom:part-remove-all-subparts' part_id=part.id part_revision_id=part_revision_id %}"
@@ -23,14 +23,14 @@
         {% else %}
             <!-- Dropdown Trigger -->
             <button class="dropdown-trigger-indented waves-effect waves-green grey lighten-4 btn-flat" data-target='manage-bom-{{ part.id }}-indented'>
-                <i class="material-icons right">arrow_drop_down</i>Manage
+                <i class="material-icons right">settings</i><i class="material-icons left">arrow_drop_down</i>مدیریت
             </button>
             <!-- Dropdown Structure -->
             <ul id='manage-bom-{{ part.id }}-indented' class='dropdown-content'>
                 {% if profile.role == 'A' %}
                     <li>{% if part_revision.configuration == 'W' %}
                         <a class="green-text text-lighten-1" href="{% url 'bom:part-manage-bom' part_id=part.id part_revision_id=part_revision.id %}">
-                            <i class="material-icons green-text text-lighten-1">edit</i>Edit BOM</a>
+                            <i class="material-icons green-text text-lighten-1 right">edit</i>ویرایش درخت محصول</a>
                     {% else %}
                         <a class="grey-text text-lighten-1" onclick="alert('Can\'t edit a released part!')"><i class="material-icons grey-text text-lighten-1">edit</i>Edit BOM</a>
                     {% endif %}
@@ -38,16 +38,16 @@
                 {% endif %}
                 {% if part_revision %}
                     <li><a class="green-text text-lighten-1" href="{% url 'bom:part-revision-export-bom' part_revision_id=part_revision.id %}">
-                        <i class="material-icons green-text text-lighten-1">cloud_download</i>Download CSV</a>
+                        <i class="material-icons green-text text-lighten-1 right">cloud_download</i>دانلود CSV</a>
                     </li>
                     <li><a class="green-text text-lighten-1" href="{% url 'bom:part-revision-export-bom-sourcing' part_revision_id=part_revision.id %}">
-                        <i class="material-icons green-text text-lighten-1">cloud_download</i>Download CSV (sourcing)</a>
+                        <i class="material-icons green-text text-lighten-1 right">cloud_download</i>دانلود CSV (منابع تأمین)</a>
                     </li>
                     <li><a class="green-text text-lighten-1" href="{% url 'bom:part-revision-export-bom-sourcing-detailed' part_revision_id=part_revision.id %}">
-                        <i class="material-icons green-text text-lighten-1">cloud_download</i>Download CSV (sourcing detailed)</a>
+                        <i class="material-icons green-text text-lighten-1 right">cloud_download</i>دانلود CSV (جزئیات تأمین)</a>
                     </li>
                 {% else %}
-                    <li><a class="green-text text-lighten-1 disabled" href=""><i class="material-icons green-text text-lighten-1">cloud_download</i>Download CSV</a></li>
+                    <li><a class="green-text text-lighten-1 disabled" href=""><i class="material-icons green-text text-lighten-1 right">cloud_download</i>دانلود CSV</a></li>
                 {% endif %}
             </ul>
         {% endif %}

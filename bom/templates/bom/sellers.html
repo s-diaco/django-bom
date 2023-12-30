@@ -21,9 +21,9 @@
                     <label for="autocomplete-input">جستجوی تأمین کننده:</label>
                 </div>
                 <div class="col s12 m2 text-center">
-                    <button type="submit" class="waves-effect waves-green btn green lighten-1 input-field" name="action">Submit</button>
+                    <button type="submit" class="waves-effect waves-green btn green lighten-1 input-field" name="action">جستجو</button>
                     {% if query %}
-                        <a class="waves-effect waves-green btn-flat input-field btn-icon-round" onclick="clearSearchExpression()"><i class="material-icons">clear</i></a>
+                        <a class="waves-effect waves-green btn-flat input-field btn-icon-round" onclick="clearSearchExpression()"><i class="material-icons">پاک کردن</i></a>
                     {% endif %}
                 </div>
             </div>
@@ -36,8 +36,8 @@
                             {% if profile.role == 'A' %}
                                 <th class="text-normal td-small action-checkbox-column" style="display: none;"><label><input type="checkbox" id="action-select-all"><span></span></label></th>
                             {% endif %}
-                            <th class="text-normal td-med">Seller</th>
-                            <th class="text-normal td-med">Seller Parts</th>
+                            <th class="text-normal td-med">تأمین کننده</th>
+                            <th class="text-normal td-med">تعداد متریال</th>
                         </tr>
                         </thead>
                         <tbody>

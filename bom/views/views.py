@@ -3,6 +3,7 @@ import logging
 import operator
 from functools import reduce
 from json import dumps
+from sys import prefix
 
 from django.conf import settings
 from django.contrib import messages
@@ -720,10 +721,10 @@ def manufacturers(request):
         return HttpResponseRedirect(reverse("bom:organization-create"))
 
     query = request.GET.get("q", "")
-    title = f"{organization.name}'s Manufacturers"
+    title = "تولید کنندگان"
 
     if query:
-        title += " - Search Results"
+        title += " - نتایج جستجو"
 
     manufacturers = (
         Manufacturer.objects.filter(organization=organization, name__icontains=query)
@@ -809,10 +810,10 @@ def sellers(request):
     organization = profile.organization
     name = "sellers"
     query = request.GET.get("q", "")
-    title = f"{organization.name}'s Sellers"
+    title = "تأمین کنندگان"
 
     if query:
-        title += " - Search Results"
+        title += " - نتایج جستجو"
 
     sellers = (
         Seller.objects.filter(organization=organization, name__icontains=query)
@@ -974,10 +975,11 @@ def part_info(request, part_id, part_revision_id=None):
 
     try:
         indented_bom = part_revision.indented(top_level_quantity=qty)
+        indented_bom.unit_cost.decimal_places_display = 0
     except (RuntimeError, RecursionError):
         messages.error(
             request,
-            "Error: infinite recursion in part relationship. Contact info@indabom.com to resolve.",
+            "Error: infinite recursion in part relationship.",
         )
         indented_bom = []
     except AttributeError as err:
@@ -989,7 +991,7 @@ def part_info(request, part_id, part_revision_id=None):
     except (RuntimeError, RecursionError):
         messages.error(
             request,
-            "Error: infinite recursion in part relationship. Contact info@indabom.com to resolve.",
+            "Error: infinite recursion in part relationship.",
         )
         flat_bom = []
     except AttributeError as err:
@@ -1055,7 +1057,7 @@ def part_export_bom(
     except (RuntimeError, RecursionError):
         messages.error(
             request,
-            "Error: infinite recursion in part relationship. Contact info@indabom.com to resolve.",
+            "Error: infinite recursion in part relationship.",
         )
         bom = []
     except AttributeError as err:
@@ -1148,7 +1150,7 @@ def part_export_bom(
 #     try:
 #         bom = part_revision.flat(top_level_quantity=qty)
 #     except (RuntimeError, RecursionError):
-#         messages.error(request, "Error: infinite recursion in part relationship. Contact info@indabom.com to resolve.")
+#         messages.error(request, "Error: infinite recursion in part relationship.")
 #         bom = []
 #     except AttributeError as err:
 #         messages.error(request, err)
@@ -1385,6 +1387,7 @@ def create_part(request):
             request.POST, organization=organization
         )
         part_revision_form = PartRevisionForm(request.POST)
+
         # Checking if part form is valid checks for number uniqueness
         if (
             part_form.is_valid()
@@ -1394,7 +1397,7 @@ def create_part(request):
             and seller_form.is_valid()
         ):
             spn = seller_part_form.cleaned_data["seller_part_number"]
-            new_seller_name = seller_form.cleaned_data["name_ac"]
+            new_seller_name = seller_form.cleaned_data["name"]
 
             seller = None
             if spn:
@@ -1418,7 +1421,7 @@ def create_part(request):
                     "کد تأمین کننده اختصاص داده نشده است. هیچ تأمین کننده‌ای انتخاب یا ایجاد نشد.",
                 )
             mpn = manufacturer_part_form.cleaned_data["manufacturer_part_number"]
-            new_manufacturer_name = manufacturer_form.cleaned_data["man_name_ac"]
+            new_manufacturer_name = manufacturer_form.cleaned_data["name"]
 
             manufacturer = None
             if mpn:
@@ -1510,16 +1513,16 @@ def create_part(request):
             )
     else:
         # Initialize organization in the form's model and in the form itself:
-        part_form = PartForm(
-            initial={"organization": organization}, organization=organization
-        )
+        part_form = PartForm(initial={"organization": organization})
         part_revision_form = PartRevisionForm(
             initial={"revision": 1, "organization": organization}
         )
-        manufacturer_form = ManufacturerForm(organization=organization)
+        manufacturer_form = ManufacturerForm(
+            organization=organization, prefix="manufacturer_"
+        )
         manufacturer_part_form = ManufacturerPartForm(organization=organization)
         seller_part_form = SellerPartForm(organization=organization)
-        seller_form = SellerForm(organization=organization)
+        seller_form = SellerForm(organization=organization, prefix="seller_")
 
     return TemplateResponse(request, "bom/create-part.html", locals())
 
@@ -1583,7 +1586,7 @@ def manage_bom(request, part_id, part_revision_id):
     except (RuntimeError, RecursionError):
         messages.error(
             request,
-            "Error: infinite recursion in part relationship. Contact info@indabom.com to resolve.",
+            "Error: infinite recursion in part relationship.",
         )
         indented_bom = []
     except AttributeError as err:

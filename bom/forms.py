@@ -325,8 +325,7 @@ class ManufacturerForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
         super().__init__(*args, **kwargs)
-        self.fields["name"].required = False
-        self.fields["man_name_ac"] = forms.CharField(
+        self.fields["name"] = forms.CharField(
             required=False,
             label="تولید کننده",
             widget=AutocompleteTextInput(
@@ -371,8 +370,7 @@ class SellerForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
         super().__init__(*args, **kwargs)
-        self.fields["name"].required = False
-        self.fields["name_ac"] = forms.CharField(
+        self.fields["name"] = forms.CharField(
             required=False,
             label="تأمین کننده",
             widget=AutocompleteTextInput(
@@ -394,28 +392,24 @@ class SellerPartForm(forms.ModelForm):
             "minimum_order_quantity",
             "minimum_pack_quantity",
             "lead_time_days",
-            "nre_cost",
+            "ncnr",
+            "link",
         ]
 
-    new_seller = forms.CharField(
-        max_length=128,
-        label="-یا- تعریف تأمین کننده جدید (در صورت موجود بودن خالی بگذارید)",
-        required=False,
-    )
     field_order = [
         "seller",
-        "new_seller",
         "unit_cost",
+        "nre_cost",
     ]
 
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
         self.manufacturer_part = kwargs.pop("manufacturer_part", None)
-        self.base_fields["unit_cost"] = forms.DecimalField(
-            required=True, decimal_places=0, max_digits=17, label="قیمت یا هزینه سربار"
+        self.base_fields["unit_cost"] = forms.IntegerField(
+            required=True, label="قیمت", initial=0
         )
-        self.base_fields["nre_cost"] = forms.DecimalField(
-            required=False, decimal_places=4, max_digits=17, label="NRE cost"
+        self.base_fields["nre_cost"] = forms.IntegerField(
+            required=False, label="هزینه سربار", initial=0
         )
 
         instance = kwargs.get("instance")

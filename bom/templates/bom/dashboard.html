@@ -133,20 +133,20 @@
                                             <li>
                                                 <a class="green-text text-lighten-1"
                                                    href="{% url 'bom:part-revision-edit' part_id=part_rev.part.id part_revision_id=part_rev.id %}">
-                                                    <i class="material-icons green-text text-lighten-1">edit</i>Edit Revision</a>
+                                                    <i class="material-icons green-text text-lighten-1 right">edit</i>Edit Revision</a>
                                             </li>
                                             <li>
                                                 <a class="green-text text-lighten-1" href="{% url 'bom:part-manage-bom' part_id=part_rev.part.id part_revision_id=part_rev.id %}">
-                                                    <i class="material-icons green-text text-lighten-1">format_list_numbered</i>Edit BOM</a>
+                                                    <i class="material-icons green-text text-lighten-1 right">format_list_numbered</i>Edit BOM</a>
                                             </li>
                                         {% endif %}
                                         <li>
                                             <a class="green-text text-lighten-1" href="{% url 'bom:part-info' part_id=part_rev.part.id %}?tab_anchor=used">
-                                                <i class="material-icons green-text text-lighten-1">my_location</i>Where Used</a>
+                                                <i class="material-icons green-text text-lighten-1 right">my_location</i>Where Used</a>
                                         </li>
                                         <li>
                                             <a class="green-text text-lighten-1" href="{% url 'bom:part-info' part_id=part_rev.part.id %}?tab_anchor=sourcing">
-                                                <i class="material-icons green-text text-lighten-1">local_airport</i>Sourcing</a>
+                                                <i class="material-icons green-text text-lighten-1 right">local_airport</i>Sourcing</a>
                                         </li>
                                         <li class="divider" tabindex="-1"></li>
                                         <li><a class="green-text text-lighten-1"

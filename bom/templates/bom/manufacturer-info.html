@@ -15,8 +15,8 @@
     <div class="container-app">
         <div class="row" style="margin-bottom: 5px;">
             <div class="col m8 hide-on-small-and-down">
-                <h3 class="light">Manufacturer / {{ manufacturer.name }}</h3>
-                <a href="{% url 'bom:manufacturers' %}">Back to manufacturers</a>
+                <h3 class="light">تولید کننده / {{ manufacturer.name }}</h3>
+                <a href="{% url 'bom:manufacturers' %}">برگشت به لیست تولید کنندگان</a>
             </div>
         </div>
         <div class="col {% if manufacturer %}m3 s1{% else %}m3 s12{% endif %}">

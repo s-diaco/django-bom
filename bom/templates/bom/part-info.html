@@ -67,17 +67,17 @@
                                     </li>
                                     <li>
                                         <a class="green-text text-lighten-1" href="{% url 'bom:part-revision-release' part_id=part.id part_revision_id=part_revision.id %}">
-                                            <i class="material-icons green-text text-lighten-1">check</i>Release</a>
+                                            <i class="material-icons green-text text-lighten-1 right">check</i>Release</a>
                                     </li>
                                 {% endif %}
                                 <li>
                                     <a class="green-text text-lighten-1" href="{% url 'bom:part-revision-new' part_id=part.id %}">
-                                        <i class="material-icons green-text text-lighten-1">add</i>New revision</a>
+                                        <i class="material-icons green-text text-lighten-1 right">add</i>New revision</a>
                                 </li>
                                 {% if part_revision.configuration == 'R' %}
                                     <li>
                                         <a class="green-text text-lighten-1 disabled" onclick="revertPartRevision()">
-                                            <i class="material-icons green-text text-lighten-1">undo</i>Revert to working</a>
+                                            <i class="material-icons green-text text-lighten-1 right">undo</i>Revert to working</a>
                                     </li>
                                 {% endif %}
                                 <li class="divider" tabindex="-1"></li>
@@ -149,7 +149,7 @@
                             </div>
                             <div class="row">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">وضعیت:</div>
-                                <div class="col s8 l10">{{ part_revision.get_configuration_display|default:'n/a' }}&nbsp;<i>{% if part_revision %}(as of <span id="specs-revision-timestamp"></span>
+                                <div class="col s8 l10">{{ part_revision.get_configuration_display|default:'نامشخص' }}&nbsp;<i>{% if part_revision %}(as of <span id="specs-revision-timestamp"></span>
                                     ){% endif %}
                                 </i></div>
                             </div>

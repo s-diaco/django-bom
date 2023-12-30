@@ -284,6 +284,14 @@ ul#dropdown-revision.dropdown-content li{
     text-align: right;
 }
 
+.dropdown-content{
+    padding-inline-start: 0px;
+}
+
+.tabs.tabs-fixed-width{
+    padding-inline-start: 0px;
+}
+
 /* Printer friendly */
 .printer-show {
     display: none;
