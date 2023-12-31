@@ -17,18 +17,15 @@
             <div class="row" style="margin-bottom: 5px;">
                 <div class="col m8 hide-on-small-and-down">
                     <h3 class="light">{{ part.full_part_number }}</h3>
-                    <!--
                     {% if part_revision %}
                         {% if profile.role == 'A' %}
-                            <p class="printer-hide">Select latest revision to edit, add a new revision, etc., or select an earlier revision for viewing only</p>
+                            <p class="printer-hide">محاسبات قیمت برای فریت‌ها با در نظر گرفتن پرت (LOI) و برای بقیه محصولات بدون کسر پرت انجام می‌شود.</p>
                         {% else %}
                             <p class="printer-hide">Select a revision for viewing</p>
                         {% endif %}
                     {% endif %}
-                    -->
                 </div>
             </div>
-            <!--
             <div class="row printer-hide">
                 {% if part_revision %}
                     <div class="col l2 m3 s5">
@@ -46,50 +43,46 @@
                 {% endif %}
                 <div class="col {% if part_revision %}m3 s1{% else %}m3 s12{% endif %}">
                     {% if profile.role == 'A' and part_revision %}
-                        <div style="margin-top: 1.5rem;">
-                        -->
+                        <div style="margin-top: 2rem;">
                             <!-- Dropdown Trigger -->
-                        <!--
                             <button class='dropdown-trigger hide-on-small-and-down waves-effect waves-light grey lighten-4 btn-flat'
-                                    href='#' data-target='dropdown-revision'><i class="material-icons right">arrow_drop_down</i>مدیریت
+                                    href='#' data-target='dropdown-revision'><i class="material-icons right">settings</i><i class="material-icons left">arrow_drop_down</i>مدیریت
                             </button>
                             <a class='dropdown-trigger hide-on-med-and-up' href='#' data-target='dropdown-revision'><i
                                     class="material-icons green-text text-lighten-1">more_vert</i></a>
-                        -->
                             <!-- Dropdown Structure -->
-                        <!--
                             <ul id='dropdown-revision' class='dropdown-content'>
                                 {% if part_revision.configuration == 'W' %}
                                     <li>
                                         <a class="green-text text-lighten-1"
-                                           href="{% url 'bom:part-revision-edit' part_id=part.id part_revision_id=part_revision.id %}">
+                                        href="{% url 'bom:part-revision-edit' part_id=part.id part_revision_id=part_revision.id %}">
                                             <i class="material-icons green-text text-lighten-1 right">edit</i>ویرایش</a>
                                     </li>
                                     <li>
                                         <a class="green-text text-lighten-1" href="{% url 'bom:part-revision-release' part_id=part.id part_revision_id=part_revision.id %}">
-                                            <i class="material-icons green-text text-lighten-1 right">check</i>Release</a>
+                                            <i class="material-icons green-text text-lighten-1 right">check</i>قفل کردن ویرایش</a>
                                     </li>
                                 {% endif %}
                                 <li>
                                     <a class="green-text text-lighten-1" href="{% url 'bom:part-revision-new' part_id=part.id %}">
-                                        <i class="material-icons green-text text-lighten-1 right">add</i>New revision</a>
+                                        <i class="material-icons green-text text-lighten-1 right">add</i>ورژن جدید</a>
                                 </li>
                                 {% if part_revision.configuration == 'R' %}
                                     <li>
                                         <a class="green-text text-lighten-1 disabled" onclick="revertPartRevision()">
-                                            <i class="material-icons green-text text-lighten-1 right">undo</i>Revert to working</a>
+                                            <i class="material-icons green-text text-lighten-1 right">undo</i>باز کردن امکان ویرایش</a>
                                     </li>
                                 {% endif %}
                                 <li class="divider" tabindex="-1"></li>
                                 <li>
                                     <a class="red-text text-lighten-1" onclick="deletePartRevision()">
-                                        <i class="material-icons red-text text-lighten-1">delete</i>Delete</a>
+                                        <i class="material-icons red-text text-lighten-1 right">delete</i>حذف</a>
                                 </li>
                             </ul>
                         </div>
                     {% elif profile.role == 'A' and not part_revision %}
                         <a class='waves-effect waves-light grey lighten-4 btn-flat'
-                           href='{% url 'bom:part-revision-new' part_id=part.id %}'><i class="material-icons left">add</i>Create Revision</a>
+                           href='{% url 'bom:part-revision-new' part_id=part.id %}'><i class="material-icons left">add</i>افزودن ورژن</a>
                     {% endif %}
                 </div>
                 {% if part_revision %}
@@ -108,7 +101,6 @@
                     </div>
                 {% endif %}
             </div>
-            -->
             <div class="row">
                 <div class="col s12 printer-hide">
                     <ul id="tabs" class="tabs tabs-fixed-width">
@@ -200,7 +192,7 @@
                             </div>
                             <div class="row">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">وزن BOM:</div>
-                                <div class="col s8 l10"><span id="mouser-est-cost-per-order"></span><span>{{ indented_bom.quantity|default_if_none:'-' }}</span></div>
+                                <div class="col s8 l10"><span id="bom_weight"></span><span>{{ indented_bom.subparts_total_qty|default_if_none:'-' }}</span></div>
                             </div>
                             <!--
                             <div class="row" id="mouser-stock-wrapper" style="display: none;">
@@ -215,9 +207,11 @@
                 <div id="bom" class="col s12">
                     <h4 class="printer-show">درخت محصول</h4>
                     <div id="bom-indented">
+                        {% comment %}
                         <div class="text-center" style="padding-top: 8px;">
                             <span>Indented</span> | <a onclick="showFlatBOM()" href="#">Flat</a>
                         </div>
+                        {% endcomment %}
                         {% include 'bom/components/bom-indented.html' with order_by=order_by bom_items=indented_bom.parts part=part part_revision=part_revision profile=profile %}
                     </div>
                     <div id="bom-flat" style="display: none;">

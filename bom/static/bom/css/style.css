@@ -292,6 +292,19 @@ ul#dropdown-revision.dropdown-content li{
     padding-inline-start: 0px;
 }
 
+.col.m2.push-l5.push-m4.s6.right-align.part-info-form{
+    float: left;
+    left: auto;
+}
+
+.dropdown-trigger.hide-on-small-and-down.waves-effect.waves-light.grey.lighten-4.btn-flat{
+    margin-top: 5px;
+}
+
+.part-info-form{
+    margin-top: 12px;
+}
+
 /* Printer friendly */
 .printer-show {
     display: none;

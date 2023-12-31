@@ -937,7 +937,7 @@ def part_info(request, part_id, part_revision_id=None):
     part = get_object_or_404(Part, pk=part_id)
 
     if part:
-        title = part.full_part_number
+        title = f"{part.description()} | {part.full_part_number()}"
 
     part_revision = None
     if part_revision_id is None:
@@ -2064,7 +2064,7 @@ def part_revision_new(request, part_id):
     organization = profile.organization
 
     part = get_object_or_404(Part, pk=part_id)
-    title = "New Revision for {}".format(part.full_part_number())
+    title = "ورژن جدید for {}".format(part.full_part_number())
     action = reverse("bom:part-revision-new", kwargs={"part_id": part_id})
 
     latest_revision = part.latest()

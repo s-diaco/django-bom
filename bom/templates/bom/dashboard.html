@@ -39,8 +39,8 @@
                         <label for="autocomplete-input">جستجوی متریال:</label>
                     {% endif %}
                 </div>
-                <div class="col s12 m2 text-center">
-                    <button type="submit" class="waves-effect waves-green btn green lighten-1 input-field" name="action">تأیید</button>
+                <div class="col s12 m2">
+                    <button type="submit" class="waves-effect waves-green btn green lighten-1 input-field" name="action">جستجو</button>
                     <a class="waves-effect waves-green btn-flat input-field btn-icon-round tooltipped" data-position="bottom" data-tooltip="Help with search" href="{% url 'bom:search-help' %}"><i
                             class="material-icons">help</i></a>
                     {% if part_class or query %}
@@ -57,17 +57,17 @@
                         <div class="row action-checkbox-hide" style="margin: 0; padding: 0; display: none;">
                             <div class="col s10 m6">
                                 <select name="part-action">
-                                    <option value="" disabled selected>Choose your action</option>
-                                    <option name="submit-part-delete">Delete</option>
+                                    <option value="" disabled selected>انتخاب عملیات</option>
+                                    <option name="submit-part-delete">حذف</option>
                                 </select>
                                 <label>Action</label>
                             </div>
                             <div class="col s12 m4" style="margin: 8px 0;">
-                                <button class="waves-effect waves-light btn green lighten-1" type="submit" name="actions">Go</button>
-                                <span><a class="btn-flat waves-green" href="#" onclick="disableActionCheckboxColumn()">Hide</a></span>
+                                <button class="waves-effect waves-light btn green lighten-1" type="submit" name="actions">انجام</button>
+                                <span><a class="btn-flat waves-green" href="#" onclick="disableActionCheckboxColumn()">پنهان کردن</a></span>
                             </div>
                         </div>
-                        <span><a class="btn-flat action-checkbox-show" href="#" onclick="enableActionCheckboxColumn()">عملیات</a></span>
+                        <span><a class="btn-flat action-checkbox-show" href="#" onclick="enableActionCheckboxColumn()">مدیریت</a></span>
                     {% endif %}
                 </div>
                 <div class="col s6 left-align">
@@ -133,29 +133,29 @@
                                             <li>
                                                 <a class="green-text text-lighten-1"
                                                    href="{% url 'bom:part-revision-edit' part_id=part_rev.part.id part_revision_id=part_rev.id %}">
-                                                    <i class="material-icons green-text text-lighten-1 right">edit</i>Edit Revision</a>
+                                                    <i class="material-icons green-text text-lighten-1 right">edit</i>ویرایش این ورژن</a>
                                             </li>
                                             <li>
                                                 <a class="green-text text-lighten-1" href="{% url 'bom:part-manage-bom' part_id=part_rev.part.id part_revision_id=part_rev.id %}">
-                                                    <i class="material-icons green-text text-lighten-1 right">format_list_numbered</i>Edit BOM</a>
+                                                    <i class="material-icons green-text text-lighten-1 right">format_list_numbered</i>ویرایش درخت محصول (BOM)</a>
                                             </li>
                                         {% endif %}
                                         <li>
                                             <a class="green-text text-lighten-1" href="{% url 'bom:part-info' part_id=part_rev.part.id %}?tab_anchor=used">
-                                                <i class="material-icons green-text text-lighten-1 right">my_location</i>Where Used</a>
+                                                <i class="material-icons green-text text-lighten-1 right">my_location</i>موارد استفاده</a>
                                         </li>
                                         <li>
                                             <a class="green-text text-lighten-1" href="{% url 'bom:part-info' part_id=part_rev.part.id %}?tab_anchor=sourcing">
-                                                <i class="material-icons green-text text-lighten-1 right">local_airport</i>Sourcing</a>
+                                                <i class="material-icons green-text text-lighten-1 right">local_airport</i>تولید کننده</a>
                                         </li>
                                         <li class="divider" tabindex="-1"></li>
                                         <li><a class="green-text text-lighten-1"
                                                href="{% url 'bom:part-revision-export-bom' part_revision_id=part_rev.id %}"><i
-                                                class="material-icons green-text text-lighten-1">cloud_download</i>Download CSV (indented)</a>
+                                                class="material-icons green-text text-lighten-1">cloud_download</i>دانلود CSV (indented)</a>
                                         </li>
                                         <li><a class="green-text text-lighten-1"
                                                href="{% url 'bom:part-revision-export-bom-flat' part_revision_id=part_rev.id %}"><i
-                                                class="material-icons green-text text-lighten-1">cloud_download</i>Download CSV (flat)</a>
+                                                class="material-icons green-text text-lighten-1">cloud_download</i>دانلود CSV (flat)</a>
                                         </li>
                                     </ul>
                                 </td>

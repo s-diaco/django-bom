@@ -845,6 +845,7 @@ class PartRevision(models.Model):
             )
 
             indent_level = indent_level + 1
+            subparts_tot_qty = 0
             if (
                 part_revision is None
                 or part_revision.assembly is None
@@ -856,6 +857,7 @@ class PartRevision(models.Model):
                 # TODO: Cache Me!
                 for sp in part_revision.assembly.subparts.all():
                     qty = sp.count
+                    subparts_tot_qty += qty
                     reference = sp.reference
                     indented_given_bom(
                         bom,
@@ -869,6 +871,7 @@ class PartRevision(models.Model):
                         reference=reference,
                         do_not_load=sp.do_not_load,
                     )
+                bom.subparts_total_qty = subparts_tot_qty
 
         bom = PartBom(part_revision=self, quantity=top_level_quantity)
         indented_given_bom(bom, self)
