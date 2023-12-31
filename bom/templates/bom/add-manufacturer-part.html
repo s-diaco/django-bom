@@ -25,24 +25,19 @@
                 {{ manufacturer_part_form.errors }}
                 <div class="row">
                     <div class="col">
-                        <p>Manufacturer <i>(skip if custom part)</i></p>
+                        <p>تولید کننده</p>
                     </div>
                 </div>
                 <div class="row">
                     <div class="fieldWrapper col m6 s12">
-                        <label for="{{ manufacturer_part_form.manufacturer.id_for_label }}">Select existing Manufacturer</label>
+                        <label for="{{ manufacturer_part_form.manufacturer.id_for_label }}">تولید کننده</label>
                         {{ manufacturer_part_form.manufacturer.errors }}
                         {{ manufacturer_part_form.manufacturer }}
                     </div>
-                    <div class="fieldWrapper col m6 s12">
-                        <label for="{{ manufacturer_form.name.id_for_label }}">-or- Create New Manufacturer</label>
-                        {{ manufacturer_form.name.errors }}
-                        {{ manufacturer_form.name }}
-                    </div>
                 </div>
                 <div class="row">
                     <div class="fieldWrapper col m6 s12">
-                        <label for="{{ manufacturer_part_form.manufacturer_part_number.id_for_label }}"><b>Manufacturer Part Number</b></label>
+                        <label for="{{ manufacturer_part_form.manufacturer_part_number.id_for_label }}"><b>کد تولید کننده</b></label>
                         {{ manufacturer_part_form.manufacturer_part_number.errors }}
                         {{ manufacturer_part_form.manufacturer_part_number }}
                     </div>

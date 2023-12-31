@@ -187,18 +187,20 @@
                                 <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ indented_bom.unit_cost|default_if_none:'-' }}</span></div>
                             </div>
                             <div class="row">
-                                <div class="col s4 l2 text-right" style="padding-left: 0px;">تعداد مواد تشکیل دهنده بدون قیمت:</div>
+                                <div class="col s4 l2 text-right" style="padding-left: 0px;">تعداد متریال بدون قیمت:</div>
                                 <div class="col s8 l10"><span id="mouser-missing-item-costs"></span><span>{{ indented_bom.missing_item_costs }}</span></div>
                             </div>
-                            <!--
                             <div class="row">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">Est. Total NRE:</div>
                                 <div class="col s8 l10"><span id="mouser-est-nre"></span><span>{{ indented_bom.nre|default_if_none:'-' }}</span></div>
                             </div>
-                            -->
                             <div class="row">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">قیمت برای سفارش {{ qty }}:</div>
                                 <div class="col s8 l10"><span id="mouser-est-cost-per-order"></span><span>{{ indented_bom.out_of_pocket_cost|default_if_none:'-' }}</span></div>
+                            </div>
+                            <div class="row">
+                                <div class="col s4 l2 text-right" style="padding-left: 0px;">وزن BOM:</div>
+                                <div class="col s8 l10"><span id="mouser-est-cost-per-order"></span><span>{{ indented_bom.quantity|default_if_none:'-' }}</span></div>
                             </div>
                             <!--
                             <div class="row" id="mouser-stock-wrapper" style="display: none;">
