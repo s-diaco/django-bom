@@ -845,7 +845,6 @@ class PartRevision(models.Model):
             )
 
             indent_level = indent_level + 1
-            subparts_tot_qty = 0
             if (
                 part_revision is None
                 or part_revision.assembly is None
@@ -857,7 +856,6 @@ class PartRevision(models.Model):
                 # TODO: Cache Me!
                 for sp in part_revision.assembly.subparts.all():
                     qty = sp.count
-                    subparts_tot_qty += qty
                     reference = sp.reference
                     indented_given_bom(
                         bom,
@@ -871,7 +869,88 @@ class PartRevision(models.Model):
                         reference=reference,
                         do_not_load=sp.do_not_load,
                     )
-                bom.subparts_total_qty = subparts_tot_qty
+
+        bom = PartBom(part_revision=self, quantity=top_level_quantity)
+        indented_given_bom(bom, self)
+
+        return bom
+
+    def indented_hierarchical(self, top_level_quantity=100):
+        """
+        This will generate an hierarchical BOM object witch will do
+        some cost calculations based on each materials weight
+        """
+
+        def indented_given_bom(
+            bom,
+            part_revision,
+            parent_id=None,
+            parent=None,
+            qty=1,
+            parent_qty=1,
+            indent_level=0,
+            subpart=None,
+            reference="",
+            do_not_load=False,
+        ):
+            bom_item_id = (parent_id or "") + (
+                str(part_revision.id) + "-dnl" if do_not_load else str(part_revision.id)
+            )
+            extended_quantity = parent_qty * qty
+            total_extended_quantity = top_level_quantity * extended_quantity
+
+            try:
+                seller_part = part_revision.part.optimal_seller(
+                    quantity=total_extended_quantity
+                )
+            except AttributeError:
+                seller_part = None
+
+            bom.append_hierarchical_item_and_update(
+                PartIndentedBomItem(
+                    bom_id=bom_item_id,
+                    part=part_revision.part,
+                    part_revision=part_revision,
+                    do_not_load=do_not_load,
+                    references=reference,
+                    quantity=qty,
+                    extended_quantity=extended_quantity,
+                    parent_quantity=parent_qty,  # Do we need this?
+                    indent_level=indent_level,
+                    parent_id=parent_id,
+                    subpart=subpart,
+                    seller_part=seller_part,
+                )
+            )
+
+            indent_level = indent_level + 1
+            if (
+                part_revision is None
+                or part_revision.assembly is None
+                or part_revision.assembly.subparts.count() == 0
+            ):
+                return
+            else:
+                parent_qty *= qty
+                # TODO: Cache Me!
+                for sp in part_revision.assembly.subparts.all():
+                    child_bom = PartBom(
+                        part_revision=part_revision, quantity=parent_qty
+                    )
+                    qty = sp.count
+                    reference = sp.reference
+                    indented_given_bom(
+                        child_bom,
+                        sp.part_revision,
+                        parent_id=bom_item_id,
+                        parent=part_revision,
+                        qty=qty,
+                        parent_qty=parent_qty,
+                        indent_level=indent_level,
+                        subpart=sp,
+                        reference=reference,
+                        do_not_load=sp.do_not_load,
+                    )
 
         bom = PartBom(part_revision=self, quantity=top_level_quantity)
         indented_given_bom(bom, self)

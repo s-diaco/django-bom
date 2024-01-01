@@ -37,6 +37,7 @@ class PartBom(AsDictModel):
             out_of_pocket_cost  # cost of buying self.quantity with MOQs
         )
         self.subparts_total_qty = 0
+        self.total_cost = self.unit_cost
 
     def cost(self):
         return self.unit_cost * self.quantity
@@ -45,6 +46,18 @@ class PartBom(AsDictModel):
         return self.out_of_pocket_cost + self.nre_cost
 
     def append_item_and_update(self, item):
+        if item.bom_id in self.parts:
+            self.parts[item.bom_id].extended_quantity += item.extended_quantity
+            ref = ", " + item.references
+            self.parts[item.bom_id].references += ref
+        else:
+            self.parts[item.bom_id] = item
+
+            item.total_extended_quantity = int(self.quantity) * item.extended_quantity
+            self.update_bom_for_part(item)
+
+    # TODO: delete
+    def append_hierarchical_item_and_update(self, item):
         if item.bom_id in self.parts:
             self.parts[item.bom_id].extended_quantity += item.extended_quantity
             ref = ", " + item.references
