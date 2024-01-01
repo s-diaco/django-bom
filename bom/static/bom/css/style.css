@@ -305,6 +305,14 @@ ul#dropdown-revision.dropdown-content li{
     margin-top: 12px;
 }
 
+i.right {
+    margin-left: 5px;
+}
+
+i.left {
+    margin-right: 5px;
+}
+
 /* Printer friendly */
 .printer-show {
     display: none;
