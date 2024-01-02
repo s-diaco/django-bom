@@ -87,27 +87,6 @@ class PartBom(AsDictModel):
                 if bom_part.seller_part.nre_cost is not None
                 else self.nre_cost
             )
-
-            def update_hierarchcal_bom(part):
-                # TODO: update self.childs_cost
-                # TODO: update self.childs_cost
-                indent_lvl = part.indent_level
-                if indent_lvl:
-                    if indent_lvl > 9:
-                        raise ValueError("Too many levels in Part BOM.")
-                    parent_part = self.parts[part.parent_id]
-                    parent_part.childs_quantity = sum(
-                        [
-                            child.quantity
-                            for child in self.parts
-                            if child.parent_id == part.parent_id
-                        ]
-                    )
-                    parent_part.childs_cost += part.order_cost
-                    parent_part.childs_quantity += part.quantity
-                    update_hierarchcal_bom(parent_part)
-
-            update_hierarchcal_bom(bom_part)
         else:
             self.missing_item_costs += 1
 
@@ -118,6 +97,32 @@ class PartBom(AsDictModel):
         self.nre_cost = Money(0, self._currency)
         for _, bom_part in self.parts.items():
             self.update_bom_for_part(bom_part)
+
+    def update_hierarchical(self):
+        """
+        Update self.childs_cost and self.childs_cost for childs
+        """
+
+        def update_hierarchcal_bom(part):
+            # TODO: update self.childs_cost
+            # TODO: update self.childs_cost
+            indent_lvl = part.indent_level
+            if indent_lvl:
+                if indent_lvl > 9:
+                    raise ValueError("Too many levels in Part BOM.")
+                parent_part = self.parts[part.parent_id]
+                parent_part.childs_quantity = sum(
+                    [
+                        child.quantity
+                        for child in self.parts.values()
+                        if child.parent_id == part.parent_id
+                    ]
+                )
+                parent_part.childs_cost += part.order_cost
+                # parent_part.childs_quantity += part.quantity
+                update_hierarchcal_bom(parent_part)
+
+        update_hierarchcal_bom(self)
 
     def mouser_parts(self):
         mouser_items = {}
