@@ -1,5 +1,6 @@
 import logging
 from collections import OrderedDict
+from textwrap import indent
 
 from djmoney.money import Money
 
@@ -36,8 +37,6 @@ class PartBom(AsDictModel):
         self.out_of_pocket_cost = (
             out_of_pocket_cost  # cost of buying self.quantity with MOQs
         )
-        self.subparts_total_qty = 0
-        self.total_cost = self.unit_cost
 
     def cost(self):
         return self.unit_cost * self.quantity
@@ -46,18 +45,6 @@ class PartBom(AsDictModel):
         return self.out_of_pocket_cost + self.nre_cost
 
     def append_item_and_update(self, item):
-        if item.bom_id in self.parts:
-            self.parts[item.bom_id].extended_quantity += item.extended_quantity
-            ref = ", " + item.references
-            self.parts[item.bom_id].references += ref
-        else:
-            self.parts[item.bom_id] = item
-
-            item.total_extended_quantity = int(self.quantity) * item.extended_quantity
-            self.update_bom_for_part(item)
-
-    # TODO: delete
-    def append_hierarchical_item_and_update(self, item):
         if item.bom_id in self.parts:
             self.parts[item.bom_id].extended_quantity += item.extended_quantity
             ref = ", " + item.references
@@ -100,6 +87,27 @@ class PartBom(AsDictModel):
                 if bom_part.seller_part.nre_cost is not None
                 else self.nre_cost
             )
+
+            def update_hierarchcal_bom(part):
+                # TODO: update self.childs_cost
+                # TODO: update self.childs_cost
+                indent_lvl = part.indent_level
+                if indent_lvl:
+                    if indent_lvl > 9:
+                        raise ValueError("Too many levels in Part BOM.")
+                    parent_part = self.parts[part.parent_id]
+                    parent_part.childs_quantity = sum(
+                        [
+                            child.quantity
+                            for child in self.parts
+                            if child.parent_id == part.parent_id
+                        ]
+                    )
+                    parent_part.childs_cost += part.order_cost
+                    parent_part.childs_quantity += part.quantity
+                    update_hierarchcal_bom(parent_part)
+
+            update_hierarchcal_bom(bom_part)
         else:
             self.missing_item_costs += 1
 
@@ -275,3 +283,10 @@ class PartIndentedBomItem(PartBomItem, AsDictModel):
 
     def __str__(self):
         return f"level: {self.indent_level}, {super().__str__()}"
+
+
+class PartHierarchicalBomItem(PartIndentedBomItem):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.childs_quantity = 0
+        self.childs_cost = Money(0, self._currency)

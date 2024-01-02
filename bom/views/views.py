@@ -974,10 +974,7 @@ def part_info(request, part_id, part_revision_id=None):
     cache.set(qty_cache_key, qty, timeout=None)
 
     try:
-        # TODO: delete
-        # indented_bom = part_revision.indented(top_level_quantity=qty)
-        indented_bom = part_revision.indented_hierarchical(top_level_quantity=qty)
-        indented_bom.unit_cost.decimal_places_display = 0
+        indented_bom = part_revision.indented(top_level_quantity=qty)
     except (RuntimeError, RecursionError):
         messages.error(
             request,
