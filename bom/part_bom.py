@@ -122,7 +122,11 @@ class PartBom(AsDictModel):
                 # parent_part.childs_quantity += part.quantity
                 update_hierarchcal_bom(parent_part)
 
-        update_hierarchcal_bom(self)
+        last_level = max([item.indent_level for item in self.parts.values()])
+        if last_level:
+            for item in self.parts.values():
+                if item.indent_level == last_level:
+                    update_hierarchcal_bom(parent_part)
 
     def mouser_parts(self):
         mouser_items = {}
