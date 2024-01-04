@@ -90,7 +90,9 @@ class PartBom(AsDictModel):
         else:
             self.missing_item_costs += 1
 
-    def update(self):
+        self.update_hierarchical(bom_part)
+
+    def update(self, bom_part):
         self.missing_item_costs = 0
         self.unit_cost = Money(0, self._currency)
         self.out_of_pocket_cost = Money(0, self._currency)
@@ -98,35 +100,51 @@ class PartBom(AsDictModel):
         for _, bom_part in self.parts.items():
             self.update_bom_for_part(bom_part)
 
-    def update_hierarchical(self):
+    def update_hierarchical(self, part):
         """
-        Update self.childs_cost and self.childs_cost for childs
+        Update self.childs_cost and self.childs_quantity for parents one by one
+        all the way up to the root node of the tree
+
+        :param part: The part wich parents will be updated
+        :type part: PartHierarchicalBomItem
         """
 
-        def update_hierarchcal_bom(part):
-            # TODO: update self.childs_cost
-            # TODO: update self.childs_cost
-            indent_lvl = part.indent_level
-            if indent_lvl:
-                if indent_lvl > 9:
-                    raise ValueError("Too many levels in Part BOM.")
-                parent_part = self.parts[part.parent_id]
-                parent_part.childs_quantity = sum(
-                    [
-                        child.quantity
-                        for child in self.parts.values()
-                        if child.parent_id == part.parent_id
-                    ]
-                )
-                parent_part.childs_cost += part.order_cost
-                # parent_part.childs_quantity += part.quantity
-                update_hierarchcal_bom(parent_part)
+        if part.indent_level:
 
-        last_level = max([item.indent_level for item in self.parts.values()])
-        if last_level:
-            for item in self.parts.values():
-                if item.indent_level == last_level:
-                    update_hierarchcal_bom(parent_part)
+            def update_parent(child_part, childs_old_cost_per_qty=0):
+                parent_part = self.parts[child_part.parent_id]
+                parents_old_cost_per_qty = 0
+                if parent_part.childs_quantity:
+                    parents_old_cost_per_qty = (
+                        parent_part.childs_cost / parent_part.childs_quantity
+                    )
+                # Revert last calculation to add the new one later
+                if child_part.childs_quantity:
+                    value_to_sub = childs_old_cost_per_qty
+                    if child_part.seller_part:
+                        value_to_sub += child_part.seller_part.unit_cost
+                    value_to_sub *= child_part.quantity
+                    parent_part.childs_cost -= value_to_sub
+                # If its the first time for child_item to be sent for parent update
+                else:
+                    parent_part.childs_quantity += child_part.quantity
+                cost_to_add = child_part.childs_cost
+                if child_part.seller_part:
+                    cost_to_add += child_part.seller_part.unit_cost
+                if child_part.childs_quantity:
+                    cost_to_add = (
+                        cost_to_add / child_part.childs_quantity * child_part.quantity
+                    )
+                else:
+                    cost_to_add *= child_part.quantity
+                parent_part.childs_cost += cost_to_add
+                if parent_part.indent_level:
+                    update_parent(
+                        child_part=parent_part,
+                        childs_old_cost_per_qty=parents_old_cost_per_qty,
+                    )
+
+            update_parent(child_part=part)
 
     def mouser_parts(self):
         mouser_items = {}
