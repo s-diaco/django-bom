@@ -1429,7 +1429,7 @@ class PartRevisionForm(forms.ModelForm):
 
 class PartRevisionNewForm(PartRevisionForm):
     copy_assembly = forms.BooleanField(
-        label="Copy assembly from latest revision", initial=True, required=False
+        label="کپی درخت محصول از آخرین ورژن", initial=True, required=False
     )
 
     def __init__(self, *args, **kwargs):
