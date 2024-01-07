@@ -94,7 +94,7 @@
                                     {{ part_info_form }}
                                 </div>
                                 <div class="col s3">
-                                    <button type="submit" class="waves-effect waves-green btn-flat input-field btn-icon-round"><i class="material-icons green-text">send</i></button>
+                                    <button type="submit" class="waves-effect waves-green btn-flat input-field btn-icon-round"><i class="material-icons green-text">ok</i></button>
                                 </div>
                             </div>
                         </form>
@@ -107,7 +107,7 @@
                         <li class="tab"><a id="specs-tab" href="#specs">مشخصات</a></li>
                         <li class="tab"><a id="bom-tab" href="#bom">درخت محصول</a></li>
                         <li class="tab"><a id="used-tab" href="#used">موارد استفاده</a></li>
-                        <li class="tab"><a id="sourcing-tab" href="#sourcing">تولید کننده</a></li>
+                        <li class="tab"><a id="sourcing-tab" href="#sourcing">تأمین کننده</a></li>
                     </ul>
                 </div>
 
@@ -140,7 +140,11 @@
                                 <div class="col s8 l10">{{ part_revision.tolerance }} %</div>
                             </div>
                             <div class="row">
-                                <div class="col s4 l2 text-right" style="padding-left: 0px;">وضعیت:</div>
+                                <div class="col s4 l2 text-right" style="padding-left: 0px;">مدل محاسبه قیمت:</div>
+                                <div class="col s8 l10">{% if part_revision.material == 'with_loi' %}محاسبه با احتساب پرت (LOI){% else %}محاسبه بدون احتساب پرت (LOI){% endif %}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col s4 l2 text-right" style="padding-left: 0px;">وضعیت ورژن:</div>
                                 <div class="col s8 l10">{{ part_revision.get_configuration_display|default:'نامشخص' }}&nbsp;<i>{% if part_revision %}(as of <span id="specs-revision-timestamp"></span>
                                     ){% endif %}
                                 </i></div>
@@ -180,11 +184,7 @@
                             </div>
                             <div class="row">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">تعداد متریال بدون قیمت:</div>
-                                <div class="col s8 l10"><span id="mouser-missing-item-costs"></span><span>{{ indented_bom.missing_item_costs }}</span></div>
-                            </div>
-                            <div class="row">
-                                <div class="col s4 l2 text-right" style="padding-left: 0px;">Est. Total NRE:</div>
-                                <div class="col s8 l10"><span id="mouser-est-nre"></span><span>{{ indented_bom.nre|default_if_none:'-' }}</span></div>
+                                <div class="col s8 l10"><span id="mouser-missing-item-costs"></span><span>{{ indented_bom.missing_item_costs }}{% if indented_bom.missing_item_costs > 0 %} <i class="material-icons red-text">cancel</i>{% else %} <i class="material-icons green-text">check_circle</i>{% endif %}</span></div>
                             </div>
                             <div class="row">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">قیمت برای سفارش {{ qty }}:</div>
@@ -192,7 +192,7 @@
                             </div>
                             <div class="row">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">وزن BOM:</div>
-                                <div class="col s8 l10"><span id="bom_weight"></span><span>{{ indented_bom.subparts_total_qty|default_if_none:'-' }}</span></div>
+                                <div class="col s8 l10"><span id="bom_weight"></span><span>{{ total_bom_weight|default_if_none:'-' }}</span></div>
                             </div>
                             <!--
                             <div class="row" id="mouser-stock-wrapper" style="display: none;">
@@ -254,7 +254,7 @@
                                             </tr>
                                         {% empty %}
                                             <tr>
-                                                <td colspan="99" style="text-align: left; height: 20vh;"><i>این متریال در هیج محصولی استفاده نمی‌شود. برای افزودن آن به یک محصول، به درخت محصول مورد نظر بروید و روی "مدیریت", و سپس "ویرایش" کلیک کنید.</i></td>
+                                                <td colspan="99" style="text-align: center; height: 20vh;"><i>این متریال در هیج محصولی استفاده نمی‌شود. برای افزودن آن به یک محصول، به درخت محصول مورد نظر بروید و روی "مدیریت", و سپس "ویرایش" کلیک کنید.</i></td>
                                             </tr>
                                         {% endfor %}
                                         </tbody>
@@ -305,12 +305,12 @@
 
                 <div id="sourcing" class="col s12">
                     <h4 class="printer-show">تولید و تأمین</h4>
-                    {% include 'bom/components/manufacturer-part-list.html' with manufacturer_parts=part.manufacturer_parts part_revision=part_revision profile=profile %}
-                    {% if profile.role == 'A' %}
+                    {% include 'bom/components/seller-part-list.html' with seller_parts=part.seller_parts part_revision=part_revision profile=profile %}
+                    {% if profile.role == 'A' and part.primary_manufacturer_part.id %}
                         <div class="row" style="padding-top: 16px;">
                             <div class="col s12 center-align">
                                 <a class="waves-effect waves-green grey lighten-4 btn-flat"
-                                   href="{% url 'bom:part-add-manufacturer-part' part_id=part.id %}" style="margin: 10px;">افزودن کد تولید کننده</a>
+                                   href="{% url 'bom:manufacturer-part-add-sellerpart' manufacturer_part_id=part.primary_manufacturer_part.id %}" style="margin: 10px;">افزودن کد تأمین کننده</a>
                             </div>
                         </div>
                     {% endif %}

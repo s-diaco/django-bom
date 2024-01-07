@@ -95,10 +95,6 @@
 
                             <th class="text-normal td-small">ورژن</th>
 
-                            <th class="text-normal td-med">تولید کننده</th>
-
-                            <th class="text-normal td-med">کد تولید کننده</th>
-
                             <th class="text-normal td-med">گزینه‌ها</th>
                         </tr>
                         </thead>
@@ -120,39 +116,27 @@
 
                                 <td class="text-normal td-small">{{ part_rev.revision }}</td>
 
-                                <td class="text-normal td-med">{{ part_rev.part.primary_manufacturer_part.manufacturer.name }}</td>
-
-                                <td class="text-normal td-med">{{ part_rev.part.primary_manufacturer_part.manufacturer_part_number }}</td>
-
                                 <td class="text-normal td-med">
+                                    {% if part_rev.configuration == 'W' %}
+                                        <a class="green-text text-lighten-1" title="ویرایش این ورژن"
+                                            href="{% url 'bom:part-revision-edit' part_id=part_rev.part.id part_revision_id=part_rev.id %}">
+                                            <i class="material-icons green-text text-lighten-1 right">edit</i></a>
+                                        <a class="green-text text-lighten-1" title="ویرایش درخت محصول (BOM)" href="{% url 'bom:part-manage-bom' part_id=part_rev.part.id part_revision_id=part_rev.id %}">
+                                            <i class="material-icons green-text text-lighten-1 right">format_list_numbered</i></a>
+                                        <a class="green-text text-lighten-1" title="" href="{% url 'bom:part-info' part_id=part_rev.part.id %}?tab_anchor=used">
+                                            <i class="material-icons green-text text-lighten-1 right" title="موارد استفاده">my_location</i></a>
+                                        <a class="green-text text-lighten-1" href="{% url 'bom:part-info' part_id=part_rev.part.id %}?tab_anchor=sourcing">
+                                            <i class="material-icons green-text text-lighten-1 right" title="تأمین کننده">local_airport</i></a>
+                                    {% endif %}
                                     <!-- Dropdown Trigger -->
                                     <a class="dropdown-trigger" href='#' data-target='part-menu-{{ part_rev.id }}'><i class="material-icons green-text">more_horiz</i></a>
                                     <!-- Dropdown Structure -->
                                     <ul id='part-menu-{{ part_rev.id }}' class='dropdown-content'>
-                                        {% if part_rev.configuration == 'W' %}
-                                            <li>
-                                                <a class="green-text text-lighten-1"
-                                                   href="{% url 'bom:part-revision-edit' part_id=part_rev.part.id part_revision_id=part_rev.id %}">
-                                                    <i class="material-icons green-text text-lighten-1 right">edit</i>ویرایش این ورژن</a>
-                                            </li>
-                                            <li>
-                                                <a class="green-text text-lighten-1" href="{% url 'bom:part-manage-bom' part_id=part_rev.part.id part_revision_id=part_rev.id %}">
-                                                    <i class="material-icons green-text text-lighten-1 right">format_list_numbered</i>ویرایش درخت محصول (BOM)</a>
-                                            </li>
-                                        {% endif %}
-                                        <li>
-                                            <a class="green-text text-lighten-1" href="{% url 'bom:part-info' part_id=part_rev.part.id %}?tab_anchor=used">
-                                                <i class="material-icons green-text text-lighten-1 right">my_location</i>موارد استفاده</a>
-                                        </li>
-                                        <li>
-                                            <a class="green-text text-lighten-1" href="{% url 'bom:part-info' part_id=part_rev.part.id %}?tab_anchor=sourcing">
-                                                <i class="material-icons green-text text-lighten-1 right">local_airport</i>تولید کننده</a>
-                                        </li>
-                                        <li class="divider" tabindex="-1"></li>
                                         <li><a class="green-text text-lighten-1"
                                                href="{% url 'bom:part-revision-export-bom' part_revision_id=part_rev.id %}"><i
                                                 class="material-icons green-text text-lighten-1">cloud_download</i>دانلود CSV (indented)</a>
                                         </li>
+                                        <li class="divider" tabindex="-1"></li>
                                         <li><a class="green-text text-lighten-1"
                                                href="{% url 'bom:part-revision-export-bom-flat' part_revision_id=part_rev.id %}"><i
                                                 class="material-icons green-text text-lighten-1">cloud_download</i>دانلود CSV (flat)</a>

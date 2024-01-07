@@ -27,27 +27,30 @@
                         is the part variation. To change the part number item length or to create part classes, go to the <a
                                 href="{% url 'bom:settings' tab_anchor='indabom' %}">Settings</a> page, and create them in the IndaBOM tab.</p>
                     {% endif %}
+                    <h2>متریال جدید</h2>
                     <div class="row">
                         {{ part_form|materializecss:'l2 m3 s12' }}
                         {% include 'bom/part-revision-display.html' with part_revision_form=part_revision_form %}
                     </div>
-                    <h2>تولید کننده</h2>
-                    <!--<p><i>The below fields are optional.</i></p>-->
-                    <p>در صورت محصول بودن "{{ organization }}" را به عنوان تولید کننده انتخاب کنید.</p>
-                    <div class="row">
-                        {{ manufacturer_form.non_field_errors }}
-                        {{ manufacturer_part_form.non_field_errors }}
-                        {{ manufacturer_part_form.manufacturer_part_number.errors }}
-                        {{ manufacturer_part_form.manufacturer_part_number|materializecss:'l2 m3 s12' }}
-                        {{ manufacturer_form.name.errors }}
-                        {{ manufacturer_form.name|materializecss:'l3 m4 s12' }}
-                        <!--
-                        <div class="input-field col m4 s12 materialize-checkbox-padding">
-                            <span>Select for parts that aren't found on Mouser.com</span>
-                        {{ manufacturer_part_form.mouser_disable.errors }}
-                        {{ manufacturer_part_form.mouser_disable|materializecss }}
+                    <div class="hidden">
+                        <h2>تولید کننده</h2>
+                        <!--<p><i>The below fields are optional.</i></p>-->
+                        <p>در صورت محصول بودن "{{ organization }}" را به عنوان تولید کننده انتخاب کنید.</p>
+                        <div class="row">
+                            {{ manufacturer_form.non_field_errors }}
+                            {{ manufacturer_part_form.non_field_errors }}
+                            {{ manufacturer_part_form.manufacturer_part_number.errors }}
+                            {{ manufacturer_part_form.manufacturer_part_number|materializecss:'l2 m3 s12' }}
+                            {{ manufacturer_form.name.errors }}
+                            {{ manufacturer_form.name|materializecss:'l3 m4 s12' }}
+                            <!--
+                            <div class="input-field col m4 s12 materialize-checkbox-padding">
+                                <span>Select for parts that aren't found on Mouser.com</span>
+                            {{ manufacturer_part_form.mouser_disable.errors }}
+                            {{ manufacturer_part_form.mouser_disable|materializecss }}
+                            </div>
+                            -->
                         </div>
-                        -->
                     </div>
                     <h2>تأمین کننده</h2>
                     <!--<p><i>The below fields are optional.</i></p>-->
@@ -58,7 +61,7 @@
                         {{ seller_part_form.seller_part_number.errors }}
                         {{ seller_part_form.seller_part_number|materializecss:'l2 m3 s12' }}
                         {{ seller_form.name.errors }}
-                        {{ seller_form.name|materializecss:'l3 m4 s12' }}
+                        {{ seller_form.name|materializecss:'l3 m3 s12' }}
                         {{ seller_part_form.unit_cost.errors }}
                         {{ seller_part_form.unit_cost|materializecss:'l2 m3 s12' }}
                         {{ seller_part_form.nre_cost.errors }}

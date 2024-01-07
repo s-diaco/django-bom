@@ -257,10 +257,6 @@ nav ul {
     margin: 0 5px;
 }
 
-.material-icons {
-    font-size: inherit;
-}
-
 ul.errorlist {
     padding-right: 0;
 }
@@ -305,10 +301,6 @@ ul#dropdown-revision.dropdown-content li{
     margin-top: 12px;
 }
 
-i.right {
-    margin-left: 5px;
-}
-
 i.left {
     margin-right: 5px;
 }
@@ -316,6 +308,10 @@ i.left {
 /* Printer friendly */
 .printer-show {
     display: none;
+}
+
+.dropdown-content li>a>i {
+    margin: 0 0 0 24px;
 }
 
 @media print {

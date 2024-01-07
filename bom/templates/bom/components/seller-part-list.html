@@ -40,13 +40,13 @@
                     <td>{{ seller_part.nre_cost }}</td>
                     <td>{{ seller_part.ncnr }}</td>
                     <td>{% if profile.role == 'A' %}
-                        <a href="{% url 'bom:sellerpart-edit' sellerpart_id=seller_part.id %}">edit</a> |
-                        <a href="{% url 'bom:sellerpart-delete' sellerpart_id=seller_part.id %}">delete</a>
+                        <a href="{% url 'bom:sellerpart-edit' sellerpart_id=seller_part.id %}">ویرایش</a> |
+                        <a href="{% url 'bom:sellerpart-delete' sellerpart_id=seller_part.id %}">حذف</a>
                     {% endif %}</td>
                 </tr>
             {% empty %}
                 <tr data-tt-id="0" data-tt-parent-id="{{ seller_part.id }}">
-                    <td colspan="99" style="text-align: center;"><i>No seller parts found.</i></td>
+                    <td colspan="99" style="text-align: center;"><i>هیچ تأمین کننده‌ای مشخص نشده است.</i></td>
                 </tr>
             {% endfor %}
         </tbody>

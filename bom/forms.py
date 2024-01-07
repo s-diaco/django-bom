@@ -312,7 +312,7 @@ class OrganizationNumberLenForm(forms.ModelForm):
 
 
 class PartInfoForm(forms.Form):
-    quantity = forms.IntegerField(label="Quantity for Est Cost", min_value=1)
+    quantity = forms.IntegerField(label="وزن مورد نظر برای محاسبه قیمت", min_value=1)
 
 
 class ManufacturerForm(forms.ModelForm):

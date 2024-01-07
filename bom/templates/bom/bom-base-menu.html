@@ -1,5 +1,4 @@
 {% if user.is_authenticated and user.bom_profile.organization %}
-    <li {% if name == "manufacturers" %}class="active"{% endif %}><a title="تولید کنندگان" href="{% url 'bom:manufacturers' %}">تولید کنندگان</a></li>
     <li {% if name == "sellers" %}class="active"{% endif %}><a title="تأمین کنندگان" href="{% url 'bom:sellers' %}">تأمین کنندگان</a></li>
     <li {% if name == "settings" %}class="active"{% endif %}><a title="تنظیمات" class="narrow-padding" href="{% url 'bom:settings' tab_anchor='user' %}"><i class="material-icons">settings</i></a></li>
 {% endif %}

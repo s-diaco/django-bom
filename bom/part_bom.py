@@ -122,7 +122,15 @@ class PartBom(AsDictModel):
                 if child_part.childs_quantity:
                     value_to_sub = childs_old_cost_per_qty
                     if child_part.seller_part:
-                        value_to_sub += child_part.seller_part.unit_cost
+                        if (
+                            parent_part.part_revision.material in ["with_loi"]
+                            and child_part.part_revision.tolerance.isnumeric()
+                        ):
+                            value_to_sub += child_part.seller_part.unit_cost / (
+                                1 - float(child_part.part_revision.tolerance) / 100
+                            )
+                        else:
+                            value_to_sub += child_part.seller_part.unit_cost
                     value_to_sub *= child_part.quantity
                     parent_part.childs_cost -= value_to_sub
                 # If its the first time for child_item to be sent for parent update
@@ -130,7 +138,15 @@ class PartBom(AsDictModel):
                     parent_part.childs_quantity += child_part.quantity
                 cost_to_add = child_part.childs_cost
                 if child_part.seller_part:
-                    cost_to_add += child_part.seller_part.unit_cost
+                    if (
+                        parent_part.part_revision.material in ["with_loi"]
+                        and child_part.part_revision.tolerance.isnumeric()
+                    ):
+                        cost_to_add += child_part.seller_part.unit_cost / (
+                            1 - float(child_part.part_revision.tolerance) / 100
+                        )
+                    else:
+                        cost_to_add += child_part.seller_part.unit_cost
                 if child_part.childs_quantity:
                     cost_to_add = (
                         cost_to_add / child_part.childs_quantity * child_part.quantity

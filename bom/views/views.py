@@ -957,7 +957,7 @@ def part_info(request, part_id, part_revision_id=None):
         return HttpResponseRedirect(reverse("bom:home"))
 
     qty_cache_key = str(part_id) + "_qty"
-    qty = cache.get(qty_cache_key, 100)
+    qty = cache.get(qty_cache_key, 1000)
     part_info_form = PartInfoForm(initial={"quantity": qty})
     upload_file_to_part_form = FileForm()
 
@@ -975,6 +975,7 @@ def part_info(request, part_id, part_revision_id=None):
 
     try:
         indented_bom = part_revision.indented(top_level_quantity=qty)
+        total_bom_weight = indented_bom.parts[str(part_id)].childs_quantity
     except (RuntimeError, RecursionError):
         messages.error(
             request,
