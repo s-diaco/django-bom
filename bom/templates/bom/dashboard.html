@@ -71,7 +71,7 @@
                     {% endif %}
                 </div>
                 <div class="col s6 left-align">
-                    <a class="button waves-effect waves-green btn-flat btn-icon-round tooltipped" data-position="bottom" data-tooltip="Download results as CSV." href="{% url 'bom:home' %}?download=1"><i
+                    <a class="button waves-effect waves-green btn-flat btn-icon-round tooltipped" data-position="bottom" data-tooltip="دانلود نتایج با فرمت CSV." href="{% url 'bom:home' %}?download=1"><i
                             class="material-icons">file_download</i></a>
                 </div>
             </div>
@@ -164,9 +164,9 @@
                 {% if part_revs.has_other_pages %}
                     <ul class="pagination center" style="padding-top: 24px;">
                         {% if part_revs.has_previous %}
-                            <li><a href="?page={{ part_revs.previous_page_number }}{% if part_class %}&part_class={{ part_class }}{% endif %}{% if query %}&q={{ query }}{% endif %}"><i class="material-icons">chevron_left</i></a></li>
+                            <li><a href="?page={{ part_revs.previous_page_number }}{% if part_class %}&part_class={{ part_class }}{% endif %}{% if query %}&q={{ query }}{% endif %}"><i class="material-icons">chevron_right</i></a></li>
                         {% else %}
-                            <li class="disabled"><i class="material-icons">chevron_left</i></li>
+                            <li class="disabled"><i class="material-icons">chevron_right</i></li>
                         {% endif %}
                         {% for i in part_revs.paginator.page_range %}
                             {% if part_revs.number == i %}
@@ -176,9 +176,9 @@
                             {% endif %}
                         {% endfor %}
                         {% if part_revs.has_next %}
-                            <li><a href="?page={{ part_revs.next_page_number }}{% if part_class %}&part_class={{ part_class }}{% endif %}{% if query %}&q={{ query }}{% endif %}"><i class="material-icons">chevron_right</i></a></li>
+                            <li><a href="?page={{ part_revs.next_page_number }}{% if part_class %}&part_class={{ part_class }}{% endif %}{% if query %}&q={{ query }}{% endif %}"><i class="material-icons">chevron_left</i></a></li>
                         {% else %}
-                            <li class="disabled"><i class="material-icons">chevron_right</i></li>
+                            <li class="disabled"><i class="material-icons">chevron_left</i></li>
                         {% endif %}
                     </ul>
                 {% endif %}

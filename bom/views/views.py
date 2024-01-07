@@ -117,26 +117,30 @@ def home(request):
         )
     elif request.method == "POST":
         if "actions" in request.POST and "part-action" in request.POST:
-            action = request.POST.get("part-action")
-            if action == "Delete":
-                part_ids = [
-                    part_id
-                    for part_id in request.POST.getlist("actions")
-                    if part_id.isdigit()
-                ]
-                for part_id in part_ids:
-                    try:
-                        part = Part.objects.get(id=part_id, organization=organization)
-                        part_number = part.full_part_number()
-                        part.delete()
-                        messages.success(request, f"Deleted part {part_number}")
-                    except Part.DoesNotExist:
-                        messages.error(
-                            request,
-                            "Can't delete part. No part found with given id {}.".format(
-                                part_id
-                            ),
-                        )
+            selected_task = request.POST.get("part-action")
+            if selected_task in ["حذف", "Delete"]:
+                action = "Delete"
+                if action == "Delete":
+                    part_ids = [
+                        part_id
+                        for part_id in request.POST.getlist("actions")
+                        if part_id.isdigit()
+                    ]
+                    for part_id in part_ids:
+                        try:
+                            part = Part.objects.get(
+                                id=part_id, organization=organization
+                            )
+                            part_number = part.full_part_number()
+                            part.delete()
+                            messages.success(request, f"Deleted part {part_number}")
+                        except Part.DoesNotExist:
+                            messages.error(
+                                request,
+                                "Can't delete part. No part found with given id {}.".format(
+                                    part_id
+                                ),
+                            )
 
     if part_class_selection_form.is_valid():
         part_class = part_class_selection_form.cleaned_data["part_class"]
