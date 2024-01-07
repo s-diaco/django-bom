@@ -21,6 +21,7 @@ from .constants import (
     DISTANCE_UNITS,
     FREQUENCY_UNITS,
     INTERFACE_TYPES,
+    MATERIAL_TYPES,
     MEMORY_UNITS,
     NUMBER_CLASS_CODE_LEN_DEFAULT,
     NUMBER_CLASS_CODE_LEN_MAX,
@@ -570,7 +571,13 @@ class PartRevision(models.Model):
     package = models.CharField(
         max_length=16, default=None, null=True, blank=True, choices=PACKAGE_TYPES
     )
-    material = models.CharField(max_length=32, default=None, null=True, blank=True)
+    material = models.CharField(
+        max_length=32,
+        default=None,
+        null=True,
+        blank=True,
+        choices=MATERIAL_TYPES,
+    )
     finish = models.CharField(max_length=32, default=None, null=True, blank=True)
     color = models.CharField(max_length=32, default=None, null=True, blank=True)
     length_units = models.CharField(

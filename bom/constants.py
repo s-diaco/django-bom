@@ -109,6 +109,14 @@ PACKAGE_TYPES = (
     ("Other", "Other"),
 )
 
+MATERIAL_TYPES = (
+    NO_CHOICE,
+    ("with_loi", "فریت (محاسبه قیمت با لحاظ کردن پرت)"),
+    ("no_loi", "محصول غیر فریت (محاسبه قیمت بدون در نظر گرفتن پرت)"),
+    ("no_bom", "مواد اولیه (قیمت مشخص)"),
+    ("Other", "سایر"),
+)
+
 DISTANCE_UNITS = (
     NO_CHOICE,
     ("mil", "mil"),
