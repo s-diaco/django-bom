@@ -12,36 +12,24 @@
         <thead>
         <tr>
             <th>Part</th>
-            <th>Manufacturer</th>
-            <th>کد تولید کننده</th>
-            <th>Seller</th>
-            <th>PN</th>
-            <th>MOQ</th>
-            <th>MPQ</th>
-            <th>Price</th>
-            <th>Lead Time (days)</th>
-            <th>NRE</th>
-            <th>NCNR</th>
-            <th colspan="2">Manage</th>
+            <th>تأمین کننده</th>
+            <th>کد تأمین کننده</th>
+            <th>قیمت</th>
+            <th colspan="2">گزینه‌ها</th>
         </tr>
         </thead>
         <tbody>
             {% for seller_part in seller_parts %}
                 <tr data-tt-id="0" data-tt-parent-id="{{ seller_part.id }}" {% if forloop.last %}id="sourcing-{{ seller_part.id }}-last"{% endif %}>
                     <td><a href="{% url 'bom:part-info' part_id=seller_part.manufacturer_part.part_id %}">{{ seller_part.manufacturer_part.part }}</a></td>
-                    <td>{% if seller_part.manufacturer_part.manufacturer %}<a href="{% url 'bom:manufacturer-info' manufacturer_id=seller_part.manufacturer_part.manufacturer_id %}">{% endif %}{{ seller_part.manufacturer_part.manufacturer }}{% if seller_part.manufacturer_part.manufacturer %}</a>{% endif %}</td>
-                    <td>{{ seller_part.manufacturer_part.manufacturer_part_number }}</td>
                     <td>{{ seller_part.seller.name }}</td>
                     <td>{{ seller_part.seller_part_number }}</td>
-                    <td>{{ seller_part.minimum_order_quantity }}</td>
-                    <td>{{ seller_part.minimum_pack_quantity }}</td>
                     <td>{{ seller_part.unit_cost }}</td>
-                    <td>{{ seller_part.lead_time_days }}</td>
-                    <td>{{ seller_part.nre_cost }}</td>
-                    <td>{{ seller_part.ncnr }}</td>
                     <td>{% if profile.role == 'A' %}
-                        <a href="{% url 'bom:sellerpart-edit' sellerpart_id=seller_part.id %}">ویرایش</a> |
-                        <a href="{% url 'bom:sellerpart-delete' sellerpart_id=seller_part.id %}">حذف</a>
+                        <a href="{% url 'bom:sellerpart-edit' sellerpart_id=seller_part.id %}"><i
+                            class="material-icons green-text text-lighten-1 right">edit</i></a>
+                        <a href="{% url 'bom:sellerpart-delete' sellerpart_id=seller_part.id %}"><i
+                            class="material-icons red-text text-lighten-1 right">delete_forever</i></a>
                     {% endif %}</td>
                 </tr>
             {% empty %}

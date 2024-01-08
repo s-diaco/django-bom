@@ -89,8 +89,8 @@
 </div>
 
 <!-- Table Sorter -->
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.2/js/jquery.tablesorter.min.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.2/js/jquery.tablesorter.widgets.min.js"></script>
+<script type="text/javascript" src="{% static 'bom/js/jquery.tablesorter.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'bom/js/jquery.tablesorter.widgets.min.js' %}"></script>
 <script>
     $(function () {
         $("#flat-bom").on('update', initTableSorterFlat);

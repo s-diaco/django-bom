@@ -35,7 +35,7 @@
                                     <option {% if part_revision.id == r.id %}selected{% endif %}
                                             value="{% if r == part.latest %}{% url 'bom:part-info' part_id=part.id %}
                                                     {% else %}{% url 'bom:part-info-history' part_id=part.id part_revision_id=r.id %}
-                                                    {% endif %}">Rev {{ r.revision }}{% if r.configuration == 'W' %} (working){% endif %}</option>
+                                                    {% endif %}">ورژن {{ r.revision }}{% if r.configuration == 'W' %} (فعال){% endif %}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -60,7 +60,7 @@
                                     </li>
                                     <li>
                                         <a class="green-text text-lighten-1" href="{% url 'bom:part-revision-release' part_id=part.id part_revision_id=part_revision.id %}">
-                                            <i class="material-icons green-text text-lighten-1 right">check</i>قفل کردن ویرایش</a>
+                                            <i class="material-icons green-text text-lighten-1 right">check</i>غیر فعال کردن ورژن</a>
                                     </li>
                                 {% endif %}
                                 <li>
@@ -94,7 +94,7 @@
                                     {{ part_info_form }}
                                 </div>
                                 <div class="col s3">
-                                    <button type="submit" class="waves-effect waves-green btn-flat input-field btn-icon-round"><i class="material-icons green-text">ok</i></button>
+                                    <button type="submit" class="waves-effect waves-green btn-flat input-field btn-icon-round"><i class="material-icons">Price_Change</i></button>
                                 </div>
                             </div>
                         </form>
@@ -145,9 +145,9 @@
                             </div>
                             <div class="row">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">وضعیت ورژن:</div>
-                                <div class="col s8 l10">{{ part_revision.get_configuration_display|default:'نامشخص' }}&nbsp;<i>{% if part_revision %}(as of <span id="specs-revision-timestamp"></span>
-                                    ){% endif %}
-                                </i></div>
+                                <div class="col s8 l10">{{ part_revision.get_configuration_display|default:'نامشخص' }}&nbsp;{% if part_revision %}(گزارش شده در <span id="specs-revision-timestamp"></span>)
+                                    {% endif %}
+                                </div>
                             </div>
                             <!--
                             <div class="row">
@@ -405,7 +405,7 @@
     <script>
         $(document).ready(function () {
             let revision_configuration_date = new Date("{{ part_revision.timestamp.isoformat }}")
-            $("#specs-revision-timestamp").text(revision_configuration_date.toLocaleString());
+            $("#specs-revision-timestamp").text(revision_configuration_date.toLocaleString("fa"));
         })
     </script>
 

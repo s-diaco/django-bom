@@ -1256,7 +1256,7 @@ def upload_parts(request):
     user = request.user
     profile = user.bom_profile()
     organization = profile.organization
-    title = "Upload Parts"
+    title = "آپلود فایل متریال"
 
     if request.method == "POST" and request.FILES["file"] is not None:
         form = PartCSVForm(request.POST, request.FILES, organization=organization)
@@ -2024,7 +2024,7 @@ def part_revision_release(request, part_id, part_revision_id):
         "bom:part-revision-release",
         kwargs={"part_id": part.id, "part_revision_id": part_revision.id},
     )
-    title = "Promote {} Rev {} {} from <b>Working</b> to <b>Released</b>?".format(
+    title = "غیرفعال کردن {} ورژن {} {} از <b>فعال</b> به <b>غیر فعال</b>?".format(
         part.full_part_number(), part_revision.revision, part_revision.synopsis()
     )
 

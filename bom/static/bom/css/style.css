@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Roboto');
+@import url(/static/bom/css/roboto.css);
 
 html {
     line-height: normal;
@@ -303,6 +303,10 @@ ul#dropdown-revision.dropdown-content li{
 
 i.left {
     margin-right: 5px;
+}
+
+.material-icons {
+    font-size: 24px !important;
 }
 
 /* Printer friendly */

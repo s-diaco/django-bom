@@ -119,18 +119,17 @@
                 {% if subpart.indent_level == 1 and subpart.subpart is not None and manage %}
                     <td>
                         <a class='dropdown-trigger' href='#'
-                           data-target='dropdown{{ subpart.subpart.id }}'><i class="material-icons left green-text">more_horiz</i></a>
+                           data-target='dropdown{{ subpart.subpart.id }}'><i class="material-icons green-text">more_horiz</i></a>
                         <!-- Dropdown Structure -->
                         <ul id='dropdown{{ subpart.subpart.id }}' class='dropdown-content'>
                             <li><a class="green-text text-lighten-1"
                                    href="{% url 'bom:part-edit-subpart' part_id=part.id part_revision_id=part_revision_id subpart_id=subpart.subpart.id %}"><i
-                                    class="material-icons green-text text-lighten-1">edit</i>Edit or Change
-                                Rev</a>
+                                    class="material-icons green-text text-lighten-1 right">edit</i>ویرایش با تغییر ورژن</a>
                             <li class="divider" tabindex="-1"></li>
                             <li><a class="red-text text-lighten-1"
                                    href="{% url 'bom:part-remove-subpart' part_id=part.id part_revision_id=part_revision.id subpart_id=subpart.subpart.id %}"
                                    onclick="return confirm('Are you sure you want to remove {{ subpart.part.full_part_number }}?')"><i
-                                    class="material-icons red-text text-lighten-1">delete_forever</i>Remove</a>
+                                    class="material-icons red-text text-lighten-1 right">delete_forever</i>حذف</a>
                             </li>
                         </ul>
                     </td>
@@ -180,8 +179,8 @@
 </script>
 
 <!-- Table Sorter -->
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.2/js/jquery.tablesorter.min.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.2/js/jquery.tablesorter.widgets.min.js"></script>
+<script type="text/javascript" src="{% static 'bom/js/jquery.tablesorter.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'bom/js/jquery.tablesorter.widgets.min.js' %}"></script>
 <script>
     $(function () {
         $("#indented-bom").on('update', initTableSorterIndented);
