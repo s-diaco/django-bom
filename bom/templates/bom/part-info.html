@@ -171,14 +171,6 @@
                         </li>
                         <li class="collection-item">
                             <div class="row">
-                                <div class="col s4 l2 text-right" style="padding-left: 0px;">کد تولید کننده:</div>
-                                <div class="col s8 l10">{% if part.primary_manufacturer_part.link %}<a href="{{ part.primary_manufacturer_part.link }}" target="_blank">{% endif %}{{ part.seller_parts }} - {{ part.primary_manufacturer_part.manufacturer_part_number }}{% if part.primary_manufacturer_part.link %}&nbsp;<i class="material-icons" style="font-size: 14px;">open_in_new</i></a>{% endif %}
-                                    {% if profile.role == 'A' %}
-                                        <a href="{% url 'bom:part-edit' part_id=part.id %}"><i class="material-icons">edit</i></a>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="row">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">قیمت:</div>
                                 <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ indented_bom.unit_cost|default_if_none:'-' }}</span></div>
                             </div>
