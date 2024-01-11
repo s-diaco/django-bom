@@ -73,6 +73,7 @@ from .models import (
 )
 from .utils import (
     check_references_for_duplicates,
+    convert_arabic_to_english,
     get_from_dict,
     listify_string,
     prep_for_sorting_nicely,
@@ -804,7 +805,7 @@ class PartCSVForm(forms.Form):
                             )
                             self.add_error(
                                 None,
-                                "Part number {0} in row {1} already exists. Uploading of this part skipped.".format(
+                                "متریال {0} در سطر {1} قبلاً تعریف شده است. این متریال آپلود نشد.".format(
                                     part_number, row_count
                                 ),
                             )
@@ -1795,6 +1796,7 @@ class BOMCSVForm(forms.Form):
                     csv_headers.get_val_from_row(part_dict, "revision") or 1
                 )
                 part_dict["count"] = csv_headers.get_val_from_row(part_dict, "count")
+                part_dict["count"] = convert_arabic_to_english(part_dict["count"])
                 part_dict["number_class"] = None
                 part_dict["number_variation"] = None
 
@@ -2023,11 +2025,11 @@ class BOMCSVForm(forms.Form):
                         assembly=parent_part_revision.assembly, subpart=subpart
                     )
 
-                info_msg = f"Row {row_count}: Added subpart {part_number}"
+                info_msg = f"سطر {row_count}: زیر مجموعه {part_number}"
                 if reference:
-                    info_msg += f" with reference designators {reference}"
+                    info_msg += f" با مشخصات {reference}"
                 if parent_part_revision:
-                    info_msg += f" to parent part {parent_part_revision.part.full_part_number()}"
+                    info_msg += f" به درخت {parent_part_revision.part.full_part_number()} افزوده شد"
                 self.successes.append(info_msg + ".")
 
                 # Now validate & save optional fields - Manufacturer, ManufacturerPart, SellerParts
