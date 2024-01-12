@@ -15,56 +15,52 @@
 
 {% block content %}
     <div class="part-info container-app">
-        <a href="{% url 'bom:part-info' part_id=part.id %}">Return to {{ part.full_part_number }}</a>
+        <a href="{% url 'bom:part-info' part_id=part.id %}">بازگشت به {{ part.full_part_number }}</a>
         <!-- <h5>{{ part.description }}</h5> -->
         <div id="bom" class="col s12">
-            <br><h5>Modify Subparts</h5>
+            <br><h5>ویرایش زیرشاخه‌ها</h5>
 
             {% include 'bom/components/bom-indented.html' with order_by='indented' manage=1 bom_items=indented_bom.parts part=part part_revision=part_revision profile=profile %}
 
-            <br><h5>Add Subpart</h5>
+            <br><h5>افزودن زیرشاخه</h5>
             <div class="row">
                 <form action="{% url 'bom:part-add-subpart' part_id=part.id part_revision_id=part_revision.id %}"
                       method="post" class="col s12">
                     {% csrf_token %}
                     {{ add_subpart_form.subpart_part_number|materializecss:'m4 s12' }}
                     {{ add_subpart_form.count|materializecss:'m1 s12' }}
-                    {{ add_subpart_form.do_not_load|materializecss:'m2 s12 input-field materialize-checkbox-padding' }}
-                    {{ add_subpart_form.reference|materializecss:'m4 s12' }}
-                    <div class="fieldWrapper">
-                        <button class="waves-effect waves-light btn green lighten-1" type="submit" name="action">add
+                    {{ add_subpart_form.do_not_load|materializecss:'hidden' }}
+                    {{ add_subpart_form.reference|materializecss:'hidden' }}
+                    <div class="fieldWrapper input-field">
+                        <button class="waves-effect waves-light btn green lighten-1" type="submit" name="action">افزودن
                         </button>
                     </div>
                 </form>
             </div>
-            <br><h5>Batch Add Subparts</h5>
-            <p>To add batch subparts, upload a csv that contains at least two columns with the headers:
-                <b>part_number</b> <i>or</i> <b>manufacturer_part_number</b> and <b>quantity</b>; the 'part_number' or
-                'manufacturer_part_number' column must contain part numbers that have already been created in this
-                system.</p>
-            <p>Additional fields include 'reference' or 'designator' to add a reference field to the subpart;
-               'do_not_load' if you don't want the part loaded into the assembly that contains it; 'dnp' if
-                you don't want to upload the part to IndaBOM.</p>
-            <form action="{% url 'bom:part-upload-bom' part_id=part.id %}" method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div class="row">
-                    <div class="col s9 file-field input-field">
+            <br><h5>افزدون کل زیرشاخه‌ها</h5>
+            <p>برای افزدون زیرشاخه‌ها یک فایل csv آپلود کنید که حداقل دو ستون داشته باشد:
+                <b>part_number</b> <i>یا</i> <b>manufacturer_part_number</b> و <b>quantity</b>; ستون‌های 'part_number' یا
+                'manufacturer_part_number' باید کدهایی باشند که قبلاً در این سیستم تعریف شده‌اند.</p>
+            <p>ستون‌های اضافه: 'reference' یا 'designator' برای افزودن فیلد رفرنس به زیرشاخه ;
+               'do_not_load' اگر نمی‌خواهید متریال به در درخت لود شود.</p>
+            <div class="row">
+                <form action="{% url 'bom:part-upload-bom' part_id=part.id %}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="col m6 s9 file-field input-field">
                         <div class="green lighten-1 btn">
-                            <span>File</span>
+                            <span>فایل</span>
                             {{ upload_subparts_csv_form.file }}
                         </div>
                         <div class="file-path-wrapper">
-                            <input class="file-path validate" type="text" placeholder="Upload a file.">
+                            <input class="file-path validate" type="text" placeholder="آپلود فایل">
                             {{ upload_subparts_csv_form.file.errors }}
                         </div>
                     </div>
-                    <div class="col s1 input-field">
-                        <input class="green lighten-1 btn" type="submit" value="Upload"/>
+                    <div class="col m1 s3 input-field">
+                        <input class="green lighten-1 btn" type="submit" value="آپلود"/>
                     </div>
-                </div>
-            </form>
-            <div class="row">
-                <div class="col s6">
+                </form>
+                <div class="col m2 s6 input-field">
                     <a href="{% url 'bom:part-info' part_id=part.id %}" class="waves-effect waves-light btn-flat grey-text lighten-1" style="margin-left: -16px;">انصراف</a>
                 </div>
             </div>

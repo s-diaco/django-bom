@@ -19,7 +19,7 @@
         {% if manage and profile.role == 'A' %}
             <a class="btn waves-effect waves-green grey lighten-4 btn-flat red-text"
                href="{% url 'bom:part-remove-all-subparts' part_id=part.id part_revision_id=part_revision_id %}"
-               onclick="return confirm('Are you sure you want to remove ALL subparts from {{ part.full_part_number }}?')">Remove All Subparts</a>
+               onclick="return confirm('همه زیرشاخه‌های درخت محصول  {{ part.full_part_number }} خذف شوند?')">حذف همه زیرشاخه‌ها</a>
         {% else %}
             <!-- Dropdown Trigger -->
             <button class="dropdown-trigger-indented waves-effect waves-green grey lighten-4 btn-flat" data-target='manage-bom-{{ part.id }}-indented'>
@@ -32,7 +32,7 @@
                         <a class="green-text text-lighten-1" href="{% url 'bom:part-manage-bom' part_id=part.id part_revision_id=part_revision.id %}">
                             <i class="material-icons green-text text-lighten-1 right">edit</i>ویرایش درخت محصول</a>
                     {% else %}
-                        <a class="grey-text text-lighten-1" onclick="alert('Can\'t edit a released part!')"><i class="material-icons grey-text text-lighten-1">edit</i>Edit BOM</a>
+                        <a class="grey-text text-lighten-1" onclick="alert('Can\'t edit a released part!')"><i class="material-icons grey-text text-lighten-1">edit</i>ویرایش درخت محصول (BOM)</a>
                     {% endif %}
                     </li>
                 {% endif %}
@@ -139,7 +139,7 @@
             </tr>
         {% empty %}
             <tr>
-                <td colspan="99" style="text-align: center; height: 20vh;"><i>This part does not contain any other parts.</i></td>
+                <td colspan="99" style="text-align: center; height: 20vh;"><i>این متریال شامل هیچ متریال دیگری نیست.</i></td>
             </tr>
         {% endfor %}
     </table>

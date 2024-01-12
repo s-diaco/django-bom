@@ -1567,7 +1567,7 @@ def manage_bom(request, part_id, part_revision_id):
 
     part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
 
-    title = "Manage BOM for " + part.full_part_number()
+    title = "ویرایش درخت محصول (BOM) متریال " + part.full_part_number()
 
     if part.organization != organization:
         messages.error(request, "Cant access a part that is not yours!")
@@ -1669,10 +1669,10 @@ def add_subpart(request, part_id, part_revision_id):
                     assembly=part_revision.assembly, subpart=new_part
                 )
 
-            info_msg = "Added subpart "
+            info_msg = "زیرشاخه "
             if reference:
                 info_msg += " " + reference
-            info_msg += " {} to part {}".format(subpart_part, part_revision)
+            info_msg += " {} به متریال {} اضافه شد.".format(subpart_part, part_revision)
             messages.info(request, info_msg)
 
         else:

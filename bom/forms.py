@@ -1512,7 +1512,7 @@ class SubpartForm(forms.ModelForm):
 
 class AddSubpartForm(forms.Form):
     subpart_part_number = forms.CharField(required=True, label="Subpart part number")
-    count = forms.FloatField(required=False, label="Quantity")
+    count = forms.FloatField(required=False, label="وزن")
     reference = forms.CharField(required=False, label="Reference")
     do_not_load = forms.BooleanField(required=False, label="do_not_load")
 
@@ -1528,9 +1528,9 @@ class AddSubpartForm(forms.Form):
         super(AddSubpartForm, self).__init__(*args, **kwargs)
         self.fields["subpart_part_number"] = forms.CharField(
             required=True,
-            label="Subpart part number",
+            label="کد زیرشاخه",
             widget=AutocompleteTextInput(
-                attrs={"placeholder": "Select a part."},
+                attrs={"placeholder": "انتخاب"},
                 queryset=Part.objects.filter(organization=self.organization).exclude(
                     id=self.part_id
                 ),
@@ -1743,6 +1743,9 @@ class BOMCSVForm(forms.Form):
 
             row_count = 1  # Skip over header row
             for row in reader:
+                # check if row is an empty line. KR has empty rows in csv files.
+                if not row:
+                    continue
                 row_count += 1
                 part_dict = {}
 
