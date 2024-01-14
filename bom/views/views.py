@@ -941,7 +941,9 @@ def part_info(request, part_id, part_revision_id=None):
     part = get_object_or_404(Part, pk=part_id)
 
     if part:
-        title = f"{part.description()} | {part.full_part_number()}"
+        title = (
+            f'{part.description()} | <span dir="ltr">{part.full_part_number()}</span>'
+        )
 
     part_revision = None
     if part_revision_id is None:

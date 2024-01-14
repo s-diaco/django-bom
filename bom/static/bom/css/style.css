@@ -161,7 +161,7 @@ table.treetable tr.expanded span.indenter a {
 
 /* Override Materialize container */
 .container-app {
-    margin: 0 auto;
+    margin: 20px auto;
     max-width: none;
     width: 95%;
 }
