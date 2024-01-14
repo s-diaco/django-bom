@@ -1100,28 +1100,80 @@ class PartCSVForm(forms.Form):
                         ) = ManufacturerPart.objects.get_or_create(
                             part=part, manufacturer_part_number=mpn, manufacturer=mfg
                         )
-                        if (
-                            part.primary_manufacturer_part is None
-                            and manufacturer_part is not None
-                        ):
-                            part.primary_manufacturer_part = manufacturer_part
-                            part.save()
+                    else:
+                        default_manufacturer_name = "انتخاب نشده (پیش فرض)"
+                        (
+                            mfg,
+                            created,
+                        ) = Manufacturer.objects.get_or_create(
+                            name__iexact=default_manufacturer_name,
+                            organization=self.organization,
+                            defaults={"name": default_manufacturer_name},
+                        )
+                        (
+                            manufacturer_part,
+                            created,
+                        ) = ManufacturerPart.objects.get_or_create(
+                            part=part,
+                            manufacturer_part_number=number_item,
+                            manufacturer=mfg,
+                        )
+                    if (
+                        part.primary_manufacturer_part is None
+                        and manufacturer_part is not None
+                    ):
+                        part.primary_manufacturer_part = manufacturer_part
+                        part.save()
 
-                        if seller_name and unit_cost and nre_cost:
-                            seller, created = Seller.objects.get_or_create(
-                                name__iexact=seller_name,
-                                organization=self.organization,
-                                defaults={"name": seller_name},
-                            )
-                            seller_part, created = SellerPart.objects.get_or_create(
-                                manufacturer_part=manufacturer_part,
-                                seller=seller,
-                                seller_part_number=seller_part_number,
-                                unit_cost=unit_cost,
-                                nre_cost=nre_cost,
-                                minimum_order_quantity=moq,
-                                minimum_pack_quantity=mpq,
-                            )
+                    if seller_name and unit_cost and nre_cost:
+                        seller, created = Seller.objects.get_or_create(
+                            name__iexact=seller_name,
+                            organization=self.organization,
+                            defaults={"name": seller_name},
+                        )
+                        seller_part, created = SellerPart.objects.get_or_create(
+                            manufacturer_part=manufacturer_part,
+                            seller=seller,
+                            seller_part_number=seller_part_number,
+                            unit_cost=unit_cost,
+                            nre_cost=nre_cost,
+                            minimum_order_quantity=moq,
+                            minimum_pack_quantity=mpq,
+                        )
+                    elif unit_cost and nre_cost:
+                        default_seller_name = "انتخاب نشده (پیش فرض)"
+                        seller, created = Seller.objects.get_or_create(
+                            name__iexact=default_seller_name,
+                            organization=self.organization,
+                            defaults={"name": default_seller_name},
+                        )
+                        (
+                            seller_part,
+                            seller_created,
+                        ) = SellerPart.objects.get_or_create(
+                            manufacturer_part=manufacturer_part,
+                            seller_part_number="",
+                            seller=seller,
+                            unit_cost=unit_cost,
+                            nre_cost=nre_cost,
+                        )
+                    elif unit_cost:
+                        default_seller_name = "انتخاب نشده (پیش فرض)"
+                        seller, created = Seller.objects.get_or_create(
+                            name__iexact=default_seller_name,
+                            organization=self.organization,
+                            defaults={"name": default_seller_name},
+                        )
+                        (
+                            seller_part,
+                            seller_created,
+                        ) = SellerPart.objects.get_or_create(
+                            manufacturer_part=manufacturer_part,
+                            seller_part_number="",
+                            seller=seller,
+                            unit_cost=unit_cost,
+                            nre_cost=nre_cost,
+                        )
 
                     self.successes.append(
                         "Part {0} on row {1} created.".format(
