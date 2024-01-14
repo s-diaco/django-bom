@@ -19,7 +19,7 @@
                     <h3 class="light">{{ part.full_part_number }}</h3>
                     {% if part_revision %}
                         {% if profile.role == 'A' %}
-                            <p class="printer-hide">محاسبات قیمت برای فریت‌ها با در نظر گرفتن پرت (LOI) و برای بقیه محصولات بدون کسر پرت انجام می‌شود.</p>
+                            <p class="printer-hide">اطلاعات مربوط به ورژن انتخاب شده</p>
                         {% else %}
                             <p class="printer-hide">Select a revision for viewing</p>
                         {% endif %}
@@ -137,7 +137,7 @@
                             </div>
                             <div class="row">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">پرت:</div>
-                                <div class="col s8 l10">{{ part_revision.tolerance }} %</div>
+                                <div class="col s8 l10">{{ part_revision.tolerance|default:'-' }}{% if part_revision.tolerance %} %{% endif %}</div>
                             </div>
                             <div class="row">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">مدل محاسبه قیمت:</div>
@@ -176,7 +176,7 @@
                             </div>
                             <div class="row">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">تعداد متریال بدون قیمت:</div>
-                                <div class="col s8 l10"><span id="mouser-missing-item-costs"></span><span><span class="right">{{ indented_bom.missing_item_costs }}{% if indented_bom.missing_item_costs > 0 %} </span><i class="material-icons red-text">cancel</i>{% else %} <i class="material-icons green-text">check_circle</i>{% endif %}</span></div>
+                                <div class="col s8 l10"><span id="mouser-missing-item-costs"></span><span><span class="right">{{ indented_bom.missing_item_costs }}{% if indented_bom.missing_item_costs > 0 %} </span><i class="material-icons red-text">error</i>{% else %} <i class="material-icons green-text">check_circle</i>{% endif %}</span></div>
                             </div>
                             <div class="row">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">قیمت برای سفارش {{ qty }}:</div>
