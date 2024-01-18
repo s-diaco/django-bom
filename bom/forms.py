@@ -1422,6 +1422,7 @@ class PartRevisionForm(forms.ModelForm):
         self.fields["attribute"].label = ""
         self.fields["revision"].label = "ورژن"
         self.fields["tolerance"].label = "درصد پرت (LOI)"
+        self.fields["material"].label = "روش محاسبه قیمت"
         self.fields["tolerance"].initial = 0
         self.fields["description"] = forms.CharField(
             required=True,

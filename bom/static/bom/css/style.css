@@ -314,6 +314,10 @@ i.left {
     height: 36px;
 }
 
+.dropdown-content li {
+    text-align: right;
+}
+
 /* Printer friendly */
 .printer-show {
     display: none;
