@@ -16,17 +16,13 @@
 {% block content %}
     <div class="container-app">
         {% if profile.role == 'A' %}
-            <h5>Upload Parts</h5>
-            <p>To batch create parts, upload a csv that contains columns with the headers
-                {% if organization.number_scheme == 'S' %}<b>'part_class'</b> or {% endif %}<b>'part_number'</b>, <b>'description'</b> or <b>'value'</b>
-                along with <b>'value_units'</b>, and <b>'revision'</b>. {% if organization.number_scheme == 'S' %}If you specify a part number
-                then it must be one that is not already being used. If you don't specify a part number
-                then IndaBOM will create one for you.{% endif %}
+            <h5>آپلود فایل لیست متریال</h5>
+            <p>برای آپلود همزمان چندین متریال، یک فایل CSV آپلود کنید که شامل ستون‌های <b>'کد'</b>، <b>'نوع متریال'</b>
+            ، <b>'ورژن'</b> باشد.</p>
+            <p>کد متریال نباید تکراری باشد.
+             اگر کد متریال را مشخص نکنید یک کد اتوماتیک به متریال اختصاص داده خواهد شد.
             </p>
-            </p>
-            You may optionally specify a manufacturer and manufacturer's part number using
-            columns with the headers <b>'manufacturer'</b> and a <b>'manufacturer_part_number'</b>.
-            For the names of other optional columns click <a href="{% url 'bom:upload-parts-help' %}">here</a>.
+            برای مشاهده سایر ستون‌های اختیاری <a href="{% url 'bom:upload-parts-help' %}">اینجا</a> کلیک کنید.
             </p>
             <form action="{% url 'bom:upload-parts' %}" method="post" enctype="multipart/form-data">
                 {% csrf_token %}
@@ -42,7 +38,7 @@
                         </div>
                     </div>
                     <div class="col m2 s12 text-center input-field">
-                        <input class="green lighten-1 btn" type="submit" value="Upload"/>
+                        <input class="green lighten-1 btn" type="submit" value="آپلود"/>
                     </div>
                 </div>
             </form>
