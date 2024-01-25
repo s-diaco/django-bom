@@ -17,11 +17,9 @@
     <div class="container-app">
         {% if profile.role == 'A' %}
             <div class="upload-bom">
-                <p>Click here to download <a href="{% static 'bom/doc/test_bom_5_intelligent.csv' %}">a sample CSV file for uploading intelligent
-                parts</a> and here is <a href="{% static 'bom/doc/test_bom.csv' %}">a sample CSV file for uploading semi-intelligent parts</a>. Uploading uses
-                an append or create strategy, for example, if a part, part revision, or part class already exists, it will be overwritten; and
-                    if a part, part revision, or part class <b>does not</b> exist, it will be created.</p>
-                <p>For details on CSV file requirements, see the help docs <a href="{% url 'bom:help' %}#uploading-parts" target="_blank">here   <i class="material-icons" style="font-size: 1em;">open_in_new</i></a>.</p>
+                <p>برای دیدن <a href="{% static 'bom/doc/test_bom_5_intelligent.csv' %}">یک فایل نمونه برای آپلود درخت محصول</a> کلیک کنید. زمانی که متریال یا ورژن مورد نظر از قبل تعریف شده باشد، به روز رسانی می‌شود و
+                 اگر تعریف <b>نشده</b> باشد از نو ایجاد خواهد شد.</p>
+                <p>برای مشاهده ملزومات فایل CSV مستندات مربوطه را  <a href="{% url 'bom:help' %}#uploading-parts" target="_blank">اینجا<i class="material-icons" style="font-size: 1em;">open_in_new</i></a> ببینید.</p>
 
                 <form action="{% url 'bom:upload-bom' %}" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
@@ -37,7 +35,7 @@
                             </div>
                         </div>
                         <div class="col s1 input-field">
-                            <input class="green lighten-1 btn" type="submit" value="Upload"/>
+                            <input class="green lighten-1 btn" type="submit" value="آپلود"/>
                         </div>
                     </div>
 {#                    <div class="row">#}
@@ -48,10 +46,10 @@
 {#                    </div>#}
                     <div class="row">
                         {{ upload_bom_form.parent_part_number|materializecss:'m3 s12' }}
-                        <div class="col m6 s12 input-field">
-                            <b>{{upload_bom_form.parent_part_number.label}}</b> <i>Optional.</i> Upload this BOM to a parent assembly by specifying the parent part number. Level 1 will upload as the first child of this part.
+                        <div class="col m6 s12 input-field" style="line-height: 4rem;">
+                            <b>{{upload_bom_form.parent_part_number.label}}</b> <i>[اختیاری]</i> با انتخاب کد متریال این درخت محصول را به متریال مورد نظر وصل کنید.
                             {% if parent_part %}
-                                <br><h6><a href="{% url 'bom:part-info' part_id=parent_part.id %}">Go to {{ parent_part_number }}</a></h6>
+                                <br><h6><a href="{% url 'bom:part-info' part_id=parent_part.id %}">رفتن به {{ parent_part_number }}</a></h6>
                             {% endif %}
                         </div>
                     </div>

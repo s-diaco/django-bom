@@ -305,10 +305,6 @@ i.left {
     margin-right: 5px;
 }
 
-.material-icons {
-    font-size: 24px !important;
-}
-
 .file-field .btn{
     line-height: 36px;
     height: 36px;
@@ -316,6 +312,10 @@ i.left {
 
 .dropdown-content li {
     text-align: right;
+}
+
+.upload-bom .material-icons{
+    font-size: inherit !important;
 }
 
 /* Printer friendly */

@@ -1684,7 +1684,7 @@ class AddSubpartForm(forms.Form):
 
 
 class UploadBOMForm(forms.Form):
-    parent_part_number = forms.CharField(required=False, label="Parent part number")
+    parent_part_number = forms.CharField(required=False, label="کد سر شاخه")
 
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
