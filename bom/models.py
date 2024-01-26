@@ -286,7 +286,10 @@ class Part(models.Model):
     @staticmethod
     def verify_format_number_item(number_item, organization):
         if organization.number_scheme == "I":
-            if len(number_item) < NUMBER_ITEM_LEN_MIN:
+            if (
+                len(number_item) < NUMBER_ITEM_LEN_MIN
+                or len(number_item) > NUMBER_ITEM_LEN_MAX
+            ):
                 raise AttributeError(
                     f"Expect {NUMBER_ITEM_LEN_MIN} to {NUMBER_ITEM_LEN_MAX} digits for number item"
                 )
