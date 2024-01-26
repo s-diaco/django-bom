@@ -90,7 +90,8 @@ class PartBom(AsDictModel):
         else:
             self.missing_item_costs += 1
 
-        self.update_hierarchical(bom_part)
+        if isinstance(bom_part, PartIndentedBomItem):
+            self.update_hierarchical(bom_part)
 
     def update(self, bom_part):
         self.missing_item_costs = 0
