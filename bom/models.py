@@ -285,10 +285,22 @@ class Part(models.Model):
 
     @staticmethod
     def verify_format_number_item(number_item, organization):
-        if len(number_item) < NUMBER_ITEM_LEN_MIN:
-            raise AttributeError(
-                f"Expect {NUMBER_ITEM_LEN_MIN} to {NUMBER_ITEM_LEN_MAX} digits for number item"
-            )
+        if organization.number_scheme == "I":
+            if len(number_item) < NUMBER_ITEM_LEN_MIN:
+                raise AttributeError(
+                    f"Expect {NUMBER_ITEM_LEN_MIN} to {NUMBER_ITEM_LEN_MAX} digits for number item"
+                )
+        elif organization.number_scheme == "S":
+            if len(number_item) != organization.number_item_len:
+                raise AttributeError(
+                    f"Expect {organization.number_item_len} digits for number item"
+                )
+            elif number_item is not None:
+                for c in number_item:
+                    if not c.isdigit():
+                        raise AttributeError(
+                            f"{c} is not a proper character for a number item"
+                        )
         return number_item
 
     @staticmethod
