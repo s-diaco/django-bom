@@ -1399,33 +1399,8 @@ def create_part(request):
             part_form.is_valid()
             and manufacturer_form.is_valid()
             and manufacturer_part_form.is_valid()
-            and seller_part_form.is_valid()
             and seller_form.is_valid()
         ):
-            spn = seller_part_form.cleaned_data["seller_part_number"]
-            new_seller_name = seller_form.cleaned_data["name"]
-
-            seller = None
-            if spn:
-                if new_seller_name and new_seller_name != "":
-                    seller, seller_created = Seller.objects.get_or_create(
-                        name__iexact=new_seller_name,
-                        organization=organization,
-                        defaults={"name": new_seller_name},
-                    )
-                else:
-                    seller, seller_created = Seller.objects.get_or_create(
-                        name__iexact=default_seller_name,
-                        organization=organization,
-                        defaults={"name": default_seller_name},
-                    )
-                    # messages.error(request, "یک تأمین کننده جدید بسازید یا از لیست تأمین کنندگان انتخاب کنید.")
-                    # return TemplateResponse(request, "bom/create-part.html", locals())
-            elif new_seller_name != "":
-                messages.warning(
-                    request,
-                    "کد تأمین کننده اختصاص داده نشده است. هیچ تأمین کننده‌ای انتخاب یا ایجاد نشد.",
-                )
             mpn = manufacturer_part_form.cleaned_data["manufacturer_part_number"]
             new_manufacturer_name = manufacturer_form.cleaned_data["name"]
 
@@ -1502,18 +1477,42 @@ def create_part(request):
 
             # TODO: delete
             seller_part = None
-            if seller is not None:
-                (
-                    seller_part,
-                    seller_created,
-                ) = SellerPart.objects.get_or_create(
-                    manufacturer_part=manufacturer_part,
-                    seller_part_number="" if spn == "" else spn,
-                    seller=seller,
-                    unit_cost=seller_part_form.instance.unit_cost,
-                    nre_cost=seller_part_form.instance.nre_cost,
-                )
+            if seller_part_form.is_valid():
+                spn = seller_part_form.cleaned_data["seller_part_number"]
+                new_seller_name = seller_form.cleaned_data["name"]
 
+                seller = None
+                if spn:
+                    if new_seller_name and new_seller_name != "":
+                        seller, seller_created = Seller.objects.get_or_create(
+                            name__iexact=new_seller_name,
+                            organization=organization,
+                            defaults={"name": new_seller_name},
+                        )
+                    else:
+                        seller, seller_created = Seller.objects.get_or_create(
+                            name__iexact=default_seller_name,
+                            organization=organization,
+                            defaults={"name": default_seller_name},
+                        )
+                        # messages.error(request, "یک تأمین کننده جدید بسازید یا از لیست تأمین کنندگان انتخاب کنید.")
+                        # return TemplateResponse(request, "bom/create-part.html", locals())
+                elif new_seller_name != "":
+                    messages.warning(
+                        request,
+                        "کد تأمین کننده اختصاص داده نشده است. هیچ تأمین کننده‌ای انتخاب یا ایجاد نشد.",
+                    )
+                if seller is not None:
+                    (
+                        seller_part,
+                        seller_created,
+                    ) = SellerPart.objects.get_or_create(
+                        manufacturer_part=manufacturer_part,
+                        seller_part_number="" if spn == "" else spn,
+                        seller=seller,
+                        unit_cost=seller_part_form.instance.unit_cost,
+                        nre_cost=seller_part_form.instance.nre_cost,
+                    )
             return HttpResponseRedirect(
                 reverse("bom:part-info", kwargs={"part_id": str(new_part.id)})
             )
