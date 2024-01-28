@@ -1987,7 +1987,7 @@ def sellerpart_edit(request, sellerpart_id):
     profile = user.bom_profile()
     organization = profile.organization
 
-    title = "Edit Seller Part"
+    title = "ویرایش اطلاعات مربوط به تأمین متریال"
     action = reverse("bom:sellerpart-edit", kwargs={"sellerpart_id": sellerpart_id})
     sellerpart = get_object_or_404(SellerPart, pk=sellerpart_id)
 
