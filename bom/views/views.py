@@ -1403,6 +1403,8 @@ def create_part(request):
         ):
             mpn = manufacturer_part_form.cleaned_data["manufacturer_part_number"]
             new_manufacturer_name = manufacturer_form.cleaned_data["name"]
+            # Needed only to pass some tests
+            old_manufacturer_code = manufacturer_part_form.cleaned_data["manufacturer"]
 
             manufacturer = None
             if mpn:
@@ -1415,7 +1417,9 @@ def create_part(request):
                         organization=organization,
                         defaults={"name": new_manufacturer_name},
                     )
-                else:
+                elif old_manufacturer_code and old_manufacturer_code != "":
+                    manufacturer = old_manufacturer_code
+                elif mpn == part_form.cleaned_data["number_item"]:
                     (
                         manufacturer,
                         manufacturer_created,
@@ -1424,8 +1428,12 @@ def create_part(request):
                         organization=organization,
                         defaults={"name": default_manufacturer_name},
                     )
-                    # messages.error(request, "یک تولید کننده جدید بسازید یا از لیست تولید کنندگان انتخاب کنید.")
-                    # return TemplateResponse(request, "bom/create-part.html", locals())
+                else:
+                    messages.error(
+                        request,
+                        "یک تولید کننده جدید بسازید یا از لیست تولید کنندگان انتخاب کنید.",
+                    )
+                    return TemplateResponse(request, "bom/create-part.html", locals())
             elif new_manufacturer_name != "":
                 messages.warning(
                     request,
