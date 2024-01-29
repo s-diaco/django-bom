@@ -406,7 +406,7 @@ class SellerPartForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
         self.manufacturer_part = kwargs.pop("manufacturer_part", None)
-        self.base_fields["unit_cost"] = forms.IntegerField(
+        self.base_fields["unit_cost"] = forms.DecimalField(
             required=True, label="قیمت", initial=0
         )
         self.base_fields["nre_cost"] = forms.IntegerField(
@@ -1115,7 +1115,7 @@ class PartCSVForm(forms.Form):
                             created,
                         ) = ManufacturerPart.objects.get_or_create(
                             part=part,
-                            manufacturer_part_number=number_item,
+                            manufacturer_part_number=part.number_item,  # TODO: is it unique?
                             manufacturer=mfg,
                         )
                     if (
