@@ -465,6 +465,7 @@ class SellerPartForm(forms.ModelForm):
                 organization=self.organization,
                 defaults={"name": default_seller_name},
             )
+            self.cleaned_data["seller"] = obj
 
 
 class PartClassForm(forms.ModelForm):
