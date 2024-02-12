@@ -952,6 +952,7 @@ def part_info(request, part_id, part_revision_id=None):
         part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
 
     try:
+        # TODO: is this check needed?
         selected_rev_is_latest = part_revision.revision == part.latest().revision
     except AttributeError:
         selected_rev_is_latest = False
@@ -981,7 +982,8 @@ def part_info(request, part_id, part_revision_id=None):
 
     try:
         indented_bom = part_revision.indented(top_level_quantity=qty)
-        total_bom_weight = indented_bom.parts[str(part_id)].childs_quantity
+        # TODO: change "str(part_revision.id)" if possible
+        total_bom_weight = indented_bom.parts[str(part_revision.id)].childs_quantity
     except (RuntimeError, RecursionError):
         messages.error(
             request,
