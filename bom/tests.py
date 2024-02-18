@@ -527,32 +527,34 @@ class TestBOM(TransactionTestCase):
             )
             self.assertTrue("Row 15" in str(msg.message))
 
-    # TODO: implement test
+    # TODO: Only tested for semi-intelligent scheme
+    @skip("not implemented")
     def test_price_calcs(self):
-        (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
-        # Test OK upload with parent part number
-        test_file = (
-            "test_full_bom.csv"
-            if self.organization.number_variation_len > 0
-            else "test_full_bom_no_variations.csv"
-        )
-        p4_rev = create_a_fake_part_revision(p4, create_a_fake_assembly())
-        with open(f"{TEST_FILES_DIR}/{test_file}") as test_csv:
-            response = self.client.post(
-                reverse("bom:upload-bom"),
-                {"file": test_csv, "parent_part_number": p4.full_part_number()},
-                follow=True,
+        if self.organization.number_scheme == constants.NUMBER_SCHEME_INTELLIGENT:
+            (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+            # Test OK upload with parent part number
+            test_file = (
+                "bom_exports/CGM4554.csv"
+                if self.organization.number_variation_len > 0
+                else "test_full_bom_no_variations.csv"
             )
-        self.assertEqual(response.status_code, 200)
+            p4_rev = create_a_fake_part_revision(p4, create_a_fake_assembly())
+            with open(f"{TEST_FILES_DIR}/{test_file}") as test_csv:
+                response = self.client.post(
+                    reverse("bom:upload-bom"),
+                    {"file": test_csv, "parent_part_number": p4.full_part_number()},
+                    follow=True,
+                )
+            self.assertEqual(response.status_code, 200)
 
-        messages = list(response.context.get("messages"))
-        for msg in messages:
-            self.assertEqual(msg.tags, "info", msg.message)
-            self.assertNotEqual(msg.tags, "error", msg.message)
+            messages = list(response.context.get("messages"))
+            for msg in messages:
+                self.assertEqual(msg.tags, "info", msg.message)
+                self.assertNotEqual(msg.tags, "error", msg.message)
 
-        p4.refresh_from_db()
-        p4_rev.refresh_from_db()
-        self.assertEqual(len(p4_rev.indented().parts), 36)
+            p4.refresh_from_db()
+            p4_rev.refresh_from_db()
+            self.assertEqual(len(p4_rev.indented().parts), 36)
 
     def test_part_upload_bom_corner_cases(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)

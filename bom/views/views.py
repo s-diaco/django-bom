@@ -292,9 +292,9 @@ def home(request):
 
     if "download" in request.GET:
         response = HttpResponse(content_type="text/csv")
-        response[
-            "Content-Disposition"
-        ] = 'attachment; filename="indabom_parts_search.csv"'
+        response["Content-Disposition"] = (
+            'attachment; filename="indabom_parts_search.csv"'
+        )
         csv_headers = organization.part_list_csv_headers()
         seller_csv_headers = SellerPartCSVHeaders()
         writer = csv.DictWriter(response, fieldnames=csv_headers.get_default_all())
@@ -309,17 +309,18 @@ def home(request):
                         "part_category"
                     ): part_rev.part.number_class.name,
                     csv_headers.get_default("part_revision"): part_rev.revision,
-                    csv_headers.get_default(
-                        "part_manufacturer"
-                    ): part_rev.part.primary_manufacturer_part.manufacturer.name
-                    if part_rev.part.primary_manufacturer_part is not None
-                    and part_rev.part.primary_manufacturer_part.manufacturer is not None
-                    else "",
-                    csv_headers.get_default(
-                        "part_manufacturer_part_number"
-                    ): part_rev.part.primary_manufacturer_part.manufacturer_part_number
-                    if part_rev.part.primary_manufacturer_part is not None
-                    else "",
+                    csv_headers.get_default("part_manufacturer"): (
+                        part_rev.part.primary_manufacturer_part.manufacturer.name
+                        if part_rev.part.primary_manufacturer_part is not None
+                        and part_rev.part.primary_manufacturer_part.manufacturer
+                        is not None
+                        else ""
+                    ),
+                    csv_headers.get_default("part_manufacturer_part_number"): (
+                        part_rev.part.primary_manufacturer_part.manufacturer_part_number
+                        if part_rev.part.primary_manufacturer_part is not None
+                        else ""
+                    ),
                 }
                 for field_name in csv_headers.get_default_all():
                     if field_name not in csv_headers.get_defaults_list(
@@ -336,9 +337,9 @@ def home(request):
                         attr = getattr(part_rev, field_name)
                         row.update(
                             {
-                                csv_headers.get_default(field_name): attr
-                                if attr is not None
-                                else ""
+                                csv_headers.get_default(field_name): (
+                                    attr if attr is not None else ""
+                                )
                             }
                         )
             else:
@@ -347,17 +348,18 @@ def home(request):
                         "part_number"
                     ): part_rev.part.full_part_number(),
                     csv_headers.get_default("part_revision"): part_rev.revision,
-                    csv_headers.get_default(
-                        "part_manufacturer"
-                    ): part_rev.part.primary_manufacturer_part.manufacturer.name
-                    if part_rev.part.primary_manufacturer_part is not None
-                    and part_rev.part.primary_manufacturer_part.manufacturer is not None
-                    else "",
-                    csv_headers.get_default(
-                        "part_manufacturer_part_number"
-                    ): part_rev.part.primary_manufacturer_part.manufacturer_part_number
-                    if part_rev.part.primary_manufacturer_part is not None
-                    else "",
+                    csv_headers.get_default("part_manufacturer"): (
+                        part_rev.part.primary_manufacturer_part.manufacturer.name
+                        if part_rev.part.primary_manufacturer_part is not None
+                        and part_rev.part.primary_manufacturer_part.manufacturer
+                        is not None
+                        else ""
+                    ),
+                    csv_headers.get_default("part_manufacturer_part_number"): (
+                        part_rev.part.primary_manufacturer_part.manufacturer_part_number
+                        if part_rev.part.primary_manufacturer_part is not None
+                        else ""
+                    ),
                 }
                 for field_name in csv_headers.get_default_all():
                     if field_name not in csv_headers.get_defaults_list(
@@ -373,9 +375,9 @@ def home(request):
                         attr = getattr(part_rev, field_name)
                         row.update(
                             {
-                                csv_headers.get_default(field_name): attr
-                                if attr is not None
-                                else ""
+                                csv_headers.get_default(field_name): (
+                                    attr if attr is not None else ""
+                                )
                             }
                         )
 
@@ -386,9 +388,9 @@ def home(request):
                         attr = getattr(sellerpart, field_name)
                         row.update(
                             {
-                                csv_headers.get_default(field_name): attr
-                                if attr is not None
-                                else ""
+                                csv_headers.get_default(field_name): (
+                                    attr if attr is not None else ""
+                                )
                             }
                         )
                     writer.writerow({k: smart_str(v) for k, v in row.items()})
@@ -619,9 +621,9 @@ def bom_settings(request, tab_anchor=None):
 
         elif "submit-part-class-export" in request.POST:
             response = HttpResponse(content_type="text/csv")
-            response[
-                "Content-Disposition"
-            ] = 'attachment; filename="indabom_parts_search.csv"'
+            response["Content-Disposition"] = (
+                'attachment; filename="indabom_parts_search.csv"'
+            )
             csv_headers = PartClassesCSVHeaders()
             writer = csv.DictWriter(response, fieldnames=csv_headers.get_default_all())
             writer.writeheader()
@@ -632,9 +634,9 @@ def bom_settings(request, tab_anchor=None):
                     attr = getattr(part_class, field_name)
                     row.update(
                         {
-                            csv_headers.get_default(field_name): attr
-                            if attr is not None
-                            else ""
+                            csv_headers.get_default(field_name): (
+                                attr if attr is not None else ""
+                            )
                         }
                     )
                 writer.writerow({k: smart_str(v) for k, v in row.items()})
@@ -1184,7 +1186,7 @@ def upload_bom(request):
     user = request.user
     profile = user.bom_profile()
     organization = profile.organization
-    title = "Upload Bill of Materials"
+    title = "آپلود درخت محصول (BOM)"
 
     if (
         request.method == "POST"
@@ -1315,18 +1317,18 @@ def export_part_list(request):
             row = {
                 csv_headers.get_default("part_number"): item.full_part_number(),
                 csv_headers.get_default("part_revision"): item.latest().revision,
-                csv_headers.get_default(
-                    "part_manufacturer"
-                ): item.primary_manufacturer_part.manufacturer.name
-                if item.primary_manufacturer_part is not None
-                and item.primary_manufacturer_part.manufacturer is not None
-                else "",
-                csv_headers.get_default(
-                    "part_manufacturer_part_number"
-                ): item.primary_manufacturer_part.manufacturer_part_number
-                if item.primary_manufacturer_part is not None
-                and item.primary_manufacturer_part.manufacturer is not None
-                else "",
+                csv_headers.get_default("part_manufacturer"): (
+                    item.primary_manufacturer_part.manufacturer.name
+                    if item.primary_manufacturer_part is not None
+                    and item.primary_manufacturer_part.manufacturer is not None
+                    else ""
+                ),
+                csv_headers.get_default("part_manufacturer_part_number"): (
+                    item.primary_manufacturer_part.manufacturer_part_number
+                    if item.primary_manufacturer_part is not None
+                    and item.primary_manufacturer_part.manufacturer is not None
+                    else ""
+                ),
             }
             for field_name in csv_headers.get_default_all():
                 if field_name not in csv_headers.get_defaults_list(
@@ -1342,9 +1344,9 @@ def export_part_list(request):
                     attr = getattr(item, field_name)
                     row.update(
                         {
-                            csv_headers.get_default(field_name): attr
-                            if attr is not None
-                            else ""
+                            csv_headers.get_default(field_name): (
+                                attr if attr is not None else ""
+                            )
                         }
                     )
             writer.writerow({k: smart_str(v) for k, v in row.items()})
