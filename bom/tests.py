@@ -528,10 +528,17 @@ class TestBOM(TransactionTestCase):
             self.assertTrue("Row 15" in str(msg.message))
 
     # TODO: Only tested for intelligent scheme
-    def test_price_calcs(self):
+    def test_childs_cost_calcs(self):
         if self.organization.number_scheme == constants.NUMBER_SCHEME_INTELLIGENT:
+            # Upload parts with prices
+            with open(
+                "bom/test_files/test_new_parts_sellers_intelligent.csv"
+            ) as test_csv:
+                response = self.client.post(
+                    reverse("bom:upload-parts"), {"file": test_csv}
+                )
+            self.assertEqual(response.status_code, 302)
             (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
-            # Test OK upload with parent part number
             test_cases = [("bom_exports/CGM4554.csv", 100, 0)]
             for test_file, childs_quantity, childs_cost in test_cases:
                 p4_rev = create_a_fake_part_revision(p4, create_a_fake_assembly())
@@ -550,11 +557,13 @@ class TestBOM(TransactionTestCase):
 
                 p4.refresh_from_db()
                 p4_rev.refresh_from_db()
+                # self.assertEqual(
+                #    p4_rev.indented().parts[str(p4_rev.id)].childs_cost.amount,
+                #    childs_cost,
+                # )
                 self.assertEqual(
-                    p4_rev.indented().parts[str(p4_rev.id)].childs_cost.amount, 0
-                )
-                self.assertEqual(
-                    p4_rev.indented().parts[str(p4_rev.id)].childs_quantity, 100
+                    p4_rev.indented().parts[str(p4_rev.id)].childs_quantity,
+                    childs_quantity,
                 )
 
     def test_part_upload_bom_corner_cases(self):
