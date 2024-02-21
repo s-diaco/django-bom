@@ -539,7 +539,14 @@ class TestBOM(TransactionTestCase):
                 )
             self.assertEqual(response.status_code, 302)
             (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
-            test_cases = [("bom_exports/CGM4554.csv", 100, 0)]
+            test_cases = [
+                ("bom_exports/1155T158.csv", 1000, 2291816),
+                ("bom_exports/2183S119.csv", 2015, 3024695),
+                ("bom_exports/CGM5357.csv", 2115, 3570196.5),
+                ("bom_exports/CNE5393.csv", 2215, 3693350.5),
+                ("bom_exports/F190.csv", 3225, 5549940.5),
+                ("bom_exports/CGM4554.csv", 3325, 5901071),
+            ]
             for test_file, childs_quantity, childs_cost in test_cases:
                 p4_rev = create_a_fake_part_revision(p4, create_a_fake_assembly())
                 with open(f"{TEST_FILES_DIR}/{test_file}") as test_csv:
@@ -557,10 +564,10 @@ class TestBOM(TransactionTestCase):
 
                 p4.refresh_from_db()
                 p4_rev.refresh_from_db()
-                # self.assertEqual(
-                #    p4_rev.indented().parts[str(p4_rev.id)].childs_cost.amount,
-                #    childs_cost,
-                # )
+                self.assertEqual(
+                    p4_rev.indented().parts[str(p4_rev.id)].childs_cost.amount,
+                    childs_cost,
+                )
                 self.assertEqual(
                     p4_rev.indented().parts[str(p4_rev.id)].childs_quantity,
                     childs_quantity,
