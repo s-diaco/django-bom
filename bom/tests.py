@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
+from parameterized import parameterized
 
 from . import constants
 from .forms import AddSubpartForm, PartFormSemiIntelligent, PartInfoForm, SellerPartForm
@@ -20,7 +21,15 @@ from .helpers import (
     create_some_fake_sellers,
     create_user_and_organization,
 )
-from .models import ManufacturerPart, Part, PartClass, Seller, SellerPart, Subpart
+from .models import (
+    ManufacturerPart,
+    Organization,
+    Part,
+    PartClass,
+    Seller,
+    SellerPart,
+    Subpart,
+)
 
 
 TEST_FILES_DIR = "bom/test_files"
@@ -528,7 +537,18 @@ class TestBOM(TransactionTestCase):
             self.assertTrue("Row 15" in str(msg.message))
 
     # TODO: Only tested for intelligent scheme
-    def test_childs_cost_calcs(self):
+    @parameterized.expand(
+        [
+            ("bom_exports/1155T158.csv", 1000, 2291816),
+            ("bom_exports/2183S119.csv", 1015, 732879),
+            ("bom_exports/CGM5357.csv", 100, 548166),
+            ("bom_exports/CNE5393.csv", 100, 149918),
+            ("bom_exports/1155F190.csv", 1010, 1856590),
+            ("bom_exports/CGM4554.csv", 100, 354905),
+            ("bom_exports/CNE5393_fake.csv", 100, 147418),
+        ]
+    )
+    def test_childs_cost_calcs(self, test_file, childs_quantity, childs_cost):
         if self.organization.number_scheme == constants.NUMBER_SCHEME_INTELLIGENT:
             # Upload parts with prices
             with open(
@@ -538,40 +558,70 @@ class TestBOM(TransactionTestCase):
                     reverse("bom:upload-parts"), {"file": test_csv}
                 )
             self.assertEqual(response.status_code, 302)
+
+            # create some materials with bom as nested boms
+
+            # frit1
+            frit1 = Part(number_item="2183S119", organization=self.organization)
+            frit1.save()
+            frit1_rev = create_a_fake_part_revision(frit1, create_a_fake_assembly())
+            frit1_rev.save()
+            frit1.refresh_from_db()
+            frit1_rev.refresh_from_db()
+            with open(f"{TEST_FILES_DIR}/bom_exports/2183S119.csv") as test_csv:
+                frit1_response = self.client.post(
+                    reverse("bom:upload-bom"),
+                    {
+                        "file": test_csv,
+                        "parent_part_number": frit1.full_part_number(),
+                    },
+                    follow=True,
+                )
+            self.assertEqual(frit1_response.status_code, 200)
+
+            # frit2
+            frit2 = Part(number_item="1155F190", organization=self.organization)
+            frit2.save()
+            frit2_rev = create_a_fake_part_revision(frit2, create_a_fake_assembly())
+            frit2_rev.save()
+            frit2.refresh_from_db()
+            frit2_rev.refresh_from_db()
+            with open(f"{TEST_FILES_DIR}/bom_exports/1155F190.csv") as test_csv:
+                frit2_response = self.client.post(
+                    reverse("bom:upload-bom"),
+                    {
+                        "file": test_csv,
+                        "parent_part_number": frit2.full_part_number(),
+                    },
+                    follow=True,
+                )
+            self.assertEqual(frit2_response.status_code, 200)
+
             (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
-            test_cases = [
-                ("bom_exports/1155T158.csv", 1000, 2291816),
-                ("bom_exports/2183S119.csv", 2015, 3024695),
-                ("bom_exports/CGM5357.csv", 2115, 3570196.5),
-                ("bom_exports/CNE5393.csv", 2215, 3693350.5),
-                ("bom_exports/F190.csv", 3225, 5549940.5),
-                ("bom_exports/CGM4554.csv", 3325, 5901071),
-            ]
-            for test_file, childs_quantity, childs_cost in test_cases:
-                p4_rev = create_a_fake_part_revision(p4, create_a_fake_assembly())
-                with open(f"{TEST_FILES_DIR}/{test_file}") as test_csv:
-                    response = self.client.post(
-                        reverse("bom:upload-bom"),
-                        {"file": test_csv, "parent_part_number": p4.full_part_number()},
-                        follow=True,
-                    )
-                self.assertEqual(response.status_code, 200)
-
-                messages = list(response.context.get("messages"))
-                for msg in messages:
-                    self.assertEqual(msg.tags, "info", msg.message)
-                    self.assertNotEqual(msg.tags, "error", msg.message)
-
-                p4.refresh_from_db()
-                p4_rev.refresh_from_db()
-                self.assertEqual(
-                    p4_rev.indented().parts[str(p4_rev.id)].childs_cost.amount,
-                    childs_cost,
+            p4_rev = create_a_fake_part_revision(p4, create_a_fake_assembly())
+            with open(f"{TEST_FILES_DIR}/{test_file}") as test_csv:
+                response = self.client.post(
+                    reverse("bom:upload-bom"),
+                    {"file": test_csv, "parent_part_number": p4.full_part_number()},
+                    follow=True,
                 )
-                self.assertEqual(
-                    p4_rev.indented().parts[str(p4_rev.id)].childs_quantity,
-                    childs_quantity,
-                )
+            self.assertEqual(response.status_code, 200)
+
+            messages = list(response.context.get("messages"))
+            for msg in messages:
+                self.assertEqual(msg.tags, "info", msg.message)
+                self.assertNotEqual(msg.tags, "error", msg.message)
+
+            p4.refresh_from_db()
+            p4_rev.refresh_from_db()
+            self.assertEqual(
+                int(p4_rev.indented().parts[str(p4_rev.id)].childs_cost.amount),
+                childs_cost,
+            )
+            self.assertEqual(
+                p4_rev.indented().parts[str(p4_rev.id)].childs_quantity,
+                childs_quantity,
+            )
 
     def test_part_upload_bom_corner_cases(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
@@ -1882,7 +1932,7 @@ class TestBOMIntelligent(TestBOM):
         self.assertEqual(response.status_code, 302)
 
         parts_count = Part.objects.all().count()
-        self.assertEqual(parts_count - initial_parts_count, 4)
+        self.assertEqual(parts_count - initial_parts_count, 40)
 
     @skip("not applicable")
     def test_upload_part_classes(self):
