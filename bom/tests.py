@@ -540,12 +540,12 @@ class TestBOM(TransactionTestCase):
     @parameterized.expand(
         [
             ("bom_exports/1155T158.csv", 1000, 2291816),
+            ("bom_exports/1155F190.csv", 1010, 1856590),
             ("bom_exports/2183S119.csv", 1015, 732879),
+            ("bom_exports/CGM4554.csv", 100, 354905),
             ("bom_exports/CGM5357.csv", 100, 548166),
             ("bom_exports/CNE5393.csv", 100, 149918),
-            ("bom_exports/1155F190.csv", 1010, 1856590),
-            ("bom_exports/CGM4554.csv", 100, 354905),
-            ("bom_exports/CNE5393_fake.csv", 100, 147418),
+            ("bom_exports/CNE5393_fake.csv", 100, 158877),
         ]
     )
     def test_childs_cost_calcs(self, test_file, childs_quantity, childs_cost):
@@ -596,6 +596,24 @@ class TestBOM(TransactionTestCase):
                     follow=True,
                 )
             self.assertEqual(frit2_response.status_code, 200)
+
+            # frit3
+            frit3 = Part(number_item="1155T158", organization=self.organization)
+            frit3.save()
+            frit3_rev = create_a_fake_part_revision(frit3, create_a_fake_assembly())
+            frit3_rev.save()
+            frit3.refresh_from_db()
+            frit3_rev.refresh_from_db()
+            with open(f"{TEST_FILES_DIR}/bom_exports/1155T158.csv") as test_csv:
+                frit3_response = self.client.post(
+                    reverse("bom:upload-bom"),
+                    {
+                        "file": test_csv,
+                        "parent_part_number": frit3.full_part_number(),
+                    },
+                    follow=True,
+                )
+            self.assertEqual(frit3_response.status_code, 200)
 
             (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
             p4_rev = create_a_fake_part_revision(p4, create_a_fake_assembly())
