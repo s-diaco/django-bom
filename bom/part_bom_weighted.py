@@ -72,14 +72,7 @@ class PartBomWeighted(PartBom):
 
 
 class PartWeightedBomItem(PartIndentedBomItem):
-    def __init__(self, part_indented_bom_item, *args, **kwargs):
-        super().__init__(
-            part_indented_bom_item.indent_level,
-            part_indented_bom_item.parent_id,
-            part_indented_bom_item.subpart,
-            part_indented_bom_item.parent_quantity,
-            *args,
-            **kwargs
-        )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.childs_quantity = 0
         self.childs_cost = Money(0, self._currency)

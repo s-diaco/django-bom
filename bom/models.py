@@ -847,7 +847,7 @@ class PartRevision(models.Model):
         self.displayable_synopsis = self.generate_synopsis(False)
         super(PartRevision, self).save(*args, **kwargs)
 
-    def indented(self, top_level_quantity=100, is_weighted_bom=False):
+    def indented(self, top_level_quantity=100, is_weighted_bom=True):
         def indented_given_bom(
             bom,
             part_revision,
@@ -873,26 +873,25 @@ class PartRevision(models.Model):
             except AttributeError:
                 seller_part = None
 
-            part_indented_bom_item = PartIndentedBomItem(
-                bom_id=bom_item_id,
-                part=part_revision.part,
-                part_revision=part_revision,
-                do_not_load=do_not_load,
-                references=reference,
-                quantity=qty,
-                extended_quantity=extended_quantity,
-                parent_quantity=parent_qty,  # Do we need this?
-                indent_level=indent_level,
-                parent_id=parent_id,
-                subpart=subpart,
-                seller_part=seller_part,
-            )
+            bom_item_args = {
+                "bom_id": bom_item_id,
+                "part": part_revision.part,
+                "part_revision": part_revision,
+                "do_not_load": do_not_load,
+                "references": reference,
+                "quantity": qty,
+                "extended_quantity": extended_quantity,
+                "parent_quantity": parent_qty,  # Do we need this?
+                "indent_level": indent_level,
+                "parent_id": parent_id,
+                "subpart": subpart,
+                "seller_part": seller_part,
+            }
 
-            bom_item = (
-                PartWeightedBomItem(part_indented_bom_item)
-                if is_weighted_bom
-                else part_indented_bom_item
-            )
+            if is_weighted_bom:
+                bom_item = PartWeightedBomItem(**bom_item_args)
+            else:
+                bom_item = PartIndentedBomItem(**bom_item_args)
 
             bom.append_item_and_update(bom_item)
 
