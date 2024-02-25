@@ -14,6 +14,8 @@ from django.utils import timezone
 from djmoney.models.fields import CURRENCY_CHOICES, CurrencyField, MoneyField
 from social_django.models import UserSocialAuth
 
+from bom.part_bom_weighted import PartBomWeighted
+
 from .base_classes import AsDictModel
 from .constants import (
     CONFIGURATION_TYPES,
@@ -46,7 +48,7 @@ from .constants import (
     WEIGHT_UNITS,
 )
 from .csv_headers import PartsListCSVHeaders, PartsListCSVHeadersSemiIntelligent
-from .part_bom import PartBom, PartBomItem, PartWeightedBomItem, PartIndentedBomItem
+from .part_bom import PartBom, PartBomItem
 from .utils import (
     increment_str,
     listify_string,
@@ -872,7 +874,7 @@ class PartRevision(models.Model):
                 seller_part = None
 
             bom.append_item_and_update(
-                PartWeightedBomItem(
+                PartIndentedBomItem(
                     bom_id=bom_item_id,
                     part=part_revision.part,
                     part_revision=part_revision,
@@ -914,11 +916,10 @@ class PartRevision(models.Model):
                         do_not_load=sp.do_not_load,
                     )
 
-        bom = PartBom(
-            part_revision=self,
-            quantity=top_level_quantity,
-            is_weighted_bom=is_weighted_bom,
-        )
+        if is_weighted_bom:
+            bom = PartBomWeighted(part_revision=self, quantity=top_level_quantity)
+        else:
+            bom = PartBom(part_revision=self, quantity=top_level_quantity)
         indented_given_bom(bom, self)
 
         return bom

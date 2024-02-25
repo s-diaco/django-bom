@@ -1,6 +1,5 @@
 import logging
 from collections import OrderedDict
-from textwrap import indent
 
 from djmoney.money import Money
 
@@ -19,7 +18,6 @@ class PartBom(AsDictModel):
         missing_item_costs=0,
         nre_cost=None,
         out_of_pocket_cost=None,
-        is_weighted_bom=False,
     ):
         self.part_revision = part_revision
         self.parts = OrderedDict()
@@ -38,7 +36,6 @@ class PartBom(AsDictModel):
         self.out_of_pocket_cost = (
             out_of_pocket_cost  # cost of buying self.quantity with MOQs
         )
-        self.is_weighted_bom = is_weighted_bom
 
     def cost(self):
         return self.unit_cost * self.quantity
@@ -92,9 +89,6 @@ class PartBom(AsDictModel):
         else:
             self.missing_item_costs += 1
 
-        if self.is_weighted_bom:
-            self.update_as_weighted_bom(bom_part)
-
     def update(self):
         self.missing_item_costs = 0
         self.unit_cost = Money(0, self._currency)
@@ -102,68 +96,6 @@ class PartBom(AsDictModel):
         self.nre_cost = Money(0, self._currency)
         for _, bom_part in self.parts.items():
             self.update_bom_for_part(bom_part)
-
-    def update_as_weighted_bom(self, part):
-        """
-        Update self.childs_cost and self.childs_quantity for parents one by one
-        all the way up to the root node of the tree
-
-        :param part: The part wich parents will be updated
-        :type part: PartHierarchicalBomItem
-        """
-
-        if part.indent_level:
-
-            def update_parent(child_part, childs_old_cost_per_qty=0):
-                parent_part = self.parts[child_part.parent_id]
-                parents_old_cost_per_qty = 0
-                if parent_part.childs_quantity:
-                    parents_old_cost_per_qty = (
-                        parent_part.childs_cost / parent_part.childs_quantity
-                    )
-                # Revert last calculation to add the new one later
-                if child_part.childs_quantity:
-                    value_to_sub = childs_old_cost_per_qty
-                    if child_part.seller_part:
-                        if (
-                            parent_part.part_revision.material in ["with_loi"]
-                            and child_part.part_revision.tolerance.isnumeric()
-                        ):
-                            value_to_sub += child_part.seller_part.unit_cost / (
-                                1 - float(child_part.part_revision.tolerance) / 100
-                            )
-                        else:
-                            value_to_sub += child_part.seller_part.unit_cost
-                    value_to_sub *= child_part.quantity
-                    parent_part.childs_cost -= value_to_sub
-                # If its the first time for child_item to be sent for parent update
-                else:
-                    parent_part.childs_quantity += child_part.quantity
-                cost_to_add = child_part.childs_cost
-                if child_part.seller_part:
-                    if (
-                        parent_part.part_revision.material in ["with_loi"]
-                        and child_part.part_revision.tolerance.isnumeric()
-                    ):
-                        cost_to_add += child_part.seller_part.unit_cost / (
-                            1 - float(child_part.part_revision.tolerance) / 100
-                        )
-                    else:
-                        cost_to_add += child_part.seller_part.unit_cost
-                if child_part.childs_quantity:
-                    cost_to_add = (
-                        cost_to_add / child_part.childs_quantity * child_part.quantity
-                    )
-                else:
-                    cost_to_add *= child_part.quantity
-                parent_part.childs_cost += cost_to_add
-                if parent_part.indent_level:
-                    update_parent(
-                        child_part=parent_part,
-                        childs_old_cost_per_qty=parents_old_cost_per_qty,
-                    )
-
-            update_parent(child_part=part)
 
     def mouser_parts(self):
         mouser_items = {}
@@ -337,10 +269,3 @@ class PartIndentedBomItem(PartBomItem, AsDictModel):
 
     def __str__(self):
         return f"level: {self.indent_level}, {super().__str__()}"
-
-
-class PartWeightedBomItem(PartIndentedBomItem):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.childs_quantity = 0
-        self.childs_cost = Money(0, self._currency)
