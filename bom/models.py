@@ -14,7 +14,7 @@ from django.utils import timezone
 from djmoney.models.fields import CURRENCY_CHOICES, CurrencyField, MoneyField
 from social_django.models import UserSocialAuth
 
-from bom.part_bom_weighted import PartBomWeighted
+from bom.part_bom_weighted import PartBomWeighted, PartWeightedBomItem
 
 from .base_classes import AsDictModel
 from .constants import (
@@ -48,7 +48,7 @@ from .constants import (
     WEIGHT_UNITS,
 )
 from .csv_headers import PartsListCSVHeaders, PartsListCSVHeadersSemiIntelligent
-from .part_bom import PartBom, PartBomItem
+from .part_bom import PartBom, PartBomItem, PartIndentedBomItem
 from .utils import (
     increment_str,
     listify_string,
@@ -873,22 +873,28 @@ class PartRevision(models.Model):
             except AttributeError:
                 seller_part = None
 
-            bom.append_item_and_update(
-                PartIndentedBomItem(
-                    bom_id=bom_item_id,
-                    part=part_revision.part,
-                    part_revision=part_revision,
-                    do_not_load=do_not_load,
-                    references=reference,
-                    quantity=qty,
-                    extended_quantity=extended_quantity,
-                    parent_quantity=parent_qty,  # Do we need this?
-                    indent_level=indent_level,
-                    parent_id=parent_id,
-                    subpart=subpart,
-                    seller_part=seller_part,
-                )
+            part_indented_bom_item = PartIndentedBomItem(
+                bom_id=bom_item_id,
+                part=part_revision.part,
+                part_revision=part_revision,
+                do_not_load=do_not_load,
+                references=reference,
+                quantity=qty,
+                extended_quantity=extended_quantity,
+                parent_quantity=parent_qty,  # Do we need this?
+                indent_level=indent_level,
+                parent_id=parent_id,
+                subpart=subpart,
+                seller_part=seller_part,
             )
+
+            bom_item = (
+                PartWeightedBomItem(part_indented_bom_item)
+                if is_weighted_bom
+                else part_indented_bom_item
+            )
+
+            bom.append_item_and_update(bom_item)
 
             indent_level = indent_level + 1
             if (
