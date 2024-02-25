@@ -983,7 +983,9 @@ def part_info(request, part_id, part_revision_id=None):
     cache.set(qty_cache_key, qty, timeout=None)
 
     try:
-        indented_bom = part_revision.indented(top_level_quantity=qty)
+        indented_bom = part_revision.indented(
+            top_level_quantity=qty, is_weighted_bom=True
+        )
         # TODO: change "str(part_revision.id)" if possible
         total_bom_weight = indented_bom.parts[str(part_revision.id)].childs_quantity
     except (RuntimeError, RecursionError):

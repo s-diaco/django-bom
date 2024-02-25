@@ -46,7 +46,7 @@ from .constants import (
     WEIGHT_UNITS,
 )
 from .csv_headers import PartsListCSVHeaders, PartsListCSVHeadersSemiIntelligent
-from .part_bom import PartBom, PartBomItem, PartHierarchicalBomItem, PartIndentedBomItem
+from .part_bom import PartBom, PartBomItem, PartWeightedBomItem, PartIndentedBomItem
 from .utils import (
     increment_str,
     listify_string,
@@ -704,9 +704,9 @@ class PartRevision(models.Model):
         s = ""
         s += verbosify(
             self.value,
-            units=self.value_units
-            if make_searchable
-            else self.get_value_units_display(),
+            units=(
+                self.value_units if make_searchable else self.get_value_units_display()
+            ),
         )
         s += verbosify(self.description)
         tolerance = self.tolerance.replace("%", "") if self.tolerance else ""
@@ -716,58 +716,74 @@ class PartRevision(models.Model):
         s += verbosify(self.pin_count, post="pins")
         s += verbosify(
             self.frequency,
-            units=self.frequency_units
-            if make_searchable
-            else self.get_frequency_units_display(),
+            units=(
+                self.frequency_units
+                if make_searchable
+                else self.get_frequency_units_display()
+            ),
         )
         s += verbosify(
             self.wavelength,
-            units=self.wavelength_units
-            if make_searchable
-            else self.get_wavelength_units_display(),
+            units=(
+                self.wavelength_units
+                if make_searchable
+                else self.get_wavelength_units_display()
+            ),
         )
         s += verbosify(
             self.memory,
-            units=self.memory_units
-            if make_searchable
-            else self.get_memory_units_display(),
+            units=(
+                self.memory_units
+                if make_searchable
+                else self.get_memory_units_display()
+            ),
         )
         s += verbosify(
             self.interface if make_searchable else self.get_interface_display()
         )
         s += verbosify(
             self.supply_voltage,
-            units=self.supply_voltage_units
-            if make_searchable
-            else self.get_supply_voltage_units_display(),
+            units=(
+                self.supply_voltage_units
+                if make_searchable
+                else self.get_supply_voltage_units_display()
+            ),
             post="supply",
         )
         s += verbosify(
             self.temperature_rating,
-            units=self.temperature_rating_units
-            if make_searchable
-            else self.get_temperature_rating_units_display(),
+            units=(
+                self.temperature_rating_units
+                if make_searchable
+                else self.get_temperature_rating_units_display()
+            ),
             post="rating",
         )
         s += verbosify(
             self.power_rating,
-            units=self.power_rating_units
-            if make_searchable
-            else self.get_power_rating_units_display(),
+            units=(
+                self.power_rating_units
+                if make_searchable
+                else self.get_power_rating_units_display()
+            ),
             post="rating",
         )
         s += verbosify(
             self.voltage_rating,
-            units=self.voltage_rating_units
-            if make_searchable
-            else self.get_voltage_rating_units_display(),
+            units=(
+                self.voltage_rating_units
+                if make_searchable
+                else self.get_voltage_rating_units_display()
+            ),
             post="rating",
         )
         s += verbosify(
             self.current_rating,
-            units=self.current_rating_units
-            if make_searchable
-            else self.get_current_rating_units_display(),
+            units=(
+                self.current_rating_units
+                if make_searchable
+                else self.get_current_rating_units_display()
+            ),
             post="rating",
         )
         s += verbosify(self.material)
@@ -775,30 +791,36 @@ class PartRevision(models.Model):
         s += verbosify(self.finish)
         s += verbosify(
             self.length,
-            units=self.length_units
-            if make_searchable
-            else self.get_length_units_display(),
+            units=(
+                self.length_units
+                if make_searchable
+                else self.get_length_units_display()
+            ),
             pre="L",
         )
         s += verbosify(
             self.width,
-            units=self.width_units
-            if make_searchable
-            else self.get_width_units_display(),
+            units=(
+                self.width_units if make_searchable else self.get_width_units_display()
+            ),
             pre="W",
         )
         s += verbosify(
             self.height,
-            units=self.height_units
-            if make_searchable
-            else self.get_height_units_display(),
+            units=(
+                self.height_units
+                if make_searchable
+                else self.get_height_units_display()
+            ),
             pre="H",
         )
         s += verbosify(
             self.weight,
-            units=self.weight_units
-            if make_searchable
-            else self.get_weight_units_display(),
+            units=(
+                self.weight_units
+                if make_searchable
+                else self.get_weight_units_display()
+            ),
         )
         return s[:255]
 
@@ -823,7 +845,7 @@ class PartRevision(models.Model):
         self.displayable_synopsis = self.generate_synopsis(False)
         super(PartRevision, self).save(*args, **kwargs)
 
-    def indented(self, top_level_quantity=100):
+    def indented(self, top_level_quantity=100, is_weighted_bom=False):
         def indented_given_bom(
             bom,
             part_revision,
@@ -850,7 +872,7 @@ class PartRevision(models.Model):
                 seller_part = None
 
             bom.append_item_and_update(
-                PartHierarchicalBomItem(
+                PartWeightedBomItem(
                     bom_id=bom_item_id,
                     part=part_revision.part,
                     part_revision=part_revision,
@@ -892,7 +914,11 @@ class PartRevision(models.Model):
                         do_not_load=sp.do_not_load,
                     )
 
-        bom = PartBom(part_revision=self, quantity=top_level_quantity)
+        bom = PartBom(
+            part_revision=self,
+            quantity=top_level_quantity,
+            is_weighted_bom=is_weighted_bom,
+        )
         indented_given_bom(bom, self)
 
         return bom
@@ -1079,9 +1105,9 @@ class ManufacturerPart(models.Model, AsDictModel):
 
     def as_dict_for_export(self):
         return {
-            "manufacturer_name": self.manufacturer.name
-            if self.manufacturer is not None
-            else "",
+            "manufacturer_name": (
+                self.manufacturer.name if self.manufacturer is not None else ""
+            ),
             "manufacturer_part_number": self.manufacturer_part_number,
         }
 
@@ -1121,9 +1147,11 @@ class SellerPart(models.Model, AsDictModel):
 
     def as_dict_for_export(self):
         return {
-            "manufacturer_name": self.manufacturer_part.manufacturer.name
-            if self.manufacturer_part.manufacturer is not None
-            else "",
+            "manufacturer_name": (
+                self.manufacturer_part.manufacturer.name
+                if self.manufacturer_part.manufacturer is not None
+                else ""
+            ),
             "manufacturer_part_number": self.manufacturer_part.manufacturer_part_number,
             "seller": self.seller.name,
             "seller_part_number": self.seller_part_number,

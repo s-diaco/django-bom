@@ -3,6 +3,7 @@ from collections import OrderedDict
 from textwrap import indent
 
 from djmoney.money import Money
+from networkx import is_weighted
 
 from .base_classes import AsDictModel
 
@@ -19,6 +20,7 @@ class PartBom(AsDictModel):
         missing_item_costs=0,
         nre_cost=None,
         out_of_pocket_cost=None,
+        is_weighted_bom=False,
     ):
         self.part_revision = part_revision
         self.parts = OrderedDict()
@@ -37,6 +39,7 @@ class PartBom(AsDictModel):
         self.out_of_pocket_cost = (
             out_of_pocket_cost  # cost of buying self.quantity with MOQs
         )
+        self.is_weighted_bom = is_weighted_bom
 
     def cost(self):
         return self.unit_cost * self.quantity
@@ -90,8 +93,8 @@ class PartBom(AsDictModel):
         else:
             self.missing_item_costs += 1
 
-        if isinstance(bom_part, PartIndentedBomItem):
-            self.update_hierarchical(bom_part)
+        if self.is_weighted_bom:
+            self.update_as_weighted_bom(bom_part)
 
     def update(self):
         self.missing_item_costs = 0
@@ -101,7 +104,7 @@ class PartBom(AsDictModel):
         for _, bom_part in self.parts.items():
             self.update_bom_for_part(bom_part)
 
-    def update_hierarchical(self, part):
+    def update_as_weighted_bom(self, part):
         """
         Update self.childs_cost and self.childs_quantity for parents one by one
         all the way up to the root node of the tree
@@ -259,35 +262,43 @@ class PartBomItem(AsDictModel):
             "part_synopsis": self.part_revision.synopsis(),
             "part_description": self.part_revision.description,
             "part_revision": self.part_revision.revision,
-            "part_manufacturer": self.part.primary_manufacturer_part.manufacturer.name
-            if self.part.primary_manufacturer_part is not None
-            and self.part.primary_manufacturer_part.manufacturer is not None
-            else "",
-            "part_manufacturer_part_number": self.part.primary_manufacturer_part.manufacturer_part_number
-            if self.part.primary_manufacturer_part is not None
-            else "",
+            "part_manufacturer": (
+                self.part.primary_manufacturer_part.manufacturer.name
+                if self.part.primary_manufacturer_part is not None
+                and self.part.primary_manufacturer_part.manufacturer is not None
+                else ""
+            ),
+            "part_manufacturer_part_number": (
+                self.part.primary_manufacturer_part.manufacturer_part_number
+                if self.part.primary_manufacturer_part is not None
+                else ""
+            ),
             "part_ext_qty": self.extended_quantity,
             "part_order_qty": self.order_quantity,
-            "part_seller": self.seller_part.seller.name
-            if self.seller_part is not None
-            else "",
-            "part_seller_part_number": self.seller_part.seller_part_number
-            if self.seller_part is not None
-            else "",
-            "part_cost": self.seller_part.unit_cost
-            if self.seller_part is not None
-            else "",
-            "part_moq": self.seller_part.minimum_order_quantity
-            if self.seller_part is not None
-            else 0,
-            "part_nre": self.seller_part.nre_cost
-            if self.seller_part is not None
-            else 0,
+            "part_seller": (
+                self.seller_part.seller.name if self.seller_part is not None else ""
+            ),
+            "part_seller_part_number": (
+                self.seller_part.seller_part_number
+                if self.seller_part is not None
+                else ""
+            ),
+            "part_cost": (
+                self.seller_part.unit_cost if self.seller_part is not None else ""
+            ),
+            "part_moq": (
+                self.seller_part.minimum_order_quantity
+                if self.seller_part is not None
+                else 0
+            ),
+            "part_nre": (
+                self.seller_part.nre_cost if self.seller_part is not None else 0
+            ),
             "part_ext_cost": self.extended_cost(),
             "part_out_of_pocket_cost": self.out_of_pocket_cost(),
-            "part_lead_time_days": self.seller_part.lead_time_days
-            if self.seller_part is not None
-            else 0,
+            "part_lead_time_days": (
+                self.seller_part.lead_time_days if self.seller_part is not None else 0
+            ),
         }
 
     def manufacturer_parts_for_export(self):
@@ -329,7 +340,7 @@ class PartIndentedBomItem(PartBomItem, AsDictModel):
         return f"level: {self.indent_level}, {super().__str__()}"
 
 
-class PartHierarchicalBomItem(PartIndentedBomItem):
+class PartWeightedBomItem(PartIndentedBomItem):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.childs_quantity = 0

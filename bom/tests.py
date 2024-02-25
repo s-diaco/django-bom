@@ -561,7 +561,7 @@ class TestBOM(TransactionTestCase):
 
             # create some materials with bom as nested boms
 
-            # frit1
+            # test_frit1
             frit1 = Part(number_item="2183S119", organization=self.organization)
             frit1.save()
             frit1_rev = create_a_fake_part_revision(frit1, create_a_fake_assembly())
@@ -579,7 +579,7 @@ class TestBOM(TransactionTestCase):
                 )
             self.assertEqual(frit1_response.status_code, 200)
 
-            # frit2
+            # test_frit2
             frit2 = Part(number_item="1155F190", organization=self.organization)
             frit2.save()
             frit2_rev = create_a_fake_part_revision(frit2, create_a_fake_assembly())
@@ -597,7 +597,7 @@ class TestBOM(TransactionTestCase):
                 )
             self.assertEqual(frit2_response.status_code, 200)
 
-            # frit3
+            # test_frit3
             frit3 = Part(number_item="1155T158", organization=self.organization)
             frit3.save()
             frit3_rev = create_a_fake_part_revision(frit3, create_a_fake_assembly())
