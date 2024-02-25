@@ -3,7 +3,6 @@ from collections import OrderedDict
 from textwrap import indent
 
 from djmoney.money import Money
-from networkx import is_weighted
 
 from .base_classes import AsDictModel
 
