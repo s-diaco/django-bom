@@ -14,7 +14,7 @@ from django.utils import timezone
 from djmoney.models.fields import CURRENCY_CHOICES, CurrencyField, MoneyField
 from social_django.models import UserSocialAuth
 
-from bom.part_bom_weighted import PartBomWeighted, PartWeightedBomItem
+from bom.part_bom_weighted import PartBomWeighted, PartBomWeightedItem
 
 from .base_classes import AsDictModel
 from .constants import (
@@ -889,7 +889,7 @@ class PartRevision(models.Model):
             }
 
             if is_weighted_bom:
-                bom_item = PartWeightedBomItem(**bom_item_args)
+                bom_item = PartBomWeightedItem(**bom_item_args)
             else:
                 bom_item = PartIndentedBomItem(**bom_item_args)
 

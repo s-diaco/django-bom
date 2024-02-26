@@ -6,11 +6,12 @@ class PartBomWeighted(PartBom):
 
     def update_as_weighted_bom(self, part):
         """
-        Update self.childs_cost and self.childs_quantity for parents one by one
-        all the way up to the root node of the tree
+        Update "childs_cost" and "childs_quantity" for parent "PartBomItem"s
+        one by one all the way up to the root node of the tree and
+        calculate unit_cost
 
-        :param part: The part wich parents will be updated
-        :type part: PartHierarchicalBomItem
+        :param part: BOM item whom parents will be updated
+        :type part: PartBomWeightedItem
         """
 
         if part.indent_level:
@@ -63,15 +64,41 @@ class PartBomWeighted(PartBom):
                         child_part=parent_part,
                         childs_old_cost_per_qty=parents_old_cost_per_qty,
                     )
+                # "parent_part" is the root part
+                else:
+                    self.unit_cost = (
+                        parent_part.childs_cost / parent_part.childs_quantity
+                    )
+                    if (parent_part.seller_part) and (
+                        parent_part.seller_part.unit_cost is not None
+                    ):
+                        self.unit_cost += parent_part.seller_part.unit_cost
 
             update_parent(child_part=part)
 
     def update_bom_for_part(self, bom_part):
-        super().update_bom_for_part(bom_part)
+        if bom_part.do_not_load:
+            bom_part.order_quantity = 0
+            bom_part.order_cost = 0
+            return
+
         self.update_as_weighted_bom(bom_part)
 
+        if bom_part.seller_part:
+            try:
+                bom_part.order_quantity = bom_part.seller_part.order_quantity(
+                    bom_part.total_extended_quantity
+                )
+                bom_part.order_cost = (
+                    bom_part.total_extended_quantity * bom_part.seller_part.unit_cost
+                )
+            except AttributeError:
+                pass
+        else:
+            self.missing_item_costs += 1
 
-class PartWeightedBomItem(PartIndentedBomItem):
+
+class PartBomWeightedItem(PartIndentedBomItem):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.childs_quantity = 0
