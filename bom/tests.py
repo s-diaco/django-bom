@@ -539,16 +539,18 @@ class TestBOM(TransactionTestCase):
     # TODO: Only tested for intelligent scheme
     @parameterized.expand(
         [
-            ("bom_exports/1155T158.csv", 1000, 2291816),
-            ("bom_exports/1155F190.csv", 1010, 1856590),
-            ("bom_exports/2183S119.csv", 1015, 732879),
-            ("bom_exports/CGM4554.csv", 100, 354905),
-            ("bom_exports/CGM5357.csv", 100, 548166),
-            ("bom_exports/CNE5393.csv", 100, 149918),
-            ("bom_exports/CNE5393_fake.csv", 100, 158877),
+            ("bom_exports/1155T158.csv", 1000, 2291816, 2291),
+            ("bom_exports/1155F190.csv", 1010, 1856590, 1838),
+            ("bom_exports/2183S119.csv", 1015, 732879, 722),
+            ("bom_exports/CGM4554.csv", 100, 354905, 3549),
+            ("bom_exports/CGM5357.csv", 100, 548166, 5481),
+            ("bom_exports/CNE5393.csv", 100, 149918, 1499),
+            ("bom_exports/CNE5393_fake.csv", 100, 158877, 1588),
         ]
     )
-    def test_childs_cost_calcs(self, test_file, childs_quantity, childs_cost):
+    def test_childs_cost_calcs(
+        self, test_file, childs_quantity, childs_cost, bom_unit_cost
+    ):
         if self.organization.number_scheme == constants.NUMBER_SCHEME_INTELLIGENT:
             # Upload parts with prices
             with open(
@@ -639,6 +641,10 @@ class TestBOM(TransactionTestCase):
             self.assertEqual(
                 p4_rev.indented().parts[str(p4_rev.id)].childs_quantity,
                 childs_quantity,
+            )
+            self.assertEqual(
+                int(p4_rev.indented().unit_cost.amount),
+                bom_unit_cost,
             )
 
     def test_part_upload_bom_corner_cases(self):
