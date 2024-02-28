@@ -574,24 +574,17 @@ class TestBOM(TransactionTestCase):
             )
             bom = parent_part.indented()
             bom_list = list(bom.parts.values())
-            self.assertEqual(len(bom.parts), len(test_list))
+            # number of bom.parts = Num. of test_list + parent part
+            self.assertEqual(len(bom.parts), len(test_list) + 1)
 
-            # Check that we successfully updated an existing part (only tested for semi-intelligent scheme for now)
-            if (
-                self.organization.number_scheme
-                == constants.NUMBER_SCHEME_SEMI_INTELLIGENT
-            ):
-                p2.refresh_from_db()
-                p2_rev = p2.latest()
-                p2_mp = p2.primary_manufacturer_part
-                self.assertEqual(p2_rev.revision, "88")  # previously 1
-                self.assertEqual(p2_rev.description, "123")  # previously 'Brown dog'
-                self.assertEqual(
-                    p2_mp.manufacturer.name, "a new manufacturer name"
-                )  # previously None
-                self.assertEqual(
-                    p2_mp.manufacturer_part_number, "a new mpn"
-                )  # previously 'GRM1555C1H100JA01D'
+            # Check that we successfully updated an existing part
+            p2.refresh_from_db()
+            p2_rev = p2.latest()
+            p2_mp = p2.primary_manufacturer_part
+            self.assertEqual(p2_rev.revision, "1")
+            self.assertEqual(p2_rev.description, "Brown dog")
+            self.assertEqual(p2_mp.manufacturer.name, "Nordic Semiconductor")
+            self.assertEqual(p2_mp.manufacturer_part_number, "GRM1555C1H100JA01D")
 
             # Check that parts get uploaded correctly
             for idx, item in enumerate(test_list):
