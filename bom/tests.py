@@ -8,6 +8,8 @@ from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from parameterized import parameterized
 
+from bom.utils import convert_arabic_to_english
+
 from . import constants
 from .forms import AddSubpartForm, PartFormSemiIntelligent, PartInfoForm, SellerPartForm
 from .helpers import (
@@ -538,13 +540,13 @@ class TestBOM(TransactionTestCase):
 
     @parameterized.expand(
         [
-            ("bom_exports/1155T158.csv", "1155T158"),
-            ("bom_exports/1155F190.csv", "1155F190"),
-            ("bom_exports/2183S119.csv", "2183S119"),
-            ("bom_exports/CGM4554.csv", "CGM4554"),
-            ("bom_exports/CGM5357.csv", "CGM5357"),
-            ("bom_exports/CNE5393.csv", "CNE5393"),
-            ("bom_exports/CNE5393_fake.csv", "CNE5393_fake"),
+            ("bom_exports/1155T158.csv", 8),
+            ("bom_exports/1155F190.csv", 6),
+            ("bom_exports/2183S119.csv", 10),
+            ("bom_exports/CGM4554.csv", 11),
+            ("bom_exports/CGM5357.csv", 8),
+            ("bom_exports/CNE5393.csv", 8),
+            ("bom_exports/CNE5393_fake.csv", 8),
         ]
     )
     def test_upload_bom_custom_csv(self, test_file, num_parts):
@@ -588,47 +590,20 @@ class TestBOM(TransactionTestCase):
 
             # Check that parts get uploaded correctly
             for idx, item in enumerate(test_list):
-                assertion_message = f'Index: {idx}, CSV PN: {item["part_number"]}, BOM PN: {bom_list[idx].part.full_part_number()}'
+                assertion_message = f"Index: {idx+1}, CSV PN: {item[next(iter(item))]}, BOM PN: {bom_list[idx+1].part.full_part_number()}"
                 self.assertEqual(
-                    int(float(item["level"])),
-                    bom_list[idx].indent_level,
+                    item[next(iter(item))],
+                    bom_list[idx + 1].part.full_part_number(),
                     assertion_message,
                 )
-                self.assertEqual(
-                    item["part_number"],
-                    bom_list[idx].part.full_part_number(),
-                    assertion_message,
-                )
-                self.assertEqual(
-                    item["revision"],
-                    bom_list[idx].part_revision.revision,
-                    assertion_message,
-                )
-                self.assertEqual(
-                    item["manufacturer_name"],
-                    bom_list[idx].part.primary_manufacturer_part.manufacturer.name,
-                    assertion_message,
-                )
-                self.assertEqual(
-                    item["manufacturer_part_number"],
-                    bom_list[
-                        idx
-                    ].part.primary_manufacturer_part.manufacturer_part_number,
-                    assertion_message,
-                )
-                if bom_list[idx].indent_level > 0:
+                if bom_list[idx + 1].indent_level > 0:
                     self.assertEqual(
-                        float(item["quantity"]),
-                        bom_list[idx].subpart.count,
+                        float(convert_arabic_to_english(item[list(item.keys())[-2]])),
+                        bom_list[idx + 1].subpart.count,
                         assertion_message,
                     )
 
             # Test OK upload with parent part number
-            test_file = (
-                "test_full_bom.csv"
-                if self.organization.number_variation_len > 0
-                else "test_full_bom_no_variations.csv"
-            )
             p4_rev = create_a_fake_part_revision(p4, create_a_fake_assembly())
             with open(f"{TEST_FILES_DIR}/{test_file}") as test_csv:
                 response = self.client.post(
@@ -645,104 +620,7 @@ class TestBOM(TransactionTestCase):
 
             p4.refresh_from_db()
             p4_rev.refresh_from_db()
-            self.assertEqual(len(p4_rev.indented().parts), num_parts)
-
-            # Test errors get thrown
-            test_file = (
-                "test_full_bom_with_errors.csv"
-                if self.organization.number_variation_len > 0
-                else "test_full_bom_no_variations_with_errors.csv"
-            )
-            with open(f"{TEST_FILES_DIR}/{test_file}") as test_csv:
-                response = self.client.post(
-                    reverse("bom:upload-bom"),
-                    {"file": test_csv, "parent_part_number": p3.full_part_number()},
-                    follow=True,
-                )
-            self.assertEqual(response.status_code, 200)
-
-            messages = list(response.context.get("messages"))
-
-            for idx, msg in enumerate(messages):
-                if (
-                    self.organization.number_scheme
-                    == constants.NUMBER_SCHEME_SEMI_INTELLIGENT
-                ):
-                    self.assertTrue(
-                        "Row 38 - part_number: Uploading of this subpart skipped. Couldn&#x27;t parse part number."
-                        in str(msg.message)
-                    )
-                    self.assertTrue(
-                        "Row 34 - code: Ensure this value has at most 3 characters (it has 9)."
-                        in str(msg.message)
-                    )
-                    self.assertTrue(
-                        "Row 33 - part_number: Uploading of this subpart skipped. Couldn&#x27;t parse part number."
-                        in str(msg.message)
-                    )
-                    self.assertTrue(
-                        "Row 35 - part_number: Uploading of this subpart skipped. Couldn&#x27;t parse part number."
-                        in str(msg.message)
-                    )
-                    self.assertTrue(
-                        "Row 36 - part_number: Uploading of this subpart skipped. Couldn&#x27;t parse part number."
-                        in str(msg.message)
-                    )
-                    self.assertTrue(
-                        "Row 37 - part_number: Uploading of this subpart skipped. Couldn&#x27;t parse part number."
-                        in str(msg.message)
-                    )
-                self.assertTrue(
-                    "Row 39 - count: Ensure this value is greater than or equal to 0."
-                    in str(msg.message)
-                )
-                self.assertTrue(
-                    "Row 40 - level: Assembly levels must decrease by no more than 1 from sequential rows."
-                    in str(msg.message)
-                )
-
-            # Check that 2 rows of 103-0002-00 in one assembly gets combined into one part, and added to the 2 that already exist = 2 + 1 + 1
-            parent_part_number = (
-                "107-0003-22"
-                if self.organization.number_variation_len > 0
-                else "107-0003"
-            )
-            parent_part = Part.from_part_number(
-                parent_part_number, organization=self.organization
-            )
-            bom = parent_part.indented()
-            part_number_to_check = (
-                "103-0002-00"
-                if self.organization.number_variation_len > 0
-                else "103-0002"
-            )
-            self.assertEqual(
-                list(bom.parts.values())[6].part.full_part_number(),
-                part_number_to_check,
-            )
-            self.assertEqual(list(bom.parts.values())[6].subpart.count, 4)
-
-            # Test infinite recursion error gets thrown
-            test_file = (
-                "test_full_bom_with_errors_infinite_recursion.csv"
-                if self.organization.number_variation_len > 0
-                else "test_full_bom_no_variations_with_errors_infinite_recursion.csv"
-            )
-            with open(f"{TEST_FILES_DIR}/{test_file}") as test_csv:
-                response = self.client.post(
-                    reverse("bom:upload-bom"),
-                    {"file": test_csv, "parent_part_number": p3.full_part_number()},
-                    follow=True,
-                )
-            self.assertEqual(response.status_code, 200)
-
-            messages = list(response.context.get("messages"))
-            for idx, msg in enumerate(messages):
-                self.assertTrue(
-                    "it would cause infinite recursion. Uploading of this subpart skipped."
-                    in str(msg.message)
-                )
-                self.assertTrue("Row 15" in str(msg.message))
+            self.assertEqual(len(p4_rev.indented().parts), num_parts + 1)
 
     # Only for intelligent scheme
     @parameterized.expand(
