@@ -1142,12 +1142,11 @@ class PartCSVForm(forms.Form):
                             minimum_order_quantity=moq,
                             minimum_pack_quantity=mpq,
                         )
-                    elif unit_cost and nre_cost:
-                        nre_cost = Money(nre_cost, self.organization.currency)
+                    elif seller_name and unit_cost:
+                        nre_cost = Money(0, self.organization.currency)
                         unit_cost = Money(unit_cost, self.organization.currency)
-                        default_seller_name = "انتخاب نشده (پیش فرض)"
                         seller, created = Seller.objects.get_or_create(
-                            name__iexact=default_seller_name,
+                            name__iexact=seller_name,
                             organization=self.organization,
                             defaults={"name": default_seller_name},
                         )
@@ -1161,11 +1160,12 @@ class PartCSVForm(forms.Form):
                             unit_cost=unit_cost,
                             nre_cost=nre_cost,
                         )
-                    elif seller_name and unit_cost:
-                        nre_cost = Money(0, self.organization.currency)
+                    elif unit_cost and nre_cost:
+                        nre_cost = Money(nre_cost, self.organization.currency)
                         unit_cost = Money(unit_cost, self.organization.currency)
+                        default_seller_name = "انتخاب نشده (پیش فرض)"
                         seller, created = Seller.objects.get_or_create(
-                            name__iexact=seller_name,
+                            name__iexact=default_seller_name,
                             organization=self.organization,
                             defaults={"name": default_seller_name},
                         )

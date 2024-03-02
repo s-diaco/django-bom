@@ -66,15 +66,21 @@ class PartBomWeighted(PartBom):
                     )
                 # "parent_part" is the root part
                 else:
-                    self.unit_cost = (
-                        parent_part.childs_cost / parent_part.childs_quantity
-                    )
+                    if parent_part.childs_quantity:
+                        self.unit_cost = (
+                            parent_part.childs_cost / parent_part.childs_quantity
+                        )
                     if (parent_part.seller_part) and (
                         parent_part.seller_part.unit_cost is not None
                     ):
                         self.unit_cost += parent_part.seller_part.unit_cost
 
             update_parent(child_part=part)
+        else:
+            # TODO: Fix double calc
+            # "part" is root
+            if (part.seller_part) and (part.seller_part.unit_cost is not None):
+                self.unit_cost = part.seller_part.unit_cost
 
     def update_bom_for_part(self, bom_part):
         if bom_part.do_not_load:

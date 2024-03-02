@@ -2011,7 +2011,7 @@ class TestBOMIntelligent(TestBOM):
         self.assertEqual(response.status_code, 302)
         found_error = False
         for m in response.wsgi_request._messages:
-            if "already exists" in str(m):
+            if "تعریف شده است" in str(m):
                 found_error = True
         self.assertTrue(found_error)
 
