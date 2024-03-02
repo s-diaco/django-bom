@@ -815,15 +815,13 @@ class PartCSVForm(forms.Form):
                             self.add_error(
                                 None,
                                 str(e)
-                                + " on row {}. Creation of this part skipped.".format(
-                                    row_count
-                                ),
+                                + " on row {}. این متریال آپلود نشد.".format(row_count),
                             )
                             continue
                         except PartClass.DoesNotExist:
                             self.add_error(
                                 None,
-                                "No part class found for part number {0} in row {1}. Creation of this part skipped.".format(
+                                "No part class found for part number {0} in row {1}. این متریال آپلود نشد.".format(
                                     part_number, row_count
                                 ),
                             )
@@ -841,7 +839,7 @@ class PartCSVForm(forms.Form):
                             )
                             self.add_error(
                                 None,
-                                f"Part number {part_number} in row {row_count} already exists. Uploading of this part skipped.",
+                                f"کد {part_number} در سطر {row_count} قبلاً تعریف شده است. متریال آپلود نشد.",
                             )
                             continue
                         except Part.DoesNotExist:
@@ -883,11 +881,12 @@ class PartCSVForm(forms.Form):
                     continue
 
                 if not revision:
-                    self.add_error(
-                        None,
-                        f"Missing revision in row {row_count}. Uploading of this part skipped.",
-                    )
-                    continue
+                    revision = 1
+                    # self.add_error(
+                    #     None,
+                    #     f"Missing revision in row {row_count}. Uploading of this part skipped.",
+                    # )
+                    # continue
                 elif len(revision) > 4:
                     self.add_error(
                         None,
@@ -1127,6 +1126,8 @@ class PartCSVForm(forms.Form):
                         part.save()
 
                     if seller_name and unit_cost and nre_cost:
+                        nre_cost = Money(nre_cost, self.organization.currency)
+                        unit_cost = Money(unit_cost, self.organization.currency)
                         seller, created = Seller.objects.get_or_create(
                             name__iexact=seller_name,
                             organization=self.organization,
@@ -1142,6 +1143,8 @@ class PartCSVForm(forms.Form):
                             minimum_pack_quantity=mpq,
                         )
                     elif unit_cost and nre_cost:
+                        nre_cost = Money(nre_cost, self.organization.currency)
+                        unit_cost = Money(unit_cost, self.organization.currency)
                         default_seller_name = "انتخاب نشده (پیش فرض)"
                         seller, created = Seller.objects.get_or_create(
                             name__iexact=default_seller_name,
@@ -1158,7 +1161,27 @@ class PartCSVForm(forms.Form):
                             unit_cost=unit_cost,
                             nre_cost=nre_cost,
                         )
+                    elif seller_name and unit_cost:
+                        nre_cost = Money(0, self.organization.currency)
+                        unit_cost = Money(unit_cost, self.organization.currency)
+                        seller, created = Seller.objects.get_or_create(
+                            name__iexact=seller_name,
+                            organization=self.organization,
+                            defaults={"name": default_seller_name},
+                        )
+                        (
+                            seller_part,
+                            seller_created,
+                        ) = SellerPart.objects.get_or_create(
+                            manufacturer_part=manufacturer_part,
+                            seller_part_number="",
+                            seller=seller,
+                            unit_cost=unit_cost,
+                            nre_cost=nre_cost,
+                        )
                     elif unit_cost:
+                        nre_cost = Money(0, self.organization.currency)
+                        unit_cost = Money(unit_cost, self.organization.currency)
                         default_seller_name = "انتخاب نشده (پیش فرض)"
                         seller, created = Seller.objects.get_or_create(
                             name__iexact=default_seller_name,
@@ -1228,12 +1251,10 @@ class PartFormIntelligent(forms.ModelForm):
         self.fields["number_item"].label = "کد"
         self.fields["number_item"].widget.attrs["oninput"] = "updateTargetInput()"
         if self.instance and self.instance.id:
-            self.fields[
-                "primary_manufacturer_part"
-            ].queryset = ManufacturerPart.objects.filter(
-                part__id=self.instance.id
-            ).order_by(
-                "manufacturer_part_number"
+            self.fields["primary_manufacturer_part"].queryset = (
+                ManufacturerPart.objects.filter(part__id=self.instance.id).order_by(
+                    "manufacturer_part_number"
+                )
             )
         else:
             del self.fields["primary_manufacturer_part"]
@@ -1304,12 +1325,10 @@ class PartFormSemiIntelligent(forms.ModelForm):
             self.id = kwargs["instance"].id
 
         if self.instance and self.instance.id:
-            self.fields[
-                "primary_manufacturer_part"
-            ].queryset = ManufacturerPart.objects.filter(
-                part__id=self.instance.id
-            ).order_by(
-                "manufacturer_part_number"
+            self.fields["primary_manufacturer_part"].queryset = (
+                ManufacturerPart.objects.filter(part__id=self.instance.id).order_by(
+                    "manufacturer_part_number"
+                )
             )
         else:
             del self.fields["primary_manufacturer_part"]
