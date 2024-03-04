@@ -102,6 +102,27 @@ class UserCreateForm(UserCreationForm):
     last_name = forms.CharField(required=True)
     email = forms.EmailField(required=True)
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.fields["username"].help_text = (
+            "الزامی. حداکثر ۱۵۰ کاراکتر. فقط حروف (فارسی، انگلیسی) اعداد و @/./+/-/_."
+        )
+        self.fields["password1"].help_text = (
+            """
+            مشابه نام یا نام کاربری نباشد.
+            حداقل ۸ کاراکتر داشته باشد.
+            خیلی واضح نباشد.
+            حداقل دارای یک کاراکتر غیر عددی باشد.
+            """
+        )
+        self.fields["password2"].help_text = "پسورد را دوباره برای تأیید وارد کنید."
+        self.fields["password1"].label = "رمز"
+        self.fields["password2"].label = "تأیید رمز"
+        self.fields["username"].label = "نام کاربری"
+        self.fields["first_name"].label = "نام"
+        self.fields["last_name"].label = "نام خانوادگی"
+        self.fields["email"].label = "ایمیل"
+
     def clean_email(self):
         email = self.cleaned_data["email"]
         exists = User.objects.filter(email__iexact=email).count() > 0
@@ -407,10 +428,10 @@ class SellerPartForm(forms.ModelForm):
         self.organization = kwargs.pop("organization", None)
         self.manufacturer_part = kwargs.pop("manufacturer_part", None)
         self.base_fields["unit_cost"] = forms.DecimalField(
-            required=True, label="قیمت", initial=0
+            required=True, label="قیمت (هزینه سربار)", initial=0
         )
         self.base_fields["nre_cost"] = forms.IntegerField(
-            required=False, label="هزینه سربار", initial=0
+            required=False, label="nre_cost", initial=0
         )
 
         instance = kwargs.get("instance")

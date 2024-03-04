@@ -428,7 +428,7 @@ def organization_create(request):
         if form.is_valid():
             organization = form.save(commit=False)
             organization.owner = user
-            organization.subscription = constants.SUBSCRIPTION_TYPE_FREE
+            organization.subscription = constants.SUBSCRIPTION_TYPE_PRO
             organization.save()
             profile.organization = organization
             profile.role = constants.ROLE_TYPE_ADMIN
@@ -529,7 +529,7 @@ def bom_settings(request, tab_anchor=None):
                     added_user_profile = user_add_form.save()
                     messages.info(
                         request,
-                        f"Added {added_user_profile.user.first_name} {added_user_profile.user.last_name} to your organization.",
+                        f"{added_user_profile.user.first_name} {added_user_profile.user.last_name} به شرکت شما اضافه شد.",
                     )
                 else:
                     messages.error(request, user_add_form.errors)

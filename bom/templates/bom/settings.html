@@ -175,7 +175,7 @@
 
         <div id="organization" class="col s12">
             {% if user.bom_profile.role == 'A' %}
-                <h3>Organization</h3>
+                <h3>شرکت</h3>
                 <div class="row">
                     <div class="col s12">
                         <form name="seller" action="{% url 'bom:settings' tab_anchor=ORGANIZATION_TAB %}" method="post" class="col s12" enctype="multipart/form-data">
@@ -195,7 +195,7 @@
                 </div>
                 <div class="row">
                     <div class="col s12">
-                        <h3>Users</h3>
+                        <h3>کاربران</h3>
                         {% if users_in_organization.count > 0 %}
                             <form name="seller" action="{% url 'bom:settings' tab_anchor=ORGANIZATION_TAB %}" method="post" class="col s12" enctype="multipart/form-data">
                                 {% csrf_token %}
@@ -203,10 +203,10 @@
                                     <thead>
                                     <tr>
                                         <th class="text-normal"><label><input type="checkbox" id="user-select-all"><span></span></label></th>
-                                        <th class="text-normal">Role</th>
-                                        <th class="text-normal">User Name</th>
-                                        <th class="text-normal">Full Name</th>
-                                        <th class="text-normal">Email</th>
+                                        <th class="text-normal">نقش</th>
+                                        <th class="text-normal">نام کاربری</th>
+                                        <th class="text-normal">نام و نام خانوادگی</th>
+                                        <th class="text-normal">ایمیل</th>
                                         <th class="text-normal"></th>
                                     </tr>
                                     </thead>
@@ -222,7 +222,7 @@
                                             <td class="text-normal"><a href="mailto:{{ user.email }}">{{ org_user.email }}</a></td>
                                             <td>
                                                 <a class="waves-effect waves-green btn-flat green-text text-lighten-1" href="{% url 'bom:user-meta-edit' user_meta_id=org_user.bom_profile.id %}"><i
-                                                        class="material-icons left green-text text-lighten-1">edit</i>Edit</a>
+                                                        class="material-icons left green-text text-lighten-1">edit</i>ویرایش</a>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -231,11 +231,11 @@
                                 <div class="row" style="padding-top: 16px;">
                                     <div class="col s6">
                                         <button class="waves-effect waves-light btn red lighten-1" type="submit" name="submit-remove-user"
-                                                onclick="return confirm('Are you sure you want to remove the selected users from {{ organization }}?')">Remove Selected
+                                                onclick="return confirm('کاربر/کاربران انتخاب شده از شرکت {{ organization }} حذف شوند?')">خذف کاربر انتخاب شده
                                         </button>
                                     </div>
                                     <div class="col s6 left-align">
-                                        {% include 'bom/bom-form-modal.html' with modal_title='Add User' form=user_add_form action=user_add_form_action name='submit-add-user' modal_description='Adding users to your organization is a paid feature, but is free for a limited time while we are still developing the tool. Contact <a href="mailto:infomailaddress">infomailaddress</a> if you are interested.' %}
+                                        {% include 'bom/bom-form-modal.html' with modal_title='افزودن کاربر' form=user_add_form action=user_add_form_action name='submit-add-user' modal_description='Adding users to your organization is a paid feature, but is free for a limited time while we are still developing the tool. Contact <a href="mailto:infomailaddress">infomailaddress</a> if you are interested.' %}
                                     </div>
                                 </div>
                             </form>

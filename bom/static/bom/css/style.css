@@ -166,6 +166,14 @@ table.treetable tr.expanded span.indenter a {
     width: 95%;
 }
 
+.row .col.push-m3 {
+    right: 25%;
+}
+
+.input-field>input[type]:-webkit-autofill:not(.browser-default):not([type="search"])+label, .input-field>input[type=date]:not(.browser-default)+label, .input-field>input[type=time]:not(.browser-default)+label {
+    transform-origin: top right;
+}
+
 @media only screen and (min-width: 601px) {
     .container-app {
         width: 95%;
