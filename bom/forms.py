@@ -416,12 +416,12 @@ class SellerPartForm(forms.ModelForm):
             "lead_time_days",
             "ncnr",
             "link",
+            "nre_cost",
         ]
 
     field_order = [
         "seller",
         "unit_cost",
-        "nre_cost",
     ]
 
     def __init__(self, *args, **kwargs):
@@ -429,9 +429,6 @@ class SellerPartForm(forms.ModelForm):
         self.manufacturer_part = kwargs.pop("manufacturer_part", None)
         self.base_fields["unit_cost"] = forms.DecimalField(
             required=True, label="قیمت (هزینه سربار)", initial=0
-        )
-        self.base_fields["nre_cost"] = forms.IntegerField(
-            required=False, label="nre_cost", initial=0
         )
 
         instance = kwargs.get("instance")
@@ -1446,6 +1443,13 @@ class PartRevisionForm(forms.ModelForm):
             "attribute": _("اطلاعات اضافه متریال"),
             "value": _("عدد یا تکست"),
         }
+        # TODO: Delete
+        # error_messages = {
+        #     "description": {
+        #        "required": _("Please let us know what to call you!"),
+        #        "max_length": _("This writer's name is too long."),
+        #    },
+        # }
 
     def __init__(self, *args, **kwargs):
         super(PartRevisionForm, self).__init__(*args, **kwargs)
@@ -1466,6 +1470,8 @@ class PartRevisionForm(forms.ModelForm):
         self.fields["material"].label = "روش محاسبه قیمت"
         self.fields["tolerance"].initial = 0
         self.fields["description"] = forms.CharField(
+            # TODO: Delete
+            # error_messages={"required": "Please let us know what to call you!"},
             required=True,
             label="نوع",
             widget=AutocompleteTextInput(

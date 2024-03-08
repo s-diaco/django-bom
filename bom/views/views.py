@@ -1523,7 +1523,7 @@ def create_part(request):
                         seller_part_number="" if spn == "" else spn,
                         seller=seller,
                         unit_cost=seller_part_form.instance.unit_cost,
-                        nre_cost=seller_part_form.instance.nre_cost,
+                        nre_cost=seller_part_form.instance.unit_cost,
                     )
             return HttpResponseRedirect(
                 reverse("bom:part-info", kwargs={"part_id": str(new_part.id)})
@@ -1539,7 +1539,7 @@ def create_part(request):
         )
         manufacturer_part_form = ManufacturerPartForm(organization=organization)
         seller_part_form = SellerPartForm(organization=organization)
-        seller_form = SellerForm(organization=organization, prefix="seller_")
+        seller_form = SellerForm(organization=organization)
 
     return TemplateResponse(request, "bom/create-part.html", locals())
 
@@ -1991,7 +1991,7 @@ def sellerpart_edit(request, sellerpart_id):
     profile = user.bom_profile()
     organization = profile.organization
 
-    title = "ویرایش اطلاعات مربوط به تأمین متریال"
+    title = "ویرایش اطلاعات بازرگانی متریال"
     action = reverse("bom:sellerpart-edit", kwargs={"sellerpart_id": sellerpart_id})
     sellerpart = get_object_or_404(SellerPart, pk=sellerpart_id)
 
