@@ -53,7 +53,7 @@
             <th class="text-normal">Qty</th>
             <th class="text-normal">Refs</th>
             <th class="text-normal">DNL</th>
-            <th class="text-normal">Synopsis</th>
+            <th class="text-normal">description</th>
             <th class="text-normal">Rev</th>
             <th class="text-normal">Manufacturer</th>
             <th class="text-normal">کد تولید کننده</th>
@@ -71,7 +71,7 @@
                 <td class="text-normal">{{ subpart.extended_quantity | floatformat }}</td>
                 <td class="text-normal">{{ subpart.references | default:"-" }}</td>
                 <td class="text-normal">{{ subpart.do_not_load | default:"-" }}</td>
-                <td class="text-normal">{{ subpart.part_revision.synopsis }}</td>
+                <td class="text-normal">{{ subpart.part_revision.description }}</td>
                 <td class="text-normal">{{ subpart.part_revision.revision }}</td>
                 <td class="text-normal">{{ subpart.part.primary_manufacturer_part.manufacturer.name }}
                     {% if subpart.part.manufacturer_parts.count > 1 %}<i>(+{{ subpart.part.manufacturer_parts.count }})</i>{% endif %}</td>

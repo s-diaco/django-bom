@@ -91,11 +91,11 @@
                     </div>
                 </div>
             {% endif %}
-            {% if subpart.part_revision.synopsis|length > 75 %}
+            {% if subpart.part_revision.description|length > 75 %}
                 <div id="modal-{{ subpart.part.id }}-synposis" class="modal">
                     <div class="modal-content">
                         <h2>{{ subpart.part.full_part_number }} Synposis</h2>
-                        <p>{{ subpart.part_revision.synopsis }}</p>
+                        <p>{{ subpart.part_revision.description }}</p>
                     </div>
                     <div class="modal-footer">
                         <a href="#!" class="modal-close waves-effect green lighten-1 waves-green btn-flat">Ok</a>
@@ -110,7 +110,7 @@
                 <td class="text-normal">{{ subpart.references | default:"-" | truncatechars:25 }}{% if subpart.references|length > 25 %}
                     <a class="modal-trigger modal-{{ subpart.part.id }}-references" href="#modal-{{ subpart.part.id }}-references">&nbsp;[+]</a>
                 {% endif %}</td>
-                <td class="text-normal">{{ subpart.part_revision.synopsis | truncatechars:75 }}{% if subpart.part_revision.synopsis|length > 75 %}
+                <td class="text-normal">{{ subpart.part_revision.description | truncatechars:75 }}{% if subpart.part_revision.description|length > 75 %}
                     <a class="modal-trigger modal-{{ subpart.part.id }}-synposis" href="#modal-{{ subpart.part.id }}-synposis">&nbsp;[+]</a>
                 {% endif %}
                 <td class="text-normal">{{ subpart.part_revision.revision }}</td>

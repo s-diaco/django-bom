@@ -3,7 +3,7 @@
 {% load static %}
 {% load djmoney %}
 
-{% block head-title %}{{ part.full_part_number }}{% if part_revision %} {{ part_revision.synopsis }}{% endif %}{% endblock %}
+{% block head-title %}{{ part.full_part_number }}{% if part_revision %} {{ part_revision.description }}{% endif %}{% endblock %}
 
 {% block head %}
     <link rel="stylesheet" type="text/css" href="{% static 'bom/css/style.css' %}"/>
@@ -239,7 +239,7 @@
                                                 <td>
                                                     <a href="{% url 'bom:part-info-history' part_id=used_part.part.id part_revision_id=used_part.id %}">{{ used_part.part.full_part_number }}</a>
                                                 </td>
-                                                <td>{{ used_part.synopsis }}</td>
+                                                <td>{{ used_part.description }}</td>
                                                 <td>{{ used_part.revision }}</td>
                                                 <td>{{ used_part.part.primary_manufacturer_part.manufacturer.name }}</td>
                                                 <td>{{ used_part.part.primary_manufacturer_part.manufacturer_part_number }}</td>
@@ -273,7 +273,7 @@
                                                 <td>
                                                     <a href="{% url 'bom:part-info-history' part_id=used_part.part.id part_revision_id=used_part.id %}">{{ used_part.part.full_part_number }}</a>
                                                 </td>
-                                                <td>{{ used_part.synopsis }}</td>
+                                                <td>{{ used_part.description }}</td>
                                                 <td>{{ used_part.revision }}</td>
                                                 <td>{{ used_part.part.primary_manufacturer_part.manufacturer.name }}</td>
                                                 <td>{{ used_part.part.primary_manufacturer_part.manufacturer_part_number }}</td>

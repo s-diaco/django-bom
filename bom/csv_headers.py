@@ -244,6 +244,7 @@ class SellerPartCSVHeaders(CSVHeaders):
                 "seller_part_unit_cost",
                 "unit_cost",
                 "part_cost",
+                "قیمت",
             ],
         ),
         CSVHeader(
@@ -297,7 +298,7 @@ class PartsListCSVHeaders(CSVHeaders):
                 "val units",
             ],
         ),
-        CSVHeader("tolerance", name_options=[]),
+        CSVHeader("tolerance", name_options=["پرت"]),
         CSVHeader("attribute", name_options=[]),
         CSVHeader("package", name_options=[]),
         CSVHeader("pin_count", name_options=[]),
@@ -338,6 +339,7 @@ class PartsListCSVHeaders(CSVHeaders):
                 name_options=[
                     "desc",
                     "desc.",
+                    "شرح",
                 ],
             ),
             CSVHeader(
@@ -366,6 +368,7 @@ class PartsListCSVHeaders(CSVHeaders):
                 name_options=[
                     "part number",
                     "part no",
+                    "کد",
                 ],
             ),
             CSVHeader(
