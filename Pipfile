@@ -4,13 +4,14 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "==3.2.16"
-django-money = "==2.0"
-google-api-python-client = "==2.8.0"
-parameterized = "==0.9.0"
-py-moneyed = "==1.2"
-requests = "==2.31.0"
-social-auth-app-django = "==4.0.0"
+django = "*"
+django-money = "*"
+google-api-python-client = "*"
+parameterized = "*"
+py-moneyed = "*"
+requests = "*"
+social-auth-app-django = "*"
+django-materializecss-form = "*"
 
 [dev-packages]
 
