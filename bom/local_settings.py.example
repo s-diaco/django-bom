@@ -39,5 +39,5 @@ SENDGRID_API_KEY = 'secretkey'
 FIXER_ACCESS_KEY = 'secretkey from fixer.io' # for exchange rate conversions
 
 # accent colors
-KRGreen #4CAF50
-LGreen #7bd3a0
+# KRGreen #4CAF50
+# LGreen #7bd3a0
