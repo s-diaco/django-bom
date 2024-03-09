@@ -58,7 +58,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = "bom.urls"
 
 AUTHENTICATION_BACKENDS = (
-    "social_core.backends.google.GoogleOpenId",
+    # "social_core.backends.google.GoogleOpenId",
     "social_core.backends.google.GoogleOAuth2",
     "social_core.backends.google.GoogleOAuth",
     "django.contrib.auth.backends.ModelBackend",
