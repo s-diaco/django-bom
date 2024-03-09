@@ -1,9 +1,9 @@
-Django
-django_money
-google_api_python_client
-parameterized
-py_moneyed
-Requests
-setuptools
-social_auth_app_django
+Django==4.2.11
+django_money==3.4.1
+google_api_python_client==2.121.0
+parameterized==0.9.0
+py_moneyed==3.0
+requests==2.31.0
+setuptools==69.1.1
+social_auth_app_django==5.4.0
 django-materializecss-form
