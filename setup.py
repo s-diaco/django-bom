@@ -39,6 +39,5 @@ setup(
         "google-api-python-client",
         "django-materializecss-form",
         "django-money",
-        "parameterized",
     ],
 )
