@@ -1143,6 +1143,10 @@ class PartCSVForm(forms.Form):
                         part.primary_manufacturer_part = manufacturer_part
                         part.save()
 
+                    # TODO: check
+                    if seller_part_number is None:
+                        seller_part_number=""
+                        
                     if seller_name and unit_cost and nre_cost:
                         nre_cost = Money(nre_cost, self.organization.currency)
                         unit_cost = Money(unit_cost, self.organization.currency)
@@ -1166,14 +1170,14 @@ class PartCSVForm(forms.Form):
                         seller, created = Seller.objects.get_or_create(
                             name__iexact=seller_name,
                             organization=self.organization,
-                            defaults={"name": default_seller_name},
+                            defaults={"name": seller_name},
                         )
                         (
                             seller_part,
                             seller_created,
                         ) = SellerPart.objects.get_or_create(
                             manufacturer_part=manufacturer_part,
-                            seller_part_number="",
+                            seller_part_number=seller_part_number,
                             seller=seller,
                             unit_cost=unit_cost,
                             nre_cost=nre_cost,
@@ -1192,7 +1196,7 @@ class PartCSVForm(forms.Form):
                             seller_created,
                         ) = SellerPart.objects.get_or_create(
                             manufacturer_part=manufacturer_part,
-                            seller_part_number="",
+                            seller_part_number=seller_part_number,
                             seller=seller,
                             unit_cost=unit_cost,
                             nre_cost=nre_cost,
@@ -1211,7 +1215,7 @@ class PartCSVForm(forms.Form):
                             seller_created,
                         ) = SellerPart.objects.get_or_create(
                             manufacturer_part=manufacturer_part,
-                            seller_part_number="",
+                            seller_part_number=seller_part_number,
                             seller=seller,
                             unit_cost=unit_cost,
                             nre_cost=nre_cost,
@@ -1443,13 +1447,6 @@ class PartRevisionForm(forms.ModelForm):
             "attribute": _("اطلاعات اضافه متریال"),
             "value": _("عدد یا تکست"),
         }
-        # TODO: Delete
-        # error_messages = {
-        #     "description": {
-        #        "required": _("Please let us know what to call you!"),
-        #        "max_length": _("This writer's name is too long."),
-        #    },
-        # }
 
     def __init__(self, *args, **kwargs):
         super(PartRevisionForm, self).__init__(*args, **kwargs)
@@ -1470,10 +1467,10 @@ class PartRevisionForm(forms.ModelForm):
         self.fields["material"].label = "روش محاسبه قیمت"
         self.fields["tolerance"].initial = 0
         self.fields["description"] = forms.CharField(
-            # TODO: Delete
-            # error_messages={"required": "Please let us know what to call you!"},
+            # TODO: Delete if not working
+            error_messages={"required": "شرح نمی‌تواند خالی باشد!"},
             required=True,
-            label="نوع",
+            label=_("نوع"),
             widget=AutocompleteTextInput(
                 queryset=PartRevision.objects.values_list("description", flat=True),
                 autocomplete_min_length=1,

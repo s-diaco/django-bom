@@ -4,16 +4,20 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "==4.2.11"
-django-money = "==3.4.1"
-google-api-python-client = "==2.121.0"
-parameterized = "==0.9.0"
-py-moneyed = "==3.0"
-requests = "==2.31.0"
-social-auth-app-django = "==5.4.0"
+django = "*"
+django-money = "*"
+google-api-python-client = "*"
+parameterized = "*"
+py-moneyed = "*"
+requests = "*"
+social-auth-app-django = "*"
 django-materializecss-form = "*"
+gunicorn = "*"
+sendgrid = "*"
 
 [dev-packages]
+pytest = "*"
+pytest-django = "*"
 
 [requires]
-python_version = "3.9"
+python_version = "3.8"

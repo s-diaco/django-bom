@@ -226,6 +226,7 @@ class SellerPartCSVHeaders(CSVHeaders):
             name_options=[
                 "part_seller",
                 "part_seller_name",
+                "تأمین کننده",
             ],
         ),
         CSVHeader(
@@ -236,6 +237,7 @@ class SellerPartCSVHeaders(CSVHeaders):
                 "pn",
                 "part_seller_part_number",
                 "seller_part_number",
+                "کد تأمین کننده",
             ],
         ),
         CSVHeader(
