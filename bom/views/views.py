@@ -877,6 +877,7 @@ def seller_edit(request, seller_id):
 
     seller = get_object_or_404(Seller, pk=seller_id)
     title = "Edit Seller"
+    # TODO: Don't edit if its the default seller
     action = reverse("bom:seller-edit", kwargs={"seller_id": seller_id})
 
     if request.method == "POST":
@@ -895,6 +896,7 @@ def seller_edit(request, seller_id):
 @login_required(login_url=BOM_LOGIN_URL)
 @organization_admin
 def seller_delete(request, seller_id):
+    # TODO: dont delete if has seler parts
     seller = get_object_or_404(Seller, pk=seller_id)
     seller.delete()
     return HttpResponseRedirect(reverse("bom:sellers"))
