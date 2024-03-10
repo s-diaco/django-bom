@@ -22,6 +22,7 @@ from djmoney.money import Money
 from .constants import (
     CONFIGURATION_TYPES,
     CURRENT_UNITS,
+    DEFAULT_SELLER_NAME,
     DISTANCE_UNITS,
     FREQUENCY_UNITS,
     INTERFACE_TYPES,
@@ -476,12 +477,10 @@ class SellerPartForm(forms.ModelForm):
         elif not seller:
             # raise forms.ValidationError("Must specify a seller.", code="invalid")
 
-            # TODO: get values from config file
-            default_seller_name = "انتخاب نشده (پیش فرض)"
             obj, created = Seller.objects.get_or_create(
-                name__iexact=default_seller_name,
+                name__iexact=DEFAULT_SELLER_NAME,
                 organization=self.organization,
-                defaults={"name": default_seller_name},
+                defaults={"name": DEFAULT_SELLER_NAME},
             )
             self.cleaned_data["seller"] = obj
 

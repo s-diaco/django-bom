@@ -896,7 +896,7 @@ def seller_edit(request, seller_id):
 @login_required(login_url=BOM_LOGIN_URL)
 @organization_admin
 def seller_delete(request, seller_id):
-    # TODO: dont delete if has seler parts
+    # TODO: dont delete if seller has seller parts
     seller = get_object_or_404(Seller, pk=seller_id)
     seller.delete()
     return HttpResponseRedirect(reverse("bom:sellers"))
@@ -1388,9 +1388,6 @@ def create_part(request):
         )
 
     if request.method == "POST":
-        # TODO: get values from config file
-        default_manufacturer_name = "انتخاب نشده (پیش فرض)"
-        default_seller_name = "انتخاب نشده (پیش فرض)"
         part_form = PartForm(request.POST, organization=organization)
         seller_form = SellerForm(request.POST)
         seller_part_form = SellerPartForm(request.POST, organization=organization)
@@ -1430,9 +1427,9 @@ def create_part(request):
                         manufacturer,
                         manufacturer_created,
                     ) = Manufacturer.objects.get_or_create(
-                        name__iexact=default_manufacturer_name,
+                        name__iexact=constants.DEFAULT_SELLER_NAME,
                         organization=organization,
-                        defaults={"name": default_manufacturer_name},
+                        defaults={"name": constants.DEFAULT_SELLER_NAME},
                     )
                 else:
                     messages.error(
@@ -1505,9 +1502,9 @@ def create_part(request):
                         )
                     else:
                         seller, seller_created = Seller.objects.get_or_create(
-                            name__iexact=default_seller_name,
+                            name__iexact=constants.DEFAULT_SELLER_NAME,
                             organization=organization,
-                            defaults={"name": default_seller_name},
+                            defaults={"name": constants.DEFAULT_SELLER_NAME},
                         )
                         # messages.error(request, "یک تأمین کننده جدید بسازید یا از لیست تأمین کنندگان انتخاب کنید.")
                         # return TemplateResponse(request, "bom/create-part.html", locals())

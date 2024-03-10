@@ -228,3 +228,5 @@ CURRENT_UNITS = (
     ("MA", "MA"),
     ("Other", "Other"),
 )
+
+DEFAULT_SELLER_NAME = "انتخاب نشده (پیش فرض)"
