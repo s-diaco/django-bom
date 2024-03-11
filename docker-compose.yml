@@ -2,9 +2,9 @@ version: '3.4'
 
 services:
   djangobom:
-    image: djangobom
+    image: djangobom-prod
     build:
       context: .
       dockerfile: ./Dockerfile
     ports:
-      - 8000:8000
+      - 80:8000

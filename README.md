@@ -116,6 +116,13 @@ pipenv shell
 python manage.py migrate
 python manage.py runserver
 ```
+## Start from docker
+1. cd to project dir
+2. docker compose build
+3. docker compose up -d
+4. docker compose exec djangobom python manage.py makemigrations --noinput
+5. docker compose exec djangobom python manage.py migrate --noinput
+6. docker compose exec djangobom python manage.py collectstatic --noinput
 
 ## Customize Base Template
 The base template can be customized to your pleasing. Just add the following configuration to your settings.py:
