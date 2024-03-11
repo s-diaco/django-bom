@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-share:
-    runs-on: python:3.9-slim
+    runs-on: python:3.12-slim
 
     steps:
       - name: Checkout code
