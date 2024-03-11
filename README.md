@@ -102,9 +102,8 @@ BOM_CONFIG = {}
 ## Start From Scratch: Use as a standalone Django project
 1. To start from scratch we recommend setting up a virtual environment
 ```
-virtualenv -p python3 mysite
-cd mysite
-source bin/activate
+virtualenv -p python3 .env
+source .env/bin/activate
 ```
 
 2. From here install django, and set up your project.
