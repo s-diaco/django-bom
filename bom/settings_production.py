@@ -231,3 +231,5 @@ BOM_CONFIG = bom_config_new
 
 # Custom login url for BOM_LOGIN
 BOM_LOGIN_URL = None
+
+Debug = False
