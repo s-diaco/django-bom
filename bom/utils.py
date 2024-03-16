@@ -1,4 +1,5 @@
 # This file is to have no project dependencies
+import re
 
 
 def increment_char(c):
@@ -30,8 +31,6 @@ def increment_str(s):
 #
 #   R5 R14
 #
-
-import re
 
 
 def prep_for_sorting_nicely(item):

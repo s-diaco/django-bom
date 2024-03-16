@@ -2,16 +2,14 @@ import codecs
 import csv
 from decimal import Decimal
 import logging
-from typing import Any, Type, TypeVar
+from typing import Any
 
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from django.core.validators import (
     MaxLengthValidator,
-    MaxValueValidator,
     MinLengthValidator,
-    MinValueValidator,
 )
 from django.db import IntegrityError
 from django.forms.models import model_to_dict
@@ -20,29 +18,17 @@ from django.utils.translation import gettext_lazy as _
 from djmoney.money import Money
 
 from .constants import (
-    CONFIGURATION_TYPES,
     CURRENT_UNITS,
     DEFAULT_SELLER_NAME,
     DISTANCE_UNITS,
     FREQUENCY_UNITS,
     INTERFACE_TYPES,
     MEMORY_UNITS,
-    NUMBER_CLASS_CODE_LEN_DEFAULT,
-    NUMBER_CLASS_CODE_LEN_MAX,
-    NUMBER_CLASS_CODE_LEN_MIN,
-    NUMBER_ITEM_LEN_DEFAULT,
-    NUMBER_ITEM_LEN_MAX,
-    NUMBER_ITEM_LEN_MIN,
     NUMBER_SCHEME_INTELLIGENT,
     NUMBER_SCHEME_SEMI_INTELLIGENT,
-    NUMBER_VARIATION_LEN_DEFAULT,
-    NUMBER_VARIATION_LEN_MAX,
-    NUMBER_VARIATION_LEN_MIN,
     PACKAGE_TYPES,
     POWER_UNITS,
     ROLE_TYPE_VIEWER,
-    ROLE_TYPES,
-    SUBSCRIPTION_TYPES,
     TEMPERATURE_UNITS,
     VALUE_UNITS,
     VOLTAGE_UNITS,
@@ -50,11 +36,9 @@ from .constants import (
     WEIGHT_UNITS,
 )
 from .csv_headers import (
-    BOMFlatCSVHeaders,
     BOMIndentedCSVHeaders,
     CSVHeaderError,
     PartClassesCSVHeaders,
-    PartsListCSVHeaders,
 )
 from .form_fields import AutocompleteTextInput
 from .models import (
@@ -73,14 +57,11 @@ from .models import (
     UserMeta,
 )
 from .utils import (
-    check_references_for_duplicates,
     convert_arabic_to_english,
-    get_from_dict,
     listify_string,
-    prep_for_sorting_nicely,
     stringify_list,
 )
-from .validators import alphanumeric, decimal, numeric
+from .validators import alphanumeric
 
 
 logger = logging.getLogger(__name__)
@@ -88,14 +69,14 @@ logger = logging.getLogger(__name__)
 
 class UserModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, user):
-        l = "[" + user.username + "]"
+        label = "[" + user.username + "]"
         if user.first_name:
-            l += " " + user.first_name
+            label += " " + user.first_name
         if user.last_name:
-            l += " " + user.last_name
+            label += " " + user.last_name
         if user.email:
-            l += ", " + user.email
-        return l
+            label += ", " + user.email
+        return label
 
 
 class UserCreateForm(UserCreationForm):
@@ -105,17 +86,17 @@ class UserCreateForm(UserCreationForm):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.fields["username"].help_text = (
+        self.fields[
+            "username"
+        ].help_text = (
             "الزامی. حداکثر ۱۵۰ کاراکتر. فقط حروف (فارسی، انگلیسی) اعداد و @/./+/-/_."
         )
-        self.fields["password1"].help_text = (
-            """
+        self.fields["password1"].help_text = """
             مشابه نام یا نام کاربری نباشد.
             حداقل ۸ کاراکتر داشته باشد.
             خیلی واضح نباشد.
             حداقل دارای یک کاراکتر غیر عددی باشد.
             """
-        )
         self.fields["password2"].help_text = "پسورد را دوباره برای تأیید وارد کنید."
         self.fields["password1"].label = "رمز"
         self.fields["password2"].label = "تأیید رمز"
@@ -934,8 +915,7 @@ class PartCSVForm(forms.Form):
                             None,
                             "Part already exists for manufacturer part {0} in row {1}. "
                             "Uploading of this part skipped.".format(
-                                row_count, mpn, row_count
-                            ),
+                                row_count, mpn, ),
                         )
                         continue
 
@@ -1144,8 +1124,8 @@ class PartCSVForm(forms.Form):
 
                     # TODO: check
                     if seller_part_number is None:
-                        seller_part_number=""
-                        
+                        seller_part_number = ""
+
                     if seller_name and unit_cost and nre_cost:
                         nre_cost = Money(nre_cost, self.organization.currency)
                         unit_cost = Money(unit_cost, self.organization.currency)
@@ -1272,11 +1252,11 @@ class PartFormIntelligent(forms.ModelForm):
         self.fields["number_item"].label = "کد"
         self.fields["number_item"].widget.attrs["oninput"] = "updateTargetInput()"
         if self.instance and self.instance.id:
-            self.fields["primary_manufacturer_part"].queryset = (
-                ManufacturerPart.objects.filter(part__id=self.instance.id).order_by(
-                    "manufacturer_part_number"
-                )
-            )
+            self.fields[
+                "primary_manufacturer_part"
+            ].queryset = ManufacturerPart.objects.filter(
+                part__id=self.instance.id
+            ).order_by("manufacturer_part_number")
         else:
             del self.fields["primary_manufacturer_part"]
         # for _, value in self.fields.items():
@@ -1346,11 +1326,11 @@ class PartFormSemiIntelligent(forms.ModelForm):
             self.id = kwargs["instance"].id
 
         if self.instance and self.instance.id:
-            self.fields["primary_manufacturer_part"].queryset = (
-                ManufacturerPart.objects.filter(part__id=self.instance.id).order_by(
-                    "manufacturer_part_number"
-                )
-            )
+            self.fields[
+                "primary_manufacturer_part"
+            ].queryset = ManufacturerPart.objects.filter(
+                part__id=self.instance.id
+            ).order_by("manufacturer_part_number")
         else:
             del self.fields["primary_manufacturer_part"]
         for _, value in self.fields.items():
@@ -1862,13 +1842,13 @@ class BOMCSVForm(forms.Form):
                 )
                 try:
                     level = int(float(csv_headers.get_val_from_row(part_dict, "level")))
-                except ValueError as e:
+                except ValueError:
                     # TODO: May want to validate whole file has acceptable levels first.
                     raise ValidationError(
                         f"Row {row_count} - level: invalid level, can't continue.",
                         code="invalid",
                     )
-                except TypeError as e:
+                except TypeError:
                     # no level field was provided, we MUST have a parent part number to upload this way, and in this case all levels are the same
                     if parent_part_revision is None:
                         raise ValidationError(
@@ -1908,7 +1888,7 @@ class BOMCSVForm(forms.Form):
                         ) = Part.parse_partial_part_number(
                             part_number, self.organization
                         )
-                    except AttributeError as e:
+                    except AttributeError:
                         self.add_error(
                             None,
                             f"Row {row_count} - part_number: Uploading of this subpart skipped. Couldn't parse part number.",
@@ -2001,9 +1981,7 @@ class BOMCSVForm(forms.Form):
                     for (
                         _,
                         sp,
-                    ) in (
-                        indented_bom.parts.items()
-                    ):  # Make sure the subpart does not contain the parent - infinite recursion!
+                    ) in indented_bom.parts.items():  # Make sure the subpart does not contain the parent - infinite recursion!
                         if sp.part_revision == parent_part_revision:
                             contains_parent = True
                     if contains_parent:

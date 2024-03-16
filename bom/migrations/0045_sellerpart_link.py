@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('bom', '0044_auto_20220831_1241'),
+        ("bom", "0044_auto_20220831_1241"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='sellerpart',
-            name='link',
+            model_name="sellerpart",
+            name="link",
             field=models.URLField(blank=True, null=True),
         ),
     ]

@@ -1,0 +1,32 @@
+[project]
+name = "django-bom"
+version = "0.1.0"
+description = "A django app to manage a bill of materials."
+authors = [
+    { name = "Diaco Soltanpour", email = "dyaco8464@yahoo.com" }
+]
+dependencies = [
+    "django>=5.0.3",
+    "django-money>=3.4.1",
+    "django-materializecss-form>=1.1.17",
+]
+readme = "README.md"
+requires-python = ">= 3.12"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "pytest>=8.1.1",
+    "pytest-django>=4.8.0",
+    "ruff>=0.3.3",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["django-bom"]

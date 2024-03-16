@@ -4,14 +4,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('bom', '0026_auto_20191222_2258'),
+        ("bom", "0026_auto_20191222_2258"),
     ]
 
     operations = [
         migrations.AlterIndexTogether(
-            name='partclass',
-            index_together={('organization', 'code')},
+            name="partclass",
+            index_together={("organization", "code")},
         ),
     ]

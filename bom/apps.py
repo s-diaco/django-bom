@@ -4,5 +4,5 @@ from django.apps import AppConfig
 
 
 class BomConfig(AppConfig):
-    name = 'bom'
+    name = "bom"
     mouser_api_key = None

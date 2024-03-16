@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('bom', '0002_auto_20180908_2151'),
+        ("bom", "0002_auto_20180908_2151"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='sellerpart',
-            name='data_source',
+            model_name="sellerpart",
+            name="data_source",
             field=models.CharField(default=None, max_length=32, null=True),
         ),
     ]

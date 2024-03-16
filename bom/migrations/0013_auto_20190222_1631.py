@@ -5,15 +5,16 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('bom', '0012_partchangehistory'),
+        ("bom", "0012_partchangehistory"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='partchangehistory',
-            name='part_id',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='bom.Part'),
+            model_name="partchangehistory",
+            name="part_id",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="bom.Part"
+            ),
         ),
     ]

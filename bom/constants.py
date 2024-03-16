@@ -48,26 +48,26 @@ DATA_SOURCES = (
 
 VALUE_UNITS = (
     NO_CHOICE,
-    ("Ohms", "\u03A9"),
-    ("mOhms", "m\u03A9"),
-    ("kOhms", "k\u03A9"),
-    ("MOhms", "M\u03A9"),
+    ("Ohms", "\u03a9"),
+    ("mOhms", "m\u03a9"),
+    ("kOhms", "k\u03a9"),
+    ("MOhms", "M\u03a9"),
     ("F", "F"),
     ("pF", "pF"),
     ("nF", "nF"),
-    ("uF", "\u03BCF"),
+    ("uF", "\u03bcF"),
     ("V", "V"),
-    ("uV", "\u03BCV"),
+    ("uV", "\u03bcV"),
     ("mV", "mV"),
     ("A", "A"),
-    ("uA", "\u03BCA"),
+    ("uA", "\u03bcA"),
     ("mA", "mA"),
-    ("C", "\u00B0C"),
-    ("F", "\u00B0F"),
+    ("C", "\u00b0C"),
+    ("F", "\u00b0F"),
     ("H", "H"),
     ("nH", "nH"),
     ("mH", "mH"),
-    ("uH", "\u03BCH"),
+    ("uH", "\u03bcH"),
     ("Hz", "Hz"),
     ("kHz", "kHz"),
     ("MHz", "MHz"),
@@ -127,7 +127,7 @@ DISTANCE_UNITS = (
     ("m", "m"),
     ("cm", "cm"),
     ("mm", "mm"),
-    ("um", "\u03BCm"),
+    ("um", "\u03bcm"),
     ("nm", "nm"),
     ("Other", "Other"),
 )
@@ -144,8 +144,8 @@ WEIGHT_UNITS = (
 
 TEMPERATURE_UNITS = (
     NO_CHOICE,
-    ("C", "\u00B0C"),
-    ("F", "\u00B0F"),
+    ("C", "\u00b0C"),
+    ("F", "\u00b0F"),
     ("Other", "Other"),
 )
 
@@ -155,9 +155,9 @@ WAVELENGTH_UNITS = (
     ("m", "m"),
     ("cm", "cm"),
     ("mm", "mm"),
-    ("um", "\u03BCm"),
+    ("um", "\u03bcm"),
     ("nm", "nm"),
-    ("A", "\u212B"),
+    ("A", "\u212b"),
     ("Other", "Other"),
 )
 
@@ -202,7 +202,7 @@ INTERFACE_TYPES = (
 POWER_UNITS = (
     NO_CHOICE,
     ("W", "W"),
-    ("uW", "\u03BCW"),
+    ("uW", "\u03bcW"),
     ("mW", "mW"),
     ("kW", "kW"),
     ("MW", "MW"),
@@ -212,7 +212,7 @@ POWER_UNITS = (
 VOLTAGE_UNITS = (
     NO_CHOICE,
     ("V", "V"),
-    ("uV", "\u03BCV"),
+    ("uV", "\u03bcV"),
     ("mV", "mV"),
     ("kV", "kV"),
     ("MV", "MV"),
@@ -222,7 +222,7 @@ VOLTAGE_UNITS = (
 CURRENT_UNITS = (
     NO_CHOICE,
     ("A", "A"),
-    ("uA", "\u03BCV"),
+    ("uA", "\u03bcV"),
     ("mA", "mA"),
     ("kA", "kA"),
     ("MA", "MA"),

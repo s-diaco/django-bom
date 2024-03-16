@@ -1,3 +1,4 @@
+# TODO: delete all setup files
 import os
 
 from setuptools import find_packages, setup

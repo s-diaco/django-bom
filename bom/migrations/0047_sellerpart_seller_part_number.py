@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('bom', '0046_alter_sellerpart_unique_together'),
+        ("bom", "0046_alter_sellerpart_unique_together"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='sellerpart',
-            name='seller_part_number',
-            field=models.CharField(blank=True, default='', max_length=64, null=True),
+            model_name="sellerpart",
+            name="seller_part_number",
+            field=models.CharField(blank=True, default="", max_length=64, null=True),
         ),
     ]

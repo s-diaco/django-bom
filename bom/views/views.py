@@ -3,7 +3,6 @@ import logging
 import operator
 from functools import reduce
 from json import dumps
-from sys import prefix
 
 from django.conf import settings
 from django.contrib import messages
@@ -148,7 +147,7 @@ def home(request):
         part_class = None
 
     if part_class or query:
-        title += f" - نتایج جستجو"
+        title += " - نتایج جستجو"
     else:
         title = f"لیست متریال {title}"
 
@@ -994,7 +993,7 @@ def part_info(request, part_id, part_revision_id=None):
             "Error: infinite recursion in part relationship.",
         )
         indented_bom = []
-    except AttributeError as err:
+    except AttributeError:
         # No part revision found, that's OK
         indented_bom = []
 
@@ -1006,7 +1005,7 @@ def part_info(request, part_id, part_revision_id=None):
             "Error: infinite recursion in part relationship.",
         )
         flat_bom = []
-    except AttributeError as err:
+    except AttributeError:
         # No part revision found, that's OK
         flat_bom = []
 
@@ -1283,7 +1282,7 @@ def upload_parts(request):
         ):
             messages.warning(
                 request,
-                f"!! Warning !! Before you upload parts, you must create any part classes. You can do this in Settings > Indabom.",
+                "!! Warning !! Before you upload parts, you must create any part classes. You can do this in Settings > Indabom.",
             )
         return TemplateResponse(request, "bom/upload-parts.html", locals())
 
@@ -1353,7 +1352,7 @@ def export_part_list(request):
                     )
             writer.writerow({k: smart_str(v) for k, v in row.items()})
 
-        except AttributeError as e:
+        except AttributeError:
             messages.warning(
                 request,
                 "No change history for part: {}. Can't export.".format(
@@ -1458,13 +1457,12 @@ def create_part(request):
                     pr = part_revision_form.save(commit=False)
                     pr.part = new_part  # Associate PartRevision with Part
                     pr.save()
-                except IntegrityError as err:
+                except IntegrityError:
                     messages.error(
                         request,
-                        "خطا! متریال با کد {0}-{1}-{3} قبلاً‌ایجاد شده است.}".format(
+                        "خطا! متریال با کد {0}-{1} قبلاً‌ایجاد شده است.".format(
                             new_part.number_class.code,
                             new_part.number_item,
-                            new_part.number_variation,
                         ),
                     )
                     return TemplateResponse(request, "bom/create-part.html", locals())

@@ -7,6 +7,6 @@ requests
 setuptools
 social_auth_app_django
 django-materializecss-form
-gunicorn
 sendgrid
-whitenoise
+psycopg2-binary
+gunicorn

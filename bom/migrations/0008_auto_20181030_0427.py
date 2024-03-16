@@ -5,15 +5,21 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('bom', '0007_auto_20181009_0256'),
+        ("bom", "0007_auto_20181009_0256"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='part',
-            name='primary_manufacturer_part',
-            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='primary_manufacturer_part', to='bom.ManufacturerPart'),
+            model_name="part",
+            name="primary_manufacturer_part",
+            field=models.ForeignKey(
+                blank=True,
+                default=None,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="primary_manufacturer_part",
+                to="bom.ManufacturerPart",
+            ),
         ),
     ]

@@ -3,7 +3,6 @@ from .part_bom import PartBom, PartIndentedBomItem
 
 
 class PartBomWeighted(PartBom):
-
     def update_as_weighted_bom(self, part):
         """
         Update "childs_cost" and "childs_quantity" for parent "PartBomItem"s

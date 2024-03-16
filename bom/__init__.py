@@ -1,1 +1,1 @@
-default_app_config = 'bom.apps.BomConfig'
+default_app_config = "bom.apps.BomConfig"

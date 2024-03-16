@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('bom', '0043_auto_20211123_0157'),
+        ("bom", "0043_auto_20211123_0157"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='manufacturerpart',
-            name='link',
+            model_name="manufacturerpart",
+            name="link",
             field=models.URLField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='partclass',
-            name='comment',
-            field=models.CharField(blank=True, default='', max_length=255),
+            model_name="partclass",
+            name="comment",
+            field=models.CharField(blank=True, default="", max_length=255),
         ),
     ]

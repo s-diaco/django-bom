@@ -5,7 +5,6 @@ from math import ceil
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -56,7 +55,7 @@ from .utils import (
     stringify_list,
     strip_trailing_zeros,
 )
-from .validators import alphanumeric, numeric, validate_pct
+from .validators import alphanumeric, validate_pct
 
 
 logger = logging.getLogger(__name__)
@@ -528,7 +527,7 @@ class Part(models.Model):
                     self.number_variation = "{0:0=2d}".format(
                         int(last_number_variation.number_variation) + 1
                     )
-                except ValueError as e:
+                except ValueError:
                     self.number_variation = "{}".format(
                         increment_str(last_number_variation.number_variation)
                     )

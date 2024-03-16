@@ -1,5 +1,5 @@
 import csv
-from re import finditer, search
+from re import finditer
 from unittest import skip
 
 from django.conf import settings
@@ -20,16 +20,12 @@ from .helpers import (
     create_some_fake_manufacturers,
     create_some_fake_part_classes,
     create_some_fake_parts,
-    create_some_fake_sellers,
     create_user_and_organization,
 )
 from .models import (
-    ManufacturerPart,
-    Organization,
     Part,
     PartClass,
     Seller,
-    SellerPart,
     Subpart,
 )
 
@@ -113,8 +109,9 @@ class TestBOM(TransactionTestCase):
         # Make sure only one part shows up
         decoded_content = response.content.decode("utf-8")
         main_content = decoded_content[
-            decoded_content.find("<main>")
-            + len("<main>") : decoded_content.rfind("</main>")
+            decoded_content.find("<main>") + len("<main>") : decoded_content.rfind(
+                "</main>"
+            )
         ]
         occurances = [m.start() for m in finditer(p1.full_part_number(), main_content)]
         self.assertEqual(len(occurances), 1)
@@ -910,8 +907,9 @@ class TestBOM(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         decoded_content = response.content.decode("utf-8")
         main_content = decoded_content[
-            decoded_content.find("<main>")
-            + len("<main>") : decoded_content.rfind("</main>")
+            decoded_content.find("<main>") + len("<main>") : decoded_content.rfind(
+                "</main>"
+            )
         ]
 
         occurances = [m.start() for m in finditer(p1.full_part_number(), main_content)]
@@ -1904,8 +1902,9 @@ class TestBOMIntelligent(TestBOM):
         self.assertEqual(response.status_code, 200)
         decoded_content = response.content.decode("utf-8")
         main_content = decoded_content[
-            decoded_content.find("<main>")
-            + len("<main>") : decoded_content.rfind("</main>")
+            decoded_content.find("<main>") + len("<main>") : decoded_content.rfind(
+                "</main>"
+            )
         ]
         occurances = [m.start() for m in finditer(p1.full_part_number(), main_content)]
         self.assertEqual(len(occurances), 1)

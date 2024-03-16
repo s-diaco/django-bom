@@ -9,16 +9,15 @@ class TestMouser(TestCase):
 
     @skip
     def test_search_keyword(self):
-        search = self.api.search_keyword(keyword='LSM6DSL')
-        self.assertGreaterEqual(search['NumberOfResult'], 1)
+        search = self.api.search_keyword(keyword="LSM6DSL")
+        self.assertGreaterEqual(search["NumberOfResult"], 1)
 
     @skip
     def test_get_manufacturer_list(self):
         manufacturers = self.api.get_manufacturer_list()
-        self.assertGreaterEqual(manufacturers['Count'], 1)
+        self.assertGreaterEqual(manufacturers["Count"], 1)
 
     @skip
     def search_part_and_manufacturer(self):
         manufacturers = self.api.get_manufacturer_list()
-        self.assertGreaterEqual(manufacturers['Count'], 1)
-
+        self.assertGreaterEqual(manufacturers["Count"], 1)

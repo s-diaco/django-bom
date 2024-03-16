@@ -4,19 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('bom', '0029_auto_20191231_1630'),
+        ("bom", "0029_auto_20191231_1630"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='manufacturerpart',
-            name='source_mouser',
+            model_name="manufacturerpart",
+            name="source_mouser",
             field=models.BooleanField(default=False),
         ),
         migrations.AlterIndexTogether(
-            name='manufacturerpart',
-            index_together={('part', 'source_mouser')},
+            name="manufacturerpart",
+            index_together={("part", "source_mouser")},
         ),
     ]

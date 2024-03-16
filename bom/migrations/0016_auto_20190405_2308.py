@@ -2,11 +2,12 @@
 
 from django.db import migrations
 
+
 def update_parts_to_part_history(apps, schema_editor):
-    Part = apps.get_model('bom', 'Part')
-    PartChangeHistory = apps.get_model('bom', 'PartChangeHistory')
-    Assembly = apps.get_model('bom', 'Assembly')
-    Subpart = apps.get_model('bom', 'Subpart')
+    Part = apps.get_model("bom", "Part")
+    PartChangeHistory = apps.get_model("bom", "PartChangeHistory")
+    Assembly = apps.get_model("bom", "Assembly")
+    Subpart = apps.get_model("bom", "Subpart")
 
     for p in Part.objects.all():
         subparts = Subpart.objects.filter(assembly_part=p)
@@ -16,43 +17,47 @@ def update_parts_to_part_history(apps, schema_editor):
             assembly.subparts.set(subparts)
 
         try:
-            PartChangeHistory.objects.get_or_create(part=p, description=p.description,
-                                                    revision=p.revision, assembly=assembly)
+            PartChangeHistory.objects.get_or_create(
+                part=p,
+                description=p.description,
+                revision=p.revision,
+                assembly=assembly,
+            )
         except PartChangeHistory.MultipleObjectsReturned:
             continue
 
     for sp in Subpart.objects.all():
         part = sp.assembly_subpart
-        pch = PartChangeHistory.objects.filter(part=part).order_by('-revision').first()
+        pch = PartChangeHistory.objects.filter(part=part).order_by("-revision").first()
         sp.part_revision = pch
         sp.save()
 
-class Migration(migrations.Migration):
 
+class Migration(migrations.Migration):
     dependencies = [
-        ('bom', '0015_auto_20190303_1915'),
+        ("bom", "0015_auto_20190303_1915"),
     ]
 
     operations = [
         migrations.RunPython(update_parts_to_part_history),
         migrations.RemoveField(
-            model_name='part',
-            name='description',
+            model_name="part",
+            name="description",
         ),
         migrations.RemoveField(
-            model_name='part',
-            name='revision',
+            model_name="part",
+            name="revision",
         ),
         migrations.RemoveField(
-            model_name='part',
-            name='subparts',
+            model_name="part",
+            name="subparts",
         ),
         migrations.RemoveField(
-            model_name='subpart',
-            name='assembly_part',
+            model_name="subpart",
+            name="assembly_part",
         ),
         migrations.RemoveField(
-            model_name='subpart',
-            name='assembly_subpart',
+            model_name="subpart",
+            name="assembly_subpart",
         ),
     ]

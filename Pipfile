@@ -12,7 +12,6 @@ py-moneyed = "*"
 requests = "*"
 social-auth-app-django = "*"
 django-materializecss-form = "*"
-gunicorn = "*"
 sendgrid = "*"
 whitenoise = "*"
 
