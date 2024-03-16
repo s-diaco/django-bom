@@ -30,3 +30,6 @@ allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["django-bom"]
+
+[tool.ruff]
+line-length = 120
