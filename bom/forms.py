@@ -86,12 +86,12 @@ class UserCreateForm(UserCreationForm):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.fields[
-            "username"
-        ].help_text = (
+        self.fields["username"].help_text = (
             "الزامی. حداکثر ۱۵۰ کاراکتر. فقط حروف (فارسی، انگلیسی) اعداد و @/./+/-/_."
         )
-        self.fields["password1"].help_text = """
+        self.fields[
+            "password1"
+        ].help_text = """
             مشابه نام یا نام کاربری نباشد.
             حداقل ۸ کاراکتر داشته باشد.
             خیلی واضح نباشد.
@@ -274,7 +274,7 @@ class OrganizationForm(forms.ModelForm):
 class OrganizationFormEditSettings(OrganizationForm):
     def __init__(self, *args, **kwargs):
         super(OrganizationFormEditSettings, self).__init__(*args, **kwargs)
-        user = kwargs.get("user", None)
+        # user = kwargs.get("user", None)
 
     class Meta:
         model = Organization
@@ -915,7 +915,9 @@ class PartCSVForm(forms.Form):
                             None,
                             "Part already exists for manufacturer part {0} in row {1}. "
                             "Uploading of this part skipped.".format(
-                                row_count, mpn, ),
+                                row_count,
+                                mpn,
+                            ),
                         )
                         continue
 
@@ -1252,11 +1254,11 @@ class PartFormIntelligent(forms.ModelForm):
         self.fields["number_item"].label = "کد"
         self.fields["number_item"].widget.attrs["oninput"] = "updateTargetInput()"
         if self.instance and self.instance.id:
-            self.fields[
-                "primary_manufacturer_part"
-            ].queryset = ManufacturerPart.objects.filter(
-                part__id=self.instance.id
-            ).order_by("manufacturer_part_number")
+            self.fields["primary_manufacturer_part"].queryset = (
+                ManufacturerPart.objects.filter(part__id=self.instance.id).order_by(
+                    "manufacturer_part_number"
+                )
+            )
         else:
             del self.fields["primary_manufacturer_part"]
         # for _, value in self.fields.items():
@@ -1304,8 +1306,8 @@ class PartFormSemiIntelligent(forms.ModelForm):
             "google_drive_parent",
         ]
         help_texts = {
-            "number_item": _("در صورت خالی بودن اتوماتیک ایجاد می‌شود."),
-            "number_variation": "در صورت خالی بودن اتوماتیک ایجاد می‌شود.",
+            'number_item': _('Auto generated if blank.'),
+            'number_variation': 'Auto generated if blank.',
         }
 
     def __init__(self, *args, **kwargs):
@@ -1326,14 +1328,14 @@ class PartFormSemiIntelligent(forms.ModelForm):
             self.id = kwargs["instance"].id
 
         if self.instance and self.instance.id:
-            self.fields[
-                "primary_manufacturer_part"
-            ].queryset = ManufacturerPart.objects.filter(
-                part__id=self.instance.id
-            ).order_by("manufacturer_part_number")
+            self.fields["primary_manufacturer_part"].queryset = (
+                ManufacturerPart.objects.filter(part__id=self.instance.id).order_by(
+                    "manufacturer_part_number"
+                )
+            )
         else:
             del self.fields["primary_manufacturer_part"]
-        for _, value in self.fields.items():
+        for value in self.fields.values():
             # value.widget.attrs["placeholder"] = value.help_text
             value.help_text = ""
 
@@ -1422,9 +1424,10 @@ class PartRevisionForm(forms.ModelForm):
         model = PartRevision
         exclude = ["timestamp", "assembly", "part"]
         help_texts = {
-            "description": _("نوع متریال"),
-            "attribute": _("اطلاعات اضافه متریال"),
-            "value": _("عدد یا تکست"),
+            'description': _('Additional part info, special instructions, etc.'),
+            'attribute': _('Additional part attributes (free form)'),
+            'value': _('Number or text'),
+
         }
 
     def __init__(self, *args, **kwargs):
@@ -1514,12 +1517,13 @@ class PartRevisionNewForm(PartRevisionForm):
         self.revision = kwargs.pop("revision", None)
         self.assembly = kwargs.pop("assembly", None)
         super(PartRevisionNewForm, self).__init__(*args, **kwargs)
-        for _, value in self.fields.items():
+        for value in self.fields.values():
             value.widget.attrs["placeholder"] = value.help_text
             value.help_text = ""
 
     def save(self):
-        cleaned_data = super(PartRevisionNewForm, self).clean()
+        # cleaned_data = super(PartRevisionNewForm, self).clean()
+        super(PartRevisionNewForm, self).clean()
         self.instance.part = self.part
         self.instance.revision = self.revision
         self.instance.assembly = self.assembly
@@ -1981,7 +1985,9 @@ class BOMCSVForm(forms.Form):
                     for (
                         _,
                         sp,
-                    ) in indented_bom.parts.items():  # Make sure the subpart does not contain the parent - infinite recursion!
+                    ) in (
+                        indented_bom.parts.items()
+                    ):  # Make sure the subpart does not contain the parent - infinite recursion!
                         if sp.part_revision == parent_part_revision:
                             contains_parent = True
                     if contains_parent:

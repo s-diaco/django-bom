@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-09 14:22+0000\n"
+"POT-Creation-Date: 2024-03-21 23:03+0330\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,27 +17,35 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: bom/forms.py:1324 build/lib/bom/forms.py:1232
-msgid "در صورت خالی بودن اتوماتیک ایجاد می‌شود."
-msgstr ""
+#: bom/forms.py:1309
+msgid "Auto generated if blank."
+msgstr "در صورت خالی بودن اتوماتیک ایجاد می‌شود."
 
-#: bom/forms.py:1442 build/lib/bom/forms.py:1352
-msgid "نوع متریال"
-msgstr ""
+#: bom/forms.py:1427
+msgid "Additional part info, special instructions, etc."
+msgstr "نوع متریال"
 
-#: bom/forms.py:1443 build/lib/bom/forms.py:1353
-msgid "اطلاعات اضافه متریال"
-msgstr ""
+#: bom/forms.py:1428
+msgid "Additional part attributes (free form)"
+msgstr "اطلاعات اضافه متریال"
 
-#: bom/forms.py:1444 build/lib/bom/forms.py:1354
-msgid "عدد یا تکست"
-msgstr ""
+#: bom/forms.py:1429
+msgid "Number or text"
+msgstr "عدد یا تکست"
 
-#: bom/forms.py:1478
+#: bom/forms.py:1455
 msgid "نوع"
 msgstr ""
 
-#: bom/validators.py:20 build/lib/bom/validators.py:20
+#: bom/templates/bom/bom-base-menu.html:3
+msgid "Products"
+msgstr "محصولات"
+
+#: bom/templates/bom/bom-base-menu.html:4
+msgid "sellers"
+msgstr "تأمین کنندگان"
+
+#: bom/validators.py:23
 #, python-format
 msgid "%(value)s is not a valid pct"
-msgstr ""
+msgstr "%(value)s درصد معتبر نیست."

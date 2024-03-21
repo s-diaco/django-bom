@@ -9,12 +9,19 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED=1
 
+# install system dependencies. required for "entrypoint.sh"
+RUN apt-get update && apt-get install -y netcat-openbsd
+
 # Install pip requirements
 COPY requirements.txt .
 RUN python -m pip install -r requirements.txt
 
 WORKDIR /app
 COPY . /app
+
+# create the appropriate directories
+RUN mkdir /app/staticfiles
+RUN mkdir /app/log
 
 # Creates a non-root user with an explicit UID and adds permission to access the /app folder
 # For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers

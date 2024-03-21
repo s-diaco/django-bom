@@ -27,6 +27,29 @@
 				],
 				"file": "manage.py"
 			}
-		}
+		},
+        {
+            "label": "Compose Up (Dev)",
+            "type": "docker-compose",
+            "dockerCompose": {
+                "up": {
+                    "detached": true,
+                    "build": true
+                },
+                "files": [
+                    "${workspaceFolder}/docker-compose.debug.yml"
+                ]
+            }
+        },
+        {
+            "label": "Compose Down",
+            "type": "docker-compose",
+            "dockerCompose": {
+                "down": {
+                    "removeVolumes": true,
+                    "removeImages": "all"
+                }
+            }
+        }
 	]
 }

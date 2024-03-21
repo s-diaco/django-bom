@@ -13,17 +13,8 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 import os
 
 
-BASE_DIR = None
-
-try:
-    from bom.local_settings import *
-except ImportError as e:
-    print(e)
-    pass
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-if not BASE_DIR:
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
@@ -104,31 +95,38 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = False
+if "DEBUG" in os.environ:
+    DEBUG = os.environ.get("DEBUG")
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {
         # Include the default Django email handler for errors
         # This is what you'd get without configuring logging at all.
-        "mail_admins": {
-            "class": "django.utils.log.AdminEmailHandler",
-            "level": "ERROR",
+        # "mail_admins": {
+        #    "class": "django.utils.log.AdminEmailHandler",
+        #    "level": "ERROR",
             # But the emails are plain text by default - HTML is nicer
-            "include_html": True,
-        },
+        #    "include_html": True,
+        # },
         # Log to a text file that can be rotated by logrotate
         "logfile": {
             "class": "logging.handlers.WatchedFileHandler",
-            "filename": "/var/log/indabom/django.log" if not DEBUG else "./bom.log",
+            "filename": (
+                os.path.join(BASE_DIR, "log/bom.log") if not DEBUG else "./bom_dev.log"
+            ),
         },
     },
     "loggers": {
         # Again, default Django configuration to email unhandled exceptions
-        "django.request": {
-            "handlers": ["mail_admins"],
-            "level": "ERROR",
-            "propagate": True,
-        },
+        # "django.request": {
+        #    "handlers": ["mail_admins"],
+        #    "level": "ERROR",
+        #    "propagate": True,
+        # },
         # Might as well log any errors anywhere else in Django
         "django": {
             "handlers": ["logfile"],
@@ -149,15 +147,19 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
 # TODO: change
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "fa-IR"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = 'Asia/Tehran'
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = True
+
+LANGUAGES = [
+    ("fa", "Persian"),
+    ("en", "English"),
+]
+LOCALE_PATHS = [os.path.join(BASE_DIR, "locale")]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
@@ -225,21 +227,34 @@ BOM_CONFIG_DEFAULT = {
 }
 
 bom_config_new = BOM_CONFIG_DEFAULT.copy()
-bom_config_new.update(BOM_CONFIG)
+# if 'BOM_CONFIG' in os.environ:
+#    bom_config_new.update(os.environ.get("BOM_CONFIG"))
 BOM_CONFIG = bom_config_new
 
 # Custom login url for BOM_LOGIN
 BOM_LOGIN_URL = None
 
-SECRET_KEY = os.environ.get("SECRET_KEY")
+# google GoogleOAuth
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = "secretkey"
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = "secretkey"
 
-DEBUG = bool(os.environ.get("DEBUG", default=0))
+EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
+SENDGRID_API_KEY = "secretkey"
 
-# 'DJANGO_ALLOWED_HOSTS' should be a single string of hosts with a space between each.
-# For example: 'DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]'
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
+FIXER_ACCESS_KEY = "secretkey from fixer.io"  # for exchange rate conversions
 
-DATABASES = {
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ.get("SECRET_KEY", "supersecretkey")
+
+ALLOWED_HOSTS = ["*"]
+if "DJANGO_ALLOWED_HOSTS" in os.environ and os.environ.get("DJANGO_ALLOWED_HOSTS"):
+    # 'DJANGO_ALLOWED_HOSTS' should be a single string of hosts with a space between each.
+    # For example: 'DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]'
+    ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
+
+# Database
+# https://docs.djangoproject.com/en/1.10/ref/settings/#databases
+DATABASES_BKP = {
     "default": {
         "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
         "NAME": os.environ.get("SQL_DATABASE", os.path.join(BASE_DIR, "db.sqlite3")),
@@ -249,3 +264,17 @@ DATABASES = {
         "PORT": os.environ.get("SQL_PORT", "5432"),
     }
 }
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+    }
+}
+
+# TODO: fix this
+CSRF_TRUSTED_ORIGINS = [
+    "https://127.0.0.1",
+    "http://localhost:1337",
+    "http://127.0.0.1",
+]

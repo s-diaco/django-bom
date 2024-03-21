@@ -34,8 +34,14 @@ def increment_str(s):
 
 
 def prep_for_sorting_nicely(item):
-    convert = lambda text: int(text) if text.isdigit() else text
-    alphanum_key = lambda key: [convert(c) for c in re.split("([0-9]+)", key)]
+    # convert = lambda text: int(text) if text.isdigit() else text
+    def convert(text):
+        return int(text) if text.isdigit() else text
+
+    # alphanum_key = lambda key: [convert(c) for c in re.split("([0-9]+)", key)]
+    def alphanum_key(key):
+        return [convert(c) for c in re.split("([0-9]+)", key)]
+
     return alphanum_key(item)
 
 
@@ -211,7 +217,7 @@ def parse_number(text):
             rightSymbolIndex = max(n.rfind(","), n.rfind(" "), n.rfind("."))
             rightSymbol = n[rightSymbolIndex : rightSymbolIndex + 1]
             if rightSymbol == " ":
-                return parseNumber(n.replace(" ", "_"))
+                return parse_number(n.replace(" ", "_"))
             n = n.replace(rightSymbol, "R")
             leftSymbolIndex = max(n.rfind(","), n.rfind(" "), n.rfind("."))
             leftSymbol = n[leftSymbolIndex : leftSymbolIndex + 1]
@@ -224,7 +230,7 @@ def parse_number(text):
             return int(n)
         else:
             return n
-    except:
+    except ValueError:
         pass
     return None
 

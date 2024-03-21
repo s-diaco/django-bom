@@ -1,12 +1,10 @@
 Django
 django_money
 google_api_python_client
-parameterized
 py_moneyed
 requests
-setuptools
 social_auth_app_django
 django-materializecss-form
-sendgrid
 psycopg2-binary
 gunicorn
+debugpy

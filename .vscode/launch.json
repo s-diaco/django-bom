@@ -15,6 +15,22 @@
                 "projectType": "django"
             },
             "envFile": "${workspaceFolder}/.env.dev"
-        }
+        },
+        {
+           "name": "Django - Compose",
+           "type": "debugpy",
+           "request": "attach",
+           "preLaunchTask": "Compose Up (Dev)",
+           "postDebugTask": "Compose Down",
+           "connect": {
+             "port": 5678
+           },
+           "pathMappings": [
+               {
+                   "localRoot": "${workspaceFolder}",
+                   "remoteRoot": "/app"
+               }
+           ]
+       }
     ]
 }

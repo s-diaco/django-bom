@@ -22,9 +22,11 @@ def create_a_fake_organization(
 ):
     org, created = Organization.objects.get_or_create(
         name="Atlas",
-        subscription=constants.SUBSCRIPTION_TYPE_FREE
-        if free
-        else constants.SUBSCRIPTION_TYPE_PRO,
+        subscription=(
+            constants.SUBSCRIPTION_TYPE_FREE
+            if free
+            else constants.SUBSCRIPTION_TYPE_PRO
+        ),
         number_scheme=number_scheme,
         number_item_len=4,
         number_variation_len=number_variation_len,
@@ -195,7 +197,8 @@ def create_some_fake_parts(organization):
     mp1.save()
     pt1.primary_manufacturer_part = mp1
     pt1.save()
-    assy = create_a_fake_assembly()
+    # assy = create_a_fake_assembly()
+    create_a_fake_assembly()
     pr1 = create_a_fake_part_revision(part=pt1, assembly=None)
 
     mp2 = ManufacturerPart(

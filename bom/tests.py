@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from parameterized import parameterized
+from django.utils import translation
 
 from bom.utils import convert_arabic_to_english
 
@@ -109,9 +110,8 @@ class TestBOM(TransactionTestCase):
         # Make sure only one part shows up
         decoded_content = response.content.decode("utf-8")
         main_content = decoded_content[
-            decoded_content.find("<main>") + len("<main>") : decoded_content.rfind(
-                "</main>"
-            )
+            decoded_content.find("<main>")
+            + len("<main>") : decoded_content.rfind("</main>")
         ]
         occurances = [m.start() for m in finditer(p1.full_part_number(), main_content)]
         self.assertEqual(len(occurances), 1)
@@ -335,6 +335,7 @@ class TestBOM(TransactionTestCase):
         self.assertEqual(len(bom.parts), 3)
 
     def test_upload_bom(self):
+        translation.activate("en-US")
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
 
         # Test OK page visit
@@ -907,9 +908,8 @@ class TestBOM(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         decoded_content = response.content.decode("utf-8")
         main_content = decoded_content[
-            decoded_content.find("<main>") + len("<main>") : decoded_content.rfind(
-                "</main>"
-            )
+            decoded_content.find("<main>")
+            + len("<main>") : decoded_content.rfind("</main>")
         ]
 
         occurances = [m.start() for m in finditer(p1.full_part_number(), main_content)]
@@ -948,7 +948,7 @@ class TestBOM(TransactionTestCase):
     def test_create_part_no_manufacturer_part(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
 
-        new_part_mpn = "STM32F401-NEW-PART"
+        # new_part_mpn = "STM32F401-NEW-PART"
         new_part_form_data = {
             "manufacturer_part_number": "",
             "manufacturer": "",
@@ -966,7 +966,8 @@ class TestBOM(TransactionTestCase):
             number_variation = "01"
             new_part_form_data["number_variation"] = number_variation
 
-        response = self.client.post(reverse("bom:create-part"), new_part_form_data)
+        # response = self.client.post(reverse("bom:create-part"), new_part_form_data)
+        self.client.post(reverse("bom:create-part"), new_part_form_data)
         part = Part.objects.get(
             number_class=p1.number_class.id,
             number_item="2000",
@@ -1902,9 +1903,8 @@ class TestBOMIntelligent(TestBOM):
         self.assertEqual(response.status_code, 200)
         decoded_content = response.content.decode("utf-8")
         main_content = decoded_content[
-            decoded_content.find("<main>") + len("<main>") : decoded_content.rfind(
-                "</main>"
-            )
+            decoded_content.find("<main>")
+            + len("<main>") : decoded_content.rfind("</main>")
         ]
         occurances = [m.start() for m in finditer(p1.full_part_number(), main_content)]
         self.assertEqual(len(occurances), 1)
@@ -1916,7 +1916,7 @@ class TestBOMIntelligent(TestBOM):
     def test_create_part_no_manufacturer_part(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
 
-        new_part_mpn = "STM32F401-NEW-PART"
+        # new_part_mpn = "STM32F401-NEW-PART"
         new_part_form_data = {
             "manufacturer_part_number": "",
             "manufacturer": "",
@@ -1928,7 +1928,8 @@ class TestBOMIntelligent(TestBOM):
             "value": "",
         }
 
-        response = self.client.post(reverse("bom:create-part"), new_part_form_data)
+        # response = self.client.post(reverse("bom:create-part"), new_part_form_data)
+        self.client.post(reverse("bom:create-part"), new_part_form_data)
         part = Part.objects.get(number_item="2000")
         self.assertEqual(len(part.manufacturer_parts()), 0)
 
@@ -1954,13 +1955,15 @@ class TestBOMIntelligent(TestBOM):
             number_item="500-5555-00", organization=self.organization
         )
         assy = create_a_fake_assembly()
-        pr5 = create_a_fake_part_revision(part=p5, assembly=assy)
+        # pr5 = create_a_fake_part_revision(part=p5, assembly=assy)
+        create_a_fake_part_revision(part=p5, assembly=assy)
 
         p6, _ = Part.objects.get_or_create(
             number_item="200-3333-00", organization=self.organization
         )
         assy = create_a_fake_assembly()
-        pr6 = create_a_fake_part_revision(part=p5, assembly=assy)
+        # pr6 = create_a_fake_part_revision(part=p5, assembly=assy)
+        create_a_fake_part_revision(part=p5, assembly=assy)
 
         with open(f"{TEST_FILES_DIR}/test_bom.csv") as test_csv:
             response = self.client.post(
@@ -2144,6 +2147,7 @@ class TestForms(TestCase):
         self.assertTrue(form.is_valid())
 
     def test_part_info_form_blank(self):
+        translation.activate("en-US")
         form = PartInfoForm({})
         self.assertFalse(form.is_valid())
         self.assertEqual(
@@ -2186,6 +2190,7 @@ class TestForms(TestCase):
         self.assertEqual(new_part.number_class.id, pc2.id)
 
     def test_part_form_blank(self):
+        translation.activate("en-US")
         (pc1, pc2, pc3) = create_some_fake_part_classes(self.organization)
 
         form = PartFormSemiIntelligent(data={}, organization=self.organization)
@@ -2213,6 +2218,7 @@ class TestForms(TestCase):
         self.assertTrue(form.is_valid())
 
     def test_add_subpart_form_blank(self):
+        translation.activate("en-US")
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
 
         form = AddSubpartForm({}, organization=self.organization, part_id=p1.id)

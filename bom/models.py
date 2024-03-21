@@ -679,6 +679,7 @@ class PartRevision(models.Model):
     )
 
     def generate_synopsis(self, make_searchable=False):
+        # TODO: remove tolerance from synopsis to improve search results.
         def verbosify(
             val,
             units=None,
