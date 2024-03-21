@@ -13,9 +13,11 @@ ENV PYTHONUNBUFFERED=1
 RUN apt-get update && apt-get install -y netcat-openbsd
 
 # Install pip requirements
-COPY requirements.txt .
-RUN python -m pip install -r requirements.txt
+COPY requirements.lock .
+RUN sed '/-e/d' requirements.lock > requirements.txt
+RUN pip install -r requirements.txt
 
+# TODO: don't copy everything 
 WORKDIR /app
 COPY . /app
 

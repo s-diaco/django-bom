@@ -22,6 +22,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Application definition
 
 INSTALLED_APPS = [
+    "corsheaders",
     "bom.apps.BomConfig",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -38,6 +39,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -109,7 +111,7 @@ LOGGING = {
         # "mail_admins": {
         #    "class": "django.utils.log.AdminEmailHandler",
         #    "level": "ERROR",
-            # But the emails are plain text by default - HTML is nicer
+        # But the emails are plain text by default - HTML is nicer
         #    "include_html": True,
         # },
         # Log to a text file that can be rotated by logrotate
@@ -149,7 +151,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # TODO: change
 LANGUAGE_CODE = "fa-IR"
 
-TIME_ZONE = 'Asia/Tehran'
+TIME_ZONE = "Asia/Tehran"
 
 USE_I18N = True
 
@@ -277,4 +279,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://127.0.0.1",
     "http://localhost:1337",
     "http://127.0.0.1",
+    "http://127.0.0.1:1337",
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True

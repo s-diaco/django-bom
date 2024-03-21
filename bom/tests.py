@@ -97,6 +97,7 @@ class TestBOM(TransactionTestCase):
         self.profile.role = "A"
         self.profile.save()
         self.client.login(username="kasper", password="ghostpassword")
+        translation.activate("en-US")
 
     def test_home(self):
         response = self.client.post(reverse("bom:home"))
@@ -335,7 +336,6 @@ class TestBOM(TransactionTestCase):
         self.assertEqual(len(bom.parts), 3)
 
     def test_upload_bom(self):
-        translation.activate("en-US")
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
 
         # Test OK page visit
@@ -2140,6 +2140,7 @@ class TestForms(TestCase):
         )
         self.organization = create_a_fake_organization(self.user)
         self.profile = self.user.bom_profile(organization=self.organization)
+        translation.activate("en-US")
 
     def test_part_info_form(self):
         form_data = {"quantity": 10}
@@ -2147,7 +2148,6 @@ class TestForms(TestCase):
         self.assertTrue(form.is_valid())
 
     def test_part_info_form_blank(self):
-        translation.activate("en-US")
         form = PartInfoForm({})
         self.assertFalse(form.is_valid())
         self.assertEqual(
@@ -2190,7 +2190,6 @@ class TestForms(TestCase):
         self.assertEqual(new_part.number_class.id, pc2.id)
 
     def test_part_form_blank(self):
-        translation.activate("en-US")
         (pc1, pc2, pc3) = create_some_fake_part_classes(self.organization)
 
         form = PartFormSemiIntelligent(data={}, organization=self.organization)
@@ -2218,7 +2217,6 @@ class TestForms(TestCase):
         self.assertTrue(form.is_valid())
 
     def test_add_subpart_form_blank(self):
-        translation.activate("en-US")
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
 
         form = AddSubpartForm({}, organization=self.organization, part_id=p1.id)

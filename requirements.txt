@@ -7,4 +7,5 @@ social_auth_app_django
 django-materializecss-form
 psycopg2-binary
 gunicorn
+django-cors-headers
 debugpy

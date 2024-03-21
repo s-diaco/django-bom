@@ -1,5 +1,5 @@
 version: '3.8'
-# name: barg_bom-dev
+name: barg_bom-dev
 
 services:
   web:
