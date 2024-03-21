@@ -23,9 +23,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install Dependencies
       run: |
-        python -m pip install --upgrade pip pipenv
         sed '/-e/d' requirements-dev.lock > requirements-dev.txt
-        pipenv install --deploy --dev
+        pip install --deploy --dev
     - name: Run Tests
       run: |
         pipenv run python manage.py test
