@@ -1,5 +1,5 @@
 [project]
-name = "django-bom"
+name = "barg-bom"
 version = "0.1.0"
 description = "A django app to manage a bill of materials."
 authors = [

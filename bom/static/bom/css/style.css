@@ -335,6 +335,10 @@ i.left {
     margin: 0 0 0 24px;
 }
 
+table.striped > tbody > tr:nth-child(odd) {
+    background-color: #caf9e373;
+}
+
 @media print {
     .container {
         width: 8.5in;

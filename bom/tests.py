@@ -1426,14 +1426,14 @@ class TestBOM(TransactionTestCase):
                 kwargs={"manufacturer_part_id": p1.primary_manufacturer_part.id},
             )
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
         new_sellerpart_form_data = {
             "seller": p1.optimal_seller().seller.id,
             "seller_part_number": p1.optimal_seller().seller_part_number,
             "minimum_order_quantity": 1000,
             "minimum_pack_quantity": 500,
-            "unit_cost": "1.23",
+            "unit_cost": "123",
             "lead_time_days": 25,
             "nre_cost": 2000,
             "ncnr": False,
@@ -1457,7 +1457,7 @@ class TestBOM(TransactionTestCase):
             "seller_part_number": "123-45678",
             "minimum_order_quantity": 100,
             "minimum_pack_quantity": 200,
-            "unit_cost": "1.2",
+            "unit_cost": "12",
             "lead_time_days": 5,
             "nre_cost": 1000,
             "ncnr": True,
@@ -2236,7 +2236,7 @@ class TestForms(TestCase):
             "seller_part_number": "123-45678",
             "minimum_order_quantity": 1000,
             "minimum_pack_quantity": 100,
-            "unit_cost": 1.2332,
+            "unit_cost": 12332,
             "lead_time_days": 14,
             "nre_cost": 1000,
             "ncnr": True,

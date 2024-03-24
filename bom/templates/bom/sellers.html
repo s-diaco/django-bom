@@ -30,13 +30,13 @@
         </form>
             <div class="part-list push-footer">
                 <div class="responsive-table-wrapper">
-                    <table class="highlight part-list tight single-line" style="margin-bottom: 14px;">
+                    <table class="striped highlight part-list tight single-line" style="margin-bottom: 14px;">
                         <thead>
                         <tr>
                             {% if profile.role == 'A' %}
                                 <th class="text-normal td-small action-checkbox-column" style="display: none;"><label><input type="checkbox" id="action-select-all"><span></span></label></th>
                             {% endif %}
-                            <th class="text-normal td-med">تأمین کننده</th>
+                            <th class="text-normal td-med">{% trans "Seller" %}</th>
                             <th class="text-normal td-med">تعداد متریال</th>
                         </tr>
                         </thead>

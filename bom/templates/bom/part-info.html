@@ -56,7 +56,7 @@
                                     <li>
                                         <a class="green-text text-lighten-1"
                                         href="{% url 'bom:part-revision-edit' part_id=part.id part_revision_id=part_revision.id %}">
-                                            <i class="material-icons green-text text-lighten-1 right">edit</i>ویرایش</a>
+                                            <i class="material-icons green-text text-lighten-1 right">edit</i>{% trans "Edit" %}</a>
                                     </li>
                                     <li>
                                         <a class="green-text text-lighten-1" href="{% url 'bom:part-revision-release' part_id=part.id part_revision_id=part_revision.id %}">
@@ -76,7 +76,7 @@
                                 <li class="divider" tabindex="-1"></li>
                                 <li>
                                     <a class="red-text text-lighten-1" onclick="deletePartRevision()">
-                                        <i class="material-icons red-text text-lighten-1 right">delete</i>حذف</a>
+                                        <i class="material-icons red-text text-lighten-1 right">delete</i>{% trans "Delete" %}</a>
                                 </li>
                             </ul>
                         </div>
@@ -107,7 +107,7 @@
                         <li class="tab"><a id="specs-tab" href="#specs">مشخصات</a></li>
                         <li class="tab"><a id="bom-tab" href="#bom">درخت محصول</a></li>
                         <li class="tab"><a id="used-tab" href="#used">موارد استفاده</a></li>
-                        <li class="tab"><a id="sourcing-tab" href="#sourcing">تأمین کننده</a></li>
+                        <li class="tab"><a id="sourcing-tab" href="#sourcing">{% trans "Seller" %}</a></li>
                     </ul>
                 </div>
 
@@ -167,7 +167,7 @@
                             -->
                         </li>
                         <li class="collection-header">
-                            <h5><h5 class="title">تأمین کننده</h5></h5>
+                            <h5><h5 class="title">{% trans "Seller" %}</h5></h5>
                         </li>
                         <li class="collection-item">
                             <div class="row">

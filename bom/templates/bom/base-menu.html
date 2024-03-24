@@ -1,17 +1,17 @@
-{% if user.is_superuser and user.is_authenticated %}<li><a title="Admin" href="/admin/" target="_blank">ادمین</a></li>{% endif %}
+{% if user.is_superuser and user.is_authenticated %}<li><a title="Admin" href="/admin/" target="_blank">{% trans "Admin" %}</a></li>{% endif %}
 {% if user.is_authenticated %}
     <li>
         <form method="post" action="{% url 'logout' %}">
             {% csrf_token %}
             {% comment %} # TODO: clean up {% endcomment %}
             <a style="cursor: default;">
-                <button title="خروج" style="border:0; background-color: transparent; color: white; cursor: pointer;" class="narrow-padding right" type="submit"><i class="material-icons right">logout</i></button>
+                <button title={% trans "logout" %} style="border:0; background-color: transparent; color: white; cursor: pointer;" class="narrow-padding right" type="submit"><i class="material-icons right">logout</i></button>
                 {{user.username}}
             </a>
         </form>
     </li>
 {% endif %}
 {% if not user.is_authenticated %}
-    <li><a title="ورود" href="{% url 'login' %}">ورود</a></li>
-    <li><a title="عضویت" href="{% url 'signup' %}">عضویت</a></li>
+    <li><a title="login" href="{% url 'login' %}">{% trans "Log in" %}</a></li>
+    <li><a title="register" href="{% url 'signup' %}">{% trans "Register" %}</a></li>
 {% endif %}

@@ -45,6 +45,7 @@ from .constants import (
     VOLTAGE_UNITS,
     WAVELENGTH_UNITS,
     WEIGHT_UNITS,
+    UNIT_COST_DECIMAL_PLACES,
 )
 from .csv_headers import PartsListCSVHeaders, PartsListCSVHeadersSemiIntelligent
 from .part_bom import PartBom, PartBomItem, PartIndentedBomItem
@@ -679,7 +680,6 @@ class PartRevision(models.Model):
     )
 
     def generate_synopsis(self, make_searchable=False):
-        # TODO: remove tolerance from synopsis to improve search results.
         def verbosify(
             val,
             units=None,
@@ -711,8 +711,8 @@ class PartRevision(models.Model):
             ),
         )
         s += verbosify(self.description)
-        tolerance = self.tolerance.replace("%", "") if self.tolerance else ""
-        s += verbosify(tolerance, post="%", post_whitespace=False)
+        # tolerance = self.tolerance.replace("%", "") if self.tolerance else ""
+        # s += verbosify(tolerance, post="%", post_whitespace=False)
         s += verbosify(self.attribute)
         s += verbosify(self.package if make_searchable else self.get_package_display())
         s += verbosify(self.pin_count, post="pins")
@@ -1139,7 +1139,9 @@ class SellerPart(models.Model, AsDictModel):
     minimum_pack_quantity = models.PositiveIntegerField(default=1)
     data_source = models.CharField(max_length=32, default=None, null=True, blank=True)
     # "To comply with certain strict accounting or financial regulations, you may consider using max_digits=19 and decimal_places=4"
-    unit_cost = MoneyField(max_digits=19, decimal_places=4, default_currency="USD")
+    unit_cost = MoneyField(
+        max_digits=19, decimal_places=UNIT_COST_DECIMAL_PLACES, default_currency="USD"
+    )
     lead_time_days = models.PositiveIntegerField(null=True, blank=True)
     nre_cost = MoneyField(max_digits=19, decimal_places=4, default_currency="USD")
     link = models.URLField(null=True, blank=True)

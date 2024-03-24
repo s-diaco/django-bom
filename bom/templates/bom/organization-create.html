@@ -12,7 +12,7 @@
 {% block content %}
     <div class="container">
         <h1 class="light header center">Welcome to IndaBOM!</h1>
-        <div id="create-or-join">
+        <div id="create-or-join"{% if not user_organization_admin %} style="display: none;"{% endif %}>
             <h3 class="center">Create or join an Organization?</h3>
             <p class="center">In IndaBOM, everything happens in an Organization. This is where your team collaborates on parts, BOMs, and assemblies.</p>
 
@@ -42,13 +42,13 @@
             </div>
         </div>
 
-        <div id="join-organization" style="display: none;">
-            <h3 class="center">Join an existing Organization</h3>
-            <h5 class="center" style="padding-top: 36px;">To join an existing organization, you must provide the e-mail address you signed up with to your IndaBOM organization owner. <br><br>Your e-mail address is {{ user.email }}, click
+        <div id="join-organization"{% if user_organization_admin %} style="display: none;"{% endif %}>
+            <h3 class="center">{% trans "Join an existing Organization" %}</h3>
+            <h5 class="center" style="padding-top: 36px;">{% trans "To join an existing organization, you must provide the e-mail address you signed up with to your IndaBOM organization owner." %} <br>{% comment %}<br>Your e-mail address is {{ user.email }}, click
                 <a href="mailto:?subject=Add me to your IndaBOM Organization&body=Hi,%0D%0A%0D%0APlease add me to your IndaBOM organization. To do so, log in, go to Settings > Organization and add me via my e-mail address {{ user.email }}">here</a>
                 to send an email.</h5>
             <br><br>
-            <p class="center">Oops! I meant to <a class="modal-trigger" onclick="resetView()">create a new organization</a>.</p>
+            <p class="center">Oops! I meant to <a class="modal-trigger" onclick="resetView()">create a new organization</a>.</p>{% endcomment %}
         </div>
 
         <div id="create-organization" style="display: none;">

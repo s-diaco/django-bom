@@ -76,8 +76,8 @@
                     <td>{{ seller_part.nre_cost }}</td>
                     <td>{{ seller_part.ncnr }}</td>
                     <td>{% if profile.role == 'A' %}
-                        <a href="{% url 'bom:sellerpart-edit' sellerpart_id=seller_part.id %}">ویرایش</a> |
-                        <a href="{% url 'bom:sellerpart-delete' sellerpart_id=seller_part.id %}">حذف</a>
+                        <a href="{% url 'bom:sellerpart-edit' sellerpart_id=seller_part.id %}">{% trans "Edit" %}</a> |
+                        <a href="{% url 'bom:sellerpart-delete' sellerpart_id=seller_part.id %}">{% trans "Delete" %}</a>
                     {% endif %}</td>
                 </tr>
             {% empty %}

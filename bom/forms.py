@@ -147,6 +147,17 @@ class UserAddForm(forms.ModelForm):
         super(UserAddForm, self).__init__(*args, **kwargs)
         self.fields["role"].required = False
 
+        self.fields["username"] = forms.CharField(
+            label=_("User"),
+            widget=AutocompleteTextInput(
+                queryset=User.objects.values_list("username", flat=True).order_by(
+                    "username"
+                ),
+                autocomplete_min_length=0,
+                autocomplete_limit=8,
+            ),
+        )
+
     def clean_username(self):
         cleaned_data = super(UserAddForm, self).clean()
         username = cleaned_data.get("username")
@@ -331,7 +342,7 @@ class ManufacturerForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["name"] = forms.CharField(
             required=False,
-            label="تولید کننده",
+            label=_("Manufacturer"),
             widget=AutocompleteTextInput(
                 queryset=Manufacturer.objects.filter(
                     organization=self.organization
@@ -373,10 +384,15 @@ class SellerForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
+        instance = kwargs.get("instance")
+        if instance:
+            initial = kwargs.get("initial", {})
+            initial["name"] = instance.name
+            kwargs["initial"] = initial
         super().__init__(*args, **kwargs)
         self.fields["name"] = forms.CharField(
             required=False,
-            label="تأمین کننده",
+            label=_("Seller"),
             widget=AutocompleteTextInput(
                 queryset=Seller.objects.filter(organization=self.organization).order_by(
                     "name"
@@ -409,8 +425,11 @@ class SellerPartForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
         self.manufacturer_part = kwargs.pop("manufacturer_part", None)
+        currency_unit_txt = self.organization.currency if self.organization else ""
         self.base_fields["unit_cost"] = forms.DecimalField(
-            required=True, label="قیمت (هزینه سربار)", initial=0
+            required=True,
+            label=_("قیمت (هزینه سربار) | {unit}").format(unit=currency_unit_txt),
+            initial=0,
         )
 
         instance = kwargs.get("instance")
@@ -418,6 +437,7 @@ class SellerPartForm(forms.ModelForm):
             initial = kwargs.get("initial", {})
             initial["unit_cost"] = instance.unit_cost.amount
             initial["nre_cost"] = instance.nre_cost.amount
+            initial["seller_part_number"] = instance.seller_part_number
             kwargs["initial"] = initial
         super(SellerPartForm, self).__init__(*args, **kwargs)
         if self.manufacturer_part is not None:
@@ -426,8 +446,8 @@ class SellerPartForm(forms.ModelForm):
             organization=self.organization
         ).order_by("name")
         self.fields["seller"].required = False
-        self.fields["seller_part_number"].label = "کد تأمین کننده"
-        self.fields["seller"].label = "تأمین کننده"
+        self.fields["seller_part_number"].label = _("Seller Part Number")
+        self.fields["seller"].label = _("Seller")
 
     def clean(self):
         cleaned_data = super(SellerPartForm, self).clean()
@@ -435,6 +455,7 @@ class SellerPartForm(forms.ModelForm):
         new_seller = cleaned_data.get("new_seller")
         unit_cost = cleaned_data.get("unit_cost")
         nre_cost = cleaned_data.get("nre_cost")
+        seller_part_number = cleaned_data.get("seller_part_number")
         if unit_cost is None:
             raise forms.ValidationError("Invalid unit cost.", code="invalid")
         self.instance.unit_cost = Money(unit_cost, self.organization.currency)
@@ -443,6 +464,9 @@ class SellerPartForm(forms.ModelForm):
             # raise forms.ValidationError("Invalid NRE cost.", code="invalid")
             nre_cost = Decimal(0)
         self.instance.nre_cost = Money(nre_cost, self.organization.currency)
+
+        if seller_part_number is None:
+            self.cleaned_data["seller_part_number"] = ""
 
         if seller and new_seller:
             raise forms.ValidationError(
@@ -1253,14 +1277,7 @@ class PartFormIntelligent(forms.ModelForm):
         self.fields["number_item"].required = True
         self.fields["number_item"].label = "کد"
         self.fields["number_item"].widget.attrs["oninput"] = "updateTargetInput()"
-        if self.instance and self.instance.id:
-            self.fields["primary_manufacturer_part"].queryset = (
-                ManufacturerPart.objects.filter(part__id=self.instance.id).order_by(
-                    "manufacturer_part_number"
-                )
-            )
-        else:
-            del self.fields["primary_manufacturer_part"]
+        del self.fields["primary_manufacturer_part"]
         # for _, value in self.fields.items():
         # value.widget.attrs["placeholder"] = value.help_text
         # value.help_text = ""
@@ -1306,8 +1323,8 @@ class PartFormSemiIntelligent(forms.ModelForm):
             "google_drive_parent",
         ]
         help_texts = {
-            'number_item': _('Auto generated if blank.'),
-            'number_variation': 'Auto generated if blank.',
+            "number_item": _("Auto generated if blank."),
+            "number_variation": "Auto generated if blank.",
         }
 
     def __init__(self, *args, **kwargs):
@@ -1424,10 +1441,9 @@ class PartRevisionForm(forms.ModelForm):
         model = PartRevision
         exclude = ["timestamp", "assembly", "part"]
         help_texts = {
-            'description': _('Additional part info, special instructions, etc.'),
-            'attribute': _('Additional part attributes (free form)'),
-            'value': _('Number or text'),
-
+            "description": _("Additional part info, special instructions, etc."),
+            "attribute": _("Additional part attributes (free form)"),
+            "value": _("Number or text"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -1608,7 +1624,7 @@ class AddSubpartForm(forms.Form):
         super(AddSubpartForm, self).__init__(*args, **kwargs)
         self.fields["subpart_part_number"] = forms.CharField(
             required=True,
-            label="کد زیرشاخه",
+            label=_("کد زیرشاخه"),
             widget=AutocompleteTextInput(
                 attrs={"placeholder": "انتخاب"},
                 queryset=Part.objects.filter(organization=self.organization).exclude(

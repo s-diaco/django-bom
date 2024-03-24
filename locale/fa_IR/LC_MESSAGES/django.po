@@ -1,51 +1,205 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# FIRST AUTHOR dyaco8464@yahoo.com, 2024.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-21 23:03+0330\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"POT-Creation-Date: 2024-03-24 07:13+0330\n"
+"PO-Revision-Date: 2024-03-24 06:55+0330\n"
+"Last-Translator: Diaco Soltanpour dyaco8464@yahoo.com\n"
+"Language-Team: Farsi (persian) dyaco8464@yahoo.com\n"
+"Language: Farsi (persian)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: bom/forms.py:1309
+#: bom/forms.py:151
+msgid "User"
+msgstr "کاربر"
+
+#: bom/forms.py:345
+msgid "Manufacturer"
+msgstr "تولید کننده"
+
+#: bom/forms.py:395 bom/forms.py:450 bom/templates/bom/add-sellerpart.html:24
+#: bom/templates/bom/components/bom-indented.html:71
+#: bom/templates/bom/components/seller-part-list.html:15
+#: bom/templates/bom/create-part.html:55 bom/templates/bom/dashboard.html:100
+#: bom/templates/bom/part-info.html:110 bom/templates/bom/part-info.html:170
+#: bom/templates/bom/sellerpart-edit.html:22 bom/templates/bom/sellers.html:39
+#: bom/views/views.py:1814
+msgid "Seller"
+msgstr "تأمین کننده"
+
+#: bom/forms.py:431
+#, python-brace-format
+msgid "قیمت (هزینه سربار) | {unit}"
+msgstr ""
+
+#: bom/forms.py:449 bom/templates/bom/components/seller-part-list.html:16
+#: bom/templates/bom/dashboard.html:98
+msgid "Seller Part Number"
+msgstr "کد تأمین کننده"
+
+#: bom/forms.py:1326
 msgid "Auto generated if blank."
 msgstr "در صورت خالی بودن اتوماتیک ایجاد می‌شود."
 
-#: bom/forms.py:1427
+#: bom/forms.py:1444
 msgid "Additional part info, special instructions, etc."
 msgstr "نوع متریال"
 
-#: bom/forms.py:1428
+#: bom/forms.py:1445
 msgid "Additional part attributes (free form)"
 msgstr "اطلاعات اضافه متریال"
 
-#: bom/forms.py:1429
+#: bom/forms.py:1446
 msgid "Number or text"
 msgstr "عدد یا تکست"
 
-#: bom/forms.py:1455
+#: bom/forms.py:1471
 msgid "نوع"
 msgstr ""
 
-#: bom/templates/bom/bom-base-menu.html:3
+#: bom/forms.py:1627
+msgid "کد زیرشاخه"
+msgstr ""
+
+#: bom/templates/bom/base-menu.html:1
+msgid "Admin"
+msgstr "مدیر"
+
+#: bom/templates/bom/base-menu.html:9
+msgid "logout"
+msgstr "خروج از حساب"
+
+#: bom/templates/bom/base-menu.html:16
+msgid "Log in"
+msgstr "ورود"
+
+#: bom/templates/bom/base-menu.html:17
+msgid "Register"
+msgstr "ایجاد حساب"
+
+#: bom/templates/bom/bom-base-menu.html:2
 msgid "Products"
 msgstr "محصولات"
 
-#: bom/templates/bom/bom-base-menu.html:4
+#: bom/templates/bom/bom-base-menu.html:3
 msgid "sellers"
 msgstr "تأمین کنندگان"
+
+#: bom/templates/bom/bom-base-menu.html:4
+msgid "settings"
+msgstr "تنظیمات"
+
+#: bom/templates/bom/bom-base-menu.html:6
+msgid "help"
+msgstr "راهنما"
+
+#: bom/templates/bom/components/bom-indented.html:78
+#: bom/templates/bom/dashboard.html:70
+msgid "Manage"
+msgstr "مدیریت"
+
+#: bom/templates/bom/components/bom-indented.html:132
+#: bom/templates/bom/components/manufacturer-part-list.html:80
+#: bom/templates/bom/dashboard.html:61
+#: bom/templates/bom/manufacturer-info.html:41
+#: bom/templates/bom/part-info.html:79 bom/templates/bom/seller-info.html:41
+msgid "Delete"
+msgstr "حذف"
+
+#: bom/templates/bom/components/manufacturer-part-list.html:79
+#: bom/templates/bom/manufacturer-info.html:36
+#: bom/templates/bom/part-info.html:59 bom/templates/bom/seller-info.html:36
+#: bom/templates/bom/settings.html:225
+msgid "Edit"
+msgstr "ویرایش"
+
+#: bom/templates/bom/components/seller-part-list.html:14
+msgid "Part"
+msgstr "متریال"
+
+#: bom/templates/bom/organization-create.html:46
+msgid "Join an existing Organization"
+msgstr "پوستن به سازمان"
+
+#: bom/templates/bom/organization-create.html:47
+msgid ""
+"To join an existing organization, you must provide the e-mail address you "
+"signed up with to your IndaBOM organization owner."
+msgstr ""
+"برای پیواستن به سازمان، با ادمین سازمان تماس بگیرید با منتظر تأیید باشید."
+
+#: bom/templates/bom/settings.html:29
+msgid "Your role is: "
+msgstr "سطح دسترسی شما: "
+
+#: bom/templates/bom/settings.html:30
+msgid "Your username is: "
+msgstr "نام کاربری شما: "
+
+#: bom/templates/bom/settings.html:31
+msgid "To request a change in role please contact "
+msgstr "برای تغییر سطح دسترسی با "
+
+#: bom/templates/bom/settings.html:31
+msgid " for assistance."
+msgstr " تماس بگیرید."
+
+#: bom/templates/bom/settings.html:236
+msgid "Remove selected user"
+msgstr "حذف کاربر انتخاب شده"
+
+#: bom/templates/bom/settings.html:310
+msgid "Leave Your Organization"
+msgstr "جدا شدن از این سازمان"
+
+#: bom/templates/bom/settings.html:311
+msgid ""
+"Warning, the only way back in to {{ organization.name }} is if you are "
+"invited by an organization administrator."
+msgstr "توجه: تنها راه بازگشت به سازمان دعوت از طرف ادمین خواهد بود."
+
+#: bom/templates/bom/settings.html:314
+msgid "Leave Organization"
+msgstr "جدا شدن از سازمان"
+
+#: bom/templates/registration/login.html:5
+#: bom/templates/registration/login.html:10
+#: bom/templates/registration/login.html:30
+msgid "Login"
+msgstr "ورود"
+
+#: bom/templates/registration/login.html:18
+msgid "Login into your BOM account"
+msgstr "ورود به اکانت BOM شما"
 
 #: bom/validators.py:23
 #, python-format
 msgid "%(value)s is not a valid pct"
 msgstr "%(value)s درصد معتبر نیست."
+
+#: bom/views/views.py:151
+msgid "Search Results - "
+msgstr " - نتایج جستجو"
+
+#: bom/views/views.py:153
+#, python-brace-format
+msgid "Material List for {title}"
+msgstr "لیست متریال {title}"
+
+#: bom/views/views.py:483
+#, fuzzy
+#| msgid "settings"
+msgid "Settings"
+msgstr "تنظیمات"
+
+#: bom/views/views.py:2013
+msgid "ویرایش اطلاعات بازرگانی متریال"
+msgstr ""

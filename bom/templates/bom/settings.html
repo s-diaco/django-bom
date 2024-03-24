@@ -26,9 +26,9 @@
                 {% csrf_token %}
                 <div class="row">
                     <div class="col s12">
-                        <p>Your role is: <b>{{ user.bom_profile.get_role_display }}</b></p>
-                        <p>Your username is: <b>{{ user.username }}</b></p>
-                        <p>To request a change in role please contact <a href="mailto:{{ organization.owner.email }}">{{ organization.owner.email }}</a> for assistance.</p>
+                        <p>{% trans "Your role is: " %}<b>{{ user.bom_profile.get_role_display }}</b></p>
+                        <p>{% trans "Your username is: " %}<b>{{ user.username }}</b></p>
+                        <p>{% trans "To request a change in role please contact " %}<a href="mailto:{{ organization.owner.email }}">{{ organization.owner.email }}</a>{% trans " for assistance." %}</p>
                     </div>
                 </div>
                 <div class="row">
@@ -45,7 +45,7 @@
         </div>
 
         <div id="indabom" class="col s12">
-            {% if profile.role == 'A' %}
+            {% if owner == user %}
                 {% if organization.number_scheme == 'S' %}
                     {% if part_classes.count > 0 %}
                         <h3>Edit Part Classes</h3>
@@ -174,7 +174,7 @@
         </div>
 
         <div id="organization" class="col s12">
-            {% if user.bom_profile.role == 'A' %}
+            {% if owner == user %}
                 <h3>شرکت</h3>
                 <div class="row">
                     <div class="col s12">
@@ -222,7 +222,7 @@
                                             <td class="text-normal"><a href="mailto:{{ user.email }}">{{ org_user.email }}</a></td>
                                             <td>
                                                 <a class="waves-effect waves-green btn-flat green-text text-lighten-1" href="{% url 'bom:user-meta-edit' user_meta_id=org_user.bom_profile.id %}"><i
-                                                        class="material-icons left green-text text-lighten-1">edit</i>ویرایش</a>
+                                                        class="material-icons left green-text text-lighten-1">edit</i>{% trans "Edit" %}</a>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -230,12 +230,13 @@
                                 </table>
                                 <div class="row" style="padding-top: 16px;">
                                     <div class="col s6">
+                                        {% comment %}TODO: not working{% endcomment %}
                                         <button class="waves-effect waves-light btn red lighten-1" type="submit" name="submit-remove-user"
-                                                onclick="return confirm('کاربر/کاربران انتخاب شده از شرکت {{ organization }} حذف شوند?')">خذف کاربر انتخاب شده
+                                                onclick="return confirm('کاربر/کاربران انتخاب شده از شرکت {{ organization }} حذف شوند?')">{% trans "Remove selected user" %}
                                         </button>
                                     </div>
                                     <div class="col s6 left-align">
-                                        {% include 'bom/bom-form-modal.html' with modal_title='افزودن کاربر' form=user_add_form action=user_add_form_action name='submit-add-user' modal_description='Adding users to your organization is a paid feature, but is free for a limited time while we are still developing the tool. Contact <a href="mailto:infomailaddress">infomailaddress</a> if you are interested.' %}
+                                        {% include 'bom/bom-form-modal.html' with modal_title='Add User' form=user_add_form action=user_add_form_action name='submit-add-user' modal_description='Adding users to your organization is a paid feature, but is free for a limited time while we are still developing the tool.' %}
                                     </div>
                                 </div>
                             </form>
@@ -305,11 +306,11 @@
             {% if profile.organization %}
                 <div class="row">
                     <div class="col s12">
-                        <h3>Leave Your Organization</h3>
-                        <p>Warning, the only way back in to {{ organization.name }} is if you are invited by an organization administrator.</p>
+                        <h3>{% trans "Leave Your Organization" %}</h3>
+                        <p>{% trans "Warning, the only way back in to {{ organization.name }} is if you are invited by an organization administrator." %}</p>
                         <form name="leave-organization" action="{% url 'bom:settings' tab_anchor=ORGANIZATION_TAB %}" method="post" class="col s12" enctype="multipart/form-data">
                             {% csrf_token %}
-                            <button class="waves-effect waves-light btn red lighten-1" type="submit" name="submit-leave-organization">Leave Organization</button>
+                            <button class="waves-effect waves-light btn red lighten-1" type="submit" name="submit-leave-organization">{% trans "Leave Organization" %}</button>
                         </form>
                     </div>
                 </div>

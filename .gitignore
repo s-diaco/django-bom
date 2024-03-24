@@ -291,6 +291,7 @@ fabric.properties
 # virtualenv
 venv/
 ENV/
+.venv/
 
 *local_setting.py
 .DS_Store

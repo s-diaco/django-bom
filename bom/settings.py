@@ -73,6 +73,7 @@ TEMPLATES = [
                 "social_django.context_processors.login_redirect",
                 "bom.context_processors.bom_config",
             ],
+            "builtins": ["django.templatetags.i18n"],
         },
     },
 ]

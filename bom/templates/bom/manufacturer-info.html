@@ -33,12 +33,12 @@
                         <li>
                             <a class="green-text text-lighten-1"
                                href="{% url 'bom:manufacturer-edit' manufacturer_id=manufacturer.id %}">
-                                <i class="material-icons green-text text-lighten-1 right">edit</i>ویرایش</a>
+                                <i class="material-icons green-text text-lighten-1 right">edit</i>{% trans "Edit" %}</a>
                         </li>
                         <li class="divider" tabindex="-1"></li>
                         <li>
                             <a class="red-text text-lighten-1" onclick="deleteManufacturer()">
-                                <i class="material-icons red-text text-lighten-1 right">delete</i>حذف</a>
+                                <i class="material-icons red-text text-lighten-1 right">delete</i>{% trans "Delete" %}</a>
                         </li>
                     </ul>
                 </div>
