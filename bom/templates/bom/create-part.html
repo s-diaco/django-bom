@@ -33,9 +33,8 @@
                         {% include 'bom/part-revision-display.html' with part_revision_form=part_revision_form %}
                     </div>
                     <div class="hidden">
-                        <h2>تولید کننده</h2>
+                        <h2>{% trans "Manufacturer" %}</h2>
                         <!--<p><i>The below fields are optional.</i></p>-->
-                        <p>در صورت محصول بودن "{{ organization }}" را به عنوان تولید کننده انتخاب کنید.</p>
                         <div class="row">
                             {{ manufacturer_form.non_field_errors }}
                             {{ manufacturer_part_form.non_field_errors }}
@@ -54,7 +53,6 @@
                     </div>
                     <h2>{% trans "Seller" %}</h2>
                     <!--<p><i>The below fields are optional.</i></p>-->
-                    <p>در صورت محصول بودن "{{ organization }}" را به عنوان تأمین کننده انتخاب کنید.</p>
                     <div class="row">
                         {{ seller_form.non_field_errors }}
                         {{ seller_part_form.non_field_errors }}
@@ -70,9 +68,14 @@
                             <a href="javascript:history.back()" class="waves-effect waves-light btn-flat grey-text lighten-1" style="margin-left: -16px;">انصراف</a>
                         </div>
                         <div class="col l4 m5 s6 left-align">
-                            <button class="waves-effect waves-light btn green lighten-1" type="submit" name="action">ذخیره</button>
+                            <button class="waves-effect waves-light btn green lighten-1" type="submit" name="action">{% trans "Save" %}</button>
                         </div>
                     </div>
+                    <label class="hidden" id="organizationName">{% trans organization.name %}</label>
+                    <label class="hidden" id="labelNoBom">{% trans "Price" %}</label>
+                    <label class="hidden" id="labelWithBom">{% trans "Overload Cost" %}</label>
+                    <label class="hidden" id="currencyText">{% trans organization.currency %}</label>
+                    <script src="{% static 'bom/js/radio.js' %}"></script>
                     <script>
                         function updateTargetInput() {
                             const sourceInputValue = document.getElementById('id_number_item').value;

@@ -25,12 +25,12 @@
                 {{ manufacturer_part_form.errors }}
                 <div class="row">
                     <div class="col">
-                        <p>تولید کننده</p>
+                        <p>{% trans "Manufacturer" %}</p>
                     </div>
                 </div>
                 <div class="row">
                     <div class="fieldWrapper col m6 s12">
-                        <label for="{{ manufacturer_part_form.manufacturer.id_for_label }}">تولید کننده</label>
+                        <label for="{{ manufacturer_part_form.manufacturer.id_for_label }}">{% trans "Manufacturer" %}</label>
                         {{ manufacturer_part_form.manufacturer.errors }}
                         {{ manufacturer_part_form.manufacturer }}
                     </div>
@@ -52,7 +52,7 @@
                         <a href="javascript:history.back()" class="waves-effect waves-light btn-flat grey-text lighten-1" style="margin-left: -16px;">انصراف</a>
                     </div>
                     <div class="col s6 left-align">
-                        <button class="waves-effect waves-light btn green lighten-1" type="submit" name="action">ذخیره</button>
+                        <button class="waves-effect waves-light btn green lighten-1" type="submit" name="action">{% trans "Save" %}</button>
                     </div>
                 </div>
             </form>

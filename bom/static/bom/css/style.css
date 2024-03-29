@@ -326,6 +326,25 @@ i.left {
     font-size: inherit !important;
 }
 
+[type="radio"]:not(:checked), [type="radio"]:checked {
+    position: relative;
+    opacity: 1;
+    pointer-events: none;
+}
+
+.radioSelect label{
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.87);
+}
+
+.radioSelect input{
+    margin: 5px;
+}
+
+div.radioSelect>div>div>label>span{
+    display: none;
+}
+
 /* Printer friendly */
 .printer-show {
     display: none;
@@ -337,6 +356,19 @@ i.left {
 
 table.striped > tbody > tr:nth-child(odd) {
     background-color: #caf9e373;
+}
+/* 
+footer>div.container{
+    width: max-content;
+    margin: auto auto auto 0;
+} */
+
+footer h5{
+    margin: 0;
+}
+
+footer.page-footer>div.container>div.row>div.col>p{
+    margin: 11px 0;
 }
 
 @media print {

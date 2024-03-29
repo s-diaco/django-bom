@@ -1,3 +1,4 @@
+from cProfile import label
 import codecs
 import csv
 from decimal import Decimal
@@ -23,6 +24,7 @@ from .constants import (
     DISTANCE_UNITS,
     FREQUENCY_UNITS,
     INTERFACE_TYPES,
+    MATERIAL_TYPES,
     MEMORY_UNITS,
     NUMBER_SCHEME_INTELLIGENT,
     NUMBER_SCHEME_SEMI_INTELLIGENT,
@@ -428,7 +430,7 @@ class SellerPartForm(forms.ModelForm):
         currency_unit_txt = self.organization.currency if self.organization else ""
         self.base_fields["unit_cost"] = forms.DecimalField(
             required=True,
-            label=_("قیمت (هزینه سربار) | {unit}").format(unit=currency_unit_txt),
+            label=_("Price | {unit}").format(unit=currency_unit_txt),
             initial=0,
         )
 
@@ -1445,6 +1447,7 @@ class PartRevisionForm(forms.ModelForm):
             "attribute": _("Additional part attributes (free form)"),
             "value": _("Number or text"),
         }
+        widgets = {"material": forms.RadioSelect()}
 
     def __init__(self, *args, **kwargs):
         super(PartRevisionForm, self).__init__(*args, **kwargs)
@@ -1462,13 +1465,15 @@ class PartRevisionForm(forms.ModelForm):
         self.fields["attribute"].label = ""
         self.fields["revision"].label = "ورژن"
         self.fields["tolerance"].label = "درصد پرت (LOI)"
-        self.fields["material"].label = "روش محاسبه قیمت"
         self.fields["tolerance"].initial = 0
+        # TODO: read choices from PartRevision model
+        self.fields["material"].choices = MATERIAL_TYPES
+        self.fields["material"].initial = "no_bom"
         self.fields["description"] = forms.CharField(
             # TODO: Delete if not working
             error_messages={"required": "شرح نمی‌تواند خالی باشد!"},
             required=True,
-            label=_("نوع"),
+            label=_("Description"),
             widget=AutocompleteTextInput(
                 queryset=PartRevision.objects.values_list("description", flat=True),
                 autocomplete_min_length=1,

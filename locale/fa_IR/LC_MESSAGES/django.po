@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-24 07:13+0330\n"
+"POT-Creation-Date: 2024-03-29 03:52+0330\n"
 "PO-Revision-Date: 2024-03-24 06:55+0330\n"
 "Last-Translator: Diaco Soltanpour dyaco8464@yahoo.com\n"
 "Language-Team: Farsi (persian) dyaco8464@yahoo.com\n"
@@ -17,57 +17,74 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: bom/forms.py:151
+#: bom/forms.py:153
 msgid "User"
 msgstr "کاربر"
 
-#: bom/forms.py:345
+#: bom/forms.py:347 bom/templates/bom/add-manufacturer-part.html:28
+#: bom/templates/bom/add-manufacturer-part.html:33
+#: bom/templates/bom/components/bom-indented.html:67
+#: bom/templates/bom/create-part.html:36
+#: bom/templates/bom/manufacturers.html:39 bom/templates/bom/part-info.html:232
+#: bom/templates/bom/part-info.html:266
 msgid "Manufacturer"
 msgstr "تولید کننده"
 
-#: bom/forms.py:395 bom/forms.py:450 bom/templates/bom/add-sellerpart.html:24
+#: bom/forms.py:397 bom/forms.py:452 bom/templates/bom/add-sellerpart.html:24
 #: bom/templates/bom/components/bom-indented.html:71
 #: bom/templates/bom/components/seller-part-list.html:15
-#: bom/templates/bom/create-part.html:55 bom/templates/bom/dashboard.html:100
+#: bom/templates/bom/create-part.html:54 bom/templates/bom/dashboard.html:100
 #: bom/templates/bom/part-info.html:110 bom/templates/bom/part-info.html:170
 #: bom/templates/bom/sellerpart-edit.html:22 bom/templates/bom/sellers.html:39
 #: bom/views/views.py:1814
 msgid "Seller"
 msgstr "تأمین کننده"
 
-#: bom/forms.py:431
+#: bom/forms.py:433
 #, python-brace-format
-msgid "قیمت (هزینه سربار) | {unit}"
-msgstr ""
+msgid "Price | {unit}"
+msgstr "قیمت | {unit}"
 
-#: bom/forms.py:449 bom/templates/bom/components/seller-part-list.html:16
+#: bom/forms.py:451 bom/templates/bom/components/seller-part-list.html:16
 #: bom/templates/bom/dashboard.html:98
 msgid "Seller Part Number"
 msgstr "کد تأمین کننده"
 
-#: bom/forms.py:1326
+#: bom/forms.py:1328
 msgid "Auto generated if blank."
 msgstr "در صورت خالی بودن اتوماتیک ایجاد می‌شود."
 
-#: bom/forms.py:1444
+#: bom/forms.py:1446
 msgid "Additional part info, special instructions, etc."
 msgstr "نوع متریال"
 
-#: bom/forms.py:1445
+#: bom/forms.py:1447
 msgid "Additional part attributes (free form)"
 msgstr "اطلاعات اضافه متریال"
 
-#: bom/forms.py:1446
+#: bom/forms.py:1448
 msgid "Number or text"
 msgstr "عدد یا تکست"
 
-#: bom/forms.py:1471
-msgid "نوع"
-msgstr ""
+#: bom/forms.py:1476
+msgid "Description"
+msgstr "شرح متریال"
 
-#: bom/forms.py:1627
+#: bom/forms.py:1632
 msgid "کد زیرشاخه"
 msgstr ""
+
+#: bom/templates/bom/add-manufacturer-part.html:55
+#: bom/templates/bom/add-sellerpart.html:38 bom/templates/bom/bom-form.html:29
+#: bom/templates/bom/create-part.html:71
+#: bom/templates/bom/edit-manufacturer-part.html:64
+#: bom/templates/bom/edit-part-class.html:27
+#: bom/templates/bom/edit-part.html:62 bom/templates/bom/edit-user-meta.html:32
+#: bom/templates/bom/part-revision-edit.html:36
+#: bom/templates/bom/part-revision-new.html:52
+#: bom/templates/bom/sellerpart-edit.html:36 bom/templates/bom/settings.html:41
+msgid "Save"
+msgstr "ذخیره"
 
 #: bom/templates/bom/base-menu.html:1
 msgid "Admin"
@@ -84,6 +101,11 @@ msgstr "ورود"
 #: bom/templates/bom/base-menu.html:17
 msgid "Register"
 msgstr "ایجاد حساب"
+
+#: bom/templates/bom/base.html:52 bom/templates/bom/base.html:55
+#: bom/templates/bom/base.html:69
+msgid "Lithium"
+msgstr "لیتیوم"
 
 #: bom/templates/bom/bom-base-menu.html:2
 msgid "Products"
@@ -125,9 +147,17 @@ msgstr "ویرایش"
 msgid "Part"
 msgstr "متریال"
 
+#: bom/templates/bom/create-part.html:75
+msgid "Price"
+msgstr "قیمت"
+
+#: bom/templates/bom/create-part.html:76
+msgid "Overload Cost"
+msgstr "هزینه سربار"
+
 #: bom/templates/bom/organization-create.html:46
 msgid "Join an existing Organization"
-msgstr "پوستن به سازمان"
+msgstr "پیوستن به سازمان"
 
 #: bom/templates/bom/organization-create.html:47
 msgid ""
@@ -135,6 +165,10 @@ msgid ""
 "signed up with to your IndaBOM organization owner."
 msgstr ""
 "برای پیواستن به سازمان، با ادمین سازمان تماس بگیرید با منتظر تأیید باشید."
+
+#: bom/templates/bom/part-revision-display.html:24
+msgid "Cost Calculations"
+msgstr "مدل محاسبه قیمت"
 
 #: bom/templates/bom/settings.html:29
 msgid "Your role is: "
@@ -195,11 +229,9 @@ msgid "Material List for {title}"
 msgstr "لیست متریال {title}"
 
 #: bom/views/views.py:483
-#, fuzzy
-#| msgid "settings"
 msgid "Settings"
 msgstr "تنظیمات"
 
 #: bom/views/views.py:2013
-msgid "ویرایش اطلاعات بازرگانی متریال"
-msgstr ""
+msgid "Edit Seller Part"
+msgstr "ویرایش اطلاعات بازرگانی متریال"

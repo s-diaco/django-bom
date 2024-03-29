@@ -149,7 +149,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
-# TODO: change
 LANGUAGE_CODE = "fa-IR"
 
 TIME_ZONE = "Asia/Tehran"

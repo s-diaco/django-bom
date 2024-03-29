@@ -1486,8 +1486,6 @@ def create_part(request):
                 new_part.primary_manufacturer_part = manufacturer_part
                 new_part.save()
 
-            # TODO: delete
-            seller_part = None
             if seller_part_form.is_valid():
                 spn = seller_part_form.cleaned_data["seller_part_number"]
                 new_seller_name = seller_form.cleaned_data["name"]
@@ -2010,7 +2008,7 @@ def sellerpart_edit(request, sellerpart_id):
     seller_part = get_object_or_404(SellerPart, pk=sellerpart_id)
     manufacturer_part = seller_part.manufacturer_part
     part = manufacturer_part.part
-    title = _("ویرایش اطلاعات بازرگانی متریال")
+    title = _("Edit Seller Part")
     title += f" | <span dir='ltr'>{part.full_part_number()}</span>"
 
     if request.method == "POST":
