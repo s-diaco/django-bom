@@ -256,7 +256,7 @@ if "DJANGO_ALLOWED_HOSTS" in os.environ and os.environ.get("DJANGO_ALLOWED_HOSTS
 
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
-DATABASES_BKP = {
+DATABASES = {
     "default": {
         "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
         "NAME": os.environ.get("SQL_DATABASE", os.path.join(BASE_DIR, "db.sqlite3")),
@@ -267,7 +267,7 @@ DATABASES_BKP = {
     }
 }
 
-DATABASES = {
+DATABASES_BKP = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
