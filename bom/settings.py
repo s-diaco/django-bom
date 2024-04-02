@@ -281,5 +281,9 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1",
     "http://127.0.0.1:1337",
 ]
+if "CSRF_TRUSTED_ORIGINS" in os.environ and os.environ.get("CSRF_TRUSTED_ORIGINS"):
+    # 'CSRF_TRUSTED_ORIGINS' should be a single string of hosts with a space between each.
+    # For example: 'CSRF_TRUSTED_ORIGINS=localhost 127.0.0.1'
+    CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS").split(" ")
 
 CORS_ALLOW_ALL_ORIGINS = True

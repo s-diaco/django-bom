@@ -10,7 +10,10 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # install system dependencies. required for "entrypoint.sh"
-RUN apt-get update && apt-get install -y netcat-openbsd
+RUN apt-get update && apt-get install -y netcat-openbsd gettext
+
+# Set the environment variable to use the mirror PyPI URL
+# ENV PIP_INDEX_URL=https://mirrors.sustech.edu.cn/pypi/web/simple
 
 # Install pip requirements
 COPY requirements.lock .
