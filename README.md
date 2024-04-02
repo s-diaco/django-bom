@@ -116,14 +116,16 @@ pipenv shell
 python manage.py migrate
 python manage.py runserver
 ```
-## Start from docker
+## Start from docker (Recommended)
+0. create .env and .env.db files (use example files or just rename them)
 1. cd to project dir
-2. cp bom/local_settings.py.example bom/local_settings.py
-3. docker compose build
-4. docker compose up -d
+2. docker compose up --build
+3. python manage.py compilemessages -l fa_IR
+4. sh entrypoint.sh
 5. docker compose exec djangobom python manage.py makemigrations --noinput
 6. docker compose exec djangobom python manage.py migrate --noinput
 7. docker compose exec djangobom python manage.py collectstatic --noinput
+8. docker compose exec python manage.py createsuperuser
 
 ## Customize Base Template
 The base template can be customized to your pleasing. Just add the following configuration to your settings.py:
