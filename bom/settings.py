@@ -277,9 +277,9 @@ DATABASES_BKP = {
 # TODO: fix this
 CSRF_TRUSTED_ORIGINS = [
     "https://127.0.0.1",
-    "http://localhost:1337",
+    "http://localhost:1313",
     "http://127.0.0.1",
-    "http://127.0.0.1:1337",
+    "http://127.0.0.1:1313",
 ]
 if "CSRF_TRUSTED_ORIGINS" in os.environ and os.environ.get("CSRF_TRUSTED_ORIGINS"):
     # 'CSRF_TRUSTED_ORIGINS' should be a single string of hosts with a space between each.
