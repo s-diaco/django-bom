@@ -1,9 +1,6 @@
 # BOM
-![](https://github.com/mpkasp/django-bom/workflows/Django%20CI/badge.svg)
 
-BOM is a simple Django app to manage a bill of materials. It supports multiple part numbering schemes, tracking component sourcing information, estimates costs, and contains smart integrations with Mouser to pull in the latest component pricing and Google Drive for part file management. BOM is written in Python 3 and Django 3.
-
-[See a live example](https://www.indabom.com).
+BOM is a simple Django app to manage a bill of materials. It supports multiple part numbering schemes, tracking component sourcing information, estimates costs, and contains Google Drive for part file management. BOM is written in Python 3 and Django 5.
 
 BOM can be added to an existing (or new) Django project, or stand alone on its own, which can be more convenient if you're interested in tweaking the tool. 
 
@@ -13,6 +10,8 @@ If you already have a django project, you can skip to [Add Django Bom To Your Ap
    * [Start From Scratch: Add to new Django project](#start-from-scratch-add-to-a-new-django-project)
    * [Add Django Bom To Your App](#add-django-bom-to-your-app)
    * [Start From Scratch: Use as standalone Django project](#start-from-scratch-use-as-a-standalone-django-project)
+   * [Start from docker](#start-from-docker-recommended)
+   * [Backup and restore database](#backup-and-restore-database-if-using-docker-compose-and-postgres)
    * [Customize Base Template](#customize-base-template)
    * [Integrations](#integrations)
    * [Contributing](#contributing)
@@ -127,6 +126,20 @@ python manage.py runserver
 7. docker compose exec djangobom python manage.py collectstatic --noinput
 8. docker compose exec python manage.py createsuperuser
 
+## Backup and restore database (If using docker-compose and postgres)
+Backup bom_db:
+```
+docker exec -t lithium_bom-db-1 pg_dump -c -U bom_user bom_db | gzip > ./dump_bom_db_$(date +"%Y-%m-%d_%H_%Ma_%S").sql.gz
+```
+Backup all:
+```
+docker exec -t lithium_bom-db-1 pg_dumpall -c -U bom_user | gzip > ./dump_bom_db_$(date +"%Y-%m-%d_%H_%Ma_%S").sql.gz
+```
+Restore bom_db:
+```
+gunzip < dump_file.sql.gz | docker exec -i lithium_bom-db-1 psql -U bom_user -d bom_db
+```
+
 ## Customize Base Template
 The base template can be customized to your pleasing. Just add the following configuration to your settings.py:
 
@@ -139,8 +152,6 @@ BOM_CONFIG = {
 where `base.html` is your base template.
 
 ## Integrations
-### Mouser Integration
-For part matching, make sure to add your Mouser api key. You can get your key [here](https://www.mouser.com/MyMouser/MouserSearchApplication.aspx).
 
 ### Google Drive Integration
 Make sure to add the following to your settings.py:
