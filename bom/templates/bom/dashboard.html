@@ -133,8 +133,13 @@
                                         <a class="green-text text-lighten-1" title="ویرایش این ورژن"
                                             href="{% url 'bom:part-revision-edit' part_id=part_rev.part.id part_revision_id=part_rev.id %}">
                                             <i class="material-icons green-text text-lighten-1 right">edit</i></a>
+                                        {% if part_rev.part.optimal_seller.id %}
                                         <a class="green-text text-lighten-1" href="{% url 'bom:sellerpart-edit' sellerpart_id=part_rev.part.optimal_seller.id %}">
                                             <i class="material-icons green-text text-lighten-1 right" title="{% trans "Cost and Seller" %}">attach_money</i></a>
+                                        {% else %}
+                                        <a class="green-text text-lighten-1" href="{% url 'bom:part-info' part_id=part_rev.part.id %}?tab_anchor=sourcing">
+                                            <i class="material-icons green-text text-lighten-1 right" title="تأمین کننده">local_airport</i></a>
+                                        {% endif %}
                                         <a class="green-text text-lighten-1" title="ویرایش درخت محصول (BOM)" href="{% url 'bom:part-manage-bom' part_id=part_rev.part.id part_revision_id=part_rev.id %}">
                                             <i class="material-icons green-text text-lighten-1 right">format_list_numbered</i></a>
                                         <a class="green-text text-lighten-1" title="" href="{% url 'bom:part-info' part_id=part_rev.part.id %}?tab_anchor=used">
