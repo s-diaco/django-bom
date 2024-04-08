@@ -116,15 +116,45 @@ python manage.py migrate
 python manage.py runserver
 ```
 ## Start from docker (Recommended)
-0. create .env and .env.db files (use example files or just rename them)
-1. cd to project dir
-2. docker compose up --build
-3. python manage.py compilemessages -l fa_IR
-4. sh entrypoint.sh
-5. docker compose exec djangobom python manage.py makemigrations --noinput
-6. docker compose exec djangobom python manage.py migrate --noinput
-7. docker compose exec djangobom python manage.py collectstatic --noinput
-8. docker compose exec python manage.py createsuperuser
+1.1. create .env and .env.db files or use example files (just rename them).
+
+1.2. If you have a problem accessing pypi (like I do) add a mirror link to Dockerfile before install pip requirements:
+```
+# Set the environment variable to use the mirror PyPI URL
+ENV PIP_INDEX_URL=https://mirrors.sustech.edu.cn/pypi/web/simple
+```
+1.3. Go to project dir
+```
+cd project_dir
+```
+2. Build and run the containers
+```
+docker compose up --build
+```
+3. Compile the translations
+```
+python manage.py compilemessages -l fa_IR
+```
+4. Run entrypoint to check if database connection is OK
+```
+sh entrypoint.sh
+```
+5. Make the migrations
+```
+docker compose exec djangobom python manage.py makemigrations --noinput
+```
+6. Run the migrations
+```
+docker compose exec djangobom python manage.py migrate --noinput
+```
+7. Place static files in the docker volume
+```
+docker compose exec djangobom python manage.py collectstatic --noinput
+```
+8. Create a superuser (if it's first time)
+```
+docker compose exec python manage.py createsuperuser
+```
 
 ## Backup and restore database (If using docker-compose and postgres)
 Backup bom_db:
