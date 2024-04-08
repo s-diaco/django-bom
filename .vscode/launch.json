@@ -1,6 +1,18 @@
 {
     "configurations": [
         {
+            "name": "Django Debugger",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "runserver"
+            ],
+            "django": true,
+            "autoStartBrowser": false,
+            "program": "${workspaceFolder}/manage.py",
+            "envFile": "${workspaceFolder}/.env.dev.sqlite"
+        },
+        {
             "name": "Docker: Python - Django",
             "type": "docker",
             "request": "launch",
@@ -17,20 +29,20 @@
             "envFile": "${workspaceFolder}/.env.dev"
         },
         {
-           "name": "Django - Compose",
-           "type": "debugpy",
-           "request": "attach",
-           "preLaunchTask": "Compose Up (Dev)",
-           "postDebugTask": "Compose Down",
-           "connect": {
-             "port": 5678
-           },
-           "pathMappings": [
-               {
-                   "localRoot": "${workspaceFolder}",
-                   "remoteRoot": "/app"
-               }
-           ]
-       }
+            "name": "Django - Compose",
+            "type": "debugpy",
+            "request": "attach",
+            "preLaunchTask": "Compose Up (Dev)",
+            "postDebugTask": "Compose Down",
+            "connect": {
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "/app"
+                }
+            ]
+        }
     ]
 }

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-29 03:52+0330\n"
+"POT-Creation-Date: 2024-04-08 14:14+0330\n"
 "PO-Revision-Date: 2024-03-24 06:55+0330\n"
 "Last-Translator: Diaco Soltanpour dyaco8464@yahoo.com\n"
 "Language-Team: Farsi (persian) dyaco8464@yahoo.com\n"
@@ -36,7 +36,7 @@ msgstr "تولید کننده"
 #: bom/templates/bom/create-part.html:54 bom/templates/bom/dashboard.html:100
 #: bom/templates/bom/part-info.html:110 bom/templates/bom/part-info.html:170
 #: bom/templates/bom/sellerpart-edit.html:22 bom/templates/bom/sellers.html:39
-#: bom/views/views.py:1814
+#: bom/views/views.py:1812
 msgid "Seller"
 msgstr "تأمین کننده"
 
@@ -50,27 +50,31 @@ msgstr "قیمت | {unit}"
 msgid "Seller Part Number"
 msgstr "کد تأمین کننده"
 
-#: bom/forms.py:1328
+#: bom/forms.py:457 bom/templates/bom/create-part.html:76
+msgid "Overload Cost"
+msgstr "هزینه سربار"
+
+#: bom/forms.py:1333
 msgid "Auto generated if blank."
 msgstr "در صورت خالی بودن اتوماتیک ایجاد می‌شود."
 
-#: bom/forms.py:1446
+#: bom/forms.py:1451
 msgid "Additional part info, special instructions, etc."
 msgstr "نوع متریال"
 
-#: bom/forms.py:1447
+#: bom/forms.py:1452
 msgid "Additional part attributes (free form)"
 msgstr "اطلاعات اضافه متریال"
 
-#: bom/forms.py:1448
+#: bom/forms.py:1453
 msgid "Number or text"
 msgstr "عدد یا تکست"
 
-#: bom/forms.py:1476
+#: bom/forms.py:1481
 msgid "Description"
 msgstr "شرح متریال"
 
-#: bom/forms.py:1632
+#: bom/forms.py:1637
 msgid "کد زیرشاخه"
 msgstr ""
 
@@ -151,9 +155,13 @@ msgstr "متریال"
 msgid "Price"
 msgstr "قیمت"
 
-#: bom/templates/bom/create-part.html:76
-msgid "Overload Cost"
-msgstr "هزینه سربار"
+#: bom/templates/bom/dashboard.html:102
+msgid "Unit Cost"
+msgstr "قیمت"
+
+#: bom/templates/bom/dashboard.html:137
+msgid "Cost and Seller"
+msgstr "قیمت و تأمین کننده"
 
 #: bom/templates/bom/organization-create.html:46
 msgid "Join an existing Organization"
@@ -232,6 +240,6 @@ msgstr "لیست متریال {title}"
 msgid "Settings"
 msgstr "تنظیمات"
 
-#: bom/views/views.py:2013
+#: bom/views/views.py:2011
 msgid "Edit Seller Part"
 msgstr "ویرایش اطلاعات بازرگانی متریال"

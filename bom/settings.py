@@ -22,7 +22,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Application definition
 
 INSTALLED_APPS = [
-    "corsheaders",
     "bom.apps.BomConfig",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -39,7 +38,6 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -267,13 +265,6 @@ DATABASES = {
     }
 }
 
-DATABASES_BKP = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-    }
-}
-
 # TODO: fix this
 CSRF_TRUSTED_ORIGINS = [
     "https://127.0.0.1",
@@ -285,5 +276,3 @@ if "CSRF_TRUSTED_ORIGINS" in os.environ and os.environ.get("CSRF_TRUSTED_ORIGINS
     # 'CSRF_TRUSTED_ORIGINS' should be a single string of hosts with a space between each.
     # For example: 'CSRF_TRUSTED_ORIGINS=http://localhost:1313 https://127.0.0.1 http://127.0.0.1:1313'
     CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS").split(" ")
-
-CORS_ALLOW_ALL_ORIGINS = True

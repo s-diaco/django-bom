@@ -450,6 +450,11 @@ class SellerPartForm(forms.ModelForm):
         self.fields["seller"].required = False
         self.fields["seller_part_number"].label = _("Seller Part Number")
         self.fields["seller"].label = _("Seller")
+        if instance and instance.manufacturer_part.part.latest().material in [
+            "no_loi",
+            "with_loi",
+        ]:
+            self.fields["unit_cost"].label = _("Overload Cost")
 
     def clean(self):
         cleaned_data = super(SellerPartForm, self).clean()
