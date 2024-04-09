@@ -163,7 +163,7 @@ docker exec -t lithium_bom-db-1 pg_dump -c -U bom_user bom_db | gzip > ./dump_bo
 ```
 Backup all:
 ```
-docker exec -t lithium_bom-db-1 pg_dumpall -c -U bom_user | gzip > ./dump_bom_db_$(date +"%Y-%m-%d_%H_%Ma_%S").sql.gz
+docker exec -t lithium_bom-db-1 pg_dumpall -c -U bom_user | gzip > ./dump_all_bom_db_$(date +"%Y-%m-%d_%H_%Ma_%S").sql.gz
 ```
 Restore bom_db:
 ```
