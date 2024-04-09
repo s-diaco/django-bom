@@ -28,6 +28,7 @@ class PartBomWeighted(PartBom):
                     if child_part.seller_part:
                         if (
                             parent_part.part_revision.material in ["with_loi"]
+                            and child_part.part_revision.tolerance is not None
                             and child_part.part_revision.tolerance.isnumeric()
                         ):
                             value_to_sub += child_part.seller_part.unit_cost / (
@@ -44,6 +45,7 @@ class PartBomWeighted(PartBom):
                 if child_part.seller_part:
                     if (
                         parent_part.part_revision.material in ["with_loi"]
+                        and child_part.part_revision.tolerance is not None
                         and child_part.part_revision.tolerance.isnumeric()
                     ):
                         cost_to_add += child_part.seller_part.unit_cost / (

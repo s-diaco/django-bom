@@ -450,6 +450,7 @@ class SellerPartForm(forms.ModelForm):
         self.fields["seller"].required = False
         self.fields["seller_part_number"].label = _("Seller Part Number")
         self.fields["seller"].label = _("Seller")
+        # TODO: what if material is None?
         if instance and instance.manufacturer_part.part.latest().material in [
             "no_loi",
             "with_loi",
