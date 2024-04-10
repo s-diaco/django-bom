@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-08 14:14+0330\n"
+"POT-Creation-Date: 2024-04-10 22:10+0330\n"
 "PO-Revision-Date: 2024-03-24 06:55+0330\n"
 "Last-Translator: Diaco Soltanpour dyaco8464@yahoo.com\n"
 "Language-Team: Farsi (persian) dyaco8464@yahoo.com\n"
@@ -50,31 +50,35 @@ msgstr "قیمت | {unit}"
 msgid "Seller Part Number"
 msgstr "کد تأمین کننده"
 
-#: bom/forms.py:457 bom/templates/bom/create-part.html:76
+#: bom/forms.py:458 bom/templates/bom/create-part.html:76
 msgid "Overload Cost"
 msgstr "هزینه سربار"
 
-#: bom/forms.py:1333
+#: bom/forms.py:1334
 msgid "Auto generated if blank."
 msgstr "در صورت خالی بودن اتوماتیک ایجاد می‌شود."
 
-#: bom/forms.py:1451
+#: bom/forms.py:1452
 msgid "Additional part info, special instructions, etc."
 msgstr "نوع متریال"
 
-#: bom/forms.py:1452
+#: bom/forms.py:1453
 msgid "Additional part attributes (free form)"
 msgstr "اطلاعات اضافه متریال"
 
-#: bom/forms.py:1453
+#: bom/forms.py:1454
 msgid "Number or text"
 msgstr "عدد یا تکست"
 
-#: bom/forms.py:1481
+#: bom/forms.py:1482
 msgid "Description"
 msgstr "شرح متریال"
 
-#: bom/forms.py:1637
+#: bom/forms.py:1622
+msgid "weight"
+msgstr "وزن"
+
+#: bom/forms.py:1638
 msgid "کد زیرشاخه"
 msgstr ""
 
@@ -159,7 +163,7 @@ msgstr "قیمت"
 msgid "Unit Cost"
 msgstr "قیمت"
 
-#: bom/templates/bom/dashboard.html:137
+#: bom/templates/bom/dashboard.html:142
 msgid "Cost and Seller"
 msgstr "قیمت و تأمین کننده"
 

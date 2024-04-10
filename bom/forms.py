@@ -1619,7 +1619,7 @@ class SubpartForm(forms.ModelForm):
 
 class AddSubpartForm(forms.Form):
     subpart_part_number = forms.CharField(required=True, label="Subpart part number")
-    count = forms.FloatField(required=False, label="وزن")
+    count = forms.FloatField(required=False, label=_("weight"))
     reference = forms.CharField(required=False, label="Reference")
     do_not_load = forms.BooleanField(required=False, label="do_not_load")
 
@@ -1637,7 +1637,6 @@ class AddSubpartForm(forms.Form):
             required=True,
             label=_("کد زیرشاخه"),
             widget=AutocompleteTextInput(
-                attrs={"placeholder": "انتخاب"},
                 queryset=Part.objects.filter(organization=self.organization).exclude(
                     id=self.part_id
                 ),

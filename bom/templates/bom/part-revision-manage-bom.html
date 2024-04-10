@@ -23,9 +23,9 @@
             {% include 'bom/components/bom-indented.html' with order_by='indented' manage=1 bom_items=indented_bom.parts part=part part_revision=part_revision profile=profile %}
 
             <br><h5>افزودن زیرشاخه</h5>
-            <div class="row">
-                <form action="{% url 'bom:part-add-subpart' part_id=part.id part_revision_id=part_revision.id %}"
-                      method="post" class="col s12">
+            <form action="{% url 'bom:part-add-subpart' part_id=part.id part_revision_id=part_revision.id %}"
+                    method="post" class="col s12">
+                <div class="row">
                     {% csrf_token %}
                     {{ add_subpart_form.subpart_part_number|materializecss:'m4 s12' }}
                     {{ add_subpart_form.count|materializecss:'m1 s12' }}
@@ -35,8 +35,8 @@
                         <button class="waves-effect waves-light btn green lighten-1" type="submit" name="action">افزودن
                         </button>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
             <br><h5>افزدون کل زیرشاخه‌ها</h5>
             <p>برای افزدون زیرشاخه‌ها یک فایل csv آپلود کنید که حداقل دو ستون داشته باشد:
                 <b>part_number</b> <i>یا</i> <b>manufacturer_part_number</b> و <b>quantity</b>; ستون‌های 'part_number' یا
