@@ -2,10 +2,15 @@ from django.conf.urls import include
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path
+from rest_framework import routers
 
 from bom.third_party_apis import google_drive
 from bom.views import json_views, views
 
+router = routers.SimpleRouter()
+# router.register(r'users', UserViewSet)
+router.register(r'sellerparts', views.SellerPartViewSet, basename="api/v1")
+urlpatterns = router.urls
 
 bom_patterns = [
     # BOM urls

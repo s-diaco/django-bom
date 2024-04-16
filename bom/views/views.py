@@ -29,6 +29,8 @@ from django.views.generic.base import TemplateView
 
 from social_django.models import UserSocialAuth
 from django.utils.translation import gettext as _
+from rest_framework import viewsets
+from rest_framework.response import Response
 
 import bom.constants as constants
 from bom.csv_headers import (
@@ -84,10 +86,26 @@ from bom.utils import (
     listify_string,
     prep_for_sorting_nicely,
 )
+from bom.serializers import SellerPartSerializer
 
 
 logger = logging.getLogger(__name__)
 BOM_LOGIN_URL = getattr(settings, "BOM_LOGIN_URL", None) or settings.LOGIN_URL
+
+
+class SellerPartViewSet(viewsets.ModelViewSet):
+    queryset = SellerPart.objects.all()
+    # serializer_class = SellerPartSerializer
+    def list(self, request):
+        # queryset = User.objects.all()
+        serializer = SellerPartSerializer(self.queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        # queryset = User.objects.all()
+        sellerpart = get_object_or_404(self.queryset, pk=pk)
+        serializer = SellerPartSerializer(sellerpart)
+        return Response(serializer.data)
 
 
 def form_error_messages(form_errors) -> [str]:
@@ -112,34 +130,24 @@ def home(request):
     part_class_selection_form = PartClassSelectionForm(organization=organization)
 
     if request.method == "GET":
-        part_class_selection_form = PartClassSelectionForm(
-            request.GET, organization=organization
-        )
+        part_class_selection_form = PartClassSelectionForm(request.GET, organization=organization)
     elif request.method == "POST":
         if "actions" in request.POST and "part-action" in request.POST:
             selected_task = request.POST.get("part-action")
             if selected_task in ["حذف", "Delete"]:
                 action = "Delete"
                 if action == "Delete":
-                    part_ids = [
-                        part_id
-                        for part_id in request.POST.getlist("actions")
-                        if part_id.isdigit()
-                    ]
+                    part_ids = [part_id for part_id in request.POST.getlist("actions") if part_id.isdigit()]
                     for part_id in part_ids:
                         try:
-                            part = Part.objects.get(
-                                id=part_id, organization=organization
-                            )
+                            part = Part.objects.get(id=part_id, organization=organization)
                             part_number = part.full_part_number()
                             part.delete()
                             messages.success(request, f"Deleted part {part_number}")
                         except Part.DoesNotExist:
                             messages.error(
                                 request,
-                                "Can't delete part. No part found with given id {}.".format(
-                                    part_id
-                                ),
+                                "Can't delete part. No part found with given id {}.".format(part_id),
                             )
 
     if part_class_selection_form.is_valid():
@@ -153,20 +161,14 @@ def home(request):
         title = _("Material List for {title}").format(title=title)
 
     if part_class:
-        parts = Part.objects.filter(
-            Q(organization=organization) & Q(number_class__code=part_class.code)
-        )
+        parts = Part.objects.filter(Q(organization=organization) & Q(number_class__code=part_class.code))
     else:
         parts = Part.objects.filter(organization=organization)
 
     part_ids = list(parts.values_list("id", flat=True))
 
     part_revs = PartRevision.objects.filter(
-        id__in=Subquery(
-            PartRevision.objects.filter(part_id__in=part_ids)
-            .annotate(max_id=Max("id"))
-            .values("id")
-        )
+        id__in=Subquery(PartRevision.objects.filter(part_id__in=part_ids).annotate(max_id=Max("id")).values("id"))
     ).order_by(
         "part__number_class__code",
         "part__number_item",
@@ -174,9 +176,7 @@ def home(request):
     )
 
     autocomplete_dict = {}
-    enable_autocomplete = settings.BOM_CONFIG.get("admin_dashboard", {}).get(
-        "enable_autocomplete", False
-    )
+    enable_autocomplete = settings.BOM_CONFIG.get("admin_dashboard", {}).get("enable_autocomplete", False)
     if enable_autocomplete:
         prefetch_related_objects(part_revs, "part")
         manufacturer_parts = ManufacturerPart.objects.filter(part__in=parts)
@@ -187,9 +187,7 @@ def home(request):
 
         for mpn in manufacturer_parts:
             if mpn.manufacturer_part_number:
-                autocomplete_dict.update(
-                    {mpn.manufacturer_part_number.replace('"', ""): None}
-                )
+                autocomplete_dict.update({mpn.manufacturer_part_number.replace('"', ""): None})
             if mpn.manufacturer is not None and mpn.manufacturer.name:
                 autocomplete_dict.update({mpn.manufacturer.name.replace('"', ""): None})
 
@@ -221,9 +219,7 @@ def home(request):
                         number_class,
                         number_item,
                         number_variation,
-                    ) = Part.parse_partial_part_number(
-                        search_term, organization, validate=False
-                    )
+                    ) = Part.parse_partial_part_number(search_term, organization, validate=False)
                 except AttributeError:
                     pass
 
@@ -237,19 +233,13 @@ def home(request):
         # Prepare Part.primary_manufacturer_part.manufacturer_part_number query by OR'ing search terms
         q_primary_mpn = reduce(
             operator.or_,
-            (
-                Q(primary_manufacturer_part__manufacturer_part_number__icontains=term)
-                for term in search_terms
-            ),
+            (Q(primary_manufacturer_part__manufacturer_part_number__icontains=term) for term in search_terms),
         )
 
         # Prepare Part.primary_manufacturer.part__manufacturer.name query by OR'ing search terms
         q_primary_mfg = reduce(
             operator.or_,
-            (
-                Q(primary_manufacturer_part__manufacturer__name__icontains=term)
-                for term in search_terms
-            ),
+            (Q(primary_manufacturer_part__manufacturer__name__icontains=term) for term in search_terms),
         )
 
         if number_class and number_item and number_variation:
@@ -272,29 +262,18 @@ def home(request):
             )
         else:
             parts = parts.filter(
-                Q(number_item__in=search_terms)
-                | Q(id__in=part_synopsis_ids)
-                | q_primary_mpn
-                | q_primary_mfg
+                Q(number_item__in=search_terms) | Q(id__in=part_synopsis_ids) | q_primary_mpn | q_primary_mfg
             )
 
         part_ids = list(parts.values_list("id", flat=True))
 
         part_revs = PartRevision.objects.filter(
-            id__in=Subquery(
-                PartRevision.objects.filter(part_id__in=part_ids)
-                .annotate(max_id=Max("id"))
-                .values("id")
-            )
-        ).order_by(
-            "part__number_class__code", "part__number_item", "part__number_variation"
-        )
+            id__in=Subquery(PartRevision.objects.filter(part_id__in=part_ids).annotate(max_id=Max("id")).values("id"))
+        ).order_by("part__number_class__code", "part__number_item", "part__number_variation")
 
     if "download" in request.GET:
         response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = (
-            'attachment; filename="indabom_parts_search.csv"'
-        )
+        response["Content-Disposition"] = 'attachment; filename="indabom_parts_search.csv"'
         csv_headers = organization.part_list_csv_headers()
         seller_csv_headers = SellerPartCSVHeaders()
         writer = csv.DictWriter(response, fieldnames=csv_headers.get_default_all())
@@ -302,18 +281,13 @@ def home(request):
         for part_rev in part_revs:
             if organization.number_scheme == constants.NUMBER_SCHEME_SEMI_INTELLIGENT:
                 row = {
-                    csv_headers.get_default(
-                        "part_number"
-                    ): part_rev.part.full_part_number(),
-                    csv_headers.get_default(
-                        "part_category"
-                    ): part_rev.part.number_class.name,
+                    csv_headers.get_default("part_number"): part_rev.part.full_part_number(),
+                    csv_headers.get_default("part_category"): part_rev.part.number_class.name,
                     csv_headers.get_default("part_revision"): part_rev.revision,
                     csv_headers.get_default("part_manufacturer"): (
                         part_rev.part.primary_manufacturer_part.manufacturer.name
                         if part_rev.part.primary_manufacturer_part is not None
-                        and part_rev.part.primary_manufacturer_part.manufacturer
-                        is not None
+                        and part_rev.part.primary_manufacturer_part.manufacturer is not None
                         else ""
                     ),
                     csv_headers.get_default("part_manufacturer_part_number"): (
@@ -335,24 +309,15 @@ def home(request):
                         + seller_csv_headers.get_default_all()
                     ):
                         attr = getattr(part_rev, field_name)
-                        row.update(
-                            {
-                                csv_headers.get_default(field_name): (
-                                    attr if attr is not None else ""
-                                )
-                            }
-                        )
+                        row.update({csv_headers.get_default(field_name): (attr if attr is not None else "")})
             else:
                 row = {
-                    csv_headers.get_default(
-                        "part_number"
-                    ): part_rev.part.full_part_number(),
+                    csv_headers.get_default("part_number"): part_rev.part.full_part_number(),
                     csv_headers.get_default("part_revision"): part_rev.revision,
                     csv_headers.get_default("part_manufacturer"): (
                         part_rev.part.primary_manufacturer_part.manufacturer.name
                         if part_rev.part.primary_manufacturer_part is not None
-                        and part_rev.part.primary_manufacturer_part.manufacturer
-                        is not None
+                        and part_rev.part.primary_manufacturer_part.manufacturer is not None
                         else ""
                     ),
                     csv_headers.get_default("part_manufacturer_part_number"): (
@@ -373,26 +338,14 @@ def home(request):
                         + seller_csv_headers.get_default_all()
                     ):
                         attr = getattr(part_rev, field_name)
-                        row.update(
-                            {
-                                csv_headers.get_default(field_name): (
-                                    attr if attr is not None else ""
-                                )
-                            }
-                        )
+                        row.update({csv_headers.get_default(field_name): (attr if attr is not None else "")})
 
             sellerparts = part_rev.part.seller_parts()
             if len(sellerparts) > 0:
                 for sellerpart in part_rev.part.seller_parts():
                     for field_name in seller_csv_headers.get_default_all():
                         attr = getattr(sellerpart, field_name)
-                        row.update(
-                            {
-                                csv_headers.get_default(field_name): (
-                                    attr if attr is not None else ""
-                                )
-                            }
-                        )
+                        row.update({csv_headers.get_default(field_name): (attr if attr is not None else "")})
                     writer.writerow({k: smart_str(v) for k, v in row.items()})
             else:
                 writer.writerow({k: smart_str(v) for k, v in row.items()})
@@ -450,9 +403,7 @@ def signup(request):
         form = UserCreateForm(request.POST)
         if form.is_valid():
             new_user = form.save()
-            login(
-                request, new_user, backend="django.contrib.auth.backends.ModelBackend"
-            )
+            login(request, new_user, backend="django.contrib.auth.backends.ModelBackend")
             return HttpResponseRedirect(reverse("bom:home"))
     else:
         form = UserCreateForm()
@@ -487,11 +438,7 @@ def bom_settings(request, tab_anchor=None):
     part_classes = PartClass.objects.all().filter(organization=organization)
 
     users_in_organization = (
-        User.objects.filter(
-            id__in=UserMeta.objects.filter(organization=organization).values_list(
-                "user", flat=True
-            )
-        )
+        User.objects.filter(id__in=UserMeta.objects.filter(organization=organization).values_list("user", flat=True))
         .exclude(id__in=[organization.owner.id])
         .order_by("first_name", "last_name", "email")
     )
@@ -521,9 +468,7 @@ def bom_settings(request, tab_anchor=None):
         elif "submit-add-user" in request.POST:
             tab_anchor = ORGANIZATION_TAB
             if organization.subscription == "F":
-                messages.error(
-                    request, "Error: You must have a paid account to add users."
-                )
+                messages.error(request, "Error: You must have a paid account to add users.")
             else:
                 user_add_form = UserAddForm(request.POST, organization=organization)
                 if user_add_form.is_valid():
@@ -545,9 +490,7 @@ def bom_settings(request, tab_anchor=None):
                 if "remove_user_meta_id_" in item:
                     user_meta_id = item.partition("remove_user_meta_id_")[2]
                     try:
-                        user_meta = UserMeta.objects.get(
-                            id=user_meta_id, organization=organization
-                        )
+                        user_meta = UserMeta.objects.get(id=user_meta_id, organization=organization)
                         if user_meta.user == organization.owner:
                             messages.error(request, "Can't remove organization owner.")
                         else:
@@ -562,9 +505,7 @@ def bom_settings(request, tab_anchor=None):
 
         elif "submit-edit-organization" in request.POST:
             tab_anchor = ORGANIZATION_TAB
-            organization_form = OrganizationFormEditSettings(
-                request.POST, instance=organization, user=user
-            )
+            organization_form = OrganizationFormEditSettings(request.POST, instance=organization, user=user)
             if organization_form.is_valid():
                 organization_form.save()
             else:
@@ -572,15 +513,11 @@ def bom_settings(request, tab_anchor=None):
 
         elif "refresh-edit-organization" in request.POST:
             tab_anchor = ORGANIZATION_TAB
-            organization_form = OrganizationFormEditSettings(
-                instance=organization, user=user
-            )
+            organization_form = OrganizationFormEditSettings(instance=organization, user=user)
 
         elif "submit-number-item-len" in request.POST:
             tab_anchor = INDABOM_TAB
-            organization_number_len_form = OrganizationNumberLenForm(
-                request.POST, instance=organization
-            )
+            organization_number_len_form = OrganizationNumberLenForm(request.POST, instance=organization)
             if organization_number_len_form.is_valid():
                 organization_number_len_form.save()
             else:
@@ -592,9 +529,7 @@ def bom_settings(request, tab_anchor=None):
 
         elif "submit-part-class-create" in request.POST:
             tab_anchor = INDABOM_TAB
-            part_class_form = PartClassForm(
-                request.POST, request.FILES, organization=organization
-            )
+            part_class_form = PartClassForm(request.POST, request.FILES, organization=organization)
             if part_class_form.is_valid():
                 part_class_form.save()
             else:
@@ -604,14 +539,9 @@ def bom_settings(request, tab_anchor=None):
             tab_anchor = INDABOM_TAB
             part_class_form = PartClassForm(organization=organization)
 
-        elif (
-            "submit-part-class-upload" in request.POST
-            and request.FILES.get("file") is not None
-        ):
+        elif "submit-part-class-upload" in request.POST and request.FILES.get("file") is not None:
             tab_anchor = INDABOM_TAB
-            part_class_csv_form = PartClassCSVForm(
-                request.POST, request.FILES, organization=organization
-            )
+            part_class_csv_form = PartClassCSVForm(request.POST, request.FILES, organization=organization)
             if part_class_csv_form.is_valid():
                 for success in part_class_csv_form.successes:
                     messages.info(request, success)
@@ -622,9 +552,7 @@ def bom_settings(request, tab_anchor=None):
 
         elif "submit-part-class-export" in request.POST:
             response = HttpResponse(content_type="text/csv")
-            response["Content-Disposition"] = (
-                'attachment; filename="indabom_parts_search.csv"'
-            )
+            response["Content-Disposition"] = 'attachment; filename="indabom_parts_search.csv"'
             csv_headers = PartClassesCSVHeaders()
             writer = csv.DictWriter(response, fieldnames=csv_headers.get_default_all())
             writer.writeheader()
@@ -633,13 +561,7 @@ def bom_settings(request, tab_anchor=None):
                 row = {}
                 for field_name in csv_headers.get_default_all():
                     attr = getattr(part_class, field_name)
-                    row.update(
-                        {
-                            csv_headers.get_default(field_name): (
-                                attr if attr is not None else ""
-                            )
-                        }
-                    )
+                    row.update({csv_headers.get_default(field_name): (attr if attr is not None else "")})
                 writer.writerow({k: smart_str(v) for k, v in row.items()})
             return response
 
@@ -651,14 +573,10 @@ def bom_settings(request, tab_anchor=None):
                 )
             elif part_class_action == "submit-part-class-enable-mouser":
                 tab_anchor = INDABOM_TAB
-                PartClass.objects.filter(id__in=part_class_action_ids).update(
-                    mouser_enabled=True
-                )
+                PartClass.objects.filter(id__in=part_class_action_ids).update(mouser_enabled=True)
             elif part_class_action == "submit-part-class-disable-mouser":
                 tab_anchor = INDABOM_TAB
-                PartClass.objects.filter(id__in=part_class_action_ids).update(
-                    mouser_enabled=False
-                )
+                PartClass.objects.filter(id__in=part_class_action_ids).update(mouser_enabled=False)
             elif part_class_action == "submit-part-class-delete":
                 tab_anchor = INDABOM_TAB
                 try:
@@ -678,16 +596,11 @@ def bom_settings(request, tab_anchor=None):
                     f"Please export, then delete all of your {organization_parts_count} parts before changing your organization's number scheme.",
                 )
             else:
-                if (
-                    organization.number_scheme
-                    == constants.NUMBER_SCHEME_SEMI_INTELLIGENT
-                ):
+                if organization.number_scheme == constants.NUMBER_SCHEME_SEMI_INTELLIGENT:
                     organization.number_scheme = constants.NUMBER_SCHEME_INTELLIGENT
                     organization.number_item_len = 128
                 else:
-                    organization.number_scheme = (
-                        constants.NUMBER_SCHEME_SEMI_INTELLIGENT
-                    )
+                    organization.number_scheme = constants.NUMBER_SCHEME_SEMI_INTELLIGENT
                     organization.number_item_len = 3
                 organization.save()
         elif "submit-leave-organization" in request.POST:
@@ -705,9 +618,7 @@ def bom_settings(request, tab_anchor=None):
 
     user_form = UserForm(instance=user)
     user_add_form = UserAddForm()
-    user_add_form_action = reverse(
-        "bom:settings", kwargs={"tab_anchor": ORGANIZATION_TAB}
-    )
+    user_add_form_action = reverse("bom:settings", kwargs={"tab_anchor": ORGANIZATION_TAB})
     user_meta_form = UserMetaForm()
 
     organization_form = OrganizationFormEditSettings(instance=organization, user=user)
@@ -769,9 +680,7 @@ def manufacturer_info(request, manufacturer_id):
         messages.error(request, "Can't access a manufacturer that is not yours!")
         return HttpResponseRedirect(reverse("bom:home"))
 
-    manufacturer_parts = ManufacturerPart.objects.filter(
-        manufacturer=manufacturer
-    ).order_by("manufacturer_part_number")
+    manufacturer_parts = ManufacturerPart.objects.filter(manufacturer=manufacturer).order_by("manufacturer_part_number")
 
     return TemplateResponse(request, "bom/manufacturer-info.html", locals())
 
@@ -784,19 +693,13 @@ def manufacturer_edit(request, manufacturer_id):
 
     manufacturer = get_object_or_404(Manufacturer, pk=manufacturer_id)
     title = "Edit Manufacturer"
-    action = reverse(
-        "bom:manufacturer-edit", kwargs={"manufacturer_id": manufacturer_id}
-    )
+    action = reverse("bom:manufacturer-edit", kwargs={"manufacturer_id": manufacturer_id})
 
     if request.method == "POST":
         form = ManufacturerForm(request.POST, instance=manufacturer)
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect(
-                reverse(
-                    "bom:manufacturer-info", kwargs={"manufacturer_id": manufacturer_id}
-                )
-            )
+            return HttpResponseRedirect(reverse("bom:manufacturer-info", kwargs={"manufacturer_id": manufacturer_id}))
     else:
         form = ManufacturerForm(instance=manufacturer)
 
@@ -885,9 +788,7 @@ def seller_edit(request, seller_id):
         form = SellerForm(request.POST, instance=seller)
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect(
-                reverse("bom:seller-info", kwargs={"seller_id": seller_id})
-            )
+            return HttpResponseRedirect(reverse("bom:seller-info", kwargs={"seller_id": seller_id}))
     else:
         form = SellerForm(instance=seller)
 
@@ -916,15 +817,11 @@ def user_meta_edit(request, user_meta_id):
     if request.method == "POST":
         user_meta_user_form = UserForm(request.POST, instance=user_meta_user)
         if user_meta_user_form.is_valid():
-            user_meta_form = UserMetaForm(
-                request.POST, instance=user_meta, organization=organization
-            )
+            user_meta_form = UserMetaForm(request.POST, instance=user_meta, organization=organization)
             if user_meta_form.is_valid():
                 user_meta_user_form.save()
                 user_meta_form.save()
-                return HttpResponseRedirect(
-                    reverse("bom:settings", kwargs={"tab_anchor": "organization"})
-                )
+                return HttpResponseRedirect(reverse("bom:settings", kwargs={"tab_anchor": "organization"}))
 
         return TemplateResponse(request, "bom/edit-user-meta.html", locals())
 
@@ -946,9 +843,7 @@ def part_info(request, part_id, part_revision_id=None):
     part = get_object_or_404(Part, pk=part_id)
 
     if part:
-        title = (
-            f'{part.description()} | <span dir="ltr">{part.full_part_number()}</span>'
-        )
+        title = f'{part.description()} | <span dir="ltr">{part.full_part_number()}</span>'
 
     part_revision = None
     if part_revision_id is None:
@@ -1054,9 +949,7 @@ def part_export_bom(
         return HttpResponseRedirect(request.META.get("HTTP_REFERER"), "/")
 
     response = HttpResponse(content_type="text/csv")
-    filename = (
-        f'indabom_export_{part.full_part_number()}_{"flat" if flat else "indented"}'
-    )
+    filename = f'indabom_export_{part.full_part_number()}_{"flat" if flat else "indented"}'
     response["Content-Disposition"] = f'attachment; filename="{filename}.csv'
 
     qty_cache_key = str(part_id) + "_qty"
@@ -1094,40 +987,15 @@ def part_export_bom(
 
         if sourcing_detailed:
             for idx, sp in enumerate(item.seller_parts_for_export()):
-                if (
-                    f"{ManufacturerPartCSVHeaders.all_headers_defns[0]}_{idx + 1}"
-                    not in csv_headers_raw
-                ):
-                    csv_headers_raw.extend(
-                        [
-                            f"{h}_{idx + 1}"
-                            for h in ManufacturerPartCSVHeaders.all_headers_defns
-                        ]
-                    )
-                    csv_headers_raw.extend(
-                        [
-                            f"{h}_{idx + 1}"
-                            for h in SellerPartCSVHeaders.all_headers_defns
-                        ]
-                    )
-                mapped_row.update(
-                    {f"{k}_{idx + 1}": smart_str(v) for k, v in sp.items()}
-                )
+                if f"{ManufacturerPartCSVHeaders.all_headers_defns[0]}_{idx + 1}" not in csv_headers_raw:
+                    csv_headers_raw.extend([f"{h}_{idx + 1}" for h in ManufacturerPartCSVHeaders.all_headers_defns])
+                    csv_headers_raw.extend([f"{h}_{idx + 1}" for h in SellerPartCSVHeaders.all_headers_defns])
+                mapped_row.update({f"{k}_{idx + 1}": smart_str(v) for k, v in sp.items()})
         elif sourcing:
             for idx, mp in enumerate(item.manufacturer_parts_for_export()):
-                if (
-                    f"{ManufacturerPartCSVHeaders.all_headers_defns[0]}_{idx + 1}"
-                    not in csv_headers_raw
-                ):
-                    csv_headers_raw.extend(
-                        [
-                            f"{h}_{idx + 1}"
-                            for h in ManufacturerPartCSVHeaders.all_headers_defns
-                        ]
-                    )
-                mapped_row.update(
-                    {f"{k}_{idx + 1}": smart_str(v) for k, v in mp.items()}
-                )
+                if f"{ManufacturerPartCSVHeaders.all_headers_defns[0]}_{idx + 1}" not in csv_headers_raw:
+                    csv_headers_raw.extend([f"{h}_{idx + 1}" for h in ManufacturerPartCSVHeaders.all_headers_defns])
+                mapped_row.update({f"{k}_{idx + 1}": smart_str(v) for k, v in mp.items()})
 
         csv_rows.append(mapped_row)
 
@@ -1191,11 +1059,7 @@ def upload_bom(request):
     organization = profile.organization
     title = "آپلود درخت محصول (BOM)"
 
-    if (
-        request.method == "POST"
-        and "file" in request.FILES
-        and request.FILES["file"] is not None
-    ):
+    if request.method == "POST" and "file" in request.FILES and request.FILES["file"] is not None:
         upload_bom_form = UploadBOMForm(request.POST, organization=organization)
         if upload_bom_form.is_valid():
             bom_csv_form = BOMCSVForm(
@@ -1250,9 +1114,7 @@ def part_upload_bom(request, part_id):
         upload_bom_form = UploadBOMForm(initial={"organization": organization})
         bom_csv_form = BOMCSVForm()
 
-    return HttpResponseRedirect(
-        request.META.get("HTTP_REFERER", reverse("bom:home")), locals()
-    )
+    return HttpResponseRedirect(request.META.get("HTTP_REFERER", reverse("bom:home")), locals())
 
 
 @login_required(login_url=BOM_LOGIN_URL)
@@ -1345,21 +1207,13 @@ def export_part_list(request):
                     ]
                 ):
                     attr = getattr(item, field_name)
-                    row.update(
-                        {
-                            csv_headers.get_default(field_name): (
-                                attr if attr is not None else ""
-                            )
-                        }
-                    )
+                    row.update({csv_headers.get_default(field_name): (attr if attr is not None else "")})
             writer.writerow({k: smart_str(v) for k, v in row.items()})
 
         except AttributeError:
             messages.warning(
                 request,
-                "No change history for part: {}. Can't export.".format(
-                    item.full_part_number()
-                ),
+                "No change history for part: {}. Can't export.".format(item.full_part_number()),
             )
 
     return response
@@ -1375,27 +1229,20 @@ def create_part(request):
 
     PartForm = part_form_from_organization(organization)
 
-    if (
-        organization.number_scheme == constants.NUMBER_SCHEME_SEMI_INTELLIGENT
-        and PartClass.objects.count() == 0
-    ):
+    if organization.number_scheme == constants.NUMBER_SCHEME_SEMI_INTELLIGENT and PartClass.objects.count() == 0:
         messages.info(
             request,
             f"Welcome to IndaBOM! Before you create your first part, you must create your first part class. "
             f'<a href="{reverse("bom:help")}#part-numbering" target="_blank">What is a part class?</a>',
         )
-        return HttpResponseRedirect(
-            reverse("bom:settings", kwargs={"tab_anchor": "indabom"})
-        )
+        return HttpResponseRedirect(reverse("bom:settings", kwargs={"tab_anchor": "indabom"}))
 
     if request.method == "POST":
         part_form = PartForm(request.POST, organization=organization)
         seller_form = SellerForm(request.POST)
         seller_part_form = SellerPartForm(request.POST, organization=organization)
         manufacturer_form = ManufacturerForm(request.POST)
-        manufacturer_part_form = ManufacturerPartForm(
-            request.POST, organization=organization
-        )
+        manufacturer_part_form = ManufacturerPartForm(request.POST, organization=organization)
         part_revision_form = PartRevisionForm(request.POST)
 
         # Checking if part form is valid checks for number uniqueness
@@ -1522,18 +1369,12 @@ def create_part(request):
                         unit_cost=seller_part_form.instance.unit_cost,
                         nre_cost=seller_part_form.instance.unit_cost,
                     )
-            return HttpResponseRedirect(
-                reverse("bom:part-info", kwargs={"part_id": str(new_part.id)})
-            )
+            return HttpResponseRedirect(reverse("bom:part-info", kwargs={"part_id": str(new_part.id)}))
     else:
         # Initialize organization in the form's model and in the form itself:
         part_form = PartForm(initial={"organization": organization})
-        part_revision_form = PartRevisionForm(
-            initial={"revision": 1, "organization": organization}
-        )
-        manufacturer_form = ManufacturerForm(
-            organization=organization, prefix="manufacturer_"
-        )
+        part_revision_form = PartRevisionForm(initial={"revision": 1, "organization": organization})
+        manufacturer_form = ManufacturerForm(organization=organization, prefix="manufacturer_")
         manufacturer_part_form = ManufacturerPartForm(organization=organization)
         seller_part_form = SellerPartForm(organization=organization)
         seller_form = SellerForm(organization=organization)
@@ -1558,9 +1399,7 @@ def part_edit(request, part_id):
         form = PartForm(request.POST, instance=part, organization=organization)
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect(
-                reverse("bom:part-info", kwargs={"part_id": part_id})
-            )
+            return HttpResponseRedirect(reverse("bom:part-info", kwargs={"part_id": part_id}))
     else:
         form = PartForm(instance=part, organization=organization)
 
@@ -1610,14 +1449,10 @@ def manage_bom(request, part_id, part_revision_id):
     references_seen = set()
     duplicate_references = set()
     for sp in part_revision.assembly.subparts.all():
-        check_references_for_duplicates(
-            sp.reference, references_seen, duplicate_references
-        )
+        check_references_for_duplicates(sp.reference, references_seen, duplicate_references)
 
     if len(duplicate_references) > 0:
-        sorted_duplicate_references = sorted(
-            duplicate_references, key=prep_for_sorting_nicely
-        )
+        sorted_duplicate_references = sorted(duplicate_references, key=prep_for_sorting_nicely)
         messages.warning(
             request,
             "Warning: The following BOM references are associated with multiple parts: "
@@ -1644,18 +1479,14 @@ def add_subpart(request, part_id, part_revision_id):
     part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
 
     if request.method == "POST":
-        add_subpart_form = AddSubpartForm(
-            request.POST, organization=organization, part_id=part_id
-        )
+        add_subpart_form = AddSubpartForm(request.POST, organization=organization, part_id=part_id)
         if add_subpart_form.is_valid():
             subpart_part = add_subpart_form.subpart_part
             reference = add_subpart_form.cleaned_data["reference"]
             dnl = add_subpart_form.cleaned_data["do_not_load"]
             count = add_subpart_form.cleaned_data["count"]
 
-            first_level_bom = part_revision.assembly.subparts.filter(
-                part_revision=subpart_part, do_not_load=dnl
-            )
+            first_level_bom = part_revision.assembly.subparts.filter(part_revision=subpart_part, do_not_load=dnl)
 
             if first_level_bom.count() > 0:
                 new_part = first_level_bom[0]
@@ -1675,9 +1506,7 @@ def add_subpart(request, part_id, part_revision_id):
                     part_revision.assembly = Assembly.objects.create()
                     part_revision.save()
 
-                AssemblySubparts.objects.create(
-                    assembly=part_revision.assembly, subpart=new_part
-                )
+                AssemblySubparts.objects.create(assembly=part_revision.assembly, subpart=new_part)
 
             info_msg = "زیرشاخه "
             if reference:
@@ -1719,14 +1548,10 @@ def part_class_edit(request, part_class_id):
     title = "Edit Part Class {}".format(part_class.__str__())
 
     if request.method == "POST":
-        part_class_form = PartClassForm(
-            request.POST, instance=part_class, organization=organization
-        )
+        part_class_form = PartClassForm(request.POST, instance=part_class, organization=organization)
         if part_class_form.is_valid():
             part_class_form.save()
-            return HttpResponseRedirect(
-                reverse("bom:settings", kwargs={"tab_anchor": "indabom"})
-            )
+            return HttpResponseRedirect(reverse("bom:settings", kwargs={"tab_anchor": "indabom"}))
 
         else:
             return TemplateResponse(request, "bom/edit-part-class.html", locals())
@@ -1754,9 +1579,7 @@ def edit_subpart(request, part_id, part_revision_id, subpart_id):
     part = get_object_or_404(Part, pk=part_id)
     subpart = get_object_or_404(Subpart, pk=subpart_id)
     title = "Edit Subpart"
-    h1 = "{} {}".format(
-        subpart.part_revision.part.full_part_number(), subpart.part_revision.synopsis()
-    )
+    h1 = "{} {}".format(subpart.part_revision.part.full_part_number(), subpart.part_revision.synopsis())
 
     if request.method == "POST":
         form = SubpartForm(
@@ -1833,8 +1656,7 @@ def add_sellerpart(request, manufacturer_part_id):
                 seller_part.manufacturer_part = manufacturer_part
                 seller_part.save()
             return HttpResponseRedirect(
-                reverse("bom:part-info", kwargs={"part_id": manufacturer_part.part.id})
-                + "?tab_anchor=sourcing"
+                reverse("bom:part-info", kwargs={"part_id": manufacturer_part.part.id}) + "?tab_anchor=sourcing"
             )
     else:
         seller_part_form = SellerPartForm(organization=organization)
@@ -1854,13 +1676,9 @@ def add_manufacturer_part(request, part_id):
 
     if request.method == "POST":
         manufacturer_form = ManufacturerForm(request.POST)
-        manufacturer_part_form = ManufacturerPartForm(
-            request.POST, organization=organization
-        )
+        manufacturer_part_form = ManufacturerPartForm(request.POST, organization=organization)
         if manufacturer_form.is_valid() and manufacturer_part_form.is_valid():
-            manufacturer_part_number = manufacturer_part_form.cleaned_data[
-                "manufacturer_part_number"
-            ]
+            manufacturer_part_number = manufacturer_part_form.cleaned_data["manufacturer_part_number"]
             manufacturer = manufacturer_part_form.cleaned_data["manufacturer"]
             new_manufacturer_name = manufacturer_form.cleaned_data["name"]
             if manufacturer is None and new_manufacturer_name == "":
@@ -1868,9 +1686,7 @@ def add_manufacturer_part(request, part_id):
                     request,
                     "Must either select an existing manufacturer, or enter a new manufacturer name.",
                 )
-                return TemplateResponse(
-                    request, "bom/add-manufacturer-part.html", locals()
-                )
+                return TemplateResponse(request, "bom/add-manufacturer-part.html", locals())
 
             if new_manufacturer_name != "" and new_manufacturer_name is not None:
                 manufacturer, created = Manufacturer.objects.get_or_create(
@@ -1891,16 +1707,13 @@ def add_manufacturer_part(request, part_id):
                 part.save()
 
             return HttpResponseRedirect(
-                reverse("bom:part-info", kwargs={"part_id": str(part.id)})
-                + "?tab_anchor=sourcing"
+                reverse("bom:part-info", kwargs={"part_id": str(part.id)}) + "?tab_anchor=sourcing"
             )
         else:
             messages.error(request, "{}".format(manufacturer_form.is_valid()))
             messages.error(request, "{}".format(manufacturer_part_form.is_valid()))
     else:
-        default_mfg = Manufacturer.objects.filter(
-            organization=organization, name__iexact=organization.name
-        ).first()
+        default_mfg = Manufacturer.objects.filter(organization=organization, name__iexact=organization.name).first()
         manufacturer_form = ManufacturerForm(initial={"organization": organization})
         manufacturer_part_form = ManufacturerPartForm(
             organization=organization,
@@ -1928,13 +1741,9 @@ def manufacturer_part_edit(request, manufacturer_part_id):
         manufacturer_part_form = ManufacturerPartForm(
             request.POST, instance=manufacturer_part, organization=organization
         )
-        manufacturer_form = ManufacturerForm(
-            request.POST, instance=manufacturer_part.manufacturer
-        )
+        manufacturer_form = ManufacturerForm(request.POST, instance=manufacturer_part.manufacturer)
         if manufacturer_part_form.is_valid() and manufacturer_form.is_valid():
-            manufacturer_part_number = manufacturer_part_form.cleaned_data.get(
-                "manufacturer_part_number"
-            )
+            manufacturer_part_number = manufacturer_part_form.cleaned_data.get("manufacturer_part_number")
             manufacturer = manufacturer_part_form.cleaned_data.get("manufacturer", None)
             new_manufacturer_name = manufacturer_form.cleaned_data.get("name", "")
 
@@ -1943,9 +1752,7 @@ def manufacturer_part_edit(request, manufacturer_part_id):
                     request,
                     "Must either select an existing manufacturer, or enter a new manufacturer name.",
                 )
-                return TemplateResponse(
-                    request, "bom/edit-manufacturer-part.html", locals()
-                )
+                return TemplateResponse(request, "bom/edit-manufacturer-part.html", locals())
 
             new_manufacturer = None
             if new_manufacturer_name != "" and new_manufacturer_name is not None:
@@ -1964,8 +1771,7 @@ def manufacturer_part_edit(request, manufacturer_part_id):
                 part.primary_manufacturer_part = manufacturer_part
                 part.save()
             return HttpResponseRedirect(
-                reverse("bom:part-info", kwargs={"part_id": manufacturer_part.part.id})
-                + "?tab_anchor=sourcing"
+                reverse("bom:part-info", kwargs={"part_id": manufacturer_part.part.id}) + "?tab_anchor=sourcing"
             )
         else:
             messages.error(request, manufacturer_part_form.errors)
@@ -1993,9 +1799,7 @@ def manufacturer_part_delete(request, manufacturer_part_id):
     manufacturer_part = get_object_or_404(ManufacturerPart, pk=manufacturer_part_id)
     part = manufacturer_part.part
     manufacturer_part.delete()
-    return HttpResponseRedirect(
-        reverse("bom:part-info", kwargs={"part_id": part.id}) + "?tab_anchor=sourcing"
-    )
+    return HttpResponseRedirect(reverse("bom:part-info", kwargs={"part_id": part.id}) + "?tab_anchor=sourcing")
 
 
 @login_required(login_url=BOM_LOGIN_URL)
@@ -2064,9 +1868,7 @@ def sellerpart_delete(request, sellerpart_id):
     sellerpart = get_object_or_404(SellerPart, pk=sellerpart_id)
     part = sellerpart.manufacturer_part.part
     sellerpart.delete()
-    return HttpResponseRedirect(
-        reverse("bom:part-info", kwargs={"part_id": part.id}) + "?tab_anchor=sourcing"
-    )
+    return HttpResponseRedirect(reverse("bom:part-info", kwargs={"part_id": part.id}) + "?tab_anchor=sourcing")
 
 
 @login_required(login_url=BOM_LOGIN_URL)
@@ -2134,9 +1936,9 @@ def part_revision_new(request, part_id):
     all_part_revisions = part.revisions()
     all_used_part_revisions = PartRevision.objects.filter(part=part)
     used_in_subparts = Subpart.objects.filter(part_revision__in=all_used_part_revisions)
-    used_in_assembly_ids = AssemblySubparts.objects.filter(
-        subpart__in=used_in_subparts
-    ).values_list("assembly", flat=True)
+    used_in_assembly_ids = AssemblySubparts.objects.filter(subpart__in=used_in_subparts).values_list(
+        "assembly", flat=True
+    )
     all_used_in_prs = PartRevision.objects.filter(assembly__in=used_in_assembly_ids)
     used_part_revisions = all_used_in_prs.filter(configuration="W")
 
@@ -2159,16 +1961,8 @@ def part_revision_new(request, part_id):
                 subparts.update(part_revision=new_part_revision)
 
             if part_revision_new_form.cleaned_data["copy_assembly"]:
-                old_subparts = (
-                    latest_revision.assembly.subparts.all()
-                    if latest_revision.assembly is not None
-                    else None
-                )
-                new_assembly = (
-                    latest_revision.assembly
-                    if latest_revision.assembly is not None
-                    else Assembly()
-                )
+                old_subparts = latest_revision.assembly.subparts.all() if latest_revision.assembly is not None else None
+                new_assembly = latest_revision.assembly if latest_revision.assembly is not None else Assembly()
                 new_assembly.pk = None
                 new_assembly.save()
 
@@ -2180,12 +1974,8 @@ def part_revision_new(request, part_id):
                     new_sp = sp
                     new_sp.pk = None
                     new_sp.save()
-                    AssemblySubparts.objects.create(
-                        assembly=new_assembly, subpart=new_sp
-                    )
-            return HttpResponseRedirect(
-                reverse("bom:part-info", kwargs={"part_id": part_id})
-            )
+                    AssemblySubparts.objects.create(assembly=new_assembly, subpart=new_sp)
+            return HttpResponseRedirect(reverse("bom:part-info", kwargs={"part_id": part_id}))
 
     else:
         if latest_revision:
@@ -2195,7 +1985,9 @@ def part_revision_new(request, part_id):
                     next_revision_number, latest_revision.revision
                 ),
             )
-            latest_revision.revision = next_revision_number  # use updated object to populate form but don't save changes
+            latest_revision.revision = (
+                next_revision_number  # use updated object to populate form but don't save changes
+            )
             part_revision_new_form = PartRevisionNewForm(instance=latest_revision)
         else:
             part_revision_new_form = PartRevisionNewForm()
@@ -2222,9 +2014,7 @@ def part_revision_edit(request, part_id, part_revision_id):
         form = PartRevisionForm(request.POST, instance=part_revision)
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect(
-                reverse("bom:part-info", kwargs={"part_id": part_id})
-            )
+            return HttpResponseRedirect(reverse("bom:part-info", kwargs={"part_id": part_id}))
     else:
         form = PartRevisionForm(instance=part_revision)
 
