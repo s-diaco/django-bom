@@ -125,7 +125,7 @@ class UserCreateForm(UserCreationForm):
         return user
 
 
-class UserForm(forms.ModelForm):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
@@ -135,7 +135,7 @@ class UserForm(forms.ModelForm):
         ]
 
 
-class UserAddForm(forms.ModelForm):
+class UserAddSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserMeta
         fields = ["role"]
@@ -208,7 +208,7 @@ class UserAddForm(forms.ModelForm):
         return user_meta
 
 
-class UserMetaForm(forms.ModelForm):
+class UserMetaSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserMeta
         exclude = [
@@ -225,7 +225,7 @@ class UserMetaForm(forms.ModelForm):
         return self.instance
 
 
-class OrganizationCreateForm(forms.ModelForm):
+class OrganizationCreateSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super(OrganizationCreateForm, self).__init__(*args, **kwargs)
         if self.data.get("number_scheme") == NUMBER_SCHEME_INTELLIGENT:
@@ -252,7 +252,7 @@ class OrganizationCreateForm(forms.ModelForm):
         }
 
 
-class OrganizationForm(forms.ModelForm):
+class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         exclude = [
@@ -308,7 +308,7 @@ class OrganizationFormEditSettings(OrganizationForm):
         }
 
 
-class OrganizationNumberLenForm(forms.ModelForm):
+class OrganizationNumberLenSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = [
@@ -334,7 +334,7 @@ class PartInfoForm(forms.Form):
     quantity = forms.IntegerField(label="محاسبه قیمت برای:", min_value=1)
 
 
-class ManufacturerForm(forms.ModelForm):
+class ManufacturerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Manufacturer
         exclude = [
@@ -357,7 +357,7 @@ class ManufacturerForm(forms.ModelForm):
         )
 
 
-class ManufacturerPartForm(forms.ModelForm):
+class ManufacturerPartSerializer(serializers.ModelSerializer):
     class Meta:
         model = ManufacturerPart
         exclude = [
@@ -379,7 +379,7 @@ class ManufacturerPartForm(forms.ModelForm):
         self.fields["manufacturer"].label = "تولید کننده"
 
 
-class SellerForm(forms.ModelForm):
+class SellerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Seller
         exclude = [
@@ -500,7 +500,7 @@ class SellerPartSerializer(serializers.ModelSerializer):
             self.cleaned_data["seller"] = obj
 
 
-class PartClassForm(forms.ModelForm):
+class PartClassSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartClass
         fields = ["code", "name", "comment"]
@@ -1269,7 +1269,7 @@ class PartCSVForm(forms.Form):
         return cleaned_data
 
 
-class PartFormIntelligent(forms.ModelForm):
+class PartFormIntelligent(serializers.ModelSerializer):
     class Meta:
         model = Part
         exclude = [
@@ -1325,7 +1325,7 @@ class PartFormIntelligent(forms.ModelForm):
         return cleaned_data
 
 
-class PartFormSemiIntelligent(forms.ModelForm):
+class PartFormSemiIntelligent(serializers.ModelSerializer):
     class Meta:
         model = Part
         exclude = [
@@ -1446,7 +1446,7 @@ class PartFormSemiIntelligent(forms.ModelForm):
         return cleaned_data
 
 
-class PartRevisionForm(forms.ModelForm):
+class PartRevisionSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartRevision
         exclude = ["timestamp", "assembly", "part"]
@@ -1560,7 +1560,7 @@ class PartRevisionNewForm(PartRevisionForm):
         return self.instance
 
 
-class SubpartForm(forms.ModelForm):
+class SubpartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subpart
         fields = ["part_revision", "reference", "count", "do_not_load"]
