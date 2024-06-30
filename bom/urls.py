@@ -1,15 +1,14 @@
 from django.conf.urls import include
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
-from django.urls import path
+from django.urls import include, path
 from rest_framework import routers
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from bom.third_party_apis import google_drive
-from bom.views import json_views, views
+from bom.views import views
 
 router = routers.SimpleRouter()
-# router.register(r'users', UserViewSet)
-router.register(r'sellerparts', views.SellerPartViewSet, basename="api/v1")
+router.register(r"sellerparts", views.SellerPartViewSet, basename="api/v1")
 urlpatterns = router.urls
 
 bom_patterns = [
@@ -194,29 +193,12 @@ bom_patterns = [
     ),
 ]
 
-google_drive_patterns = [
-    path(
-        "folder/<int:part_id>/",
-        google_drive.get_or_create_and_open_folder,
-        name="add-folder",
-    ),
-]
-
-json_patterns = [
-    path(
-        "mouser-part-match-bom/<int:part_revision_id>/",
-        json_views.MouserPartMatchBOM.as_view(),
-        name="mouser-part-match-bom",
-    )
-]
-
 urlpatterns = [
-    path("", include((bom_patterns, "bom"))),
-    path("", include("social_django.urls", namespace="social")),
-    path("google-drive/", include((google_drive_patterns, "google-drive"))),
-    path("json/", include((json_patterns, "json"))),
+    path("api/v1/", include(bom_patterns, namespace="bom")),
     # you will likely have your own implementation of these in your app
     path("admin/", admin.site.urls),
+    path("api/v1/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/v1/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("signup/", views.signup, name="signup"),
     path(
         "login/",

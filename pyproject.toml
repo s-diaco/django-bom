@@ -6,7 +6,7 @@ authors = [
     { name = "Diaco Soltanpour", email = "dyaco8464@yahoo.com" }
 ]
 dependencies = [
-    "django>=5.0.3",
+    "django>=5.0.6",
     "django-money>=3.4.1",
     "django-materializecss-form>=1.1.17",
     "social-auth-app-django>=5.4.0",
@@ -16,7 +16,7 @@ dependencies = [
     "debugpy>=1.8.1",
     "django-cors-headers>=4.3.1",
     "gunicorn>=21.2.0",
-    "djangorestframework>=3.15.1",
+    "djangorestframework>=3.15.2",
     "djangorestframework-simplejwt>=5.3.1",
 ]
 readme = "README.md"

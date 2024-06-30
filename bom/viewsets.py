@@ -14,6 +14,7 @@ from django.forms.models import model_to_dict
 from django.utils.translation import gettext_lazy as _
 from djmoney.money import Money
 from rest_framework import serializers
+from rest_framework.viewsets import ModelViewSet
 
 from bom.models import (
     Assembly,
@@ -125,7 +126,7 @@ class UserCreateForm(UserCreationForm):
         return user
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserViewSet(ModelViewSet):
     class Meta:
         model = User
         fields = [
@@ -135,7 +136,7 @@ class UserSerializer(serializers.ModelSerializer):
         ]
 
 
-class UserAddSerializer(serializers.ModelSerializer):
+class UserAddViewSet(ModelViewSet):
     class Meta:
         model = UserMeta
         fields = ["role"]
@@ -208,7 +209,7 @@ class UserAddSerializer(serializers.ModelSerializer):
         return user_meta
 
 
-class UserMetaSerializer(serializers.ModelSerializer):
+class UserMetaViewSet(ModelViewSet):
     class Meta:
         model = UserMeta
         exclude = [
@@ -225,7 +226,7 @@ class UserMetaSerializer(serializers.ModelSerializer):
         return self.instance
 
 
-class OrganizationCreateSerializer(serializers.ModelSerializer):
+class OrganizationCreateViewSet(ModelViewSet):
     def __init__(self, *args, **kwargs):
         super(OrganizationCreateForm, self).__init__(*args, **kwargs)
         if self.data.get("number_scheme") == NUMBER_SCHEME_INTELLIGENT:
@@ -252,7 +253,7 @@ class OrganizationCreateSerializer(serializers.ModelSerializer):
         }
 
 
-class OrganizationSerializer(serializers.ModelSerializer):
+class OrganizationViewSet(ModelViewSet):
     class Meta:
         model = Organization
         exclude = [
@@ -271,7 +272,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user", None)
-        super(OrganizationCreateSerializer, self).__init__(*args, **kwargs)
+        super(OrganizationForm, self).__init__(*args, **kwargs)
         if user and self.instance.owner == user:
             user_queryset = User.objects.filter(
                 id__in=UserMeta.objects.filter(
@@ -286,7 +287,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
             )
 
 
-class OrganizationFormEditSettings(OrganizationCreateSerializer):
+class OrganizationFormEditSettings(OrganizationForm):
     def __init__(self, *args, **kwargs):
         super(OrganizationFormEditSettings, self).__init__(*args, **kwargs)
         # user = kwargs.get("user", None)
@@ -308,7 +309,7 @@ class OrganizationFormEditSettings(OrganizationCreateSerializer):
         }
 
 
-class OrganizationNumberLenSerializer(serializers.ModelSerializer):
+class OrganizationNumberLenViewSet(ModelViewSet):
     class Meta:
         model = Organization
         fields = [
@@ -334,7 +335,7 @@ class PartInfoForm(forms.Form):
     quantity = forms.IntegerField(label="محاسبه قیمت برای:", min_value=1)
 
 
-class ManufacturerSerializer(serializers.ModelSerializer):
+class ManufacturerViewSet(ModelViewSet):
     class Meta:
         model = Manufacturer
         exclude = [
@@ -357,7 +358,7 @@ class ManufacturerSerializer(serializers.ModelSerializer):
         )
 
 
-class ManufacturerPartSerializer(serializers.ModelSerializer):
+class ManufacturerPartViewSet(ModelViewSet):
     class Meta:
         model = ManufacturerPart
         exclude = [
@@ -379,7 +380,7 @@ class ManufacturerPartSerializer(serializers.ModelSerializer):
         self.fields["manufacturer"].label = "تولید کننده"
 
 
-class SellerSerializer(serializers.ModelSerializer):
+class SellerViewSet(ModelViewSet):
     class Meta:
         model = Seller
         exclude = [
@@ -407,7 +408,7 @@ class SellerSerializer(serializers.ModelSerializer):
         )
 
 
-class SellerPartSerializer(serializers.ModelSerializer):
+class SellerPartViewSet(ModelViewSet):
     class Meta:
         model = SellerPart
         exclude = [
@@ -500,7 +501,7 @@ class SellerPartSerializer(serializers.ModelSerializer):
             self.cleaned_data["seller"] = obj
 
 
-class PartClassSerializer(serializers.ModelSerializer):
+class PartClassViewSet(ModelViewSet):
     class Meta:
         model = PartClass
         fields = ["code", "name", "comment"]
@@ -508,7 +509,7 @@ class PartClassSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
         self.ignore_unique_constraint = kwargs.pop("ignore_unique_constraint", False)
-        super(PartClassSerializer, self).__init__(*args, **kwargs)
+        super(PartClassForm, self).__init__(*args, **kwargs)
         self.fields["code"].required = False
         self.fields["name"].required = False
         self.fields["code"].validators.extend(
@@ -519,7 +520,7 @@ class PartClassSerializer(serializers.ModelSerializer):
         )
 
     def clean_name(self):
-        cleaned_data = super(PartClassSerializer, self).clean()
+        cleaned_data = super(PartClassForm, self).clean()
         name = cleaned_data.get("name")
         if self.ignore_unique_constraint:
             return name
@@ -542,7 +543,7 @@ class PartClassSerializer(serializers.ModelSerializer):
         return name
 
     def clean_code(self):
-        cleaned_data = super(PartClassSerializer, self).clean()
+        cleaned_data = super(PartClassForm, self).clean()
         code = cleaned_data.get("code")
         if self.ignore_unique_constraint:
             return code
@@ -559,13 +560,13 @@ class PartClassSerializer(serializers.ModelSerializer):
         return code
 
     def clean(self):
-        cleaned_data = super(PartClassSerializer, self).clean()
+        cleaned_data = super(PartClassForm, self).clean()
         cleaned_data["organization_id"] = self.organization
         self.instance.organization = self.organization
         return cleaned_data
 
 
-PartClassFormSet = forms.formset_factory(PartClassSerializer, extra=2, can_delete=True)
+PartClassFormSet = forms.formset_factory(PartClassForm, extra=2, can_delete=True)
 
 
 class PartClassSelectionForm(forms.Form):
@@ -1111,7 +1112,7 @@ class PartCSVForm(forms.Form):
                 part_dict = model_to_dict(part)
                 part_dict.update({"number_class": str(part.number_class)})
                 pf = PartForm(data=part_dict, organization=self.organization)
-                prf = PartRevisionSerializer(data=model_to_dict(part_revision))
+                prf = PartRevisionForm(data=model_to_dict(part_revision))
 
                 if pf.is_valid() and prf.is_valid():
                     part = pf.save(commit=False)
@@ -1446,7 +1447,7 @@ class PartFormSemiIntelligent(serializers.ModelSerializer):
         return cleaned_data
 
 
-class PartRevisionSerializer(serializers.ModelSerializer):
+class PartRevisionViewSet(ModelViewSet):
     class Meta:
         model = PartRevision
         exclude = ["timestamp", "assembly", "part"]
@@ -1458,7 +1459,7 @@ class PartRevisionSerializer(serializers.ModelSerializer):
         widgets = {"material": forms.RadioSelect()}
 
     def __init__(self, *args, **kwargs):
-        super(PartRevisionSerializer, self).__init__(*args, **kwargs)
+        super(PartRevisionForm, self).__init__(*args, **kwargs)
 
         self.fields["revision"].initial = 1
         self.fields["configuration"].required = False
@@ -1501,7 +1502,7 @@ class PartRevisionSerializer(serializers.ModelSerializer):
             self.data["description"] = self.instance.description
 
     def clean(self):
-        cleaned_data = super(PartRevisionSerializer, self).clean()
+        cleaned_data = super(PartRevisionForm, self).clean()
 
         if not cleaned_data.get("description") and not cleaned_data.get("value"):
             validation_error = forms.ValidationError(
@@ -1536,7 +1537,7 @@ class PartRevisionSerializer(serializers.ModelSerializer):
         return cleaned_data
 
 
-class PartRevisionNewForm(PartRevisionSerializer):
+class PartRevisionNewForm(PartRevisionForm):
     copy_assembly = forms.BooleanField(
         label="کپی درخت محصول از آخرین ورژن", initial=True, required=False
     )
@@ -1560,7 +1561,7 @@ class PartRevisionNewForm(PartRevisionSerializer):
         return self.instance
 
 
-class SubpartSerializer(serializers.ModelSerializer):
+class SubpartViewSet(ModelViewSet):
     class Meta:
         model = Subpart
         fields = ["part_revision", "reference", "count", "do_not_load"]
@@ -2048,7 +2049,7 @@ class BOMCSVForm(forms.Form):
                     "code": part_dict["number_class"],
                     "name": part_dict.get("part_class", None),
                 }
-                part_class_form = PartClassSerializer(
+                part_class_form = PartClassForm(
                     part_class_dict,
                     instance=existing_part_class,
                     ignore_unique_constraint=True,
@@ -2077,7 +2078,7 @@ class BOMCSVForm(forms.Form):
                     )
                     continue
 
-                part_revision_form = PartRevisionSerializer(
+                part_revision_form = PartRevisionForm(
                     part_dict, instance=existing_part_revision
                 )
                 if not part_revision_form.is_valid():
