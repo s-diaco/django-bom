@@ -194,12 +194,24 @@ bom_patterns = [
 ]
 
 urlpatterns = [
-    path("api/v1/", include(bom_patterns, namespace="bom")),
+    # path("api/v1/", include((bom_patterns, "bom"))),
+    path(
+        "api/v1/",
+        include(("bom.routers", "bom"), namespace="bom"),
+    ),
     # you will likely have your own implementation of these in your app
     path("admin/", admin.site.urls),
     path("api/v1/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/v1/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("signup/", views.signup, name="signup"),
+    path(
+        "api/v1/auth/login/",
+        auth_views.LoginView.as_view(),
+        {
+            "redirect_authenticated_user": True,
+        },
+        name="login",
+    ),
     path(
         "login/",
         auth_views.LoginView.as_view(),

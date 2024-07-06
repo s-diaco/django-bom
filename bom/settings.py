@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "materializecssform",
     "social_django",
     "djmoney",
@@ -56,6 +57,7 @@ SIMPLE_JWT = {
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -165,7 +167,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
-LANGUAGE_CODE = "fa-IR"
+LANGUAGE_CODE = "fa-IR" if not DEBUG else "en-US"
 
 TIME_ZONE = "Asia/Tehran"
 
@@ -290,6 +292,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1",
     "http://127.0.0.1:1313",
 ]
+
+CORS_ORIGIN_ALLOW_ALL = True
 if "CSRF_TRUSTED_ORIGINS" in os.environ and os.environ.get("CSRF_TRUSTED_ORIGINS"):
     # 'CSRF_TRUSTED_ORIGINS' should be a single string of hosts with a space between each.
     # For example: 'CSRF_TRUSTED_ORIGINS=http://localhost:1313 https://127.0.0.1 http://127.0.0.1:1313'

@@ -15,6 +15,7 @@ from django.utils.translation import gettext_lazy as _
 from djmoney.money import Money
 from rest_framework import serializers
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from bom.models import (
     Assembly,
@@ -29,6 +30,7 @@ from bom.models import (
     User,
     UserMeta,
 )
+from bom.serializers import PartRevisionSerializer
 
 from .constants import (
     CURRENT_UNITS,
@@ -272,7 +274,7 @@ class OrganizationViewSet(ModelViewSet):
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user", None)
-        super(OrganizationForm, self).__init__(*args, **kwargs)
+        super(OrganizationViewSet, self).__init__(*args, **kwargs)
         if user and self.instance.owner == user:
             user_queryset = User.objects.filter(
                 id__in=UserMeta.objects.filter(
@@ -287,7 +289,7 @@ class OrganizationViewSet(ModelViewSet):
             )
 
 
-class OrganizationFormEditSettings(OrganizationForm):
+class OrganizationFormEditSettings(OrganizationViewSet):
     def __init__(self, *args, **kwargs):
         super(OrganizationFormEditSettings, self).__init__(*args, **kwargs)
         # user = kwargs.get("user", None)
@@ -566,7 +568,7 @@ class PartClassViewSet(ModelViewSet):
         return cleaned_data
 
 
-PartClassFormSet = forms.formset_factory(PartClassForm, extra=2, can_delete=True)
+PartClassFormSet = forms.formset_factory(PartClassViewSet, extra=2, can_delete=True)
 
 
 class PartClassSelectionForm(forms.Form):
@@ -1112,7 +1114,7 @@ class PartCSVForm(forms.Form):
                 part_dict = model_to_dict(part)
                 part_dict.update({"number_class": str(part.number_class)})
                 pf = PartForm(data=part_dict, organization=self.organization)
-                prf = PartRevisionForm(data=model_to_dict(part_revision))
+                prf = PartRevisionViewSet(data=model_to_dict(part_revision))
 
                 if pf.is_valid() and prf.is_valid():
                     part = pf.save(commit=False)
@@ -1448,6 +1450,10 @@ class PartFormSemiIntelligent(serializers.ModelSerializer):
 
 
 class PartRevisionViewSet(ModelViewSet):
+    serializer_class = PartRevisionSerializer
+    permission_classes = ()
+    queryset = PartRevision.objects.all()
+
     class Meta:
         model = PartRevision
         exclude = ["timestamp", "assembly", "part"]
@@ -1458,51 +1464,8 @@ class PartRevisionViewSet(ModelViewSet):
         }
         widgets = {"material": forms.RadioSelect()}
 
-    def __init__(self, *args, **kwargs):
-        super(PartRevisionForm, self).__init__(*args, **kwargs)
-
-        self.fields["revision"].initial = 1
-        self.fields["configuration"].required = False
-
-        # Fix up field labels to be succinct for use in rendered form:
-        for f in self.fields.values():
-            if "units" in f.label:
-                f.label = "Units"
-            f.label.replace("rating", "")
-            # f.value = strip_trailing_zeros(f.value) # Harmless if field is not a number
-        self.fields["supply_voltage"].label = "Vsupply"
-        self.fields["attribute"].label = ""
-        self.fields["revision"].label = "ورژن"
-        self.fields["tolerance"].label = "درصد پرت (LOI)"
-        self.fields["tolerance"].initial = 0
-        # TODO: read choices from PartRevision model
-        self.fields["material"].choices = MATERIAL_TYPES
-        self.fields["material"].initial = "no_bom"
-        self.fields["description"] = forms.CharField(
-            # TODO: Delete if not working
-            error_messages={"required": "شرح نمی‌تواند خالی باشد!"},
-            required=True,
-            label=_("Description"),
-            widget=AutocompleteTextInput(
-                queryset=PartRevision.objects.values_list("description", flat=True),
-                autocomplete_min_length=1,
-                autocomplete_limit=8,
-            ),
-        )
-
-        # for _, value in self.fields.items():
-        # value.widget.attrs["placeholder"] = value.help_text
-        # value.help_text = ""
-
-        if (
-            self.instance
-            and not self.data.get("description")
-            and self.instance.description
-        ):
-            self.data["description"] = self.instance.description
-
     def clean(self):
-        cleaned_data = super(PartRevisionForm, self).clean()
+        cleaned_data = super(PartRevisionViewSet, self).clean()
 
         if not cleaned_data.get("description") and not cleaned_data.get("value"):
             validation_error = forms.ValidationError(
@@ -1537,7 +1500,7 @@ class PartRevisionViewSet(ModelViewSet):
         return cleaned_data
 
 
-class PartRevisionNewForm(PartRevisionForm):
+class PartRevisionNewForm(PartRevisionViewSet):
     copy_assembly = forms.BooleanField(
         label="کپی درخت محصول از آخرین ورژن", initial=True, required=False
     )
@@ -2078,7 +2041,7 @@ class BOMCSVForm(forms.Form):
                     )
                     continue
 
-                part_revision_form = PartRevisionForm(
+                part_revision_form = PartRevisionViewSet(
                     part_dict, instance=existing_part_revision
                 )
                 if not part_revision_form.is_valid():
