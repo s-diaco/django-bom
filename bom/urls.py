@@ -201,17 +201,9 @@ urlpatterns = [
     ),
     # you will likely have your own implementation of these in your app
     path("admin/", admin.site.urls),
-    path("api/v1/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("api/v1/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("api/v1/auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/v1/auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("signup/", views.signup, name="signup"),
-    path(
-        "api/v1/auth/login/",
-        auth_views.LoginView.as_view(),
-        {
-            "redirect_authenticated_user": True,
-        },
-        name="login",
-    ),
     path(
         "login/",
         auth_views.LoginView.as_view(),
