@@ -1,6 +1,5 @@
 from django.conf.urls import include
 from django.contrib import admin
-from django.contrib.auth import views as auth_views
 from django.urls import include, path
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -194,41 +193,12 @@ bom_patterns = [
 ]
 
 urlpatterns = [
-    # path("api/v1/", include((bom_patterns, "bom"))),
     path(
         "api/v1/",
         include(("bom.routers", "bom"), namespace="bom"),
     ),
-    # you will likely have your own implementation of these in your app
     path("admin/", admin.site.urls),
-    path("api/v1/token/login", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("api/v1/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/v1/auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/v1/auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("signup/", views.signup, name="signup"),
-    path(
-        "api/v1/auth/login/",
-        auth_views.LoginView.as_view(),
-        {
-            "redirect_authenticated_user": True,
-        },
-        name="login",
-    ),
-    path(
-        "api/v1/auth/login/",
-        auth_views.LoginView.as_view(),
-        {
-            "redirect_authenticated_user": True,
-        },
-        name="login",
-    ),
-    path(
-        "login/",
-        auth_views.LoginView.as_view(),
-        {
-            "redirect_authenticated_user": True,
-        },
-        name="login",
-    ),
-    path("logout/", auth_views.LogoutView.as_view(), {"next_page": "/"}, name="logout"),
+    path("api/v1/auth/signup/", views.signup, name="signup"),
 ]
