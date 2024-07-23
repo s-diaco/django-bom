@@ -2,7 +2,11 @@ from django.conf.urls import include
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework import routers
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenBlacklistView,
+)
 
 from bom.views import views
 
@@ -199,6 +203,7 @@ urlpatterns = [
     ),
     path("admin/", admin.site.urls),
     path("api/v1/auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/v1/auth/logout/", TokenBlacklistView.as_view(), name="token_blacklist"),
     path("api/v1/auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/v1/auth/signup/", views.signup, name="signup"),
 ]
