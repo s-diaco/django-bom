@@ -153,7 +153,7 @@ docker compose exec djangobom python manage.py collectstatic --noinput
 ```
 8. Create a superuser (if it's first time)
 ```
-docker compose exec python manage.py createsuperuser
+docker compose exec -it python manage.py createsuperuser
 ```
 
 ## Backup and restore database (If using docker-compose and postgres)
