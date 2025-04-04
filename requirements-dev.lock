@@ -6,6 +6,7 @@
 #   features: []
 #   all-features: false
 #   with-sources: false
+#   generate-hashes: false
 
 -e file:.
 asgiref==3.7.2
@@ -30,14 +31,23 @@ defusedxml==0.7.1
     # via social-auth-core
 django==5.0.3
     # via django-cors-headers
+    # via django-jalali
     # via django-money
+    # via djangorestframework
+    # via djangorestframework-simplejwt
     # via lithium-bom
     # via social-auth-app-django
 django-cors-headers==4.3.1
     # via lithium-bom
+django-jalali==7.4.0
+    # via lithium-bom
 django-materializecss-form==1.1.17
     # via lithium-bom
 django-money==3.4.1
+    # via lithium-bom
+djangorestframework==3.16.0
+    # via djangorestframework-simplejwt
+djangorestframework-simplejwt==5.5.0
     # via lithium-bom
 google-api-core==2.17.1
     # via google-api-python-client
@@ -60,6 +70,10 @@ idna==3.6
     # via requests
 iniconfig==2.0.0
     # via pytest
+jalali-core==1.0.0
+    # via jdatetime
+jdatetime==5.2.0
+    # via django-jalali
 oauthlib==3.2.2
     # via requests-oauthlib
     # via social-auth-core
@@ -84,6 +98,7 @@ pyasn1-modules==0.3.0
 pycparser==2.21
     # via cffi
 pyjwt==2.8.0
+    # via djangorestframework-simplejwt
     # via social-auth-core
 pyparsing==3.1.2
     # via httplib2

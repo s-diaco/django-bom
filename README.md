@@ -170,6 +170,17 @@ Restore bom_db:
 gunzip < dump_file.sql.gz | docker exec -i lithium_bom-db-1 psql -U bom_user -d bom_db
 ```
 
+## Test API
+Obtain a token:
+```
+curl -X POST -d "username=yourusername&password=yourpassword" http://127.0.0.1:1313/api/v1/auth/login/
+```
+Use the obtained token to access the protected endpoint:
+```
+curl -H "Authorization: Bearer youraccesstoken" http://127.0.0.1:1313/api/v1/items/
+```
+
+
 ## Customize Base Template
 The base template can be customized to your pleasing. Just add the following configuration to your settings.py:
 

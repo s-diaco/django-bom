@@ -18,7 +18,9 @@ RUN apt-get update && apt-get install -y netcat-openbsd gettext
 # Install pip requirements
 COPY requirements.lock .
 RUN sed '/-e/d' requirements.lock > requirements.txt
-RUN pip install -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt
+# If caching pip packages is not needed, use this line instead:
+# RUN pip install -r requirements.txt
 
 # TODO: don't copy everything 
 WORKDIR /app

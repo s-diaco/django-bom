@@ -119,6 +119,10 @@ msgstr "لیتیوم"
 msgid "Products"
 msgstr "محصولات"
 
+#: bom/templates/bom/bom-base-menu.html:2
+msgid "Reports"
+msgstr "گزارشات"
+
 #: bom/templates/bom/bom-base-menu.html:3
 msgid "sellers"
 msgstr "تأمین کنندگان"
