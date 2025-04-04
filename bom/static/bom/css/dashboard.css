@@ -11,6 +11,10 @@
         display: none;
     }
 
+    .green-text{
+        display: none;
+    }
+
     .responsive-table-wrapper {
         overflow-x: visible !important;
     }

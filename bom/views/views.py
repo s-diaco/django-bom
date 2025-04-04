@@ -85,10 +85,18 @@ from bom.utils import (
     listify_string,
     prep_for_sorting_nicely,
 )
+from jdatetime import datetime
 
 
 logger = logging.getLogger(__name__)
 BOM_LOGIN_URL = getattr(settings, "BOM_LOGIN_URL", None) or settings.LOGIN_URL
+
+
+# TODO: Move this to a utils file
+def jalali_to_gregorian(jalali_date):
+    jalali_datetime = datetime.strptime(jalali_date, "%Y/%m/%d").date()
+    gregorian_datetime = jalali_datetime.togregorian()
+    return gregorian_datetime
 
 
 def form_error_messages(form_errors) -> [str]:
@@ -609,14 +617,14 @@ def report(request):
         )
 
     if start_date:
-        date = parse_date(start_date)
+        date = jalali_to_gregorian(start_date)
         if date:
-            part_revs = part_revs.filter(Timestamp__gte=date)
+            part_revs = part_revs.filter(timestamp__gte=date)
 
     if end_date:
-        date = parse_date(end_date)
+        date = jalali_to_gregorian(end_date)
         if date:
-            part_revs = part_revs.filter(Timestamp__lte=date)
+            part_revs = part_revs.filter(timestamp__lte=date)
 
     if "download" in request.GET:
         response = HttpResponse(content_type="text/csv")

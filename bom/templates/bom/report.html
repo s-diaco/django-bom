@@ -8,6 +8,8 @@
 {% block main %}
     <link rel="stylesheet" type="text/css" href="{% static 'bom/css/style.css' %}"/>
     <link rel="stylesheet" type="text/css" href="{% static 'bom/css/dashboard.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'bom/css/jalalidatepicker.min.css' %}"/>
+    <script type="text/javascript" src="{% static 'bom/js/jalalidatepicker.min.js' %}"></script>
 {% endblock %}
 
 {% block bom-menu %}
@@ -20,7 +22,7 @@
 
 {% block content %}
     <div class="container-app">
-        <form id="searchForm" name="search-form" action="{% url 'bom:home' %}" method="get" enctype="multipart/form-data">
+        <form id="searchForm" name="search-form" action="{% url 'bom:report' %}" method="get" enctype="multipart/form-data">
             <div class="row">
                 {% if organization.number_scheme == 'S' %}
                     <div class="col s12 m4">
@@ -38,13 +40,15 @@
                         <label for="autocomplete-input">جستجوی متریال:</label>
                     {% endif %}
                 </div>
-                <div class="input-field col s12 m4">
-                    <input type="date" id="start-date" name="start_date" value="{% if start_date %}{{ start_date }}{% endif %}">
-                    <label for="start-date">Start Date</label>
+            </div>
+            <div class="row">
+                <div class="input-field col s12 m2">
+                    <input type="text" id="start-date" name="start_date" data-jdp data-jdp-only-date value="{% if start_date %}{{ start_date }}{% endif %}">
+                    <label for="start-date">{% trans "Start Date" %}</label>
                 </div>
-                <div class="input-field col s12 m4">
-                    <input type="date" id="end-date" name="end_date" value="{% if end_date %}{{ end_date }}{% endif %}">
-                    <label for="end-date">End Date</label>
+                <div class="input-field col s12 m2">
+                    <input type="text" id="end-date" name="end_date" data-jdp data-jdp-only-date value="{% if end_date %}{{ end_date }}{% endif %}">
+                    <label for="end-date">{% trans "End Date" %}</label>
                 </div>
                 <div class="col s12 m2">
                     <button type="submit" class="waves-effect waves-green btn green lighten-1 input-field" name="action">جستجو</button>
@@ -208,6 +212,10 @@
 {% endblock %}
 
 {% block bom-script %}
+    <!-- https://github.com/majidh1/JalaliDatePicker -->
+    <script>
+        jalaliDatepicker.startWatch();
+    </script>
     <!-- Autocomplete -->
     <script>
         var data = JSON.parse('{{ autocomplete|safe }}');

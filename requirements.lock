@@ -74,6 +74,7 @@ jalali-core==1.0.0
     # via jdatetime
 jdatetime==5.2.0
     # via django-jalali
+    # via lithium-bom
 oauthlib==3.2.2
     # via requests-oauthlib
     # via social-auth-core
