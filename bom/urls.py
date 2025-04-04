@@ -5,11 +5,17 @@ from django.urls import path
 
 from bom.third_party_apis import google_drive
 from bom.views import json_views, views
+from bom.views.api_views import ItemListView, LogoutView
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 
 bom_patterns = [
     # BOM urls
     path("", views.home, name="home"),
+    path("report/", views.report, name="report"),
     # path('bom/', views.home, name='home'),
     path("create-organization/", views.organization_create, name="organization-create"),
     path("help/", views.Help.as_view(), name=views.Help.name),
@@ -221,5 +227,11 @@ urlpatterns = [
         },
         name="login",
     ),
-    path("logout/", auth_views.LogoutView.as_view(), {"next_page": "/"}, name="logout"),
+    path(
+        "api/logout/",
+        auth_views.LogoutView.as_view(),
+        {"next_page": "/"},
+        name="logout",
+    ),
+    path("api/v1/", include("bom.urls_api")),
 ]

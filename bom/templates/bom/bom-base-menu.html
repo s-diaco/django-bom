@@ -1,5 +1,6 @@
 {% if user.is_authenticated and user.bom_profile.organization %}
     <li {% if name == "products" %}class="active"{% endif %}><a title={% trans "Products" %} href="{% url 'bom:home' %}?q={{user.bom_profile.organization.name}}">{% trans "Products" %}</a></li>
+    <li {% if name == "reports" %}class="active"{% endif %}><a title={% trans "Reports" %} href="{% url 'bom:report' %}?q={{user.bom_profile.organization.name}}">{% trans "Reports" %}</a></li>
     <li {% if name == "sellers" %}class="active"{% endif %}><a title={% trans "sellers" %} href="{% url 'bom:sellers' %}">{% trans "sellers" %}</a></li>
     <li {% if name == "settings" %}class="active"{% endif %}><a title={% trans "settings" %} class="narrow-padding" href="{% url 'bom:settings' tab_anchor='user' %}"><i class="material-icons">settings</i></a></li>
 {% endif %}

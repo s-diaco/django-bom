@@ -18,6 +18,7 @@ from django.db.models import (
     Subquery,
     prefetch_related_objects,
 )
+from django.utils.dateparse import parse_date
 from django.db.models.aggregates import Max
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -410,6 +411,340 @@ def home(request):
         part_revs = paginator.page(paginator.num_pages)
 
     return TemplateResponse(request, "bom/dashboard.html", locals())
+
+
+@login_required(login_url=BOM_LOGIN_URL)
+def report(request):
+    profile = request.user.bom_profile()
+    organization = profile.organization
+    if not organization:
+        return HttpResponseRedirect(reverse("bom:organization-create"))
+
+    query = request.GET.get("q", "")
+    start_date = request.GET.get("start_date", None)
+    end_date = request.GET.get("end_date", None)
+    title = f"{organization.name}"
+
+    # Note that posting a PartClass selection does not include a named parameter in
+    # the POST, so this case is the de facto "else" clause.
+    part_class_selection_form = PartClassSelectionForm(organization=organization)
+
+    if request.method == "GET":
+        part_class_selection_form = PartClassSelectionForm(
+            request.GET, organization=organization
+        )
+    elif request.method == "POST":
+        if "actions" in request.POST and "part-action" in request.POST:
+            selected_task = request.POST.get("part-action")
+            if selected_task in ["حذف", "Delete"]:
+                action = "Delete"
+                if action == "Delete":
+                    part_ids = [
+                        part_id
+                        for part_id in request.POST.getlist("actions")
+                        if part_id.isdigit()
+                    ]
+                    for part_id in part_ids:
+                        try:
+                            part = Part.objects.get(
+                                id=part_id, organization=organization
+                            )
+                            part_number = part.full_part_number()
+                            part.delete()
+                            messages.success(request, f"Deleted part {part_number}")
+                        except Part.DoesNotExist:
+                            messages.error(
+                                request,
+                                "Can't delete part. No part found with given id {}.".format(
+                                    part_id
+                                ),
+                            )
+
+    if part_class_selection_form.is_valid():
+        part_class = part_class_selection_form.cleaned_data["part_class"]
+    else:
+        part_class = None
+
+    if part_class or query:
+        title += _("Search Results - ")
+    else:
+        title = _("Material List for {title}").format(title=title)
+
+    if part_class:
+        parts = Part.objects.filter(
+            Q(organization=organization) & Q(number_class__code=part_class.code)
+        )
+    else:
+        parts = Part.objects.filter(organization=organization)
+
+    part_ids = list(parts.values_list("id", flat=True))
+
+    part_revs = PartRevision.objects.filter(
+        id__in=Subquery(
+            PartRevision.objects.filter(part_id__in=part_ids)
+            .annotate(max_id=Max("id"))
+            .values("id")
+        )
+    ).order_by(
+        "part__number_class__code",
+        "part__number_item",
+        "part__number_variation",
+    )
+
+    autocomplete_dict = {}
+    enable_autocomplete = settings.BOM_CONFIG.get("admin_dashboard", {}).get(
+        "enable_autocomplete", False
+    )
+    if enable_autocomplete:
+        prefetch_related_objects(part_revs, "part")
+        manufacturer_parts = ManufacturerPart.objects.filter(part__in=parts)
+
+        for pr in part_revs:
+            autocomplete_dict.update({pr.searchable_synopsis.replace('"', ""): None})
+            autocomplete_dict.update({pr.part.full_part_number(): None})
+
+        for mpn in manufacturer_parts:
+            if mpn.manufacturer_part_number:
+                autocomplete_dict.update(
+                    {mpn.manufacturer_part_number.replace('"', ""): None}
+                )
+            if mpn.manufacturer is not None and mpn.manufacturer.name:
+                autocomplete_dict.update({mpn.manufacturer.name.replace('"', ""): None})
+
+    autocomplete = dumps(autocomplete_dict)
+
+    if query:
+        query_stripped = query.strip()
+
+        # Parse terms separated by white space but keep together words inside of double quotes,
+        # for example
+        #   "Big Company Inc."
+        # is parsed as 'Big Company Inc.' while
+        #    Big Company Inc.
+        # is parsed as 'Big' 'Company' 'Inc.'
+        search_terms = query_stripped
+        search_terms = list(smart_split(search_terms))
+        search_terms = [search_term.replace('"', "") for search_term in search_terms]
+        noqoutes_query = query_stripped.replace('"', "")
+
+        number_class = None
+        number_item = None
+        number_variation = None
+
+        # Scan for search terms that might represent a complete or partial part number
+        if organization.number_scheme == constants.NUMBER_SCHEME_SEMI_INTELLIGENT:
+            for search_term in search_terms:
+                try:
+                    (
+                        number_class,
+                        number_item,
+                        number_variation,
+                    ) = Part.parse_partial_part_number(
+                        search_term, organization, validate=False
+                    )
+                except AttributeError:
+                    pass
+
+        # Query searchable_synopsis by OR'ing search terms
+        part_synopsis_ids = PartRevision.objects.filter(
+            reduce(
+                operator.or_,
+                (Q(searchable_synopsis__icontains=term) for term in search_terms),
+            )
+        ).values_list("part", flat=True)
+        # Prepare Part.primary_manufacturer_part.manufacturer_part_number query by OR'ing search terms
+        q_primary_mpn = reduce(
+            operator.or_,
+            (
+                Q(primary_manufacturer_part__manufacturer_part_number__icontains=term)
+                for term in search_terms
+            ),
+        )
+
+        # Prepare Part.primary_manufacturer.part__manufacturer.name query by OR'ing search terms
+        q_primary_mfg = reduce(
+            operator.or_,
+            (
+                Q(primary_manufacturer_part__manufacturer__name__icontains=term)
+                for term in search_terms
+            ),
+        )
+
+        if number_class and number_item and number_variation:
+            parts = parts.filter(
+                Q(
+                    number_class__code=number_class,
+                    number_item=number_item,
+                    number_variation=number_variation,
+                )
+                | Q(id__in=part_synopsis_ids)
+                | q_primary_mpn
+                | q_primary_mfg
+            )
+        elif number_class and number_item:
+            parts = parts.filter(
+                Q(number_class__code=number_class, number_item=number_item)
+                | Q(id__in=part_synopsis_ids)
+                | q_primary_mpn
+                | q_primary_mfg
+            )
+        else:
+            parts = parts.filter(
+                Q(number_item__in=search_terms)
+                | Q(id__in=part_synopsis_ids)
+                | q_primary_mpn
+                | q_primary_mfg
+            )
+
+        part_ids = list(parts.values_list("id", flat=True))
+
+        part_revs = PartRevision.objects.filter(
+            id__in=Subquery(
+                PartRevision.objects.filter(part_id__in=part_ids)
+                .annotate(max_id=Max("id"))
+                .values("id")
+            )
+        ).order_by(
+            "part__number_class__code", "part__number_item", "part__number_variation"
+        )
+
+    if start_date:
+        date = parse_date(start_date)
+        if date:
+            part_revs = part_revs.filter(Timestamp__gte=date)
+
+    if end_date:
+        date = parse_date(end_date)
+        if date:
+            part_revs = part_revs.filter(Timestamp__lte=date)
+
+    if "download" in request.GET:
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = (
+            'attachment; filename="indabom_parts_search.csv"'
+        )
+        csv_headers = organization.part_list_csv_headers()
+        seller_csv_headers = SellerPartCSVHeaders()
+        writer = csv.DictWriter(response, fieldnames=csv_headers.get_default_all())
+        writer.writeheader()
+        for part_rev in part_revs:
+            if organization.number_scheme == constants.NUMBER_SCHEME_SEMI_INTELLIGENT:
+                row = {
+                    csv_headers.get_default(
+                        "part_number"
+                    ): part_rev.part.full_part_number(),
+                    csv_headers.get_default(
+                        "part_category"
+                    ): part_rev.part.number_class.name,
+                    csv_headers.get_default("part_revision"): part_rev.revision,
+                    csv_headers.get_default("part_manufacturer"): (
+                        part_rev.part.primary_manufacturer_part.manufacturer.name
+                        if part_rev.part.primary_manufacturer_part is not None
+                        and part_rev.part.primary_manufacturer_part.manufacturer
+                        is not None
+                        else ""
+                    ),
+                    csv_headers.get_default("part_manufacturer_part_number"): (
+                        part_rev.part.primary_manufacturer_part.manufacturer_part_number
+                        if part_rev.part.primary_manufacturer_part is not None
+                        else ""
+                    ),
+                }
+                for field_name in csv_headers.get_default_all():
+                    if field_name not in csv_headers.get_defaults_list(
+                        [
+                            "part_number",
+                            "part_category",
+                            "part_synopsis",
+                            "part_revision",
+                            "part_manufacturer",
+                            "part_manufacturer_part_number",
+                        ]
+                        + seller_csv_headers.get_default_all()
+                    ):
+                        attr = getattr(part_rev, field_name)
+                        row.update(
+                            {
+                                csv_headers.get_default(field_name): (
+                                    attr if attr is not None else ""
+                                )
+                            }
+                        )
+            else:
+                row = {
+                    csv_headers.get_default(
+                        "part_number"
+                    ): part_rev.part.full_part_number(),
+                    csv_headers.get_default("part_revision"): part_rev.revision,
+                    csv_headers.get_default("part_manufacturer"): (
+                        part_rev.part.primary_manufacturer_part.manufacturer.name
+                        if part_rev.part.primary_manufacturer_part is not None
+                        and part_rev.part.primary_manufacturer_part.manufacturer
+                        is not None
+                        else ""
+                    ),
+                    csv_headers.get_default("part_manufacturer_part_number"): (
+                        part_rev.part.primary_manufacturer_part.manufacturer_part_number
+                        if part_rev.part.primary_manufacturer_part is not None
+                        else ""
+                    ),
+                }
+                for field_name in csv_headers.get_default_all():
+                    if field_name not in csv_headers.get_defaults_list(
+                        [
+                            "part_number",
+                            "part_synopsis",
+                            "part_revision",
+                            "part_manufacturer",
+                            "part_manufacturer_part_number",
+                        ]
+                        + seller_csv_headers.get_default_all()
+                    ):
+                        attr = getattr(part_rev, field_name)
+                        row.update(
+                            {
+                                csv_headers.get_default(field_name): (
+                                    attr if attr is not None else ""
+                                )
+                            }
+                        )
+
+            sellerparts = part_rev.part.seller_parts()
+            if len(sellerparts) > 0:
+                for sellerpart in part_rev.part.seller_parts():
+                    for field_name in seller_csv_headers.get_default_all():
+                        attr = getattr(sellerpart, field_name)
+                        row.update(
+                            {
+                                csv_headers.get_default(field_name): (
+                                    attr if attr is not None else ""
+                                )
+                            }
+                        )
+                    writer.writerow({k: smart_str(v) for k, v in row.items()})
+            else:
+                writer.writerow({k: smart_str(v) for k, v in row.items()})
+        return response
+
+    page_size = settings.BOM_CONFIG.get("admin_dashboard", {}).get("page_size", 25)
+    paginator = Paginator(part_revs, page_size)
+
+    page = request.GET.get("page")
+    try:
+        part_revs = paginator.page(page)
+    except PageNotAnInteger:
+        part_revs = paginator.page(1)
+    except EmptyPage:
+        part_revs = paginator.page(paginator.num_pages)
+
+    # TODO: delete
+    # context = {
+    #    'query': query,
+    #    'date': date_filter,
+    #    'part_revs': part_revs,
+    # }
+
+    return TemplateResponse(request, "bom/report.html", locals())
 
 
 @login_required(login_url=BOM_LOGIN_URL)
