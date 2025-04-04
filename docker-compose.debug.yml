@@ -1,4 +1,3 @@
-version: '3.8'
 name: lithium_bom-dev
 
 services:

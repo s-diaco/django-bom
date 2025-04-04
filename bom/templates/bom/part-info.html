@@ -212,6 +212,12 @@
                         </div>
                         {% include 'bom/components/bom-flat.html' with order_by=order_by bom_items=flat_bom.parts part=part part_revision=part_revision profile=profile %}
                     </div>
+                    {% if  part_revision.part.primary_manufacturer_part.manufacturer.name == user.bom_profile.organization.name %}
+                        <div class="row">
+                            <div class="col s4 l2 text-right">قیمت واحد (کیلو گرم):</div>
+                            <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ indented_bom.unit_cost|default_if_none:'-' }}</span></div>
+                        </div>
+                    {% endif %}
                 </div>
 
                 <div id="used" class="col s12">
