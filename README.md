@@ -169,6 +169,10 @@ Restore bom_db:
 ```
 gunzip < dump_file.sql.gz | docker exec -i lithium_bom-db-1 psql -U bom_user -d bom_db
 ```
+Restore bom_db (Unzipped dump on Windows):
+```
+cat dump_file.sql.gz | docker exec -i lithium_bom-db-1 psql -U bom_user -d bom_db
+```
 
 ## Test API
 Obtain a token:
