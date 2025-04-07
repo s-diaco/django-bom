@@ -24,7 +24,7 @@ charset-normalizer==3.3.2
     # via requests
 cryptography==42.0.5
     # via social-auth-core
-debugpy==1.8.1
+debugpy==1.8.13
     # via lithium-bom
 defusedxml==0.7.1
     # via python3-openid

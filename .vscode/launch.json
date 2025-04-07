@@ -25,8 +25,7 @@
                     }
                 ],
                 "projectType": "django"
-            },
-            "envFile": "${workspaceFolder}/.env.dev"
+            }
         },
         {
             "name": "Django - Compose",
@@ -35,6 +34,7 @@
             "preLaunchTask": "Compose Up (Dev)",
             "postDebugTask": "Compose Down",
             "connect": {
+                "host": "localhost",
                 "port": 5678
             },
             "pathMappings": [

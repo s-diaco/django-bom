@@ -33,13 +33,15 @@
             "type": "docker-compose",
             "dockerCompose": {
                 "up": {
-                    "detached": true,
+                    // "detached": true,
                     "build": true
                 },
                 "files": [
                     "${workspaceFolder}/docker-compose.debug.yml"
                 ]
-            }
+            },
+			"problemMatcher": [],
+            "detail": "Starts the Docker Compose services for debugging."
         },
         {
             "label": "Compose Down",
