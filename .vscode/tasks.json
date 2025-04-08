@@ -33,7 +33,7 @@
             "type": "docker-compose",
             "dockerCompose": {
                 "up": {
-                    // "detached": true,
+                    "detached": true,
                     "build": true
                 },
                 "files": [
@@ -43,6 +43,12 @@
 			"problemMatcher": [],
             "detail": "Starts the Docker Compose services for debugging."
         },
+		{
+		  "label": "sleep",
+		  "type": "shell",
+		  "command": "sleep 1",
+		  "dependsOn": "Compose Up (Dev)",
+		},
         {
             "label": "Compose Down",
             "type": "docker-compose",
@@ -51,6 +57,19 @@
                     "removeVolumes": true,
                     "removeImages": "all"
                 }
+            }
+        },
+        {
+            "label": "Compose Down (Dev)",
+            "type": "docker-compose",
+            "dockerCompose": {
+                "down": {
+                    "removeVolumes": true,
+                    "removeImages": "local"
+                },
+                "files": [
+                    "${workspaceFolder}/docker-compose.debug.yml"
+                ]
             }
         }
 	]

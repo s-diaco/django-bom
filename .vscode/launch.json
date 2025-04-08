@@ -31,10 +31,12 @@
             "name": "Django - Compose",
             "type": "debugpy",
             "request": "attach",
-            "preLaunchTask": "Compose Up (Dev)",
-            "postDebugTask": "Compose Down",
+            // "preLaunchTask": "Compose Up (Dev)",
+            "preLaunchTask": "sleep",
+            "postDebugTask": "Compose Down (Dev)",
+            "justMyCode": true,
             "connect": {
-                "host": "localhost",
+                "host": "0.0.0.0",
                 "port": 5678
             },
             "pathMappings": [
