@@ -133,27 +133,27 @@ docker compose up --build
 ```
 3. Compile the translations
 ```
-python manage.py compilemessages -l fa_IR
+docker compose -f docker-compose.yml exec web python manage.py compilemessages -l fa_IR
 ```
 4. Run entrypoint to check if database connection is OK
 ```
-sh entrypoint.sh
+docker compose -f docker-compose.yml exec web sh entrypoint.sh
 ```
 5. Make the migrations
 ```
-docker compose exec djangobom python manage.py makemigrations --noinput
+docker compose -f docker-compose.yml exec web python manage.py makemigrations --noinput
 ```
 6. Run the migrations
 ```
-docker compose exec djangobom python manage.py migrate --noinput
+docker compose -f docker-compose.yml exec web python manage.py migrate --noinput
 ```
 7. Place static files in the docker volume
 ```
-docker compose exec djangobom python manage.py collectstatic --noinput
+docker compose -f docker-compose.yml exec web python manage.py collectstatic --noinput
 ```
 8. Create a superuser (if it's first time)
 ```
-docker compose exec -it python manage.py createsuperuser
+docker compose -f docker-compose.yml exec -it web python manage.py createsuperuser
 ```
 
 ## Backup and restore database (If using docker-compose and postgres)
@@ -169,9 +169,13 @@ Restore bom_db:
 ```
 gunzip < dump_file.sql.gz | docker exec -i lithium_bom-db-1 psql -U bom_user -d bom_db
 ```
+or
+```
+gunzip < dump_file.sql.gz | docker compose -f docker-compose.yml exec -T db psql -U bom_user -d bom_db
+```
 Restore bom_db (Unzipped dump on Windows):
 ```
-cat dump_file.sql.gz | docker exec -i lithium_bom-db-1 psql -U bom_user -d bom_db
+cat dump_file.sql | docker exec -i lithium_bom-db-1 psql -U bom_user -d bom_db
 ```
 
 ## Test API
