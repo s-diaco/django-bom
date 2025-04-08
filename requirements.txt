@@ -8,4 +8,4 @@ django-materializecss-form
 psycopg2-binary
 gunicorn
 django-cors-headers
-debugpy
+debugpy # TODO: only for debugging
