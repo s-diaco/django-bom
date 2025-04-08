@@ -371,7 +371,29 @@ footer.page-footer>div.container>div.row>div.col>p{
     margin: 11px 0;
 }
 
+
 @media print {
+    /* Ensure links are black for better readability in print */
+    a {
+        color: #000 !important; /* Black color for links */
+        text-decoration: none !important; /* Optional: no underline links */
+    }
+
+    #indented-bom {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 12px;
+    }
+
+    #indented-bom th, #indented-bom td {
+        border: 1px solid #000;
+        padding: 8px;
+    }
+
+    #indented-bom th {
+        background-color: #f2f2f2;
+    }
+
     .container {
         width: 8.5in;
     }
