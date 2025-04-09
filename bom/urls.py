@@ -5,11 +5,6 @@ from django.urls import path
 
 from bom.third_party_apis import google_drive
 from bom.views import json_views, views
-from api.api_views import ItemListView, LogoutView
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
 
 
 bom_patterns = [
