@@ -1,5 +1,5 @@
 from django.urls import path
-from bom.views.api_views import ItemListView, LogoutView
+from api.api_views import ItemListView, LogoutView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,

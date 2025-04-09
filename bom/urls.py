@@ -5,7 +5,7 @@ from django.urls import path
 
 from bom.third_party_apis import google_drive
 from bom.views import json_views, views
-from bom.views.api_views import ItemListView, LogoutView
+from api.api_views import ItemListView, LogoutView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -233,5 +233,5 @@ urlpatterns = [
         {"next_page": "/"},
         name="logout",
     ),
-    path("api/v1/", include("bom.urls_api")),
+    path("api/v1/", include("api.urls_api")),
 ]
