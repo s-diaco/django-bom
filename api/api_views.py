@@ -1,3 +1,4 @@
+from time import sleep
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -6,6 +7,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework import status
+from django.contrib.auth.models import User
 
 
 class LogoutView(APIView):
@@ -35,5 +37,25 @@ class ItemListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        sleep(2)  # Simulate a delay
         items = ["item1", "item2", "item3"]
         return Response(items)
+
+
+class UserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        try:
+            # Query the user from the database
+            user = User.objects.get(id=user_id)
+            user_info = {
+                "email": user.email,
+                "name": user.get_full_name() or user.username,
+            }
+            return Response(user_info, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            # Handle the case where the user does not exist
+            return Response(
+                {"error": "User not found."}, status=status.HTTP_404_NOT_FOUND
+            )
