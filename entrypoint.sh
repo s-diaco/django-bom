@@ -11,10 +11,11 @@ then
     echo "PostgreSQL started"
 fi
 
-# python manage.py compilemessages -l fa_IR
-# python manage.py collectstatic --no-input --clear
-# python manage.py flush --no-input
-# python manage.py migrate
-# python manage.py createsuperuser
+python manage.py compilemessages -l fa_IR
+python manage.py collectstatic --no-input --clear
+python manage.py flush --no-input
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
 
 exec "$@"

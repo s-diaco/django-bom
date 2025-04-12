@@ -131,6 +131,14 @@ cd project_dir
 ```
 docker compose up --build
 ```
+optional to skip next steps (will flush database):
+```
+docker compose -f docker-compose.yml exec web sh entrypoint.sh
+```
+and then to fix showing compiled trnslations:
+```
+docker compose restart
+```
 3. Compile the translations
 ```
 docker compose -f docker-compose.yml exec web python manage.py compilemessages -l fa_IR
@@ -176,6 +184,12 @@ gunzip < dump_file.sql.gz | docker compose -f docker-compose.yml exec -T db psql
 Restore bom_db (Unzipped dump on Windows):
 ```
 cat dump_file.sql | docker exec -i lithium_bom-db-1 psql -U bom_user -d bom_db
+```
+
+## Uninstall
+to take the server down and remove images:
+```
+docker compose down -v --rmi local
 ```
 
 ## Test API

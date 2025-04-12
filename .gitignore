@@ -300,5 +300,5 @@ ENV/
 *.bak
 
 # Database dumps
-dump_bom_db_*.sql.gz
-dump_bom_db_*.sql
+dump_*.sql.gz
+dump_*.sql
