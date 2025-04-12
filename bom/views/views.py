@@ -2351,7 +2351,7 @@ def sellerpart_edit(request, sellerpart_id):
     seller_part = get_object_or_404(SellerPart, pk=sellerpart_id)
     manufacturer_part = seller_part.manufacturer_part
     part = manufacturer_part.part
-    title = _(""ویرایش اطلاعات بازرگانی متریال"")
+    title = _("ویرایش اطلاعات بازرگانی متریال")
     title += f" | <span dir='ltr'>{part.full_part_number()}</span>"
 
     if request.method == "POST":
