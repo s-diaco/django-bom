@@ -20,7 +20,7 @@ def validate_pct(value):
                 return float(value)
         except (TypeError, ValueError):
             raise ValidationError(
-                _("%(value)s is not a valid pct"),
+                _("%(value)s درصد معتبر نیست."),
                 params={"value": value},
             )
     return None

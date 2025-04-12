@@ -2,12 +2,12 @@
 
 {% load static %}
 
-{% block head-title %}{% trans "Login" %}{% endblock %}
+{% block head-title %}{% trans "ورود" %}{% endblock %}
 
 {% block title %}
 <link rel="stylesheet" type="text/css" href="{% static 'bom/style.css' %}" />
 
-<div class="text-center">{% trans "Login" %}</div>
+<div class="text-center">{% trans "ورود" %}</div>
 
 {% endblock %}
 
@@ -15,7 +15,7 @@
 {% endblock%}
 {% block content %}
     <div class="section center">
-        <h5 class="">{% trans "Login into your BOM account" %}</h5>
+        <h5 class="">{% trans "ورود به اکانت BOM شما" %}</h5>
     </div>
 
     <div class="section center">
@@ -27,7 +27,7 @@
                         <div class="col s12">
                             {{ form }}
                             <div class="center">
-                                <button class="waves-effect waves-light btn green lighten-1" style="min-width:150px" type="submit">{% trans "Login" %}</button>
+                                <button class="waves-effect waves-light btn green lighten-1" style="min-width:150px" type="submit">{% trans "ورود" %}</button>
                             </div>
                         </div>
                     </div>

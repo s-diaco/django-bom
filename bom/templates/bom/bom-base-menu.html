@@ -1,7 +1,7 @@
 {% if user.is_authenticated and user.bom_profile.organization %}
-    <li {% if name == "products" %}class="active"{% endif %}><a title={% trans "Products" %} href="{% url 'bom:home' %}?q={{user.bom_profile.organization.name}}">{% trans "Products" %}</a></li>
-    <li {% if name == "reports" %}class="active"{% endif %}><a title={% trans "Reports" %} href="{% url 'bom:report' %}">{% trans "Reports" %}</a></li>
-    <li {% if name == "sellers" %}class="active"{% endif %}><a title={% trans "sellers" %} href="{% url 'bom:sellers' %}">{% trans "sellers" %}</a></li>
-    <li {% if name == "settings" %}class="active"{% endif %}><a title={% trans "settings" %} class="narrow-padding" href="{% url 'bom:settings' tab_anchor='user' %}"><i class="material-icons">settings</i></a></li>
+    <li {% if name == "products" %}class="active"{% endif %}><a title={% trans "محصولات" %} href="{% url 'bom:home' %}?q={{user.bom_profile.organization.name}}">{% trans "محصولات" %}</a></li>
+    <li {% if name == "reports" %}class="active"{% endif %}><a title={% trans "گزارش" %} href="{% url 'bom:report' %}">{% trans "گزارش" %}</a></li>
+    <li {% if name == "sellers" %}class="active"{% endif %}><a title={% trans "تأمین کنندگان" %} href="{% url 'bom:sellers' %}">{% trans "تأمین کنندگان" %}</a></li>
+    <li {% if name == "settings" %}class="active"{% endif %}><a title={% trans "تنظیمات" %} class="narrow-padding" href="{% url 'bom:settings' tab_anchor='user' %}"><i class="material-icons">settings</i></a></li>
 {% endif %}
-<li {% if name == "help" %}class="active"{% endif %}><a title={% trans "help" %} href="{% url 'bom:help' %}" class="narrow-padding"><i class="material-icons">help</i></a></li>
+<li {% if name == "help" %}class="active"{% endif %}><a title={% trans "راهنما" %} href="{% url 'bom:help' %}" class="narrow-padding"><i class="material-icons">help</i></a></li>

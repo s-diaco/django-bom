@@ -21,7 +21,7 @@
         <div class="row">
             <form name="seller" action="{% url 'bom:manufacturer-part-add-sellerpart' manufacturer_part_id=manufacturer_part.id %}" method="post" class="col s12">
                 {% csrf_token %}
-                <h2>{% trans "Seller" %}</h2>
+                <h2>{% trans "تأمین کننده" %}</h2>
                 <p>در صورت محصول بودن "{{ organization }}" را به عنوان تأمین کننده انتخاب کنید.</p>
                 <div class="row">
                     {{ seller_form.non_field_errors }}
@@ -35,7 +35,7 @@
                         <a href="javascript:history.back()" class="waves-effect waves-light btn-flat grey-text lighten-1" style="margin-left: -16px;">انصراف</a>
                     </div>
                     <div class="col l4 m5 s6 left-align">
-                        <button class="waves-effect waves-light btn green lighten-1" type="submit" name="action">{% trans "Save" %}</button>
+                        <button class="waves-effect waves-light btn green lighten-1" type="submit" name="action">{% trans "ذخیره" %}</button>
                     </div>
                 </div>
             </form>

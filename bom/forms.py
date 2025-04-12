@@ -150,7 +150,7 @@ class UserAddForm(forms.ModelForm):
         self.fields["role"].required = False
 
         self.fields["username"] = forms.CharField(
-            label=_("User"),
+            label=_("کاربر"),
             widget=AutocompleteTextInput(
                 queryset=User.objects.values_list("username", flat=True).order_by(
                     "username"
@@ -344,7 +344,7 @@ class ManufacturerForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["name"] = forms.CharField(
             required=False,
-            label=_("Manufacturer"),
+            label=_("تولید کننده"),
             widget=AutocompleteTextInput(
                 queryset=Manufacturer.objects.filter(
                     organization=self.organization
@@ -394,7 +394,7 @@ class SellerForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["name"] = forms.CharField(
             required=False,
-            label=_("Seller"),
+            label=_("تأمین کننده"),
             widget=AutocompleteTextInput(
                 queryset=Seller.objects.filter(organization=self.organization).order_by(
                     "name"
@@ -430,7 +430,7 @@ class SellerPartForm(forms.ModelForm):
         currency_unit_txt = self.organization.currency if self.organization else ""
         self.base_fields["unit_cost"] = forms.DecimalField(
             required=True,
-            label=_("Price | {unit}").format(unit=currency_unit_txt),
+            label=_("قیمت | {unit}").format(unit=currency_unit_txt),
             initial=0,
         )
 
@@ -448,14 +448,14 @@ class SellerPartForm(forms.ModelForm):
             organization=self.organization
         ).order_by("name")
         self.fields["seller"].required = False
-        self.fields["seller_part_number"].label = _("Seller Part Number")
-        self.fields["seller"].label = _("Seller")
+        self.fields["seller_part_number"].label = _("کد تأمین کننده")
+        self.fields["seller"].label = _("تأمین کننده")
         # TODO: what if material is None?
         if instance and instance.manufacturer_part.part.latest().material in [
             "no_loi",
             "with_loi",
         ]:
-            self.fields["unit_cost"].label = _("Overload Cost")
+            self.fields["unit_cost"].label = _("هزینه سربار")
 
     def clean(self):
         cleaned_data = super(SellerPartForm, self).clean()
@@ -1331,7 +1331,7 @@ class PartFormSemiIntelligent(forms.ModelForm):
             "google_drive_parent",
         ]
         help_texts = {
-            "number_item": _("Auto generated if blank."),
+            "number_item": _("در صورت خالی بودن اتوماتیک ایجاد می‌شود"),
             "number_variation": "Auto generated if blank.",
         }
 
@@ -1449,9 +1449,9 @@ class PartRevisionForm(forms.ModelForm):
         model = PartRevision
         exclude = ["timestamp", "assembly", "part"]
         help_texts = {
-            "description": _("Additional part info, special instructions, etc."),
-            "attribute": _("Additional part attributes (free form)"),
-            "value": _("Number or text"),
+            "description": _("نوع متریال"),
+            "attribute": _("اطلاعات اضافه متریال"),
+            "value": _("عدد یا تکست"),
         }
         widgets = {"material": forms.RadioSelect()}
 
@@ -1479,7 +1479,7 @@ class PartRevisionForm(forms.ModelForm):
             # TODO: Delete if not working
             error_messages={"required": "شرح نمی‌تواند خالی باشد!"},
             required=True,
-            label=_("Description"),
+            label=_("شرح متریال"),
             widget=AutocompleteTextInput(
                 queryset=PartRevision.objects.values_list("description", flat=True),
                 autocomplete_min_length=1,
@@ -1619,7 +1619,7 @@ class SubpartForm(forms.ModelForm):
 
 class AddSubpartForm(forms.Form):
     subpart_part_number = forms.CharField(required=True, label="Subpart part number")
-    count = forms.FloatField(required=False, label=_("weight"))
+    count = forms.FloatField(required=False, label=_("وزن"))
     reference = forms.CharField(required=False, label="Reference")
     do_not_load = forms.BooleanField(required=False, label="do_not_load")
 

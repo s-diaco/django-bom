@@ -157,9 +157,9 @@ def home(request):
         part_class = None
 
     if part_class or query:
-        title += _("Search Results - ")
+        title += _(" - نتایج جستجو")
     else:
-        title = _("Material List for {title}").format(title=title)
+        title = _("لیست متریال {title}").format(title=title)
 
     if part_class:
         parts = Part.objects.filter(
@@ -474,9 +474,9 @@ def report(request):
         part_class = None
 
     if part_class or query:
-        title += _("Search Results - ")
+        title += _(" - نتایج جستجو")
     else:
-        title = _("Material List for {title}").format(title=title)
+        title = _("لیست متریال {title}").format(title=title)
 
     if part_class:
         parts = Part.objects.filter(
@@ -823,9 +823,9 @@ def bom_settings(request, tab_anchor=None):
     if organization is None:
         return HttpResponseRedirect(reverse("bom:home"))
 
-    title = _("Settings")
+    title = _("تنظیمات")
     owner = organization.owner
-    name = "settings"
+    name = "تنظیمات"
 
     part_classes = PartClass.objects.all().filter(organization=organization)
 
@@ -2152,7 +2152,7 @@ def add_sellerpart(request, manufacturer_part_id):
 
     manufacturer_part = get_object_or_404(ManufacturerPart, pk=manufacturer_part_id)
     part = manufacturer_part.part
-    title = _("Seller")
+    title = _("تأمین کننده")
     title += f" | <span dir='ltr'>{part.full_part_number()}</span>"
 
     if request.method == "POST":
@@ -2351,7 +2351,7 @@ def sellerpart_edit(request, sellerpart_id):
     seller_part = get_object_or_404(SellerPart, pk=sellerpart_id)
     manufacturer_part = seller_part.manufacturer_part
     part = manufacturer_part.part
-    title = _("Edit Seller Part")
+    title = _(""ویرایش اطلاعات بازرگانی متریال"")
     title += f" | <span dir='ltr'>{part.full_part_number()}</span>"
 
     if request.method == "POST":

@@ -26,9 +26,9 @@
                 {% csrf_token %}
                 <div class="row">
                     <div class="col s12">
-                        <p>{% trans "Your role is: " %}<b>{{ user.bom_profile.get_role_display }}</b></p>
-                        <p>{% trans "Your username is: " %}<b>{{ user.username }}</b></p>
-                        <p>{% trans "To request a change in role please contact " %}<a href="mailto:{{ organization.owner.email }}">{{ organization.owner.email }}</a>{% trans " for assistance." %}</p>
+                        <p>{% trans "سطح دسترسی شما: " %}<b>{{ user.bom_profile.get_role_display }}</b></p>
+                        <p>{% trans "نام کاربری شما: " %}<b>{{ user.username }}</b></p>
+                        <p>{% trans "برای تغییر سطح دسترسی با " %}<a href="mailto:{{ organization.owner.email }}">{{ organization.owner.email }}</a>{% trans " تماس بگیرید." %}</p>
                     </div>
                 </div>
                 <div class="row">
@@ -38,7 +38,7 @@
                 </div>
                 <div class="row">
                     <div class="col s12 right-align">
-                        <button class="waves-effect waves-light btn green lighten-1" type="submit" name="submit-edit-user">{% trans "Save" %}</button>
+                        <button class="waves-effect waves-light btn green lighten-1" type="submit" name="submit-edit-user">{% trans "ذخیره" %}</button>
                     </div>
                 </div>
             </form>
@@ -222,7 +222,7 @@
                                             <td class="text-normal"><a href="mailto:{{ user.email }}">{{ org_user.email }}</a></td>
                                             <td>
                                                 <a class="waves-effect waves-green btn-flat green-text text-lighten-1" href="{% url 'bom:user-meta-edit' user_meta_id=org_user.bom_profile.id %}"><i
-                                                        class="material-icons left green-text text-lighten-1">edit</i>{% trans "Edit" %}</a>
+                                                        class="material-icons left green-text text-lighten-1">edit</i>{% trans "ویرایش" %}</a>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -232,7 +232,7 @@
                                     <div class="col s6">
                                         {% comment %}TODO: not working{% endcomment %}
                                         <button class="waves-effect waves-light btn red lighten-1" type="submit" name="submit-remove-user"
-                                                onclick="return confirm('کاربر/کاربران انتخاب شده از شرکت {{ organization }} حذف شوند?')">{% trans "Remove selected user" %}
+                                                onclick="return confirm('کاربر/کاربران انتخاب شده از شرکت {{ organization }} حذف شوند?')">{% trans "حذف کاربر انتخاب شده" %}
                                         </button>
                                     </div>
                                     <div class="col s6 left-align">
@@ -306,11 +306,11 @@
             {% if profile.organization %}
                 <div class="row">
                     <div class="col s12">
-                        <h3>{% trans "Leave Your Organization" %}</h3>
-                        <p>{% trans "Warning, the only way back in to {{ organization.name }} is if you are invited by an organization administrator." %}</p>
+                        <h3>{% trans "جدا شدن از این سازمان" %}</h3>
+                        <p>{% trans "توجه: تنها راه بازگشت به سازمان دعوت از طرف ادمین خواهد بود." %}</p>
                         <form name="leave-organization" action="{% url 'bom:settings' tab_anchor=ORGANIZATION_TAB %}" method="post" class="col s12" enctype="multipart/form-data">
                             {% csrf_token %}
-                            <button class="waves-effect waves-light btn red lighten-1" type="submit" name="submit-leave-organization">{% trans "Leave Organization" %}</button>
+                            <button class="waves-effect waves-light btn red lighten-1" type="submit" name="submit-leave-organization">{% trans "جدا شدن از سازمان" %}</button>
                         </form>
                     </div>
                 </div>

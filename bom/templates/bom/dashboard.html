@@ -58,7 +58,7 @@
                             <div class="col s10 m6">
                                 <select name="part-action">
                                     <option value="" disabled selected>انتخاب عملیات</option>
-                                    <option name="submit-part-delete">{% trans "Delete" %}</option>
+                                    <option name="submit-part-delete">{% trans "حذف" %}</option>
                                 </select>
                                 <label>Action</label>
                             </div>
@@ -67,7 +67,7 @@
                                 <span><a class="btn-flat waves-green" href="#" onclick="disableActionCheckboxColumn()">انصراف</a></span>
                             </div>
                         </div>
-                        <span><a class="btn-flat action-checkbox-show" href="#" onclick="enableActionCheckboxColumn()"><i class="material-icons right">settings</i>{% trans "Manage" %}</a></span>
+                        <span><a class="btn-flat action-checkbox-show" href="#" onclick="enableActionCheckboxColumn()"><i class="material-icons right">settings</i>{% trans "مدیریت" %}</a></span>
                     {% endif %}
                 </div>
                 <div class="col s6 left-align">
@@ -95,11 +95,11 @@
 
                             <th class="text-normal td-small">ورژن</th>
 
-                            <th class="text-normal td-small">{% trans "Seller Part Number" %}</th>
+                            <th class="text-normal td-small">{% trans "کد تأمین کننده" %}</th>
 
-                            <th class="text-normal td-small">{% trans "Seller" %}</th>
+                            <th class="text-normal td-small">{% trans "تأمین کننده" %}</th>
 
-                            <th class="text-normal td-small">{% trans "Unit Cost" %}</th>
+                            <th class="text-normal td-small">{% trans "قیمت" %}</th>
 
                             <th class="text-normal td-med">گزینه‌ها</th>
                         </tr>
@@ -139,7 +139,7 @@
                                             <i class="material-icons green-text text-lighten-1 right">edit</i></a>
                                         {% if part_rev.part.optimal_seller.id %}
                                         <a class="green-text text-lighten-1" href="{% url 'bom:sellerpart-edit' sellerpart_id=part_rev.part.optimal_seller.id %}">
-                                            <i class="material-icons green-text text-lighten-1 right" title="{% trans "Cost and Seller" %}">attach_money</i></a>
+                                            <i class="material-icons green-text text-lighten-1 right" title="{% trans "قیمت و تأمین کننده" %}">attach_money</i></a>
                                         {% else %}
                                         <a class="green-text text-lighten-1" href="{% url 'bom:part-info' part_id=part_rev.part.id %}?tab_anchor=sourcing">
                                             <i class="material-icons green-text text-lighten-1 right" title="تأمین کننده">local_airport</i></a>
