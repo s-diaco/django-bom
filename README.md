@@ -7,34 +7,78 @@ BOM can be added to an existing (or new) Django project, or stand alone on its o
 If you already have a django project, you can skip to [Add Django Bom To Your App](#add-django-bom-to-your-app), otherwise [Start From Scratch: Add to new Django project](#start-from-scratch-add-to-a-new-django-project) to add it to a new django project, or [Start From Scratch: Use as standalone Django project](#start-from-scratch-use-as-a-standalone-django-project).
 
 ## Table of contents
-   * [Start From Scratch: Add to new Django project](#start-from-scratch-add-to-a-new-django-project)
    * [Add Django Bom To Your App](#add-django-bom-to-your-app)
    * [Start From Scratch: Use as standalone Django project](#start-from-scratch-use-as-a-standalone-django-project)
    * [Start from docker](#start-from-docker-recommended)
    * [Backup and restore database](#backup-and-restore-database-if-using-docker-compose-and-postgres)
+   * [Uninstall](#uninstall)
    * [Customize Base Template](#customize-base-template)
    * [Integrations](#integrations)
    * [Contributing](#contributing)
    * [Installation pitfalls](#installation-pitfalls)
-   
-## Start From Scratch: Add to a new Django project
-1. To start from scratch we recommend setting up a virtual environment using Python 3.8.13
+
+## Start from docker (Recommended)
+1.1. create .env and .env.db files or use example files (just rename them).
+
+1.2. If you have a problem accessing pypi add a mirror link to Dockerfile before install pip requirements:
 ```
-virtualenv -p python3 mysite
-cd mysite
-source bin/activate
+# Set the environment variable to use the mirror PyPI URL
+ENV PIP_INDEX_URL=https://mirrors.sustech.edu.cn/pypi/web/simple
+```
+1.3. Go to project dir
+```
+cd project_dir
+```
+2. Build and run the containers
+```
+docker compose up --build -d
+```
+3. Prepare django (will flush database):
+```
+docker compose exec web sh entrypoint.sh
+```
+4. To show compiled translations:
+```
+docker compose restart
 ```
 
-2. From here install django, and set up your project.
+## Backup and restore database (If using docker-compose and postgres)
+Backup bom_db:
 ```
-pip install django
-django-admin startproject mysite
-cd mysite
-python manage.py migrate
-python manage.py createsuperuser # make a user for your development environment
+docker exec -t lithium_bom-db-1 pg_dump -c -U bom_user bom_db | gzip > ./dump_bom_db_$(date +"%Y-%m-%d_%H_%Ma_%S").sql.gz
+```
+Backup all:
+```
+docker exec -t lithium_bom-db-1 pg_dumpall -c -U bom_user | gzip > ./dump_all_bom_db_$(date +"%Y-%m-%d_%H_%Ma_%S").sql.gz
+```
+Restore bom_db:
+```
+gunzip < dump_file.sql.gz | docker exec -i lithium_bom-db-1 psql -U bom_user -d bom_db
+```
+or
+```
+gunzip < dump_file.sql.gz | docker compose exec -T db psql -U bom_user -d bom_db
+```
+Restore bom_db (Unzipped dump on Windows):
+```
+cat dump_file.sql | docker exec -i lithium_bom-db-1 psql -U bom_user -d bom_db
 ```
 
-3. Continue on to [Add Django Bom To Your App](#add-django-bom-to-your-app).
+## Uninstall
+to take the server down and remove images:
+```
+docker compose down -v --rmi local
+```
+
+## Test API
+Obtain a token:
+```
+curl -X POST -d "username=yourusername&password=yourpassword" http://127.0.0.1:1313/api/v1/auth/login/
+```
+Use the obtained token to access the protected endpoint:
+```
+curl -H "Authorization: Bearer youraccesstoken" http://127.0.0.1:1313/api/v1/items/
+```
 
 ## Add Django Bom To Your App
 django-bom is a [reusable django application](https://docs.djangoproject.com/en/1.11/intro/reusable-apps/). If you don't already have a django project, you can follow some quick steps below to get up and running, or read about creating your first django app [here](https://docs.djangoproject.com/en/1.11/intro/tutorial01/).
@@ -96,112 +140,6 @@ BOM_CONFIG = {}
    to manage the bom (you'll need the Admin app enabled).
 
 6. Visit http://127.0.0.1:8000/bom/ to begin.
-
-   
-## Start From Scratch: Use as a standalone Django project
-1. To start from scratch we recommend setting up a virtual environment
-```
-virtualenv -p python3 .env
-source .env/bin/activate
-```
-
-2. From here install django, and set up your project.
-```
-git clone https://github.com/mpkasp/django-bom.git
-sudo apt-get install python3-dev (not always needed)
-cp bom/local_settings.py.example bom/local_settings.py
-pipenv install
-pipenv shell
-python manage.py migrate
-python manage.py runserver
-```
-## Start from docker (Recommended)
-1.1. create .env and .env.db files or use example files (just rename them).
-
-1.2. If you have a problem accessing pypi (like I do) add a mirror link to Dockerfile before install pip requirements:
-```
-# Set the environment variable to use the mirror PyPI URL
-ENV PIP_INDEX_URL=https://mirrors.sustech.edu.cn/pypi/web/simple
-```
-1.3. Go to project dir
-```
-cd project_dir
-```
-2. Build and run the containers
-```
-docker compose up --build
-```
-optional to skip next steps (will flush database):
-```
-docker compose -f docker-compose.yml exec web sh entrypoint.sh
-```
-and then to fix showing compiled trnslations:
-```
-docker compose restart
-```
-3. Compile the translations
-```
-docker compose -f docker-compose.yml exec web python manage.py compilemessages -l fa_IR
-```
-4. Run entrypoint to check if database connection is OK
-```
-docker compose -f docker-compose.yml exec web sh entrypoint.sh
-```
-5. Make the migrations
-```
-docker compose -f docker-compose.yml exec web python manage.py makemigrations --noinput
-```
-6. Run the migrations
-```
-docker compose -f docker-compose.yml exec web python manage.py migrate --noinput
-```
-7. Place static files in the docker volume
-```
-docker compose -f docker-compose.yml exec web python manage.py collectstatic --noinput
-```
-8. Create a superuser (if it's first time)
-```
-docker compose -f docker-compose.yml exec -it web python manage.py createsuperuser
-```
-
-## Backup and restore database (If using docker-compose and postgres)
-Backup bom_db:
-```
-docker exec -t lithium_bom-db-1 pg_dump -c -U bom_user bom_db | gzip > ./dump_bom_db_$(date +"%Y-%m-%d_%H_%Ma_%S").sql.gz
-```
-Backup all:
-```
-docker exec -t lithium_bom-db-1 pg_dumpall -c -U bom_user | gzip > ./dump_all_bom_db_$(date +"%Y-%m-%d_%H_%Ma_%S").sql.gz
-```
-Restore bom_db:
-```
-gunzip < dump_file.sql.gz | docker exec -i lithium_bom-db-1 psql -U bom_user -d bom_db
-```
-or
-```
-gunzip < dump_file.sql.gz | docker compose -f docker-compose.yml exec -T db psql -U bom_user -d bom_db
-```
-Restore bom_db (Unzipped dump on Windows):
-```
-cat dump_file.sql | docker exec -i lithium_bom-db-1 psql -U bom_user -d bom_db
-```
-
-## Uninstall
-to take the server down and remove images:
-```
-docker compose down -v --rmi local
-```
-
-## Test API
-Obtain a token:
-```
-curl -X POST -d "username=yourusername&password=yourpassword" http://127.0.0.1:1313/api/v1/auth/login/
-```
-Use the obtained token to access the protected endpoint:
-```
-curl -H "Authorization: Bearer youraccesstoken" http://127.0.0.1:1313/api/v1/items/
-```
-
 
 ## Customize Base Template
 The base template can be customized to your pleasing. Just add the following configuration to your settings.py:
