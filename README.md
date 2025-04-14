@@ -37,35 +37,27 @@ docker compose up --build -d
 ```
 docker compose exec web sh entrypoint.sh
 ```
-4. To show compiled translations:
-```
-docker compose restart
-```
 
 ## Backup and restore database (If using docker-compose and postgres)
 Backup bom_db:
 ```
-docker exec -t lithium_bom-db-1 pg_dump -c -U bom_user bom_db | gzip > ./dump_bom_db_$(date +"%Y-%m-%d_%H_%Ma_%S").sql.gz
+docker compose exec -T pg_dump -c -U bom_user bom_db | gzip > ./dump_bom_db_$(date +"%Y-%m-%d_%H_%Ma_%S").sql.gz
 ```
 Backup all:
 ```
-docker exec -t lithium_bom-db-1 pg_dumpall -c -U bom_user | gzip > ./dump_all_bom_db_$(date +"%Y-%m-%d_%H_%Ma_%S").sql.gz
+docker compose exec -T pg_dumpall -c -U bom_user | gzip > ./dump_all_bom_db_$(date +"%Y-%m-%d_%H_%Ma_%S").sql.gz
 ```
 Restore bom_db:
-```
-gunzip < dump_file.sql.gz | docker exec -i lithium_bom-db-1 psql -U bom_user -d bom_db
-```
-or
 ```
 gunzip < dump_file.sql.gz | docker compose exec -T db psql -U bom_user -d bom_db
 ```
 Restore bom_db (Unzipped dump on Windows):
 ```
-cat dump_file.sql | docker exec -i lithium_bom-db-1 psql -U bom_user -d bom_db
+cat dump_file.sql | docker compose exec -T db psql -U bom_user -d bom_db
 ```
 
 ## Uninstall
-to take the server down and remove images:
+to take the server down and remove images and volumes (including database volume):
 ```
 docker compose down -v --rmi local
 ```
