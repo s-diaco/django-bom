@@ -39,19 +39,15 @@ docker compose exec web sh entrypoint.sh
 ```
 
 ## Backup and restore database (If using docker-compose and postgres)
-Backup bom_db:
+Backup:
 ```
-docker compose exec -T pg_dump -c -U bom_user bom_db | gzip > ./dump_bom_db_$(date +"%Y-%m-%d_%H_%Ma_%S").sql.gz
+docker compose exec -T db pg_dump -c -U bom_user bom_db | gzip > ./dump_bom_db_$(date +"%Y-%m-%d_%H_%M_%S").sql.gz
 ```
-Backup all:
-```
-docker compose exec -T pg_dumpall -c -U bom_user | gzip > ./dump_all_bom_db_$(date +"%Y-%m-%d_%H_%Ma_%S").sql.gz
-```
-Restore bom_db:
+Restore:
 ```
 gunzip < dump_file.sql.gz | docker compose exec -T db psql -U bom_user -d bom_db
 ```
-Restore bom_db (Unzipped dump on Windows):
+Restore (Unzipped dump on Windows):
 ```
 cat dump_file.sql | docker compose exec -T db psql -U bom_user -d bom_db
 ```
