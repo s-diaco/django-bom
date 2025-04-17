@@ -12,6 +12,7 @@ services:
       - ${API_PORT}
     depends_on:
       - db
+    restart: always  # Critical service, should always restart
   nginx:
     build: ./nginx
     volumes:
@@ -20,12 +21,14 @@ services:
       - "${NGINX_PORT}:80"
     depends_on:
       - web
+    restart: always  # Reverse proxy, should always be available
   db:
     image: postgres:16-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
       - ./.env.db
+    restart: always  # Database, critical for the application
   backup:
     image: postgres:16-alpine
     env_file:
@@ -37,12 +40,13 @@ services:
       mkdir -p /backups &&
       while true; do
         pg_dump -U $POSTGRES_USER -d $POSTGRES_DB | gzip > /backups/dump_$POSTGRES_DB_$(date +%Y%m%d%H%M%S).sql.gz &&
-        ls -tp /backups | grep -v '/$' | tail -n +8 | xargs -I {} rm -- /backups/{};
+        ls -tp /backups | grep -v '/$' | tail -n +8 | xargs -I {} rm -- /backups/{}; 
         sleep {BACKUP_INTERVAL};
       done
       "
     depends_on:
       - db
+    restart: unless-stopped  # Backup service, can be manually stopped if needed
 
 volumes:
   postgres_data:
