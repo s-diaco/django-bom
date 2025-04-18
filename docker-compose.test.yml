@@ -1,0 +1,11 @@
+services:
+  test:
+    build:
+      context: .
+      args:
+        REQUIREMENTS_FILE: requirements-dev.lock
+    command: python manage.py test
+    restart: "no"
+
+volumes:
+  postgres_test_data:

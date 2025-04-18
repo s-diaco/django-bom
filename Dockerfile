@@ -16,8 +16,9 @@ RUN apt-get update && apt-get install -y netcat-openbsd gettext
 # ENV PIP_INDEX_URL=https://mirrors.sustech.edu.cn/pypi/web/simple
 
 # Install pip requirements
-COPY requirements.lock .
-RUN sed '/-e/d' requirements.lock > requirements.txt
+ARG REQUIREMENTS_FILE=requirements.lock
+COPY ${REQUIREMENTS_FILE} .
+RUN sed '/-e/d' ${REQUIREMENTS_FILE} > requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt
 # If caching pip packages is not needed, use this line instead:
 # RUN pip install -r requirements.txt

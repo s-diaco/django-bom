@@ -58,6 +58,15 @@ to take the server down and remove images and volumes (including database volume
 docker compose down -v --rmi local
 ```
 
+## Run the tests
+```
+docker compose --env-file .env.test -f docker-compose.test.yml up --abort-on-container-exit --remove-orphans
+```
+Cleanup after running the tests:
+```
+docker compose -f docker-compose.test.yml down -v --rmi local
+```
+
 ## Test API
 Obtain a token:
 ```

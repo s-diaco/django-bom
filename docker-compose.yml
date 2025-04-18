@@ -4,8 +4,6 @@ services:
   web:
     build: .
     command: gunicorn bom.wsgi:application --bind 0.0.0.0:${API_PORT}
-    env_file:
-      - ./.env
     volumes:
       - static_volume:/app/staticfiles
     expose:
@@ -13,10 +11,10 @@ services:
     depends_on:
       - db
     restart: always
-  nginx:
-    image: nginx:alpine
     env_file:
       - ./.env
+  nginx:
+    image: nginx:alpine
     volumes:
       - static_volume:/home/app/web/staticfiles
       - ./nginx/templates:/etc/nginx/templates/
@@ -25,27 +23,26 @@ services:
     depends_on:
       - web
     restart: always
+    env_file:
+      - ./.env
   db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-    env_file:
-      - ./.env.db
     restart: always
-  backup:
-    image: postgres:16-alpine
     env_file:
-      - ./.env.db
+      - ./.env
+  backup:
+    image: postgres:17-alpine
+    env_file:
+      - ./.env
     volumes:
       - ./postgres_backup:/backups
     entrypoint: >
       sh -c "
-      mkdir -p /backups &&
-      while true; do
-        pg_dump -U $POSTGRES_USER -d $POSTGRES_DB | gzip > /backups/dump_$POSTGRES_DB_$(date +%Y%m%d%H%M%S).sql.gz &&
-        ls -tp /backups | grep -v '/$' | tail -n +8 | xargs -I {} rm -- /backups/{}; 
-        sleep {BACKUP_INTERVAL};
-      done
+      echo '0 1 * * * PGPASSWORD=$POSTGRES_PASSWORD pg_dump -h db -p $SQL_PORT -U $POSTGRES_USER -d $POSTGRES_DB | gzip > /backups/dump_${POSTGRES_DB}_$(date +%Y-%m-%d_%H%M%S)GMT.sql.gz &&
+      ls -tp /backups | grep -v /$ | tail -n +8 | xargs -I {} rm -- /backups/{}' | crontab - &&
+      crond -f
       "
     depends_on:
       - db
