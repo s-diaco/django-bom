@@ -12,23 +12,26 @@ services:
       - ${API_PORT}
     depends_on:
       - db
-    restart: always  # Critical service, should always restart
+    restart: always
   nginx:
-    build: ./nginx
+    image: nginx:alpine
+    env_file:
+      - ./.env
     volumes:
       - static_volume:/home/app/web/staticfiles
+      - ./nginx/templates:/etc/nginx/templates/
     ports:
       - "${NGINX_PORT}:80"
     depends_on:
       - web
-    restart: always  # Reverse proxy, should always be available
+    restart: always
   db:
     image: postgres:16-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
       - ./.env.db
-    restart: always  # Database, critical for the application
+    restart: always
   backup:
     image: postgres:16-alpine
     env_file:
@@ -46,7 +49,7 @@ services:
       "
     depends_on:
       - db
-    restart: unless-stopped  # Backup service, can be manually stopped if needed
+    restart: unless-stopped
 
 volumes:
   postgres_data:
