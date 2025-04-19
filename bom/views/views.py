@@ -6,7 +6,7 @@ from json import dumps
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
@@ -21,7 +21,7 @@ from django.db.models import (
 from django.utils.dateparse import parse_date
 from django.db.models.aggregates import Max
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.encoding import smart_str
@@ -2593,6 +2593,28 @@ def part_revision_delete(request, part_id, part_revision_id):
 
     return HttpResponseRedirect(reverse("bom:part-info", kwargs={"part_id": part.id}))
 
+@login_required
+def password_reset(request):
+    if request.method == "POST":
+        current_password = request.POST.get("current_password")
+        new_password = request.POST.get("new_password")
+        confirm_password = request.POST.get("confirm_password")
+
+        if not request.user.check_password(current_password):
+            messages.error(request, "Current password is incorrect.")
+            return redirect("bom:settings")
+
+        if new_password != confirm_password:
+            messages.error(request, "New passwords do not match.")
+            return redirect("bom:settings")
+
+        request.user.set_password(new_password)
+        request.user.save()
+        update_session_auth_hash(request, request.user)  # Keep the user logged in after password change
+        messages.success(request, "Your password has been successfully reset.")
+        return redirect("bom:settings")
+
+    return redirect("bom:settings")
 
 class Help(TemplateView):
     name = "help"
