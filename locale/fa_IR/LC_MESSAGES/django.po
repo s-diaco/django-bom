@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-19 17:32+0330\n"
+"POT-Creation-Date: 2025-04-19 19:35+0330\n"
 "PO-Revision-Date: 2024-03-24 06:55+0330\n"
 "Last-Translator: Diaco Soltanpour dyaco8464@yahoo.com\n"
 "Language-Team: Farsi (persian) dyaco8464@yahoo.com\n"
@@ -287,6 +287,20 @@ msgstr "تنظیمات"
 #: bom/views/views.py:2354
 msgid "Edit Seller Part"
 msgstr "ویرایش اطلاعات بازرگانی متریال"
+
+#: bom/views/views.py:2605
+#, fuzzy
+#| msgid "Reset Password"
+msgid "Current password is incorrect."
+msgstr "رمز عبور فعلی اشتباه است."
+
+#: bom/views/views.py:2609
+msgid "New passwords do not match."
+msgstr "رمز عبورهای جدید یکسان نیستند."
+
+#: bom/views/views.py:2617
+msgid "Your password has been successfully reset."
+msgstr "رمز عبور شما با موفقیت عوض شد."
 
 #~ msgid "Reset Your Password"
 #~ msgstr "تغییر رمز عبور"
