@@ -1,7 +1,7 @@
 [project]
 name = "lithium-bom"
-version = "0.2.0"
-description = "A django app to manage a bill of materials."
+version = "1.0.0"
+description = "django app to manage a bill of materials."
 authors = [
     { name = "Diaco Soltanpour", email = "dyaco8464@yahoo.com" }
 ]
