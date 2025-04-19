@@ -16,6 +16,11 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# Ensure the log directory exists
+LOG_DIR = os.path.join(BASE_DIR, "log")
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR)
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
@@ -131,7 +136,7 @@ LOGGING = {
         "logfile": {
             "class": "logging.handlers.WatchedFileHandler",
             "filename": (
-                os.path.join(BASE_DIR, "log/bom.log") if not DEBUG else "./bom_dev.log"
+                os.path.join(LOG_DIR, "bom.log") if not DEBUG else "./bom_dev.log"
             ),
         },
     },

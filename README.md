@@ -33,7 +33,11 @@ cd project_dir
 ```
 docker compose up --build -d
 ```
-3. Prepare django (will flush database):
+3. Restore database from dump (optional)
+```
+gunzip < dump_file.sql.gz | docker compose exec -T db psql -U bom_user -d bom_db
+```
+4. Prepare django:
 ```
 docker compose exec web sh entrypoint.sh
 ```

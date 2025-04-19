@@ -35,7 +35,10 @@ services:
   backup:
     image: postgres:17-alpine
     env_file:
-      - ./.env
+      - path: ./.env
+        required: true
+      - path: ./.env.db
+        required: false
     volumes:
       - ./postgres_backup:/backups
     entrypoint: >

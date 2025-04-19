@@ -9,17 +9,18 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED=1
 
-# install system dependencies. required for "entrypoint.sh"
-RUN apt-get update && apt-get install -y netcat-openbsd gettext
+# Required for "entrypoint.sh, makemessages"
+RUN apt-get update && \
+    apt-get install -y netcat-openbsd gettext \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set the environment variable to use the mirror PyPI URL
 # ENV PIP_INDEX_URL=https://mirrors.sustech.edu.cn/pypi/web/simple
 
 # Install pip requirements
 ARG REQUIREMENTS_FILE=requirements.lock
-COPY ${REQUIREMENTS_FILE} .
-RUN sed '/-e/d' ${REQUIREMENTS_FILE} > requirements.txt
-RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt
+COPY ${REQUIREMENTS_FILE} ./
+RUN --mount=type=cache,target=/root/.cache/pip pip install -r ${REQUIREMENTS_FILE}
 # If caching pip packages is not needed, use this line instead:
 # RUN pip install -r requirements.txt
 
@@ -27,7 +28,6 @@ RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt
 WORKDIR /app
 COPY . /app
 
-# create the appropriate directories
 RUN mkdir /app/staticfiles
 RUN mkdir /app/log
 
