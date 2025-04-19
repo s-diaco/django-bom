@@ -2593,6 +2593,7 @@ def part_revision_delete(request, part_id, part_revision_id):
 
     return HttpResponseRedirect(reverse("bom:part-info", kwargs={"part_id": part.id}))
 
+
 @login_required
 def password_reset(request):
     if request.method == "POST":
@@ -2601,20 +2602,23 @@ def password_reset(request):
         confirm_password = request.POST.get("confirm_password")
 
         if not request.user.check_password(current_password):
-            messages.error(request, "Current password is incorrect.")
+            messages.error(request, _("Current password is incorrect."))
             return redirect("bom:settings")
 
         if new_password != confirm_password:
-            messages.error(request, "New passwords do not match.")
+            messages.error(request, _("New passwords do not match."))
             return redirect("bom:settings")
 
         request.user.set_password(new_password)
         request.user.save()
-        update_session_auth_hash(request, request.user)  # Keep the user logged in after password change
-        messages.success(request, "Your password has been successfully reset.")
+        update_session_auth_hash(
+            request, request.user
+        )  # Keep the user logged in after password change
+        messages.success(request, _("Your password has been successfully reset."))
         return redirect("bom:settings")
 
     return redirect("bom:settings")
+
 
 class Help(TemplateView):
     name = "help"

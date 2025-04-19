@@ -13,6 +13,7 @@ bom_patterns = [
     path("report/", views.report, name="report"),
     # path('bom/', views.home, name='home'),
     path("create-organization/", views.organization_create, name="organization-create"),
+    path("password-reset/", views.password_reset, name="password_reset"),
     path("help/", views.Help.as_view(), name=views.Help.name),
     path("search-help/", views.search_help, name="search-help"),
     path("bom-signup/", views.bom_signup, name="bom-signup"),
@@ -229,5 +230,4 @@ urlpatterns = [
         name="logout",
     ),
     path("api/v1/", include("api.urls_api")),
-    path("password-reset/", views.password_reset, name="password_reset"),
 ]

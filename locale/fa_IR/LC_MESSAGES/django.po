@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-19 13:12+0330\n"
+"POT-Creation-Date: 2025-04-19 17:32+0330\n"
 "PO-Revision-Date: 2024-03-24 06:55+0330\n"
 "Last-Translator: Diaco Soltanpour dyaco8464@yahoo.com\n"
 "Language-Team: Farsi (persian) dyaco8464@yahoo.com\n"
@@ -195,9 +195,10 @@ msgstr "تاریخ شروع"
 msgid "End Date"
 msgstr "تاریخ پایان"
 
-#: bom/templates/bom/settings.html:20 bom/templates/bom/settings.html:330
+#: bom/templates/bom/settings.html:18 bom/templates/bom/settings.html:330
+#: bom/templates/bom/settings.html:353
 msgid "Reset Password"
-msgstr "رمز عبور"
+msgstr "تغییر رمز عبور"
 
 #: bom/templates/bom/settings.html:25
 #, fuzzy
@@ -239,9 +240,21 @@ msgstr "توجه: تنها راه بازگشت به سازمان دعوت از �
 msgid "Leave Organization"
 msgstr "جدا شدن از سازمان"
 
-#: bom/templates/bom/settings.html:333
-msgid "Reset Your Password"
-msgstr "بازنشانی رمز عبور"
+#: bom/templates/bom/settings.html:335
+#, fuzzy
+#| msgid "Reset Password"
+msgid "Current Password"
+msgstr "رمز عبور فعلی"
+
+#: bom/templates/bom/settings.html:341
+#, fuzzy
+#| msgid "Reset Password"
+msgid "New Password"
+msgstr "رمز عبور جدید"
+
+#: bom/templates/bom/settings.html:347
+msgid "Confirm New Password"
+msgstr "تکرار رمز عبور جدید"
 
 #: bom/templates/registration/login.html:5
 #: bom/templates/registration/login.html:10
@@ -274,3 +287,6 @@ msgstr "تنظیمات"
 #: bom/views/views.py:2354
 msgid "Edit Seller Part"
 msgstr "ویرایش اطلاعات بازرگانی متریال"
+
+#~ msgid "Reset Your Password"
+#~ msgstr "تغییر رمز عبور"

@@ -116,9 +116,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-if "DEBUG" in os.environ:
-    DEBUG = os.environ.get("DEBUG")
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 LOGGING = {
     "version": 1,
@@ -286,12 +284,10 @@ DATABASES = {
 
 # TODO: fix this
 CSRF_TRUSTED_ORIGINS = [
-    "https://127.0.0.1",
     "http://localhost:1313",
-    "http://127.0.0.1",
     "http://127.0.0.1:1313",
 ]
 if "CSRF_TRUSTED_ORIGINS" in os.environ and os.environ.get("CSRF_TRUSTED_ORIGINS"):
     # 'CSRF_TRUSTED_ORIGINS' should be a single string of hosts with a space between each.
-    # For example: 'CSRF_TRUSTED_ORIGINS=http://localhost:1313 https://127.0.0.1 http://127.0.0.1:1313'
+    # For example: 'CSRF_TRUSTED_ORIGINS=http://localhost:1313 http://127.0.0.1:1313'
     CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS").split(" ")
