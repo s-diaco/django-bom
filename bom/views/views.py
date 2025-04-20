@@ -18,6 +18,7 @@ from django.db.models import (
     Subquery,
     prefetch_related_objects,
 )
+from django.forms import ValidationError
 from django.utils.dateparse import parse_date
 from django.db.models.aggregates import Max
 from django.http import HttpResponse, HttpResponseRedirect
@@ -1974,7 +1975,20 @@ def manage_bom(request, part_id, part_revision_id):
 @organization_admin
 def part_delete(request, part_id):
     part = get_object_or_404(Part, pk=part_id)
-    part.delete()
+    try:
+        # Check if the part is used in any BOMs
+        if Subpart.objects.filter(part_revision__part=part).exists():
+            raise ValidationError(
+                f"Cannot delete part {part.full_part_number()} because it is used in a BOM."
+            )
+        # Proceed with deletion if not used
+        part.delete()
+        messages.success(
+            request, f"Part {part.full_part_number()} deleted successfully."
+        )
+    except ValidationError as e:
+        # TODO: returns: Server Error (500)
+        messages.error(request, str(e))
     return HttpResponseRedirect(reverse("bom:home"))
 
 
