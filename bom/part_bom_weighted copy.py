@@ -1,0 +1,156 @@
+from djmoney.money import Money
+from .part_bom import PartBom, PartIndentedBomItem
+
+
+class PartBomWeighted(PartBom):
+    """
+    Part BOM with weighted cost calculation. This class is used to
+    calculate the cost of a part BOM with weighted costs. It is a
+    subclass of PartBom and extends its functionality to support
+    weighted costs.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.bom_unit_cost = Money(0, self._currency)
+
+    def insert_item(self, part):
+        """
+        Insert a part into the BOM tree and update the cost of the parent
+        part. This method is called when a new part is added to the BOM.
+        It updates the cost of the parent part and all its ancestors
+        recursively.
+        :param part: BOM item to be inserted
+        :type part: PartBomWeightedItem
+        """
+        parent = self.parts.get(part.parent_id)
+        if parent:
+            parent.childs_cost += part.bom_unit_cost * part.quantity
+            parent.childs_quantity += part.quantity
+            parent.childs_residue_quantity += part.residue_quantity
+            if parent.part_revision.material in ["with_loi"]:
+                parent.bom_unit_cost = (
+                    parent.chils_cost / parent.childs_residue_quantity
+                )
+            else:
+                parent.bom_unit_cost = parent.childs_cost / parent.childs_quantity
+            # TODO: Prevent infinite loop
+            self.insert_item(parent)
+        else:
+            # root node
+            self.bom_unit_cost = part.bom_unit_cost
+
+    def update_as_weighted_bom(self, part):
+        """
+        Update "childs_cost" and "childs_quantity" for parent "PartBomItem"s
+        one by one all the way up to the root node of the tree and
+        calculate unit_cost
+
+        :param part: BOM item whom parents will be updated
+        :type part: PartBomWeightedItem
+        """
+
+        if part.indent_level:
+
+            def update_parent(child_part, childs_old_cost_per_qty=0):
+                parent_part = self.parts[child_part.parent_id]
+                parents_old_cost_per_qty = 0
+                if parent_part.childs_quantity:
+                    parents_old_cost_per_qty = (
+                        parent_part.childs_cost / parent_part.childs_quantity
+                    )
+                # Revert last calculation to add the new one later
+                if child_part.childs_quantity:
+                    value_to_sub = childs_old_cost_per_qty
+                    if child_part.seller_part:
+                        if (
+                            parent_part.part_revision.material in ["with_loi"]
+                            and child_part.part_revision.tolerance is not None
+                            and child_part.part_revision.tolerance.isnumeric()
+                        ):
+                            value_to_sub += child_part.seller_part.unit_cost / (
+                                1 - float(child_part.part_revision.tolerance) / 100
+                            )
+                        else:
+                            value_to_sub += child_part.seller_part.unit_cost
+                    value_to_sub *= child_part.quantity
+                    parent_part.childs_cost -= value_to_sub
+                # If its the first time for child_item to be sent for parent update
+                else:
+                    parent_part.childs_quantity += child_part.quantity
+                cost_to_add = child_part.childs_cost
+                if child_part.seller_part:
+                    if (
+                        parent_part.part_revision.material in ["with_loi"]
+                        and child_part.part_revision.tolerance is not None
+                        and child_part.part_revision.tolerance.isnumeric()
+                    ):
+                        cost_to_add += child_part.seller_part.unit_cost / (
+                            1 - float(child_part.part_revision.tolerance) / 100
+                        )
+                    else:
+                        cost_to_add += child_part.seller_part.unit_cost
+                if child_part.childs_quantity:
+                    cost_to_add = (
+                        cost_to_add / child_part.childs_quantity * child_part.quantity
+                    )
+                else:
+                    cost_to_add *= child_part.quantity
+                parent_part.childs_cost += cost_to_add
+                if parent_part.indent_level:
+                    update_parent(
+                        child_part=parent_part,
+                        childs_old_cost_per_qty=parents_old_cost_per_qty,
+                    )
+                # "parent_part" is the root part
+                else:
+                    if parent_part.childs_quantity:
+                        self.unit_cost = (
+                            parent_part.childs_cost / parent_part.childs_quantity
+                        )
+                    if (parent_part.seller_part) and (
+                        parent_part.seller_part.unit_cost is not None
+                    ):
+                        self.unit_cost += parent_part.seller_part.unit_cost
+
+            update_parent(child_part=part)
+        else:
+            # TODO: Fix double calc
+            # "part" is root
+            if (part.seller_part) and (part.seller_part.unit_cost is not None):
+                self.unit_cost = part.seller_part.unit_cost
+
+    def update_bom_for_part(self, bom_part):
+        if bom_part.do_not_load:
+            bom_part.order_quantity = 0
+            bom_part.order_cost = 0
+            return
+
+        self.insert_item(bom_part)
+
+        if bom_part.seller_part:
+            try:
+                bom_part.order_quantity = bom_part.seller_part.order_quantity(
+                    bom_part.total_extended_quantity
+                )
+                bom_part.order_cost = (
+                    bom_part.total_extended_quantity * bom_part.seller_part.unit_cost
+                )
+            except AttributeError:
+                pass
+        else:
+            self.missing_item_costs += 1
+
+
+class PartBomWeightedItem(PartIndentedBomItem):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.childs_quantity = 0
+        if not self.part_revision.tolerance:
+            self.part_revision.tolerance = 0
+        self.residue_quantity = self.quantity * (
+            1 - (self.part_revision.tolerance / 100)
+        )
+        self.childs_residue_quantity = 0
+        self.childs_cost = Money(0, self._currency)
+        self.bom_unit_cost = Money(0, self._currency)
