@@ -6,13 +6,11 @@ from math import ceil
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
-from djmoney.models.fields import CurrencyField, MoneyField
-from djmoney.settings import CURRENCY_CHOICES
+from djmoney.models.fields import CURRENCY_CHOICES, CurrencyField, MoneyField
 from social_django.models import UserSocialAuth
 
 from bom.part_bom_weighted import PartBomWeighted, PartBomWeightedItem
@@ -584,7 +582,6 @@ class PartRevision(models.Model):
     pin_count = models.DecimalField(
         max_digits=3, decimal_places=0, default=None, null=True, blank=True
     )
-    # TODO: unmaching parameter count
     tolerance = models.CharField(
         max_length=6, validators=[validate_pct], default=None, null=True, blank=True
     )
@@ -849,20 +846,6 @@ class PartRevision(models.Model):
         self.searchable_synopsis = self.generate_synopsis(True)
         self.displayable_synopsis = self.generate_synopsis(False)
         super(PartRevision, self).save(*args, **kwargs)
-
-    # Override the delete method
-    def delete(self, *args, **kwargs):
-        # Check if the PartRevision is referenced in other tables
-        if Subpart.objects.filter(part_revision=self).exists():
-            raise ValidationError(
-                f"Cannot delete PartRevision {self} because it is referenced in Subpart."
-            )
-        if AssemblySubparts.objects.filter(subpart__part_revision=self).exists():
-            raise ValidationError(
-                f"Cannot delete PartRevision {self} because it is referenced in AssemblySubparts."
-            )
-        # If no references exist, proceed with deletion
-        super().delete(*args, **kwargs)
 
     def indented(self, top_level_quantity=100, is_weighted_bom=True):
         def indented_given_bom(
