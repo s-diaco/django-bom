@@ -399,7 +399,7 @@ footer.page-footer>div.container>div.row>div.col>p{
     }
 
     body {
-        font-family: verdana, arial, sans-serif;
+        font-family: IRNazanin, verdana, arial, sans-serif;
         /*transform: scale(.7);*/
         /*transform-origin: left top;*/
     }
@@ -451,4 +451,5 @@ footer.page-footer>div.container>div.row>div.col>p{
     .pagination {
         display: none;
     }
+    
 }
