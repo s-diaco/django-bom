@@ -2493,6 +2493,7 @@ def part_revision_new(request, part_id):
             revision=request.POST.get("revision"),
             assembly=latest_revision.assembly,
         )
+        # TODO: checkif revision is duplicate
         if part_revision_new_form.is_valid():
             new_part_revision = part_revision_new_form.save()
 
