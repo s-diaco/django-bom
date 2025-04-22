@@ -80,63 +80,66 @@
         </tr>
         </thead>
         {% for bom_id, subpart in bom_items.items %}
-            {% if subpart.references|length > 25 %}
-                <div id="modal-{{ subpart.part.id }}-references" class="modal">
-                    <div class="modal-content">
-                        <h2>{{ subpart.part.full_part_number }} References</h2>
-                        <p>{{ subpart.references }}</p>
+            {% if subpart.indent_level %}
+                <!-- TODO: what does this do? -->
+                {% if subpart.references|length > 25 %}
+                    <div id="modal-{{ subpart.part.id }}-references" class="modal">
+                        <div class="modal-content">
+                            <h2>{{ subpart.part.full_part_number }} References</h2>
+                            <p>{{ subpart.references }}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <a href="#!" class="modal-close waves-effect green lighten-1 waves-green btn-flat">Ok</a>
+                        </div>
                     </div>
-                    <div class="modal-footer">
-                        <a href="#!" class="modal-close waves-effect green lighten-1 waves-green btn-flat">Ok</a>
-                    </div>
-                </div>
-            {% endif %}
-            {% if subpart.part_revision.description|length > 75 %}
-                <div id="modal-{{ subpart.part.id }}-synposis" class="modal">
-                    <div class="modal-content">
-                        <h2>{{ subpart.part.full_part_number }} Synposis</h2>
-                        <p>{{ subpart.part_revision.description }}</p>
-                    </div>
-                    <div class="modal-footer">
-                        <a href="#!" class="modal-close waves-effect green lighten-1 waves-green btn-flat">Ok</a>
-                    </div>
-                </div>
-            {% endif %}
-            <tr data-tt-id="{{ bom_id }}"
-                {% if subpart.parent_id %}data-tt-parent-id="{{ subpart.parent_id }}"{% endif %}>
-                <td class="text-normal printer-hide">{{ subpart.indent_level }}</td>
-                <td class="text-normal"><a href="{% url 'bom:part-info' part_id=subpart.part.id %}">{{ subpart.part.full_part_number }}</a></td>
-                <td class="text-normal">{{ subpart.quantity | floatformat }}</td>
-                <td class="text-normal printer-hide">{{ subpart.references | default:"-" | truncatechars:25 }}{% if subpart.references|length > 25 %}
-                    <a class="modal-trigger modal-{{ subpart.part.id }}-references" href="#modal-{{ subpart.part.id }}-references">&nbsp;[+]</a>
-                {% endif %}</td>
-                <td class="text-normal">{{ subpart.part_revision.description | truncatechars:75 }}{% if subpart.part_revision.description|length > 75 %}
-                    <a class="modal-trigger modal-{{ subpart.part.id }}-synposis" href="#modal-{{ subpart.part.id }}-synposis">&nbsp;[+]</a>
                 {% endif %}
-                <td class="text-normal printer-hide">{{ subpart.part_revision.revision }}</td>
-                <td class="text-normal printer-hide" id="bom-indented-seller-name-{{ subpart.part_revision.id }}">{{ subpart.seller_part.seller.name | default:"-" }}</td>
-                <td class="text-normal" id="bom-indented-unit-cost-{{ subpart.part_revision.id }}">{{ subpart.seller_part.unit_cost | default:"-" }}</td>
-                {% if subpart.indent_level == 1 and subpart.subpart is not None and manage %}
-                    <td>
-                        <a class='dropdown-trigger' href='#'
-                           data-target='dropdown{{ subpart.subpart.id }}'><i class="material-icons green-text">more_horiz</i></a>
-                        <!-- Dropdown Structure -->
-                        <ul id='dropdown{{ subpart.subpart.id }}' class='dropdown-content'>
-                            <li><a class="green-text text-lighten-1"
-                                   href="{% url 'bom:part-edit-subpart' part_id=part.id part_revision_id=part_revision_id subpart_id=subpart.subpart.id %}"><i
-                                    class="material-icons green-text text-lighten-1 right">edit</i>ویرایش با تغییر ورژن</a>
-                            <li class="divider" tabindex="-1"></li>
-                            <li><a class="red-text text-lighten-1"
-                                   href="{% url 'bom:part-remove-subpart' part_id=part.id part_revision_id=part_revision.id subpart_id=subpart.subpart.id %}"
-                                   onclick="return confirm('Are you sure you want to remove {{ subpart.part.full_part_number }}?')"><i
-                                    class="material-icons red-text text-lighten-1 right">delete_forever</i>{% trans "Delete" %}</a>
-                            </li>
-                        </ul>
-                    </td>
-                {% elif manage %}
-                    <td></td>
+                {% if subpart.part_revision.description|length > 75 %}
+                    <div id="modal-{{ subpart.part.id }}-synposis" class="modal">
+                        <div class="modal-content">
+                            <h2>{{ subpart.part.full_part_number }} Synposis</h2>
+                            <p>{{ subpart.part_revision.description }}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <a href="#!" class="modal-close waves-effect green lighten-1 waves-green btn-flat">Ok</a>
+                        </div>
+                    </div>
                 {% endif %}
-            </tr>
+                <tr data-tt-id="{{ bom_id }}"
+                    {% if subpart.parent_id %}data-tt-parent-id="{{ subpart.parent_id }}"{% endif %}>
+                    <td class="text-normal printer-hide">{{ subpart.indent_level }}</td>
+                    <td class="text-normal"><a href="{% url 'bom:part-info' part_id=subpart.part.id %}">{{ subpart.part.full_part_number }}</a></td>
+                    <td class="text-normal">{{ subpart.quantity | floatformat }}</td>
+                    <td class="text-normal printer-hide">{{ subpart.references | default:"-" | truncatechars:25 }}{% if subpart.references|length > 25 %}
+                        <a class="modal-trigger modal-{{ subpart.part.id }}-references" href="#modal-{{ subpart.part.id }}-references">&nbsp;[+]</a>
+                    {% endif %}</td>
+                    <td class="text-normal">{{ subpart.part_revision.description | truncatechars:75 }}{% if subpart.part_revision.description|length > 75 %}
+                        <a class="modal-trigger modal-{{ subpart.part.id }}-synposis" href="#modal-{{ subpart.part.id }}-synposis">&nbsp;[+]</a>
+                    {% endif %}
+                    <td class="text-normal printer-hide">{{ subpart.part_revision.revision }}</td>
+                    <td class="text-normal printer-hide" id="bom-indented-seller-name-{{ subpart.part_revision.id }}">{{ subpart.seller_part.seller.name | default:"-" }}</td>
+                    <td class="text-normal" id="bom-indented-unit-cost-{{ subpart.part_revision.id }}">{{ subpart.seller_part.unit_cost | default:"-" }}</td>
+                    {% if subpart.indent_level == 1 and subpart.subpart is not None and manage %}
+                        <td>
+                            <a class='dropdown-trigger' href='#'
+                            data-target='dropdown{{ subpart.subpart.id }}'><i class="material-icons green-text">more_horiz</i></a>
+                            <!-- Dropdown Structure -->
+                            <ul id='dropdown{{ subpart.subpart.id }}' class='dropdown-content'>
+                                <li><a class="green-text text-lighten-1"
+                                    href="{% url 'bom:part-edit-subpart' part_id=part.id part_revision_id=part_revision_id subpart_id=subpart.subpart.id %}"><i
+                                        class="material-icons green-text text-lighten-1 right">edit</i>ویرایش با تغییر ورژن</a>
+                                <li class="divider" tabindex="-1"></li>
+                                <li><a class="red-text text-lighten-1"
+                                    href="{% url 'bom:part-remove-subpart' part_id=part.id part_revision_id=part_revision.id subpart_id=subpart.subpart.id %}"
+                                    onclick="return confirm('Are you sure you want to remove {{ subpart.part.full_part_number }}?')"><i
+                                        class="material-icons red-text text-lighten-1 right">delete_forever</i>{% trans "Delete" %}</a>
+                                </li>
+                            </ul>
+                        </td>
+                    {% elif manage %}
+                        <td></td>
+                    {% endif %}
+                </tr>
+            {% endif %}
         {% empty %}
             <tr>
                 <td colspan="99" style="text-align: center; height: 20vh;"><i>این متریال شامل هیچ متریال دیگری نیست.</i></td>

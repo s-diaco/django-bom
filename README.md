@@ -18,7 +18,7 @@ If you already have a django project, you can skip to [Add Django Bom To Your Ap
    * [Installation pitfalls](#installation-pitfalls)
 
 ## Start from docker (Recommended)
-1.1. create .env and .env.db files or use example files (just rename them).
+1.1. create .env.prod and .env.db files or use example files (just rename them).
 
 1.2. If you have a problem accessing pypi add a mirror link to Dockerfile before install pip requirements:
 ```
@@ -31,7 +31,7 @@ cd project_dir
 ```
 2. Build and run the containers
 ```
-docker compose up --build -d
+docker compose --env-file .env.prod up --build -d
 ```
 3. Restore database from dump (optional)
 ```
@@ -59,7 +59,7 @@ cat dump_file.sql | docker compose exec -T db psql -U bom_user -d bom_db
 ## Uninstall
 to take the server down and remove images and volumes (including database volume):
 ```
-docker compose down --volumes --rmi local
+docker compose --env-file .env.prod down --volumes --rmi local
 ```
 
 ## Run the tests

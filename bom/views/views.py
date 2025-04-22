@@ -1332,6 +1332,9 @@ def part_info(request, part_id, part_revision_id=None):
         indented_bom = part_revision.indented(top_level_quantity=qty)
         # TODO: change "str(part_revision.id)" if possible
         total_bom_weight = indented_bom.parts[str(part_revision.id)].childs_quantity
+        childs_unit_cost = indented_bom.parts[
+            str(part_revision.id)
+        ].get_childs_unit_cost()
     except (RuntimeError, RecursionError):
         messages.error(
             request,
@@ -2487,7 +2490,7 @@ def part_revision_new(request, part_id):
         part_revision_new_form = PartRevisionNewForm(
             request.POST,
             part=part,
-            revision=next_revision_number,
+            revision=request.POST.get("revision"),
             assembly=latest_revision.assembly,
         )
         if part_revision_new_form.is_valid():

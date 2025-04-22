@@ -1,4 +1,5 @@
 {
+    "version": "0.2.0",
     "configurations": [
         {
             "name": "Django Debugger",
@@ -45,6 +46,19 @@
                     "remoteRoot": "/app"
                 }
             ]
+        },
+        {
+            "name": "Django Tests",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/manage.py",
+            "args": ["test"],
+            "django": true,
+            "justMyCode": true,
+            "env": {
+                "DJANGO_SETTINGS_MODULE": "bom.settings",
+                "PYTHONPATH": "${workspaceFolder}"
+            }
         }
     ]
 }

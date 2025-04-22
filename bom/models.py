@@ -552,7 +552,7 @@ class PartRevision(models.Model):
     configuration = models.CharField(
         max_length=1, choices=CONFIGURATION_TYPES, default="W"
     )
-    revision = models.CharField(max_length=4, db_index=True, default="1")
+    revision = models.CharField(max_length=12, db_index=True, default="1")
     assembly = models.ForeignKey(
         "Assembly", default=None, null=True, on_delete=models.CASCADE, db_index=True
     )
