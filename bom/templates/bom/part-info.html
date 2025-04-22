@@ -90,7 +90,9 @@
                 <div class="col s12 printer-hide">
                     <ul id="tabs" class="tabs tabs-fixed-width">
                         <li class="tab"><a id="specs-tab" href="#specs">مشخصات</a></li>
+                        {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
                         <li class="tab"><a id="bom-tab" href="#bom">درخت محصول</a></li>
+                        {% endif %}
                         <li class="tab"><a id="used-tab" href="#used">موارد استفاده</a></li>
                         <li class="tab"><a id="sourcing-tab" href="#sourcing">{% trans "Seller" %}</a></li>
                     </ul>
@@ -120,14 +122,17 @@
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">متریال:</div>
                                 <div class="col s8 l10">{{ part_revision.description }}</div>
                             </div>
-                            <div class="row">
-                                <div class="col s4 l2 text-right" style="padding-left: 0px;">پرت:</div>
-                                <div class="col s8 l10">{{ part_revision.tolerance|default:'-' }}{% if part_revision.tolerance %} %{% endif %}</div>
-                            </div>
+                            {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
                             <div class="row">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">مدل محاسبه قیمت:</div>
                                 <div class="col s8 l10">{% if part_revision.material == 'with_loi' %}محاسبه با احتساب پرت (LOI){% else %}محاسبه بدون احتساب پرت (LOI){% endif %}</div>
                             </div>
+                            {% else %}
+                            <div class="row">
+                                <div class="col s4 l2 text-right" style="padding-left: 0px;">پرت:</div>
+                                <div class="col s8 l10">{{ part_revision.tolerance|default:'-' }}{% if part_revision.tolerance %} %{% endif %}</div>
+                            </div>
+                            {% endif %}
                             <div class="row">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">وضعیت ورژن:</div>
                                 <div class="col s8 l10">{{ part_revision.get_configuration_display|default:'نامشخص' }}&nbsp;{% if part_revision %}(آخرین ویرایش: <span id="specs-revision-timestamp"></span>)
@@ -155,52 +160,59 @@
                             <h5><h5 class="title">{% trans "Seller" %}</h5></h5>
                         </li>
                         <li class="collection-item">
-                            <div class="row">
-                                <div class="col s4 l2 text-right" style="padding-left: 0px;">قیمت:</div>
-                                <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ childs_unit_cost|default_if_none:'-' }}</span></div>
-                            </div>
-                            <div class="row">
-                                <div class="col s4 l2 text-right" style="padding-left: 0px;">تعداد متریال بدون قیمت:</div>
-                                <div class="col s8 l10"><span id="mouser-missing-item-costs"></span><span><span class="right">{{ indented_bom.missing_item_costs }}{% if indented_bom.missing_item_costs > 0 %} </span><i class="material-icons red-text">error</i>{% else %} <i class="material-icons green-text">check_circle</i>{% endif %}</span></div>
-                            </div>
-                            <div class="row">
-                                <div class="col s4 l2 text-right" style="padding-left: 0px;">وزن BOM:</div>
-                                <div class="col s8 l10"><span id="bom_weight"></span><span>{{ total_bom_weight|default_if_none:'-' }}</span></div>
-                            </div>
-                            <!--
-                            <div class="row" id="mouser-stock-wrapper" style="display: none;">
-                                <div class="col s4 l2 text-right" style="padding-left: 0px;">Mouser stock:</div>
-                                <div class="col s8 l10"><span id="mouser-stock"></span></div>
-                            </div>
-                            -->
+                            {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
+                                <div class="row">
+                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">قیمت:</div>
+                                    <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ childs_unit_cost|default_if_none:'-' }}</span></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">تعداد متریال بدون قیمت:</div>
+                                    <div class="col s8 l10"><span id="mouser-missing-item-costs"></span><span><span class="right">{{ indented_bom.missing_item_costs }}{% if indented_bom.missing_item_costs > 0 %} </span><i class="material-icons red-text">error</i>{% else %} <i class="material-icons green-text">check_circle</i>{% endif %}</span></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">وزن BOM:</div>
+                                    <div class="col s8 l10"><span id="bom_weight"></span><span>{{ total_bom_weight|default_if_none:'-' }}</span></div>
+                                </div>
+                                <!--
+                                <div class="row" id="mouser-stock-wrapper" style="display: none;">
+                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">Mouser stock:</div>
+                                    <div class="col s8 l10"><span id="mouser-stock"></span></div>
+                                </div>
+                                -->
+                            {% else %}
+                                <div class="row">
+                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">قیمت:</div>
+                                    <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ indented_bom.unit_cost|default_if_none:'-' }}</span></div>
+                                </div>
+                            {% endif %}
                         </li>
                     </ul>
                 </div>
-
-                <div id="bom" class="col s12">
-                    <h4 class="printer-show">درخت محصول</h4>
-                    <div id="bom-indented">
-                        {% comment %}
-                        <div class="text-center" style="padding-top: 8px;">
-                            <span>Indented</span> | <a onclick="showFlatBOM()" href="#">Flat</a>
+                {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
+                    <div id="bom" class="col s12">
+                        <h4 class="printer-show">درخت محصول</h4>
+                        <div id="bom-indented">
+                            {% comment %}
+                            <div class="text-center" style="padding-top: 8px;">
+                                <span>Indented</span> | <a onclick="showFlatBOM()" href="#">Flat</a>
+                            </div>
+                            {% endcomment %}
+                            {% include 'bom/components/bom-indented.html' with order_by=order_by bom_items=indented_bom.parts part=part part_revision=part_revision profile=profile %}
                         </div>
-                        {% endcomment %}
-                        {% include 'bom/components/bom-indented.html' with order_by=order_by bom_items=indented_bom.parts part=part part_revision=part_revision profile=profile %}
+                        <div id="bom-flat" style="display: none;">
+                            <div class="text-center" style="padding-top: 8px;">
+                                <a onclick="showIndentedBOM()" href="#">Indented</a> | <span>Flat</span>
+                            </div>
+                            {% include 'bom/components/bom-flat.html' with order_by=order_by bom_items=flat_bom.parts part=part part_revision=part_revision profile=profile %}
+                        </div>
+                        {% if  part_revision.part.primary_manufacturer_part.manufacturer.name == user.bom_profile.organization.name %}
+                            <div class="row">
+                                <div class="col s4 l2 text-right">قیمت واحد (کیلو گرم):</div>
+                                <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ childs_unit_cost|default_if_none:'-' }}</span></div>
+                            </div>
+                        {% endif %}
                     </div>
-                    <div id="bom-flat" style="display: none;">
-                        <div class="text-center" style="padding-top: 8px;">
-                            <a onclick="showIndentedBOM()" href="#">Indented</a> | <span>Flat</span>
-                        </div>
-                        {% include 'bom/components/bom-flat.html' with order_by=order_by bom_items=flat_bom.parts part=part part_revision=part_revision profile=profile %}
-                    </div>
-                    {% if  part_revision.part.primary_manufacturer_part.manufacturer.name == user.bom_profile.organization.name %}
-                        <div class="row">
-                            <div class="col s4 l2 text-right">قیمت واحد (کیلو گرم):</div>
-                            <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ childs_unit_cost|default_if_none:'-' }}</span></div>
-                        </div>
-                    {% endif %}
-                </div>
-
+                {% endif %}
                 <div id="used" class="col s12">
                     <h4 class="printer-show">موارد استفاده</h4>
                     <br>
