@@ -36,6 +36,7 @@
                     "detached": true,
                     "build": true
                 },
+                "envFile": "${workspaceFolder}/.env.dev",
                 "files": [
                     "${workspaceFolder}/docker-compose.debug.yml"
                 ]
@@ -46,7 +47,7 @@
 		{
 		  "label": "sleep",
 		  "type": "shell",
-		  "command": "sleep 1",
+		  "command": "sleep 5",
 		  "dependsOn": "Compose Up (Dev)",
 		},
         {

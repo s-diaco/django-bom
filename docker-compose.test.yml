@@ -1,3 +1,4 @@
+name: lithium_bom-test
 services:
   test:
     build:

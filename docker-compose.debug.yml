@@ -1,22 +1,23 @@
 name: lithium_bom-dev
 
 services:
-  web:
+  backend:
     build:
       context: .
       args:
         REQUIREMENTS_FILE: requirements-dev.lock
-    command: 
+    volumes:
+      - .:/app  # Mount the local project directory to /app in the container
+    user: "${USERID}:${GROUPID}"  # Use the host user's UID and GID
+    command:
       - "sh"
       - "-c"
       - |
         python -Xfrozen_modules=off /usr/local/lib/python3.12/site-packages/debugpy --wait-for-client --listen 0.0.0.0:5678 \
         manage.py runserver 0.0.0.0:8000 --nothreading --noreload
-    volumes:
-      - ./:/usr/src/app/
     ports:
       - 8000:8000
       - 5678:5678
-    env_file:
-      - ./.env.dev
     restart: "no"
+    env_file:
+      - .env.dev

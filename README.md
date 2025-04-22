@@ -59,7 +59,7 @@ cat dump_file.sql | docker compose exec -T db psql -U bom_user -d bom_db
 ## Uninstall
 to take the server down and remove images and volumes (including database volume):
 ```
-docker compose down -v --rmi local
+docker compose down --volumes --rmi local
 ```
 
 ## Run the tests
