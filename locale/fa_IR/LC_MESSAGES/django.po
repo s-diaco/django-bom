@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-19 19:35+0330\n"
+"POT-Creation-Date: 2025-04-23 10:06+0330\n"
 "PO-Revision-Date: 2024-03-24 06:55+0330\n"
 "Last-Translator: Diaco Soltanpour dyaco8464@yahoo.com\n"
 "Language-Team: Farsi (persian) dyaco8464@yahoo.com\n"
@@ -25,18 +25,17 @@ msgstr "کاربر"
 #: bom/templates/bom/add-manufacturer-part.html:33
 #: bom/templates/bom/components/bom-indented.html:67
 #: bom/templates/bom/create-part.html:36
-#: bom/templates/bom/manufacturers.html:39 bom/templates/bom/part-info.html:238
-#: bom/templates/bom/part-info.html:272
+#: bom/templates/bom/manufacturers.html:39 bom/templates/bom/part-info.html:231
+#: bom/templates/bom/part-info.html:265
 msgid "Manufacturer"
 msgstr "تولید کننده"
 
 #: bom/forms.py:397 bom/forms.py:452 bom/templates/bom/add-sellerpart.html:24
-#: bom/templates/bom/components/bom-indented.html:71
 #: bom/templates/bom/components/seller-part-list.html:15
 #: bom/templates/bom/create-part.html:54 bom/templates/bom/dashboard.html:100
-#: bom/templates/bom/part-info.html:110 bom/templates/bom/part-info.html:170
+#: bom/templates/bom/part-info.html:97 bom/templates/bom/part-info.html:160
 #: bom/templates/bom/report.html:111 bom/templates/bom/sellerpart-edit.html:22
-#: bom/templates/bom/sellers.html:39 bom/views/views.py:2155
+#: bom/templates/bom/sellers.html:39 bom/views/views.py:2158
 msgid "Seller"
 msgstr "تأمین کننده"
 
@@ -135,12 +134,16 @@ msgstr "تنظیمات"
 msgid "help"
 msgstr "راهنما"
 
+#: bom/templates/bom/components/bom-indented.html:71
+msgid "L.O.I"
+msgstr "پرت"
+
 #: bom/templates/bom/components/bom-indented.html:78
 #: bom/templates/bom/dashboard.html:70 bom/templates/bom/report.html:81
 msgid "Manage"
 msgstr "مدیریت"
 
-#: bom/templates/bom/components/bom-indented.html:132
+#: bom/templates/bom/components/bom-indented.html:134
 #: bom/templates/bom/components/manufacturer-part-list.html:80
 #: bom/templates/bom/dashboard.html:61
 #: bom/templates/bom/manufacturer-info.html:41
@@ -284,21 +287,21 @@ msgstr "لیست متریال {title}"
 msgid "Settings"
 msgstr "تنظیمات"
 
-#: bom/views/views.py:2354
+#: bom/views/views.py:2357
 msgid "Edit Seller Part"
 msgstr "ویرایش اطلاعات بازرگانی متریال"
 
-#: bom/views/views.py:2605
+#: bom/views/views.py:2609
 #, fuzzy
 #| msgid "Reset Password"
 msgid "Current password is incorrect."
 msgstr "رمز عبور فعلی اشتباه است."
 
-#: bom/views/views.py:2609
+#: bom/views/views.py:2613
 msgid "New passwords do not match."
 msgstr "رمز عبورهای جدید یکسان نیستند."
 
-#: bom/views/views.py:2617
+#: bom/views/views.py:2621
 msgid "Your password has been successfully reset."
 msgstr "رمز عبور شما با موفقیت عوض شد."
 
