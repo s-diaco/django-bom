@@ -1,41 +1,43 @@
-part_number,description,revision,manufacturer,manufacturer_part_number,seller,unit_cost,part_nre_cost,moq,mpq
-PART1,Test Part 1,A,Manufacturer1,MAN1_123,Seller1,12,2,100,10
-PART2,Test Part 2,A,Manufacturer2,MAN2_13,Seller2,1000.23,124.23,1,1
-PART3,Test Part 2,A,Manufacturer2,MAN2_14,Seller1,1000.23,124.23,1,1
-PART4,Test Part 2,A,Manufacturer1,MAN2_15,Seller2,1000.23,124.23,1,1
-001-44,سیلیس میکرونیزه آبراهه تبریز (فراوری),A,Manufacturer1,MAN1_1,Seller2,144,124.23,1,1
-001-54,سیلیس میکرونیزه ممتاز خوی (فراوری),A,Manufacturer1,MAN3_1,Seller2,154,124.23,1,1
-001-57,سیلیس میکرونیزه رضوان ملایر (فراوری),A,Manufacturer1,MAN2_1,Seller2,157,124.23,1,1
-002-16,پودر فلدسپار سدیک چشمه سنگ (فراوری),A,Manufacturer1,MAN2_2,Seller2,216,124.23,1,1
-003-00,براکس پنتا (اتی بانک),A,Manufacturer1,MAN2_3,Seller2,300,124.23,1,1
-005-03,کربنات کلسیم (ایران کلسیت),A,Manufacturer1,MAN1_5,Seller2,503,124.23,1,1
-005-16,کربنات کلسیم (نارین پودر),A,Manufacturer1,MAN2_5,Seller2,516,124.23,1,1
-007-15,کائولن ، ماکادم ( زت لیس) چک,A,Manufacturer1,MAN2_7,Seller2,715,124.23,1,1
-007-25,کائولن ZWMK1 (پودر) خاک چینی,A,Manufacturer1,MAN3_7,Seller2,725,124.23,1,1
-007-38,کائولن GZWNK(ماکادم) خاک چینی,A,Manufacturer1,MAN1_7,Seller2,738,124.23,1,1
-007-42,کائولن میکرونیزه زرمهر (KP22 S),A,Manufacturer1,MAN4_7,Seller2,742,124.23,1,1
-008-15,اکسید روی نانو بلوره پارس,A,Manufacturer1,MAN1_8,Seller2,815,124.23,1,1
-008-16,اکسیدروی شکوهیه (قم),A,Manufacturer1,MAN2_8,Seller2,816,124.23,1,1
-010-02,سیلیکات زیرکونیم 500,A,Manufacturer1,MAN2_10,Seller2,1002,124.23,1,1
-010-23,سیلیکات زیرکونیوم  325 شایراد تجارت,A,Manufacturer1,MAN1_10,Seller2,1023,124.23,1,1
-011-04,کربنات سدیم سبک (مراغه),A,Manufacturer1,MAN1_11,Seller2,1104,124.23,1,1
-012-08,کلمانیت ترکیه,A,Manufacturer1,MAN2_12,Seller2,1208,124.23,1,1
-020-17,پودر فلدسپات پتاسیک میکرونیزه(SP110 ),A,Manufacturer1,MAN1_20,Seller2,2017,124.23,1,1
-020-28,فلدسپات پتاسیک میکرونیزه فرخی (فراوری),A,Manufacturer1,MAN3_20,Seller2,2028,124.23,1,1
-020-29,فلدسپات پتاسیک میکرونیزه جهان سنگ,A,Manufacturer1,MAN2_20,Seller2,2029,124.23,1,1
-022-05,دولومیت میکرونیزه (دیرین پودر همدان),A,Manufacturer1,MAN2_22,Seller2,2205,124.23,1,1
-022-08,دولومیت میکرونیزه (مهرین پودر),A,Manufacturer1,MAN1_22,Seller2,2416,124.23,1,1
-024-16,نیترات پتاسیم ( نانو بلوره ),A,Manufacturer1,MAN2_24,Seller2,6306,124.23,1,1
-063-06,اکسید تیتانیوم چینی,A,Manufacturer1,MAN2_63,Seller2,6306,124.23,1,1
-065-00,کربنات باریم,A,Manufacturer1,MAN2_65,Seller2,6500,124.23,1,1
-066-05,اکسید آلومینیوم فرانسوی,A,Manufacturer1,MAN1_66,Seller2,6605,124.23,1,1
-066-14,اکسید آلومینیوم( آریا فرآور),A,Manufacturer1,MAN3_66,Seller2,6614,124.23,1,1
-066-15,اکسید آلومینیوم فرانسوی (AC   90),A,Manufacturer1,MAN2_66,Seller2,6615,124.23,1,1
-083-00,نفلین (خارجی),A,Manufacturer1,MAN1_83,Seller2,8300,124.23,1,1
-083-01,نفلین کلیبر (ایرانی),A,Manufacturer1,MAN2_83,Seller2,8301,124.23,1,1
-083-04,نفلین خارجی  ( کلرو بیا ),A,Manufacturer1,MAN3_83,Seller2,8304,124.23,1,1
-1155F211,فریت اپک انگوب,A,Manufacturer1,1155F211,Seller2,500,124.23,1,1
-1170S122,اوپک,A,Manufacturer1,1170S122,Seller2,500,124.23,1,1
-2173K377,فریت ترانس,A,Manufacturer1,2173K377,Seller2,500,124.23,1,1
-3000B273,فریت مات,A,Manufacturer1,3000B273,Seller2,500,124.23,1,1
-3024K205,فریت مات دیوار,A,Manufacturer1,3024K205,Seller2,500,124.23,1,1
+part_number,description,revision,manufacturer,manufacturer_part_number,seller,unit_cost,part_nre_cost,moq,mpq,tolerance,material
+PART1,Test Part 1,A,Manufacturer1,MAN1_123,Seller1,12,2,100,10,0,no_bom
+PART2,Test Part 2,A,Manufacturer2,MAN2_13,Seller2,1000.23,124.23,1,1,0,no_bom
+PART3,Test Part 2,A,Manufacturer2,MAN2_14,Seller1,1000.23,124.23,1,1,0,no_bom
+PART4,Test Part 2,A,Manufacturer1,MAN2_15,Seller2,1000.23,124.23,1,1,0,no_bom
+001-44,سیلیس میکرونیزه آبراهه تبریز (فراوری),A,Manufacturer1,MAN1_1,Seller2,144,124.23,1,1,0,no_bom
+001-54,سیلیس میکرونیزه ممتاز خوی (فراوری),A,Manufacturer1,MAN3_1,Seller2,154,124.23,1,1,0,no_bom
+001-57,سیلیس میکرونیزه رضوان ملایر (فراوری),A,Manufacturer1,MAN2_1,Seller2,157,124.23,1,1,0.12,no_bom
+002-16,پودر فلدسپار سدیک چشمه سنگ (فراوری),A,Manufacturer1,MAN2_2,Seller2,216,124.23,1,1,43.2,no_bom
+003-00,براکس پنتا (اتی بانک),A,Manufacturer1,MAN2_3,Seller2,300,124.23,1,1,0,no_bom
+005-03,کربنات کلسیم (ایران کلسیت),A,Manufacturer1,MAN1_5,Seller2,503,124.23,1,1,0,no_bom
+005-16,کربنات کلسیم (نارین پودر),A,Manufacturer1,MAN2_5,Seller2,516,124.23,1,1,14.4,no_bom
+007-15,کائولن ، ماکادم ( زت لیس) چک,A,Manufacturer1,MAN2_7,Seller2,715,124.23,1,1,0,no_bom
+007-25,کائولن ZWMK1 (پودر) خاک چینی,A,Manufacturer1,MAN3_7,Seller2,725,124.23,1,1,0,no_bom
+007-38,کائولن GZWNK(ماکادم) خاک چینی,A,Manufacturer1,MAN1_7,Seller2,738,124.23,1,1,0,no_bom
+007-42,کائولن میکرونیزه زرمهر (KP22 S),A,Manufacturer1,MAN4_7,Seller2,742,124.23,1,1,0,no_bom
+008-11,اکسید روی (آریا توتیا),A,Manufacturer1,MAN1_8,Seller2,815,124.23,1,1,21.3,no_bom
+008-15,اکسید روی نانو بلوره پارس,A,Manufacturer1,MAN1_8,Seller2,815,124.23,1,1,0,no_bom
+008-16,اکسیدروی شکوهیه (قم),A,Manufacturer1,MAN2_8,Seller2,816,124.23,1,1,0,no_bom
+010-02,سیلیکات زیرکونیم 500,A,Manufacturer1,MAN2_10,Seller2,1002,124.23,1,1,0,no_bom
+010-23,سیلیکات زیرکونیوم  325 شایراد تجارت,A,Manufacturer1,MAN1_10,Seller2,1023,124.23,1,1,0,no_bom
+011-04,کربنات سدیم سبک (مراغه),A,Manufacturer1,MAN1_11,Seller2,1104,124.23,1,1,0,no_bom
+012-08,کلمانیت ترکیه,A,Manufacturer1,MAN2_12,Seller2,1208,124.23,1,1,0,no_bom
+020-17,پودر فلدسپات پتاسیک میکرونیزه(SP110 ),A,Manufacturer1,MAN1_20,Seller2,2017,124.23,1,1,1.5,no_bom
+020-28,فلدسپات پتاسیک میکرونیزه فرخی (فراوری),A,Manufacturer1,MAN3_20,Seller2,2028,124.23,1,1,0,no_bom
+020-29,فلدسپات پتاسیک میکرونیزه جهان سنگ,A,Manufacturer1,MAN2_20,Seller2,2029,124.23,1,1,0,no_bom
+022-05,دولومیت میکرونیزه (دیرین پودر همدان),A,Manufacturer1,MAN2_22,Seller2,2205,124.23,1,1,2.8,no_bom
+022-08,دولومیت میکرونیزه (مهرین پودر),A,Manufacturer1,MAN1_22,Seller2,2416,124.23,1,1,0,no_bom
+024-16,نیترات پتاسیم ( نانو بلوره ),A,Manufacturer1,MAN2_24,Seller2,6306,124.23,1,1,0,no_bom
+063-06,اکسید تیتانیوم چینی,A,Manufacturer1,MAN2_63,Seller2,6306,124.23,1,1,0,no_bom
+065-00,کربنات باریم,A,Manufacturer1,MAN2_65,Seller2,6500,124.23,1,1,0,no_bom
+066-05,اکسید آلومینیوم فرانسوی,A,Manufacturer1,MAN1_66,Seller2,6605,124.23,1,1,0,no_bom
+066-13,اکسید آلومینیوم (پارس اکسید),A,Manufacturer1,MAN3_66,Seller2,6614,124.23,1,1,2.8,no_bom
+066-14,اکسید آلومینیوم( آریا فرآور),A,Manufacturer1,MAN3_66,Seller2,6614,124.23,1,1,0,no_bom
+066-15,اکسید آلومینیوم فرانسوی (AC   90),A,Manufacturer1,MAN2_66,Seller2,6615,124.23,1,1,0,no_bom
+083-00,نفلین (خارجی),A,Manufacturer1,MAN1_83,Seller2,8300,124.23,1,1,0,no_bom
+083-01,نفلین کلیبر (ایرانی),A,Manufacturer1,MAN2_83,Seller2,8301,124.23,1,1,0,no_bom
+083-04,نفلین خارجی  ( کلرو بیا ),A,Manufacturer1,MAN3_83,Seller2,8304,124.23,1,1,0,no_bom
+1155F211,فریت اپک انگوب,A,Manufacturer1,1155F211,Seller2,500,124.23,1,1,0,with_loi
+1170S122,اوپک,A,Manufacturer1,1170S122,Seller2,500,124.23,1,1,0,with_loi
+2173K377,فریت ترانس,A,Manufacturer1,2173K377,Seller2,500,124.23,1,1,0,with_loi
+3000B273,فریت مات,A,Manufacturer1,3000B273,Seller2,500,124.23,1,1,0,with_loi
+3024K205,فریت مات دیوار,A,Manufacturer1,3024K205,Seller2,500,124.23,1,1,0,with_loi

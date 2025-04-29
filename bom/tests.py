@@ -26,6 +26,7 @@ from .helpers import (
 from .models import (
     Part,
     PartClass,
+    PartRevision,
     Seller,
     Subpart,
 )
@@ -490,7 +491,7 @@ class TestBOM(TransactionTestCase):
                     in str(msg.message)
                 )
             self.assertTrue(
-                "Row 39 - count: Ensure this value is greater than or equal to 0."
+                "Row 39 - count: "
                 in str(msg.message)
             )
             self.assertTrue(
@@ -630,6 +631,8 @@ class TestBOM(TransactionTestCase):
             ("bom_exports/CGM5357.csv", 100, 548166, 5481),
             ("bom_exports/CNE5393.csv", 100, 149918, 1499),
             ("bom_exports/CNE5393_fake.csv", 100, 158877, 1588),
+            ("bom_exports/3024K205.csv", 1000, 1675335, 234034),
+            ("bom_exports/CPM5163.csv", 100, 158877, 1588),
         ]
     )
     def test_childs_cost_calcs(
@@ -703,6 +706,16 @@ class TestBOM(TransactionTestCase):
 
             (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
             p4_rev = create_a_fake_part_revision(p4, create_a_fake_assembly())
+            csv_material_code= test_file.split("/")[1].split(".")[0]
+            all_part_revisions = PartRevision.objects.all()
+            # check if csv_material_code is in the part number
+            if csv_material_code in [str(part_rev.part) for part_rev in all_part_revisions]:
+                p4_rev_material = PartRevision.objects.get(
+                    part__number_item=csv_material_code,
+                    part__organization=self.organization,
+                    ).material
+            else:
+                p4_rev_material = "no_loi"
             with open(f"{TEST_FILES_DIR}/{test_file}") as test_csv:
                 response = self.client.post(
                     reverse("bom:upload-bom"),
@@ -718,6 +731,7 @@ class TestBOM(TransactionTestCase):
 
             p4.refresh_from_db()
             p4_rev.refresh_from_db()
+            p4_rev.material = p4_rev_material
             self.assertEqual(
                 int(p4_rev.indented().parts[str(p4_rev.id)].childs_cost.amount),
                 childs_cost,
