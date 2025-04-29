@@ -28,7 +28,7 @@ def create_root(user):
     organization = user.bom_profile().organization
     service = get_service(user)
     file_metadata = {
-        "name": "IndaBOM Part Files",
+        "name": "LithiumBoM Part Files",
         "mimeType": "application/vnd.google-apps.folder",
         "folderColorRgb": "green",
     }

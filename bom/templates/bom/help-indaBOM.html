@@ -13,14 +13,14 @@
 
 {% block content %}
     <div class="container" style="font-size: 16px;">
-        <h1 class="text-center">IndaBOM Guide</h1>
+        <h1 class="text-center">LithiumBoM Guide</h1>
         <div class="row">
             <article class="col s12 m8 offset-m1 xl7 offset-xl1">
                 <div class="section scrollspy">
                     <h2>Quick Start</h2>
                     <ol>
                         <li>Assuming that you have the role of Admin, the first thing you want to do is go to the <a href="{% url 'bom:settings' %}" target="_blank">Settings</a> page and select the
-                            IndaBOM
+                            LithiumBoM
                             tab.
                             <ul class="browser-default">
                                 <li>Set the number of digits you want to use for your organization&rsquo;s part number item number. Keep in mind that in the future you can increase, but you cannot
@@ -68,23 +68,23 @@
                             </ul>
                         </li>
                     </ol>
-                    <p>There are many more things you can do with IndaBOM, but these three steps will get you started.</p>
+                    <p>There are many more things you can do with LithiumBoM, but these three steps will get you started.</p>
                     <div class="divider"></div>
                     <a class="anchor" id="intro-to-indabom"></a>
                 </div>
                 <div class="section scrollspy">
-                    <h2>Introduction to IndaBOM Concepts</h2>
-                    <p>IndaBOM may be used to create a catalog of parts and to organize parts into assemblies. The parts that comprise a particular assembly is referred to as a Bill of Materials, or
+                    <h2>Introduction to LithiumBoM Concepts</h2>
+                    <p>LithiumBoM may be used to create a catalog of parts and to organize parts into assemblies. The parts that comprise a particular assembly is referred to as a Bill of Materials, or
                         BOM.
                         BOMs
                         and
-                        parts may be entered directly into IndaBOM or they may be uploaded as comma-separated (CSV) files. Information about an individual part, a collection of parts, or a BOM may be
+                        parts may be entered directly into LithiumBoM or they may be uploaded as comma-separated (CSV) files. Information about an individual part, a collection of parts, or a BOM may be
                         downloaded
                         as CSV files.</p>
                     <p>Parts are grouped by class. A part class represents a category of parts and is used to classify parts, such as resistors, capacitors, or printed circuit board
                         assemblies.&nbsp;</p>
-                    <p>All of the information about parts, part classes, and BOMs is maintained by IndaBOM in an underlying relational database.</p>
-                    <p>The general use model for IndaBOM is to define part classes, then define parts, then define BOMs for the parts that are assemblies of other parts, and then use this information
+                    <p>All of the information about parts, part classes, and BOMs is maintained by LithiumBoM in an underlying relational database.</p>
+                    <p>The general use model for LithiumBoM is to define part classes, then define parts, then define BOMs for the parts that are assemblies of other parts, and then use this information
                         as
                         the
                         authoritative source of parts and assemblies for your projects or products. For example, you might provide a downloaded BOM to a contract manufacturer so that they are able to
@@ -95,7 +95,7 @@
                         or
                         even
                         deleted altogether.</p>
-                    <p>IndaBOM is capable of representing many of the key relationships that are required to represent parts and assemblies. Below are some of the key relationships. Note that in the
+                    <p>LithiumBoM is capable of representing many of the key relationships that are required to represent parts and assemblies. Below are some of the key relationships. Note that in the
                         narrative
                         below, a subpart refers to a part that is used to construct another part. A subpart is not a real-world part but rather it represents a relationship between a real-world part
                         and
@@ -121,21 +121,21 @@
                 </div>
                 <div class="section scrollspy">
                     <h3>Organizations</h3>
-                    <p>IndaBOM may be used on a shared-host via indabom.com. IndaBOM may also be downloaded and installed on your own server. In either case, you define the organization on whose
+                    <p>LithiumBoM may be used on a shared-host via indabom.com. LithiumBoM may also be downloaded and installed on your own server. In either case, you define the organization on whose
                         behalf
-                        IndaBOM
+                        LithiumBoM
                         maintains a database of parts and BOMs. You also define the valid users and their roles. A user may only access the parts and BOMs for their organization and may only perform
                         the
-                        IndaBOM
+                        LithiumBoM
                         operations that are allowed by their role.&nbsp;</p>
                 </div>
                 <div class="section scrollspy">
                     <h3>Users and Roles</h3>
-                    <p>An IndaBOM user may be affiliated with only one IndaBOM organization at a time. A user can only view and revise information that is associated with their organization.</p>
-                    <p>Within the scope of an organization, an IndaBOM user may have either the role of &ldquo;Viewer&rdquo; or of &ldquo;Admin&rdquo;. A viewer can search for and view data about part
+                    <p>An LithiumBoM user may be affiliated with only one LithiumBoM organization at a time. A user can only view and revise information that is associated with their organization.</p>
+                    <p>Within the scope of an organization, an LithiumBoM user may have either the role of &ldquo;Viewer&rdquo; or of &ldquo;Admin&rdquo;. A viewer can search for and view data about part
                         classes,
                         parts and BOMs. An admin can additionally add, revise, and delete part class, part and BOM data.</p>
-                    <p>The user who initially sets-up IndaBOM for an organization is referred to as the &ldquo;organization&rsquo;s owner&rdquo;. This person may add or remove users to their
+                    <p>The user who initially sets-up LithiumBoM for an organization is referred to as the &ldquo;organization&rsquo;s owner&rdquo;. This person may add or remove users to their
                         organization,
                         and
                         they may transfer organizational ownership to another user in the organization. An organization can have only one owner.</p>
@@ -144,28 +144,28 @@
                 <div class="section scrollspy">
                     <h3>Part Numbers</h3>
                     <p>There are two types of part numbering systems you can select when creating your organization. The two types, <b>intelligent</b>, and <b>semi-intelligent</b> (recommended by
-                        IndaBOM,
+                        LithiumBoM,
                         sometimes called, "non-intelligent", or "agnostic"), are the most common options used by most manufacturers. Once you make this decision, it can be very hard to change it, so
                         choose
                         wisely!</p>
                 </div>
                 <div class="section scrollspy">
                     <h4>Semi-Intelligent Part Numbers</h4>
-                    <p>Semi-intelligent IndaBOM part numbers are designed to be simple to assign and simple to subsequently write, type, or speak. This approach makes it a lot easier to maintain part
+                    <p>Semi-intelligent LithiumBoM part numbers are designed to be simple to assign and simple to subsequently write, type, or speak. This approach makes it a lot easier to maintain part
                         numbers
                         over time while minimizing the possibility of communication or transcription mistakes. There are drawbacks, the arguably most important drawback of semi-intelligent parts is
                         that
                         the
                         part
                         number does not convey much information about a part. </p>
-                    <p>If detailed information about a part is needed then IndaBOM may be easily used to look up or search for the part. IndaBOM was originally built using a semi-intelligent, or
+                    <p>If detailed information about a part is needed then LithiumBoM may be easily used to look up or search for the part. LithiumBoM was originally built using a semi-intelligent, or
                         agnostic
                         part
                         numbering scheme.</p>
-                    <p>An IndaBOM part number is comprised of three components:</p>
+                    <p>An LithiumBoM part number is comprised of three components:</p>
                     <ul class="browser-default">
                         <li><b>Part Class</b>: A three-digit part class that uniquely represents the class (category) of a particular part as selected from the part classes that you defined for your
-                            organization in IndaBOM.&nbsp;
+                            organization in LithiumBoM.&nbsp;
                         </li>
                         <li><b>Item Number</b>: A multi-digit item number, representing the particular part within a part class. You may select the quantity of digits to be for your organization. The
                             minimum
@@ -185,15 +185,15 @@
                     <p>The overall part number looks like:</p>
                     <p>CCC-NNNNNN-VV</p>
                     <p>where the quantity of number item digits N depends on your organization&rsquo;s configuration (six in this example).</p>
-                    <p>IndaBOM ensures that every part number is unique relative to an organization&rsquo;s catalog of parts. In other words, the tuple {CCC, NNNNNN, VV} is defined as unique in
-                        IndaBOM&rsquo;s
+                    <p>LithiumBoM ensures that every part number is unique relative to an organization&rsquo;s catalog of parts. In other words, the tuple {CCC, NNNNNN, VV} is defined as unique in
+                        LithiumBoM&rsquo;s
                         underlying database.</p>
                     <p>The actual assignment of part numbers may be done explicitly or automatically. When you create a part, or when you uploaded a list of parts, you may specify the part numbers
                         that
                         you
                         would
-                        like IndaBOM to use. As long as a part number you specify is unique then it will be accepted by IndaBOM.&nbsp;</p>
-                    <p>Alternatively, you can just specify a part&rsquo;s part class and leave it to IndaBOM to assign an item number. The item number created by IndaBOM will be one greater-than the
+                        like LithiumBoM to use. As long as a part number you specify is unique then it will be accepted by LithiumBoM.&nbsp;</p>
+                    <p>Alternatively, you can just specify a part&rsquo;s part class and leave it to LithiumBoM to assign an item number. The item number created by LithiumBoM will be one greater-than the
                         largest
                         item
                         number that has <em>ever</em> been assigned to the new part&rsquo;s part class. The variation will be set to &ldquo;00&rdquo;.</p>
@@ -201,7 +201,7 @@
                 </div>
                 <div class="section scrollspy">
                     <h5>A note on Part Classes</h5>
-                    <p>Part classes are not built into IndaBOM. Instead, one of the first things you need to do when you set-up your IndaBOM environment is to define part classes. A part class is
+                    <p>Part classes are not built into LithiumBoM. Instead, one of the first things you need to do when you set-up your LithiumBoM environment is to define part classes. A part class is
                         represented
                         by a
                         unique number and a unique name. It may also optionally include a comment or description.</p>
@@ -213,7 +213,7 @@
                 </div>
                 <div class="section scrollspy">
                     <h4>Intelligent Part Numbers</h4>
-                    <p>Intelligent part numbering on IndaBOM allows the user to assign any part number to a part. The part number contains descriptive details embedded within that provides noteworthy
+                    <p>Intelligent part numbering on LithiumBoM allows the user to assign any part number to a part. The part number contains descriptive details embedded within that provides noteworthy
                         information
                         about the part. For example, a capacitor may be named C0402X5R33PF to indicate that it is a capacitor of size "0402", using a X5R dialectric, and is 33pF.</p>
                     <p>Though it may seem beneficial at first to use an intelligent part numbering schemes due to readability, the drawbacks include limited automation when creating parts, potential
@@ -226,7 +226,7 @@
                 </div>
                 <div class="section scrollspy">
                     <h3>Part Specifications &amp; Synopsis</h3>
-                    <p>IndaBOM is designed to handle a wide-range of parts. To enable you to adequately specify your parts, you may use a mix of pre-defined part properties in conjunction with
+                    <p>LithiumBoM is designed to handle a wide-range of parts. To enable you to adequately specify your parts, you may use a mix of pre-defined part properties in conjunction with
                         free-form
                         text
                         to
@@ -240,27 +240,27 @@
                 </div>
                 <div class="section scrollspy">
                     <h3>Part Revisions</h3>
-                    <p>As you edit, update or otherwise revise a part&rsquo;s specification, you can use IndaBOM to keep track of your specification revisions. Independent of how you choose to use the
+                    <p>As you edit, update or otherwise revise a part&rsquo;s specification, you can use LithiumBoM to keep track of your specification revisions. Independent of how you choose to use the
                         part
                         number
-                        part variation field, a revision is a snapshot of your part in terms of the specification information captured and stored in IndaBOM.&nbsp;</p>
+                        part variation field, a revision is a snapshot of your part in terms of the specification information captured and stored in LithiumBoM.&nbsp;</p>
                     <p>A newly created part is assigned a revision of 1. You may edit a part without changing its revision, or you may create a new revision with is initialized with data from the
                         latest
                         revision.
-                        Note that you cannot explicitly set the revision number. Instead, IndaBOM manages the assignment of revision numbers, for example, it will increment a part&rsquo;s current
+                        Note that you cannot explicitly set the revision number. Instead, LithiumBoM manages the assignment of revision numbers, for example, it will increment a part&rsquo;s current
                         revision
                         number
-                        when you instruct IndaBOM to create a new revision.</p>
-                    <p>In addition, at various times IndaBOM will automatically manage part revisions for you. For example, if you change a part&rsquo;s part class and the part number item and number
+                        when you instruct LithiumBoM to create a new revision.</p>
+                    <p>In addition, at various times LithiumBoM will automatically manage part revisions for you. For example, if you change a part&rsquo;s part class and the part number item and number
                         variation
-                        would conflict with a part that already exists in the target class, then IndaBOM will create a new revision of the part. The revision number will be set to one greater than the
+                        would conflict with a part that already exists in the target class, then LithiumBoM will create a new revision of the part. The revision number will be set to one greater than the
                         largest
                         revision for the otherwise conflicting part.</p>
                 </div>
                 <div class="section scrollspy">
                     <h3>Part Release Management</h3>
-                    <p>IndaBOM enables you to control whether or not a part&rsquo;s specification is still a work-in-progress, or whether it has been released for use by your team. A part is tagged in
-                        IndaBOM
+                    <p>LithiumBoM enables you to control whether or not a part&rsquo;s specification is still a work-in-progress, or whether it has been released for use by your team. A part is tagged in
+                        LithiumBoM
                         as
                         &ldquo;Working&rdquo; if it is a work-in-progress, in which case you may continue to edit the part&rsquo;s specification or create new revisions. When you are ready, you can
                         change
@@ -278,10 +278,10 @@
                 </div>
                 <div class="section scrollspy">
                     <h3>Case Sensitivity</h3>
-                    <p>Throughout the IndaBOM application you will need to enter names for part classes, organizations, and manufacturers. These names you enter are stored in with case preserved, but
+                    <p>Throughout the LithiumBoM application you will need to enter names for part classes, organizations, and manufacturers. These names you enter are stored in with case preserved, but
                         for
                         comparison purposes the names are treated as case insensitive. In fact, for comparison purposes, any text that you enter is treated as case insensitive.&nbsp;</p>
-                    <p>For example, the part class names &ldquo;capacitor&rdquo; and &ldquo;Capacitor&rdquo; are treated by IndaBOM as the same thing when it comes to validating part class names. You
+                    <p>For example, the part class names &ldquo;capacitor&rdquo; and &ldquo;Capacitor&rdquo; are treated by LithiumBoM as the same thing when it comes to validating part class names. You
                         can
                         edit
                         the
@@ -295,9 +295,9 @@
                 </div>
                 <div class="section scrollspy">
                     <h3>Settings Page</h3>
-                    <p>The Settings page contains three tabs: User, IndaBOM, Organization.</p>
-                    <p>If your role is &ldquo;Viewer&rdquo; then you can only access the &ldquo;User&rdquo; tab, from which you can edit your IndaBOM username and contact information.</p>
-                    <p>If your role is &ldquo;Admin&rdquo; then you can access the &ldquo;IndaBOM&rdquo; tab you can revise your organization&rsquo;s IndaBOM configuration, including:</p>
+                    <p>The Settings page contains three tabs: User, LithiumBoM, Organization.</p>
+                    <p>If your role is &ldquo;Viewer&rdquo; then you can only access the &ldquo;User&rdquo; tab, from which you can edit your LithiumBoM username and contact information.</p>
+                    <p>If your role is &ldquo;Admin&rdquo; then you can access the &ldquo;LithiumBoM&rdquo; tab you can revise your organization&rsquo;s LithiumBoM configuration, including:</p>
                     <ul class="browser-default">
                         <li>Setting the number of digits for part number item numbers.</li>
                         <li>Edit or delete existing part classes.</li>
@@ -308,16 +308,16 @@
                         including.</p>
                     <ul class="browser-default">
                         <li>Change your organization&rsquo;s name.</li>
-                        <li>Change your organization&rsquo;s owner (to any other of your organization&rsquo;s current IndaBOM users).</li>
+                        <li>Change your organization&rsquo;s owner (to any other of your organization&rsquo;s current LithiumBoM users).</li>
                         <li>Edit any user&rsquo;s username or contact information, as well as their role.</li>
-                        <li>Remove any user from your organization (after which the user remains as a valid IndaBOM user but is no longer associated with any organization)</li>
-                        <li>Add a user to your organization (must be an existing IndaBOM user who is not presently associated with another organization).</li>
-                        <li>Establish a connection to Google Drive for downloading and uploading IndaBOM CSV files.</li>
+                        <li>Remove any user from your organization (after which the user remains as a valid LithiumBoM user but is no longer associated with any organization)</li>
+                        <li>Add a user to your organization (must be an existing LithiumBoM user who is not presently associated with another organization).</li>
+                        <li>Establish a connection to Google Drive for downloading and uploading LithiumBoM CSV files.</li>
                     </ul>
                 </div>
                 <div class="section scrollspy">
                     <h3>Home Page</h3>
-                    <p>Once you have logged into IndaBOM you will be brought to the application&rsquo;s Home page. From this you may select a part class in order to view all of the parts in the class,
+                    <p>Once you have logged into LithiumBoM you will be brought to the application&rsquo;s Home page. From this you may select a part class in order to view all of the parts in the class,
                         or
                         you
                         can
@@ -327,7 +327,7 @@
                         the
                         Settings page or logout.</p>
                     <p>In addition, pop-up icon buttons at the bottom right of the Home page enable you to explicitly create a part using a form or to upload parts from a CSV file.</p>
-                    <p>Note &hellip; you can return to this page from any other IndaBOM page by clicking on the IndaBOM icon that appears on the upper left corner of every page.</p>
+                    <p>Note &hellip; you can return to this page from any other LithiumBoM page by clicking on the LithiumBoM icon that appears on the upper left corner of every page.</p>
                 </div>
                 <div class="section scrollspy">
                     <h3>Search Results Page</h3>
@@ -343,7 +343,7 @@
                         select a different part class to view, obviating the need to return to the Home page.</p>
                     <p>Additionally, from the Search Results page you can also download to a CSV file the information presented about all of the parts listed in the search results list.</p>
                     <p>And, from this page, you can select any part for viewing in detail by clicking on its part number.</p>
-                    <p>Finally, if you have the role of Admin, then can show or hide controls that allow you to select one or more parts to delete from IndaBOM. You should do this carefully because
+                    <p>Finally, if you have the role of Admin, then can show or hide controls that allow you to select one or more parts to delete from LithiumBoM. You should do this carefully because
                         the
                         deleting
                         of a part cannot be undone. You will have to re-enter the information about a part you did not really want to delete.</p>
@@ -360,7 +360,7 @@
                         item variation.&nbsp;</p>
                     <p>For example, both 102-00033-04 and 102-000033 are valid part number search terms. This example assumes that your organization uses 5 digits for its item
                         number.</p>
-                    <p>When entering a free-form search expression, the special characters that are used by IndaBOM to display units of measure need to be represented as standard text characters in
+                    <p>When entering a free-form search expression, the special characters that are used by LithiumBoM to display units of measure need to be represented as standard text characters in
                         your
                         search
                         term:</p>
@@ -423,7 +423,7 @@
                     <p>If you have the role of Admin, then the Part Creation page enables you to specify a new part. First you need to select a part class, then you may optionally specify the item
                         number
                         and
-                        revision, or may allow IndaBOM to specify either or both values of these for you.</p>
+                        revision, or may allow LithiumBoM to specify either or both values of these for you.</p>
                     <p>The remaining information you may enter describes the part. At a minimum you must specify a value for the part along with the units of measure, or you must provide a free-text
                         description.&nbsp;</p>
                     <p>The optional properties of a part are organized into the following groups:</p>
@@ -457,12 +457,12 @@
                         that
                         appears at
                         the top of the Home page and Search Results pages.</p>
-                    <p>When you upload parts from a CSV file you can assign IndaBOM part numbers in the file or you can allow IndaBOM to automatically assign part numbers. If you specify a part number
+                    <p>When you upload parts from a CSV file you can assign LithiumBoM part numbers in the file or you can allow LithiumBoM to automatically assign part numbers. If you specify a part number
                         that is
-                        already in use then the conflicting part will not be uploaded. Similarly, other errors may prevent a part from being uploaded, for example, an improperly formatted IndaBOM part
+                        already in use then the conflicting part will not be uploaded. Similarly, other errors may prevent a part from being uploaded, for example, an improperly formatted LithiumBoM part
                         number
                         or
-                        the use of an unknown IndaBOM part class. The uploading will continue with the next valid part in the file.</p>
+                        the use of an unknown LithiumBoM part class. The uploading will continue with the next valid part in the file.</p>
                     <p>Here is <a href="{% static 'bom/doc/test_new_parts.csv' %}">a sample CSV for uploading semi-intelligent parts</a> and here is
                         <a href="{% static 'bom/doc/test_new_parts_5_intelligent.csv' %}">a sample CSV for uploading intelligent parts</a>.</p>
                 </div>
@@ -505,7 +505,7 @@
                                 <p>part_class</p>
                             </td>
                             <td>
-                                <p>3-digit valid IndaBOM part class</p>
+                                <p>3-digit valid LithiumBoM part class</p>
                             </td>
                             <td>
                                 <p>You need to first define the part classes for your organization; If a part_number is also specified then its part_class takes precedence over this part_class should
@@ -521,7 +521,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <p>A pre-assigned IndaBOM part number</p>
+                                <p>A pre-assigned LithiumBoM part number</p>
                             </td>
                             <td>
                                 <p>part_number</p>
@@ -530,7 +530,7 @@
                                 <p>CCC-NNNNNN-VV</p>
                             </td>
                             <td>
-                                <p>Must not yet exist in IndaBOM; The part class code must be valid; the number of digits in the item number must match your organization&rsquo;s configuration</p>
+                                <p>Must not yet exist in LithiumBoM; The part class code must be valid; the number of digits in the item number must match your organization&rsquo;s configuration</p>
                             </td>
                         </tr>
                         <tr>
@@ -1104,7 +1104,7 @@
                     <p>To make sure the integration works, you need to enable Mouser Sourcing for the part class of interest (e.g. if you have a Capacitor part class, you need to enable mouser
                         sourcing
                         for
-                        this part class). This setting is found in Settings > IndaBOM under part classes. From here, a part is searched for in Mouser by part number and manfuacturer, or just part
+                        this part class). This setting is found in Settings > LithiumBoM under part classes. From here, a part is searched for in Mouser by part number and manfuacturer, or just part
                         number
                         if
                         there is no manufacturer.</p>
@@ -1151,7 +1151,7 @@
                         appears that enables adding a part to the current BOM. The part of interest is identified by its part number. The quantity of parts, one or more reference designators, and the
                         ability
                         to
-                        indicate &ldquo;do not load&rdquo; are parameters that may be set when adding a part. Only parts that are already in your IndaBOM database may be added to a BOM.</p>
+                        indicate &ldquo;do not load&rdquo; are parameters that may be set when adding a part. Only parts that are already in your LithiumBoM database may be added to a BOM.</p>
                 </div>
                 <div class="section scrollspy">
                     <h3>Editing a Subpart</h3>
@@ -1202,7 +1202,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <p>The subpart&rsquo;s IndaBOM part number</p>
+                                <p>The subpart&rsquo;s LithiumBoM part number</p>
                             </td>
                             <td>
                                 <p>part_number</p>
@@ -1211,7 +1211,7 @@
                                 <p>CCC-NNNNN-VV</p>
                             </td>
                             <td>
-                                <p>Must be a valid IndaBOM part number; the number of digits in the item number must match your organization&rsquo;s configuration</p>
+                                <p>Must be a valid LithiumBoM part number; the number of digits in the item number must match your organization&rsquo;s configuration</p>
                             </td>
                         </tr>
                         <tr>
@@ -1230,7 +1230,7 @@
                                 <p>Per the manufacturer&rsquo;s convention, up to 128 characters</p>
                             </td>
                             <td>
-                                <p>Must be a valid manufacturer&rsquo;s part number previously entered into IndaBOM</p>
+                                <p>Must be a valid manufacturer&rsquo;s part number previously entered into LithiumBoM</p>
                             </td>
                         </tr>
                         <tr>

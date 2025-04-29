@@ -1037,7 +1037,7 @@ def bom_settings(request, tab_anchor=None):
             if organization.owner == user:
                 messages.error(
                     request,
-                    "You are the owner of the organization. For now we're not letting owners leave their organization. This will change in the future. Contact info@indabom.com "
+                    "You are the owner of the organization. For now we're not letting owners leave their organization. This will change in the future. Contact Lithium Admin "
                     "if you want us to manually remove you from your organization.",
                 )
             else:
@@ -1399,7 +1399,7 @@ def part_export_bom(
 
     response = HttpResponse(content_type="text/csv")
     filename = (
-        f'indabom_export_{part.full_part_number()}_{"flat" if flat else "indented"}'
+        f'lithium_bom_export_{part.full_part_number()}_{"flat" if flat else "indented"}'
     )
     response["Content-Disposition"] = f'attachment; filename="{filename}.csv'
 
@@ -1725,7 +1725,7 @@ def create_part(request):
     ):
         messages.info(
             request,
-            f"Welcome to IndaBOM! Before you create your first part, you must create your first part class. "
+            f"Welcome to LithiumBoM! Before you create your first part, you must create your first part class. "
             f'<a href="{reverse("bom:help")}#part-numbering" target="_blank">What is a part class?</a>',
         )
         return HttpResponseRedirect(

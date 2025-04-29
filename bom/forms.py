@@ -717,7 +717,7 @@ class PartClassCSVForm(forms.Form):
                 None,
                 forms.ValidationError(
                     "CSV File Encoding error, try encoding your file as utf-8, and upload again. \
-                If this keeps happening, reach out to info@indabom.com with your csv file and we'll do our best to \
+                If this keeps happening, reach out to Lithium Admin with your csv file and we'll do our best to \
                 fix your issue!",
                     code="invalid",
                 ),
@@ -883,7 +883,7 @@ class PartCSVForm(forms.Form):
                     except PartClass.DoesNotExist:
                         self.add_error(
                             None,
-                            "Part class {0} in row {1} doesn't exist. Create part class on Settings > IndaBOM and try again."
+                            "Part class {0} in row {1} doesn't exist. Create part class on Settings > LithiumBoM and try again."
                             "Uploading of this part skipped.".format(
                                 part_data[csv_headers.get_default("part_class")],
                                 row_count,
@@ -1256,7 +1256,7 @@ class PartCSVForm(forms.Form):
                 None,
                 forms.ValidationError(
                     "CSV File Encoding error, try encoding your file as utf-8, and upload again. \
-                If this keeps happening, reach out to info@indabom.com with your csv file and we'll do our best to \
+                If this keeps happening, reach out to Lithium Admin with your csv file and we'll do our best to \
                 fix your issue!",
                     code="invalid",
                 ),
@@ -2193,7 +2193,7 @@ class BOMCSVForm(forms.Form):
                 None,
                 forms.ValidationError(
                     "CSV File Encoding error, try encoding your file as utf-8, and upload again. \
-                If this keeps happening, reach out to info@indabom.com with your csv file and we'll do our best to \
+                If this keeps happening, reach out to Lithium Admin with your csv file and we'll do our best to \
                 fix your issue!",
                     code="invalid",
                 ),

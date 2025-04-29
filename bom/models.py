@@ -571,7 +571,7 @@ class PartRevision(models.Model):
 
     description = models.CharField(max_length=255, default="", null=True, blank=True)
 
-    # By convention for IndaBOM, for part revision properties below, if a property value has
+    # By convention for LithiumBoM, for part revision properties below, if a property value has
     # an associated units of measure, and if the property value field name is 'vvv' then the
     # associated units of measure field name must be 'vvv_units'.
     value_units = models.CharField(

@@ -182,7 +182,7 @@ msgstr "پیوستن به سازمان"
 #: bom/templates/bom/organization-create.html:47
 msgid ""
 "To join an existing organization, you must provide the e-mail address you "
-"signed up with to your IndaBOM organization owner."
+"signed up with to your LithiumBoM organization owner."
 msgstr ""
 "برای پیواستن به سازمان، با ادمین سازمان تماس بگیرید با منتظر تأیید باشید."
 

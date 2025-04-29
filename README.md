@@ -183,12 +183,6 @@ To set this up you just need to add your API key to local_settings.py as shown i
 
 To update rates, migrate and run `python manage.py update_rates`. Some day we will need to add a (celerybeat?) task to update rates on a schedule. Explained more [here](https://github.com/django-money/django-money#working-with-exchange-rates).
 
-## Contributing
-
-Contributions welcome! Before contributing your work please read the [contributing readme](https://github.com/mpkasp/django-bom/blob/master/CONTRIBUTING.md).
-
-Also reach out to mike@indabom.com to discuss features, and join our slack channel.
-
 ## Installation Pitfalls
 
 ### Windows
