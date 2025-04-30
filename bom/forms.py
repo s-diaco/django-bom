@@ -1901,8 +1901,8 @@ class BOMCSVForm(forms.Form):
                     "yes",
                     "true",
                 ]
-                part_dict["revision"] = (
-                    csv_headers.get_val_from_row(part_dict, "revision") or 1
+                part_dict["revision"] = csv_headers.get_val_from_row(
+                    part_dict, "revision"
                 )
                 part_dict["count"] = csv_headers.get_val_from_row(part_dict, "count")
                 part_dict["count"] = convert_arabic_to_english(part_dict["count"])
@@ -1999,9 +1999,17 @@ class BOMCSVForm(forms.Form):
 
                 existing_part_revision = None
                 if existing_part:
-                    existing_part_revision = PartRevision.objects.filter(
-                        part=existing_part, revision=part_dict["revision"]
-                    ).first()
+                    if part_dict["revision"]:
+                        existing_part_revision = PartRevision.objects.filter(
+                            part=existing_part, revision=part_dict["revision"]
+                        ).first()
+                    else:
+                        existing_part_revision = existing_part.latest()
+                        part_dict["revision"] = (
+                            existing_part_revision.revision
+                            if existing_part_revision
+                            else "1"
+                        )
 
                 if (
                     existing_part_revision and parent_part_revision
@@ -2075,6 +2083,8 @@ class BOMCSVForm(forms.Form):
                     )
                     continue
 
+                if not existing_part_revision:
+                    part_dict["revision"] = 1
                 part_revision_form = PartRevisionForm(
                     part_dict, instance=existing_part_revision
                 )
