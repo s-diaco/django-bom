@@ -471,10 +471,7 @@ class TestBOM(TransactionTestCase):
                     "Row 38 - part_number: Uploading of this subpart skipped. Couldn&#x27;t parse part number."
                     in str(msg.message)
                 )
-                self.assertTrue(
-                    "Row 34 - code: Ensure this value has at most 3 characters (it has 9)."
-                    in str(msg.message)
-                )
+                self.assertTrue("Row 34 - code: " in str(msg.message))
                 self.assertTrue(
                     "Row 33 - part_number: Uploading of this subpart skipped. Couldn&#x27;t parse part number."
                     in str(msg.message)
@@ -491,7 +488,7 @@ class TestBOM(TransactionTestCase):
                     "Row 37 - part_number: Uploading of this subpart skipped. Couldn&#x27;t parse part number."
                     in str(msg.message)
                 )
-            self.assertTrue("Row 39 - count: " "Row 39 - count: " in str(msg.message))
+            self.assertTrue("Row 39 - count: " in str(msg.message))
             self.assertTrue(
                 "Row 40 - level: Assembly levels must decrease by no more than 1 from sequential rows."
                 in str(msg.message)

@@ -2004,12 +2004,9 @@ class BOMCSVForm(forms.Form):
                             part=existing_part, revision=part_dict["revision"]
                         ).first()
                     else:
-                        existing_part_revision = existing_part.latest()
-                        part_dict["revision"] = (
-                            existing_part_revision.revision
-                            if existing_part_revision
-                            else "1"
-                        )
+                        if existing_part.latest():
+                            existing_part_revision = existing_part.latest()
+                            part_dict["revision"] = existing_part_revision.revision
 
                 if (
                     existing_part_revision and parent_part_revision
@@ -2083,7 +2080,7 @@ class BOMCSVForm(forms.Form):
                     )
                     continue
 
-                if not existing_part_revision:
+                if not part_dict["revision"]:
                     part_dict["revision"] = 1
                 part_revision_form = PartRevisionForm(
                     part_dict, instance=existing_part_revision
