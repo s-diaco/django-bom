@@ -1,5 +1,6 @@
 import csv
 from re import finditer
+import re
 from unittest import skip
 
 from django.conf import settings
@@ -24,6 +25,7 @@ from .helpers import (
     create_user_and_organization,
 )
 from .models import (
+    Assembly,
     Part,
     PartClass,
     PartRevision,
@@ -619,15 +621,17 @@ class TestBOM(TransactionTestCase):
     # Only for intelligent scheme
     @parameterized.expand(
         [
-            ("bom_exports/1155T158.csv", 1000, 2291816, 2291),
-            ("bom_exports/1155F190.csv", 1010, 1856590, 1838),
-            ("bom_exports/2183S119.csv", 1015, 732879, 722),
-            ("bom_exports/CGM4554.csv", 100, 354905, 3549),
-            ("bom_exports/CGM5357.csv", 100, 548166, 5481),
-            ("bom_exports/CNE5393.csv", 100, 149918, 1499),
-            ("bom_exports/CNE5393_fake.csv", 100, 158877, 1588),
+            ("bom_exports/1155T158.csv", 1000, 2291816, 2360),
+            ("bom_exports/1155F190.csv", 1010, 1856590, 1851),
+            ("bom_exports/2183S119.csv", 1015, 732879, 736),
             ("bom_exports/3024K205.csv", 1000, 1675335, 1886),
-            ("bom_exports/CPM5163.csv", 100, 34950340, 349503),
+            ("bom_exports/CGM4554.csv", 100, 363650, 3636),
+            ("bom_exports/CGM5357.csv", 100, 560942, 5609),
+            ("bom_exports/CNE5393.csv", 100, 147418, 1474),
+            ("bom_exports/CNE5393_fake.csv", 100, 159223, 1592),
+            ("bom_exports/CPM5163.csv", 100, 592968, 5929),
+            ("bom_exports/1155S100.csv", 565, 944305, 1692),
+            ("bom_exports/SimpleBoM_w_1155S100.csv", 16, 30624, 1914),
         ]
     )
     def test_childs_cost_calcs(
@@ -699,30 +703,36 @@ class TestBOM(TransactionTestCase):
                 )
             self.assertEqual(frit3_response.status_code, 200)
 
+            # test_frit4
+            frit4 = Part(number_item="3024K205", organization=self.organization)
+            frit4.save()
+            frit4_rev = create_a_fake_part_revision(
+                frit4, create_a_fake_assembly(), material="with_loi"
+            )
+            frit4_rev.save()
+            frit4.refresh_from_db()
+            frit4_rev.refresh_from_db()
+            with open(f"{TEST_FILES_DIR}/bom_exports/3024K205.csv") as test_csv:
+                frit4_response = self.client.post(
+                    reverse("bom:upload-bom"),
+                    {
+                        "file": test_csv,
+                        "parent_part_number": frit4.full_part_number(),
+                    },
+                    follow=True,
+                )
+            self.assertEqual(frit4_response.status_code, 200)
+
             (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
             p4_rev = create_a_fake_part_revision(p4, create_a_fake_assembly())
             csv_material_code = test_file.split("/")[1].split(".")[0]
             all_part_revisions = PartRevision.objects.all()
-            # check if csv_material_code is in the part number
-            if csv_material_code in [
-                str(part_rev.part) for part_rev in all_part_revisions
-            ]:
-                p4_rev_material = PartRevision.objects.get(
-                    part__number_item=csv_material_code,
-                    part__organization=self.organization,
-                ).material
-            else:
-                p4_rev_material = "no_loi"
-            csv_material_code = test_file.split("/")[1].split(".")[0]
-            all_part_revisions = PartRevision.objects.all()
-            # check if csv_material_code is in the part number
-            if csv_material_code in [
-                str(part_rev.part) for part_rev in all_part_revisions
-            ]:
-                p4_rev_material = PartRevision.objects.get(
-                    part__number_item=csv_material_code,
-                    part__organization=self.organization,
-                ).material
+            # TODO: don't hardcode this regex in test
+            # define regex matching code "1155F190"
+            with_loi_regex = r"^[0-9]{4}[A-Z]{1}[0-9]{3}$"
+            # check if csv_material_code matches the regex
+            if re.match(with_loi_regex, csv_material_code):
+                p4_rev_material = "with_loi"
             else:
                 p4_rev_material = "no_loi"
             with open(f"{TEST_FILES_DIR}/{test_file}") as test_csv:
@@ -740,8 +750,13 @@ class TestBOM(TransactionTestCase):
 
             p4.refresh_from_db()
             p4_rev.refresh_from_db()
-            p4_rev.material = p4_rev_material
-            p4_rev.material = p4_rev_material
+            # TODO: remove.
+            # assemblies_list = Assembly.objects.all()
+            # list all Assembly. Non-empty ones are:
+            # F190
+            # S119
+            # T158
+            # K205
             self.assertEqual(
                 int(p4_rev.indented().parts[str(p4_rev.id)].childs_cost.amount),
                 childs_cost,

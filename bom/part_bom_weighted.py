@@ -105,73 +105,47 @@ class PartBomWeighted(PartBom):
 
         if part.indent_level:
 
-            def update_parent(child_part, childs_old_cost_per_qty=0):
+            def update_parent(child_part):
                 parent_part = self.parts[child_part.parent_id]
-                parents_old_cost_per_qty = 0
-                if parent_part.childs_quantity:
-                    if parent_part.part_revision.material in ["with_loi"]:
-                        parents_old_cost_per_qty = (
-                            parent_part.childs_cost
-                            / parent_part.childs_residue_quantity
+                parent_part.childs_cost = 0
+                parent_part.childs_quantity = 0
+                parent_part.childs_residue_quantity = 0
+                # Update the parent part's cost and quantity based on its children
+                subpart_list = [
+                    x
+                    for x in self.parts.values()
+                    if x.parent_id == child_part.parent_id
+                ]
+                for child in subpart_list:
+                    parent_part.childs_quantity += child.quantity
+                    parent_part.childs_residue_quantity += child.residue_quantity
+                    child_product_qty = (
+                        child.residue_quantity
+                        if parent_part.part_revision.material in ["with_loi"]
+                        else child.quantity
+                    )
+                    parent_part.childs_cost += (
+                        child.childs_cost / child_product_qty * child.quantity
+                    )
+                    if child.seller_part and child.seller_part.unit_cost is not None:
+                        parent_part.childs_cost += (
+                            child.seller_part.unit_cost * child.quantity
                         )
-                    else:
-                        parents_old_cost_per_qty = (
-                            parent_part.childs_cost / parent_part.childs_quantity
-                        )
-                # Revert last calculation to add the new one later
-                if child_part.childs_quantity:
-                    value_to_sub = childs_old_cost_per_qty
-                    if child_part.seller_part:
-                        value_to_sub += child_part.seller_part.unit_cost
-                    if parent_part.part_revision.material in ["with_loi"]:
-                        value_to_sub *= child_part.residue_quantity
-                    else:
-                        value_to_sub *= child_part.quantity
-                    parent_part.childs_cost -= value_to_sub
-                # If its the first time for child_item to be sent for parent update
-                else:
-                    parent_part.childs_quantity += child_part.quantity
-                    parent_part.childs_residue_quantity += child_part.residue_quantity
-                cost_to_add = child_part.childs_cost
-                if child_part.seller_part:
-                    cost_to_add += child_part.seller_part.unit_cost
-                if child_part.childs_quantity:
-                    if child_part.part_revision.material in ["with_loi"]:
-                        cost_to_add = (
-                            cost_to_add
-                            / child_part.childs_residue_quantity
-                            * child_part.quantity
-                        )
-                    else:
-                        cost_to_add = (
-                            cost_to_add
-                            / child_part.childs_quantity
-                            * child_part.quantity
-                        )
-                else:
-                    cost_to_add *= child_part.quantity
-                parent_part.childs_cost += cost_to_add
+                parent_part.unit_cost = parent_part.childs_cost / (
+                    parent_part.childs_residue_quantity
+                    if parent_part.part_revision.material in ["with_loi"]
+                    else parent_part.childs_quantity
+                )
+                if parent_part.seller_part and parent_part.seller_part.unit_cost:
+                    parent_part.unit_cost += parent_part.seller_part.unit_cost
                 if parent_part.indent_level:
                     update_parent(
                         child_part=parent_part,
-                        childs_old_cost_per_qty=parents_old_cost_per_qty,
                     )
-                # "parent_part" is the root part
                 else:
-                    if parent_part.childs_quantity:
-                        if parent_part.part_revision.material in ["with_loi"]:
-                            self.unit_cost = (
-                                parent_part.childs_cost
-                                / parent_part.childs_residue_quantity
-                            )
-                        else:
-                            self.unit_cost = (
-                                parent_part.childs_cost / parent_part.childs_quantity
-                            )
-                    if (parent_part.seller_part) and (
-                        parent_part.seller_part.unit_cost is not None
-                    ):
-                        self.unit_cost += parent_part.seller_part.unit_cost
+                    # "part" is root
+                    if parent_part.bom_id == self.part_revision.assembly_id:
+                        self.unit_cost = parent_part.unit_cost
 
             update_parent(child_part=part)
         else:

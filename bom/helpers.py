@@ -1,3 +1,4 @@
+from email.policy import default
 from bom import constants
 from bom.models import (
     Assembly,
@@ -82,17 +83,27 @@ def create_a_fake_assembly_with_subpart(part_revision, reference="D4", count=4):
     return assy
 
 
-def create_a_fake_part_revision(part, assembly, description="Brown dog", revision="1"):
-    pch, created = PartRevision.objects.get_or_create(
-        part=part,
-        revision=revision,
-        defaults={
+def create_a_fake_part_revision(
+    part, assembly, description="Brown dog", revision="1", material=""
+):
+    defaults = {
+        "description": description,
+        "revision": revision,
+        "attribute": "Voltage",
+        "value": "3.3",
+        "assembly": assembly,
+    }
+    if material:
+        defaults = {
             "description": description,
             "revision": revision,
             "attribute": "Voltage",
             "value": "3.3",
             "assembly": assembly,
-        },
+            "material": material,
+        }
+    pch, created = PartRevision.objects.get_or_create(
+        part=part, revision=revision, defaults=defaults
     )
     return pch
 
