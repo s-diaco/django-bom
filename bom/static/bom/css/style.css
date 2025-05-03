@@ -451,5 +451,15 @@ footer.page-footer>div.container>div.row>div.col>p{
     .pagination {
         display: none;
     }
-    
+
+    @page {
+        size: A5;
+        margin: 1cm;
+    }
+
+    /* Remove all shadows in print view */
+    * {
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
 }
