@@ -724,9 +724,7 @@ class TestBOM(TransactionTestCase):
             self.assertEqual(frit4_response.status_code, 200)
 
             (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
-            p4_rev = create_a_fake_part_revision(p4, create_a_fake_assembly())
             csv_material_code = test_file.split("/")[1].split(".")[0]
-            all_part_revisions = PartRevision.objects.all()
             # TODO: don't hardcode this regex in test
             # define regex matching code "1155F190"
             with_loi_regex = r"^[0-9]{4}[A-Z]{1}[0-9]{3}$"
@@ -735,6 +733,9 @@ class TestBOM(TransactionTestCase):
                 p4_rev_material = "with_loi"
             else:
                 p4_rev_material = "no_loi"
+            p4_rev = create_a_fake_part_revision(
+                p4, create_a_fake_assembly(), material=p4_rev_material
+            )
             with open(f"{TEST_FILES_DIR}/{test_file}") as test_csv:
                 response = self.client.post(
                     reverse("bom:upload-bom"),

@@ -1,4 +1,5 @@
 from djmoney.money import Money
+from decimal import Decimal
 from .part_bom import PartBom, PartIndentedBomItem
 
 
@@ -34,7 +35,7 @@ class PartBomWeighted(PartBom):
                 if child.seller_part:
                     cost_to_subtract += child.seller_part.unit_cost
                 cost_to_subtract *= (
-                    child.residue_quantity
+                    child.product_quantity
                     if parent.part_revision.material in ["with_loi"]
                     else child.quantity
                 )
@@ -42,13 +43,13 @@ class PartBomWeighted(PartBom):
 
             # Update parent's quantity and cost with the child's new values
             parent.childs_quantity += child.quantity
-            parent.childs_residue_quantity += child.residue_quantity
+            parent.childs_product_quantity += child.product_quantity
 
             cost_to_add = child.childs_cost
             if child.seller_part:
                 cost_to_add += child.seller_part.unit_cost
             cost_to_add *= (
-                child.residue_quantity
+                child.product_quantity
                 if parent.part_revision.material in ["with_loi"]
                 else child.quantity
             )
@@ -60,7 +61,7 @@ class PartBomWeighted(PartBom):
             """
             parent = self.parts[child.parent_id]
             old_cost_per_qty = (
-                parent.childs_cost / parent.childs_residue_quantity
+                parent.childs_cost / parent.childs_product_quantity
                 if parent.part_revision.material in ["with_loi"]
                 and parent.childs_quantity
                 else (
@@ -77,7 +78,7 @@ class PartBomWeighted(PartBom):
             else:
                 # If the parent is the root, calculate its unit cost
                 self.unit_cost = (
-                    parent.childs_cost / parent.childs_residue_quantity
+                    parent.childs_cost / parent.childs_product_quantity
                     if parent.part_revision.material in ["with_loi"]
                     and parent.childs_quantity
                     else (
@@ -109,7 +110,7 @@ class PartBomWeighted(PartBom):
                 parent_part = self.parts[child_part.parent_id]
                 parent_part.childs_cost = 0
                 parent_part.childs_quantity = 0
-                parent_part.childs_residue_quantity = 0
+                parent_part.childs_product_quantity = 0
                 # Update the parent part's cost and quantity based on its children
                 subpart_list = [
                     x
@@ -118,21 +119,24 @@ class PartBomWeighted(PartBom):
                 ]
                 for child in subpart_list:
                     parent_part.childs_quantity += child.quantity
-                    parent_part.childs_residue_quantity += child.residue_quantity
-                    child_product_qty = (
-                        child.residue_quantity
-                        if parent_part.part_revision.material in ["with_loi"]
-                        else child.quantity
+                    parent_part.childs_product_quantity += child.product_quantity
+                    product_child_qty = (
+                        child.childs_product_quantity
+                        if child.part_revision.material in ["with_loi"]
+                        else child.childs_quantity
                     )
-                    parent_part.childs_cost += (
-                        child.childs_cost / child_product_qty * child.quantity
-                    )
+                    if product_child_qty:
+                        parent_part.childs_cost += (
+                            child.childs_cost
+                            / Decimal(product_child_qty)
+                            * Decimal(child.quantity)
+                        )
                     if child.seller_part and child.seller_part.unit_cost is not None:
                         parent_part.childs_cost += (
                             child.seller_part.unit_cost * child.quantity
                         )
-                parent_part.unit_cost = parent_part.childs_cost / (
-                    parent_part.childs_residue_quantity
+                parent_part.unit_cost = parent_part.childs_cost / Decimal(
+                    parent_part.childs_product_quantity
                     if parent_part.part_revision.material in ["with_loi"]
                     else parent_part.childs_quantity
                 )
@@ -144,7 +148,7 @@ class PartBomWeighted(PartBom):
                     )
                 else:
                     # "part" is root
-                    if parent_part.bom_id == self.part_revision.assembly_id:
+                    if parent_part.bom_id == str(self.part_revision.assembly_id):
                         self.unit_cost = parent_part.unit_cost
 
             update_parent(child_part=part)
@@ -180,7 +184,7 @@ class PartBomWeightedItem(PartIndentedBomItem):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.childs_quantity = 0
-        self.childs_residue_quantity = 0
+        self.childs_product_quantity = 0
         self.childs_cost = Money(0, self._currency)
 
         # Set residue quantity
@@ -188,7 +192,7 @@ class PartBomWeightedItem(PartIndentedBomItem):
             self.part_revision.tolerance = 0
         # TODO: fix: tolerance should be a float. it is a string
         # in the database
-        self.residue_quantity = self.quantity * (
+        self.product_quantity = self.quantity * (
             1 - (float(self.part_revision.tolerance) / 100)
         )
 
@@ -202,6 +206,6 @@ class PartBomWeightedItem(PartIndentedBomItem):
         product_qty = (
             self.childs_quantity
             if self.part_revision.material not in ["with_loi"]
-            else self.childs_residue_quantity
+            else self.childs_product_quantity
         )
         return self.childs_cost / product_qty if self.childs_quantity else 0

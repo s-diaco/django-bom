@@ -60,7 +60,7 @@
             <th class="text-normal printer-hide">سطح</th>
             <th class="text-normal">کد</th>
             <th class="text-normal">مقدار</th>
-            <th class="text-normal printer-hide">رفرنس</th>
+            <!--<th class="text-normal printer-hide">رفرنس</th>-->
             <!--<th class="text-normal">DNL</th>-->
             <th class="text-normal">شرح</th>
             <th class="text-normal printer-hide">ورژن</th>
@@ -81,18 +81,6 @@
         </thead>
         {% for bom_id, subpart in bom_items.items %}
             {% if subpart.indent_level %}
-                <!-- TODO: what does this do? -->
-                {% if subpart.references|length > 25 %}
-                    <div id="modal-{{ subpart.part.id }}-references" class="modal">
-                        <div class="modal-content">
-                            <h2>{{ subpart.part.full_part_number }} References</h2>
-                            <p>{{ subpart.references }}</p>
-                        </div>
-                        <div class="modal-footer">
-                            <a href="#!" class="modal-close waves-effect green lighten-1 waves-green btn-flat">Ok</a>
-                        </div>
-                    </div>
-                {% endif %}
                 {% if subpart.part_revision.description|length > 75 %}
                     <div id="modal-{{ subpart.part.id }}-synposis" class="modal">
                         <div class="modal-content">
@@ -109,15 +97,18 @@
                     <td class="text-normal printer-hide">{{ subpart.indent_level }}</td>
                     <td class="text-normal"><a href="{% url 'bom:part-info' part_id=subpart.part.id %}">{{ subpart.part.full_part_number }}</a></td>
                     <td class="text-normal">{{ subpart.quantity | floatformat }}</td>
-                    <td class="text-normal printer-hide">{{ subpart.references | default:"-" | truncatechars:25 }}{% if subpart.references|length > 25 %}
-                        <a class="modal-trigger modal-{{ subpart.part.id }}-references" href="#modal-{{ subpart.part.id }}-references">&nbsp;[+]</a>
-                    {% endif %}</td>
                     <td class="text-normal">{{ subpart.part_revision.description | truncatechars:75 }}{% if subpart.part_revision.description|length > 75 %}
                         <a class="modal-trigger modal-{{ subpart.part.id }}-synposis" href="#modal-{{ subpart.part.id }}-synposis">&nbsp;[+]</a>
                     {% endif %}
                     <td class="text-normal printer-hide">{{ subpart.part_revision.revision }}</td>
                     <td class="text-normal printer-hide" id="bom-indented-seller-name-{{ subpart.part_revision.id }}">{{ subpart.part_revision.tolerance | default:"-" }}</td>
-                    <td class="text-normal" id="bom-indented-unit-cost-{{ subpart.part_revision.id }}">{{ subpart.seller_part.unit_cost | default:"-" }}</td>
+                    <td class="text-normal" id="bom-indented-unit-cost-{{ subpart.part_revision.id }}">
+                        {% if subpart.subpart is not None %}
+                            {{ subpart.unit_cost }}
+                        {% else %}
+                            {{ subpart.seller_part.unit_cost | default:"-" }}
+                        {% endif %}
+                    </td>
                     {% if subpart.indent_level == 1 and subpart.subpart is not None and manage %}
                         <td>
                             <a class='dropdown-trigger' href='#'
