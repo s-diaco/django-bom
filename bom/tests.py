@@ -652,7 +652,9 @@ class TestBOM(TransactionTestCase):
             # test_frit1
             frit1 = Part(number_item="2183S119", organization=self.organization)
             frit1.save()
-            frit1_rev = create_a_fake_part_revision(frit1, create_a_fake_assembly())
+            frit1_rev = create_a_fake_part_revision(
+                frit1, create_a_fake_assembly(), material="with_loi"
+            )
             frit1_rev.save()
             frit1.refresh_from_db()
             frit1_rev.refresh_from_db()
@@ -670,7 +672,9 @@ class TestBOM(TransactionTestCase):
             # test_frit2
             frit2 = Part(number_item="1155F190", organization=self.organization)
             frit2.save()
-            frit2_rev = create_a_fake_part_revision(frit2, create_a_fake_assembly())
+            frit2_rev = create_a_fake_part_revision(
+                frit2, create_a_fake_assembly(), material="with_loi"
+            )
             frit2_rev.save()
             frit2.refresh_from_db()
             frit2_rev.refresh_from_db()
@@ -688,7 +692,9 @@ class TestBOM(TransactionTestCase):
             # test_frit3
             frit3 = Part(number_item="1155T158", organization=self.organization)
             frit3.save()
-            frit3_rev = create_a_fake_part_revision(frit3, create_a_fake_assembly())
+            frit3_rev = create_a_fake_part_revision(
+                frit3, create_a_fake_assembly(), material="with_loi"
+            )
             frit3_rev.save()
             frit3.refresh_from_db()
             frit3_rev.refresh_from_db()
