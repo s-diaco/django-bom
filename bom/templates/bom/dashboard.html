@@ -128,8 +128,8 @@
 
                                 <td class="text-normal td-med">{% if part_rev.material == "no_bom" or part_rev.material == None %}
                                     {{ part_rev.part.optimal_seller.unit_cost }}
-                                    {% elif part_rev.indented.unit_cost is not 0 %}
-                                    {{ part_rev.indented.unit_cost }}
+                                    {% elif part_rev.indented.bom_unit_cost is not 0 %}
+                                    {{ part_rev.indented.bom_unit_cost }}
                                     {% endif %}</td>
 
                                 <td class="text-normal td-med">

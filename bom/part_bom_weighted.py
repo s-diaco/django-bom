@@ -10,90 +10,13 @@ class PartBomWeighted(PartBom):
     functionality to calculate the cost of a part BOM with weighted items.
     """
 
-    def update_as_weighted_bom_2(self, part):
-        """
-        Update "childs_cost" and "childs_quantity" for parent "PartBomItem"s
-        all the way up to the root node of the tree and calculate unit_cost.
+    def __init__(self, bom_unit_cost=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if bom_unit_cost is None:
+            bom_unit_cost = Money(0, self._currency)
+        self.bom_unit_cost = bom_unit_cost
 
-        :param part: BOM item whose parents will be updated
-        :type part: PartBomWeightedItem
-        """
-        if not part.indent_level:
-            # If the part is the root, calculate its unit cost directly
-            if part.seller_part and part.seller_part.unit_cost is not None:
-                self.unit_cost += part.seller_part.unit_cost
-            return
-
-        def calculate_cost_and_quantity(child, parent, old_cost_per_qty=0):
-            """
-            Helper function to calculate and update the parent's cost and quantity
-            based on the child's values.
-            """
-            # Revert the parent's previous cost contribution from the child
-            if child.childs_quantity:
-                cost_to_subtract = old_cost_per_qty
-                if child.seller_part:
-                    cost_to_subtract += child.seller_part.unit_cost
-                cost_to_subtract *= (
-                    child.product_quantity
-                    if parent.part_revision.material in ["with_loi"]
-                    else child.quantity
-                )
-                parent.childs_cost -= cost_to_subtract
-
-            # Update parent's quantity and cost with the child's new values
-            parent.childs_quantity += child.quantity
-            parent.childs_product_quantity += child.product_quantity
-
-            cost_to_add = child.childs_cost
-            if child.seller_part:
-                cost_to_add += child.seller_part.unit_cost
-            cost_to_add *= (
-                child.product_quantity
-                if parent.part_revision.material in ["with_loi"]
-                else child.quantity
-            )
-            parent.childs_cost += cost_to_add
-
-        def update_parent(child):
-            """
-            Recursively update the parent parts up to the root.
-            """
-            parent = self.parts[child.parent_id]
-            old_cost_per_qty = (
-                parent.childs_cost / parent.childs_product_quantity
-                if parent.part_revision.material in ["with_loi"]
-                and parent.childs_quantity
-                else (
-                    parent.childs_cost / parent.childs_quantity
-                    if parent.childs_quantity
-                    else 0
-                )
-            )
-
-            calculate_cost_and_quantity(child, parent, old_cost_per_qty)
-
-            if parent.indent_level:
-                update_parent(parent)
-            else:
-                # If the parent is the root, calculate its unit cost
-                self.unit_cost = (
-                    parent.childs_cost / parent.childs_product_quantity
-                    if parent.part_revision.material in ["with_loi"]
-                    and parent.childs_quantity
-                    else (
-                        parent.childs_cost / parent.childs_quantity
-                        if parent.childs_quantity
-                        else 0
-                    )
-                )
-                if parent.seller_part and parent.seller_part.unit_cost is not None:
-                    self.unit_cost += parent.seller_part.unit_cost
-
-        # Start updating from the given part
-        update_parent(part)
-
-    # TODO: simplify this method using the above one
+    # TODO: simplify this method
     def update_as_weighted_bom(self, part):
         """
         Update "childs_cost" and "childs_quantity" for parent "PartBomItem"s
@@ -148,7 +71,16 @@ class PartBomWeighted(PartBom):
                     )
                 else:
                     # "part" is root
-                    if parent_part.bom_id == str(self.part_revision.assembly_id):
+                    if (
+                        self.part_revision.part.number_item
+                        == parent_part.part_revision.part.number_item
+                    ):
+                        if parent_part.childs_quantity:
+                            self.bom_unit_cost = parent_part.childs_cost / Decimal(
+                                parent_part.childs_product_quantity
+                                if parent_part.part_revision.material in ["with_loi"]
+                                else parent_part.childs_quantity
+                            )
                         self.unit_cost = parent_part.unit_cost
 
             update_parent(child_part=part)
@@ -165,7 +97,6 @@ class PartBomWeighted(PartBom):
             return
 
         self.update_as_weighted_bom(bom_part)
-
         if bom_part.seller_part:
             try:
                 bom_part.order_quantity = bom_part.seller_part.order_quantity(
