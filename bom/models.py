@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.forms import ValidationError
 from django.utils import timezone
 
 from djmoney.models.fields import CURRENCY_CHOICES, CurrencyField, MoneyField
@@ -67,7 +68,7 @@ class Organization(models.Model):
     name = models.CharField(max_length=255, default=None)
     subscription = models.CharField(max_length=1, choices=SUBSCRIPTION_TYPES)
     subscription_quantity = models.IntegerField(default=0)
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     number_scheme = models.CharField(
         max_length=1, choices=NUMBER_SCHEMES, default=NUMBER_SCHEME_SEMI_INTELLIGENT
     )
@@ -134,7 +135,7 @@ class UserMeta(models.Model):
         settings.AUTH_USER_MODEL, db_index=True, on_delete=models.CASCADE
     )
     organization = models.ForeignKey(
-        Organization, blank=True, null=True, on_delete=models.CASCADE
+        Organization, blank=True, null=True, on_delete=models.PROTECT
     )
     role = models.CharField(max_length=1, choices=ROLE_TYPES)
 
@@ -205,7 +206,7 @@ class PartClass(models.Model):
 class Manufacturer(models.Model, AsDictModel):
     name = models.CharField(max_length=128, default=None)
     organization = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, db_index=True
+        Organization, on_delete=models.PROTECT, db_index=True
     )
 
     class Meta:
@@ -220,7 +221,7 @@ class Manufacturer(models.Model, AsDictModel):
 # that should be done often.
 class Part(models.Model):
     organization = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, db_index=True
+        Organization, on_delete=models.PROTECT, db_index=True
     )
     number_class = models.ForeignKey(
         PartClass,
@@ -246,7 +247,7 @@ class Part(models.Model):
         default=None,
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         related_name="primary_manufacturer_part",
     )
     google_drive_parent = models.CharField(
@@ -261,6 +262,21 @@ class Part(models.Model):
             "organization",
         ]
         index_together = ["organization", "number_class"]
+
+    def delete(self, *args, **kwargs):
+        if self.revisions().exists():
+            raise ValidationError(
+                f"Cannot delete part {self.full_part_number()} because it is referenced in PartRevision."
+            )
+        if self.manufacturer_parts().exists():
+            raise ValidationError(
+                f"Cannot delete part {self.full_part_number()} because it is referenced in ManufacturerPart."
+            )
+        if self.seller_parts().exists():
+            raise ValidationError(
+                f"Cannot delete part {self.full_part_number()} because it is referenced in SellerPart."
+            )
+        super().delete(*args, **kwargs)
 
     def full_part_number(self):
         if self.organization.number_scheme == NUMBER_SCHEME_SEMI_INTELLIGENT:
@@ -1122,7 +1138,7 @@ class ManufacturerPart(models.Model, AsDictModel):
 
 
 class Seller(models.Model, AsDictModel):
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
     name = models.CharField(max_length=128, default=None)
 
     def __str__(self):

@@ -18,6 +18,7 @@ from django.db.models import (
     Subquery,
     prefetch_related_objects,
 )
+from django.forms import ValidationError
 from django.utils.dateparse import parse_date
 from django.db.models.aggregates import Max
 from django.http import HttpResponse, HttpResponseRedirect
@@ -141,8 +142,7 @@ def home(request):
                                 id=part_id, organization=organization
                             )
                             part_number = part.full_part_number()
-                            part.delete()
-                            messages.success(request, f"Deleted part {part_number}")
+                            part_delete(request=request, part_id=part_id)
                         except Part.DoesNotExist:
                             messages.error(
                                 request,
@@ -1975,7 +1975,14 @@ def manage_bom(request, part_id, part_revision_id):
 @organization_admin
 def part_delete(request, part_id):
     part = get_object_or_404(Part, pk=part_id)
-    part.delete()
+    try:
+        part.delete()
+        messages.success(
+            request, f"Part {part.full_part_number()} deleted successfully."
+        )
+    except ValidationError as e:
+        # Handle the ValidationError and display the error message
+        messages.error(request, f"Cannot delete part: {e.message}")
     return HttpResponseRedirect(reverse("bom:home"))
 
 
@@ -2469,7 +2476,7 @@ def part_revision_new(request, part_id):
     organization = profile.organization
 
     part = get_object_or_404(Part, pk=part_id)
-    title = "ورژن جدید for {}".format(part.full_part_number())
+    title = "ورژن جدید برای {}".format(part.full_part_number())
     action = reverse("bom:part-revision-new", kwargs={"part_id": part_id})
 
     latest_revision = part.latest()
@@ -2488,10 +2495,8 @@ def part_revision_new(request, part_id):
         part_revision_new_form = PartRevisionNewForm(
             request.POST,
             part=part,
-            revision=request.POST.get("revision"),
             assembly=latest_revision.assembly,
         )
-        # TODO: checkif revision is duplicate
         if part_revision_new_form.is_valid():
             new_part_revision = part_revision_new_form.save()
 
@@ -2581,17 +2586,34 @@ def part_revision_edit(request, part_id, part_revision_id):
 def part_revision_delete(request, part_id, part_revision_id):
     part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
     part = part_revision.part
-    part_revision.delete()
-
+    try:
+        part_revision.delete()
+        messages.info(
+            request,
+            "Deleted {} Rev {}.".format(
+                part.full_part_number(), part_revision.revision
+            ),
+        )
+    except ValidationError as e:
+        messages.error(request, f"Cannot delete part revision: {e.message}")
+        return HttpResponseRedirect(
+            reverse("bom:part-info", kwargs={"part_id": part.id})
+        )
     if part.revisions().count() == 0:
-        part.delete()
-        messages.info(request, "Deleted {}.".format(part.full_part_number()))
-        return HttpResponseRedirect(reverse("bom:home"))
-
-    messages.info(
-        request,
-        "Deleted {} Rev {}.".format(part.full_part_number(), part_revision.revision),
-    )
+        try:
+            part.delete()
+            messages.info(request, "Deleted {}.".format(part.full_part_number()))
+            return HttpResponseRedirect(reverse("bom:home"))
+        except ValidationError as e:
+            # Undo the deletion of the part revision if part deletion fails
+            part_revision.save()
+            messages.error(
+                request,
+                f"Cannot delete part: {e.message}. Restored the deleted part revision.",
+            )
+            return HttpResponseRedirect(
+                reverse("bom:part-info", kwargs={"part_id": part.id})
+            )
 
     return HttpResponseRedirect(reverse("bom:part-info", kwargs={"part_id": part.id}))
 

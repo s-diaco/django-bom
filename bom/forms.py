@@ -1549,11 +1549,11 @@ class PartRevisionNewForm(PartRevisionForm):
             value.help_text = ""
 
     def save(self):
-        # cleaned_data = super(PartRevisionNewForm, self).clean()
-        super(PartRevisionNewForm, self).clean()
+        cleaned_data = super(PartRevisionNewForm, self).clean()
         self.instance.part = self.part
-        self.instance.revision = self.revision
-        self.instance.assembly = self.assembly
+        self.instance.revision = cleaned_data["revision"]
+        # TODO: delete
+        # self.instance.assembly = self.assembly
         self.instance.save()
         return self.instance
 
