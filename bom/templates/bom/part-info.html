@@ -162,16 +162,16 @@
                         </li>
                         <li class="collection-item">
                             {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
-                                <div class="row">
+                                <div class="row{% if indented_bom.missing_item_costs > 0 %} red-text{% endif %}">
                                     <div class="col s4 l2 text-right" style="padding-left: 0px;">قیمت:</div>
                                     <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ childs_unit_cost|default_if_none:'-' }}</span></div>
                                 </div>
-                                <div class="row">
+                                <div class="row{% if indented_bom.missing_item_costs > 0 %} red-text{% endif %}">
                                     <div class="col s4 l2 text-right" style="padding-left: 0px;">تعداد متریال بدون قیمت:</div>
                                     <div class="col s8 l10"><span id="mouser-missing-item-costs"></span><span><span class="right">{{ indented_bom.missing_item_costs }}{% if indented_bom.missing_item_costs > 0 %} </span><i class="material-icons red-text">error</i>{% else %} <i class="material-icons green-text">check_circle</i>{% endif %}</span></div>
                                 </div>
                                 <div class="row">
-                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">وزن BOM:</div>
+                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">وزن BoM:</div>
                                     <div class="col s8 l10"><span id="bom_weight"></span><span>{{ total_bom_weight|default_if_none:'-' }}</span></div>
                                 </div>
                                 <!--
