@@ -15,7 +15,7 @@ PART4,Test Part 2,A,Manufacturer1,MAN2_15,Seller2,1000.23,124.23,1,1,0,no_bom
 007-38,کائولن GZWNK(ماکادم) خاک چینی,A,Manufacturer1,MAN1_7,Seller2,738,124.23,1,1,0,no_bom
 007-42,کائولن میکرونیزه زرمهر (KP22 S),A,Manufacturer1,MAN4_7,Seller2,742,124.23,1,1,0,no_bom
 008-11,اکسید روی (آریا توتیا),A,Manufacturer1,MAN1_8,Seller2,815,124.23,1,1,21.3,no_bom
-008-15,اکسید روی نانو بلوره پارس,A,Manufacturer1,MAN1_8,Seller2,815,124.23,1,1,0,no_bom
+008-15,اکسید روی نانو بلوره پارس,A,Manufacturer1,MAN3_8,Seller2,815,124.23,1,1,0,no_bom
 008-16,اکسیدروی شکوهیه (قم),A,Manufacturer1,MAN2_8,Seller2,816,124.23,1,1,0,no_bom
 010-02,سیلیکات زیرکونیم 500,A,Manufacturer1,MAN2_10,Seller2,1002,124.23,1,1,0,no_bom
 010-23,سیلیکات زیرکونیوم  325 شایراد تجارت,A,Manufacturer1,MAN1_10,Seller2,1023,124.23,1,1,0,no_bom
@@ -29,7 +29,7 @@ PART4,Test Part 2,A,Manufacturer1,MAN2_15,Seller2,1000.23,124.23,1,1,0,no_bom
 024-16,نیترات پتاسیم ( نانو بلوره ),A,Manufacturer1,MAN2_24,Seller2,6306,124.23,1,1,0,no_bom
 063-06,اکسید تیتانیوم چینی,A,Manufacturer1,MAN2_63,Seller2,6306,124.23,1,1,0,no_bom
 065-00,کربنات باریم,A,Manufacturer1,MAN2_65,Seller2,6500,124.23,1,1,0,no_bom
-066-00,اکسید آلومینیوم فرانسوی,A,Manufacturer1,MAN4_66,Seller2,6600,124.23,1,1,2.8,no_bom
+066-00,اکسید آلومینیوم فرانسوی,A,Manufacturer1,MAN5_66,Seller2,6600,124.23,1,1,2.8,no_bom
 066-05,اکسید آلومینیوم فرانسوی,A,Manufacturer1,MAN1_66,Seller2,6605,124.23,1,1,0,no_bom
 066-13,اکسید آلومینیوم (پارس اکسید),A,Manufacturer1,MAN2_66,Seller2,6614,124.23,1,1,2.8,no_bom
 066-14,اکسید آلومینیوم( آریا فرآور),A,Manufacturer1,MAN3_66,Seller2,6614,124.23,1,1,0,no_bom
