@@ -65,7 +65,7 @@
             "type": "docker-compose",
             "dockerCompose": {
                 "down": {
-                    "removeVolumes": true,
+                    "removeVolumes": false,
                     "removeImages": "local"
                 },
                 "files": [
