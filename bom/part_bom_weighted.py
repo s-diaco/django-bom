@@ -26,6 +26,8 @@ class PartBomWeighted(PartBom):
         :param part: BOM item whom parents will be updated
         :type part: PartBomWeightedItem
         """
+        if (part.seller_part) and (part.seller_part.unit_cost is not None):
+            part.unit_cost = part.seller_part.unit_cost
 
         if part.indent_level:
 
@@ -43,15 +45,10 @@ class PartBomWeighted(PartBom):
                 for child in subpart_list:
                     parent_part.childs_quantity += child.quantity
                     parent_part.childs_product_quantity += child.product_quantity
-                    product_child_qty = (
-                        child.childs_product_quantity
-                        if child.part_revision.material in ["with_loi"]
-                        else child.childs_quantity
-                    )
-                    if product_child_qty:
+                    if child.childs_product_quantity:
                         parent_part.childs_cost += (
                             child.childs_cost
-                            / Decimal(product_child_qty)
+                            / Decimal(child.childs_product_quantity)
                             * Decimal(child.quantity)
                         )
                     if child.seller_part and child.seller_part.unit_cost is not None:
@@ -60,8 +57,6 @@ class PartBomWeighted(PartBom):
                         )
                 parent_part.unit_cost = parent_part.childs_cost / Decimal(
                     parent_part.childs_product_quantity
-                    if parent_part.part_revision.material in ["with_loi"]
-                    else parent_part.childs_quantity
                 )
                 if parent_part.seller_part and parent_part.seller_part.unit_cost:
                     parent_part.unit_cost += parent_part.seller_part.unit_cost
@@ -78,8 +73,6 @@ class PartBomWeighted(PartBom):
                         if parent_part.childs_quantity:
                             self.bom_unit_cost = parent_part.childs_cost / Decimal(
                                 parent_part.childs_product_quantity
-                                if parent_part.part_revision.material in ["with_loi"]
-                                else parent_part.childs_quantity
                             )
                         self.unit_cost = parent_part.unit_cost
 
@@ -117,6 +110,7 @@ class PartBomWeightedItem(PartIndentedBomItem):
         self.childs_quantity = 0
         self.childs_product_quantity = 0
         self.childs_cost = Money(0, self._currency)
+        self.cost_effect_in_bom = 0
 
         # Set residue quantity
         if not self.part_revision.tolerance:
@@ -124,7 +118,7 @@ class PartBomWeightedItem(PartIndentedBomItem):
         # TODO: fix: tolerance should be a float. it is a string
         # in the database
         self.product_quantity = self.quantity * (
-            1 - (float(self.part_revision.tolerance) / 100)
+            1 - (float(self.part_revision.tolerance) / 100) * self.is_sintered_product
         )
 
     @property
@@ -134,9 +128,19 @@ class PartBomWeightedItem(PartIndentedBomItem):
         :return: unit cost of the child parts
         :rtype: Money
         """
-        product_qty = (
-            self.childs_quantity
-            if self.part_revision.material not in ["with_loi"]
-            else self.childs_product_quantity
+        return (
+            self.childs_cost / self.childs_product_quantity
+            if self.childs_quantity
+            else 0
         )
-        return self.childs_cost / product_qty if self.childs_quantity else 0
+
+    @property
+    def is_sintered_product(self):
+        """
+        Check if the part is a sintered product.
+        :return: True if the part is a sintered product, False otherwise
+        :rtype: bool
+        """
+        if self.part_revision.material in ["with_loi"]:
+            return True
+        return False
