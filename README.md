@@ -1,8 +1,8 @@
 # BOM
 
-BOM is a simple Django app to manage a bill of materials. It supports multiple part numbering schemes, tracking component sourcing information, estimates costs, and contains Google Drive for part file management. BOM is written in Python 3 and Django 5.
+BoM is a simple Django app to manage a bill of materials. It supports multiple part numbering schemes, tracking component sourcing information, estimates costs, and contains Google Drive for part file management. BoM is written in Python 3 and Django 5.
 
-BOM can be added to an existing (or new) Django project, or stand alone on its own, which can be more convenient if you're interested in tweaking the tool. 
+BoM can be added to an existing (or new) Django project, or stand alone on its own, which can be more convenient if you're interested in tweaking the tool. 
 
 If you already have a django project, you can skip to [Add Django Bom To Your App](#add-django-bom-to-your-app), otherwise [Start From Scratch: Add to new Django project](#start-from-scratch-add-to-a-new-django-project) to add it to a new django project, or [Start From Scratch: Use as standalone Django project](#start-from-scratch-use-as-a-standalone-django-project).
 

@@ -266,8 +266,8 @@ msgid "Login"
 msgstr "ورود"
 
 #: bom/templates/registration/login.html:18
-msgid "Login into your BOM account"
-msgstr "ورود به اکانت BOM شما"
+msgid "Login into your BoM account"
+msgstr "ورود به اکانت BoM شما"
 
 #: bom/validators.py:23
 #, python-format

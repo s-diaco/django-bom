@@ -393,7 +393,7 @@ class TestBOM(TransactionTestCase):
 
         # Check that parts get uploaded correctly
         for idx, item in enumerate(test_list):
-            assertion_message = f'Index: {idx}, CSV PN: {item["part_number"]}, BOM PN: {bom_list[idx].part.full_part_number()}'
+            assertion_message = f'Index: {idx}, CSV PN: {item["part_number"]}, BoM PN: {bom_list[idx].part.full_part_number()}'
             self.assertEqual(
                 int(float(item["level"])), bom_list[idx].indent_level, assertion_message
             )
@@ -586,7 +586,7 @@ class TestBOM(TransactionTestCase):
 
             # Check that parts get uploaded correctly
             for idx, item in enumerate(test_list):
-                assertion_message = f"Index: {idx+1}, CSV PN: {item[next(iter(item))]}, BOM PN: {bom_list[idx+1].part.full_part_number()}"
+                assertion_message = f"Index: {idx+1}, CSV PN: {item[next(iter(item))]}, BoM PN: {bom_list[idx+1].part.full_part_number()}"
                 self.assertEqual(
                     item[next(iter(item))],
                     bom_list[idx + 1].part.full_part_number(),
@@ -2024,7 +2024,7 @@ class TestBOMIntelligent(TestBOM):
         for msg in messages:
             self.assertNotEqual(
                 msg.tags, "error"
-            )  # Error loading 200-3333-00 via CSV because already in parent's BOM and has empty ref designators
+            )  # Error loading 200-3333-00 via CSV because already in parent's BoM and has empty ref designators
 
         subparts = p2.latest().assembly.subparts.all()
 
@@ -2067,7 +2067,7 @@ class TestBOMIntelligent(TestBOM):
         # Only one part should exist
         self.assertEqual(Part.objects.filter(number_item="C0402X5R10V001").count(), 1)
 
-        # Uploading this BOM should work, and multiple parts should not be created
+        # Uploading this BoM should work, and multiple parts should not be created
         p = Part.objects.first()
         with open(f"{TEST_FILES_DIR}/test_bom_5_intelligent.csv") as test_csv:
             response = self.client.post(

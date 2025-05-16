@@ -8,7 +8,7 @@ from bom.views import views
 
 
 bom_patterns = [
-    # BOM urls
+    # BoM urls
     path("", views.home, name="home"),
     path("report/", views.report, name="report"),
     # path('bom/', views.home, name='home'),

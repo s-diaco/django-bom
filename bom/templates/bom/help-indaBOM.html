@@ -63,7 +63,7 @@
                                     will be
                                     able to
                                     fill
-                                    out your BOM one subpart at a time by entering data into a form, or you can upload a CSV file. Again, on-line instructions provide the details.
+                                    out your BoM one subpart at a time by entering data into a form, or you can upload a CSV file. Again, on-line instructions provide the details.
                                 </li>
                             </ul>
                         </li>
@@ -78,7 +78,7 @@
                         BOM.
                         BOMs
                         and
-                        parts may be entered directly into LithiumBoM or they may be uploaded as comma-separated (CSV) files. Information about an individual part, a collection of parts, or a BOM may be
+                        parts may be entered directly into LithiumBoM or they may be uploaded as comma-separated (CSV) files. Information about an individual part, a collection of parts, or a BoM may be
                         downloaded
                         as CSV files.</p>
                     <p>Parts are grouped by class. A part class represents a category of parts and is used to classify parts, such as resistors, capacitors, or printed circuit board
@@ -87,7 +87,7 @@
                     <p>The general use model for LithiumBoM is to define part classes, then define parts, then define BOMs for the parts that are assemblies of other parts, and then use this information
                         as
                         the
-                        authoritative source of parts and assemblies for your projects or products. For example, you might provide a downloaded BOM to a contract manufacturer so that they are able to
+                        authoritative source of parts and assemblies for your projects or products. For example, you might provide a downloaded BoM to a contract manufacturer so that they are able to
                         procure
                         parts and assemble your product.</p>
                     <p>Over time, new part classes and parts may be added and new assembly BOMs may be defined. Similarly, the definitions for existing part classes, parts, and assemblies may be
@@ -134,7 +134,7 @@
                     <p>An LithiumBoM user may be affiliated with only one LithiumBoM organization at a time. A user can only view and revise information that is associated with their organization.</p>
                     <p>Within the scope of an organization, an LithiumBoM user may have either the role of &ldquo;Viewer&rdquo; or of &ldquo;Admin&rdquo;. A viewer can search for and view data about part
                         classes,
-                        parts and BOMs. An admin can additionally add, revise, and delete part class, part and BOM data.</p>
+                        parts and BOMs. An admin can additionally add, revise, and delete part class, part and BoM data.</p>
                     <p>The user who initially sets-up LithiumBoM for an organization is referred to as the &ldquo;organization&rsquo;s owner&rdquo;. This person may add or remove users to their
                         organization,
                         and
@@ -1094,7 +1094,7 @@
                     <h4>Mouser Integration</h4>
                     <p>The Mouser integration shows up in a few places - both on the part info page (the detail view for a part with the tabs "Specifications", "Bill of materials", etc...):</p>
                     <ul>
-                        <li>Specifications: Under the Manufacturer and sourcing tab, after the page loads, we ping Mouser and update BOM costs. This may take a few seconds, and you will know it's done
+                        <li>Specifications: Under the Manufacturer and sourcing tab, after the page loads, we ping Mouser and update BoM costs. This may take a few seconds, and you will know it's done
                             when a
                             Mouser "M" icon shows up.
                         </li>
@@ -1119,7 +1119,7 @@
                         include other assemblies.</p>
                 </div>
                 <div class="section scrollspy">
-                    <h3>BOM Reference Designators</h3>
+                    <h3>BoM Reference Designators</h3>
                     <p>The Bill Of Materials display orders the listing of parts based upon the optional reference designator assigned to the part. For example, using common electrical engineering
                         conventions,
                         capacitors might have a reference designator that begins with the letter &lsquo;C&rsquo; followed by a number, such as C10, C13, C26 and so on. A resistor might have a
@@ -1131,11 +1131,11 @@
                         R13, R15.</p>
                     <p>A reference designator may be comprised of any printable character. It cannot, however, include any of the delimiters listed below.</p>
                     <p>If a part does not have a reference then its part number is used to determine its order in the listing.</p>
-                    <p>Whether editing a BOM or uploading a BOM, a warning will be issued when the same reference designator is associated with multiple parts in a Bill of Materials. Sometimes it is
+                    <p>Whether editing a BoM or uploading a BOM, a warning will be issued when the same reference designator is associated with multiple parts in a Bill of Materials. Sometimes it is
                         desirable
                         to
                         use the same reference designator for multiple parts, which is why this situation is only a warning. The warning is displayed at the top of the page.</p>
-                    <p>Further, when a part is added to a BOM or an existing BOM part is edited, and a reference designator is specified, then the number of designators must match the part quantity
+                    <p>Further, when a part is added to a BoM or an existing BoM part is edited, and a reference designator is specified, then the number of designators must match the part quantity
                         specified.
                         Multiple reference designators may be separated by white space, commas, semi-colons, colons, or tabs, such as &ldquo;R1, R2, R3&rdquo; or &ldquo;R1 R2 R3&rdquo; or &ldquo;R1;
                         R2,
@@ -1155,30 +1155,30 @@
                 </div>
                 <div class="section scrollspy">
                     <h3>Editing a Subpart</h3>
-                    <p>When a BOM is being edited, it is also possible to edit the information about an existing subpart or remove a subpart altogether. At the end of each subpart row is a drop down
+                    <p>When a BoM is being edited, it is also possible to edit the information about an existing subpart or remove a subpart altogether. At the end of each subpart row is a drop down
                         menu
                         that
                         allows you to edit or delete the subpart. If you chose to edit the subpart you can change which part revision it is tied to, you can change its reference designator(s), you can
                         change
                         the
                         quantity of the subpart, and you can set or unset the subpart&rsquo;s Do Not Load flag.</p>
-                    <p>If you chose to delete the part then it will be removed from the BOM you are editing. This does not affect any other BOM, and it does not affect the part that the subpart is
+                    <p>If you chose to delete the part then it will be removed from the BoM you are editing. This does not affect any other BOM, and it does not affect the part that the subpart is
                         tied
                         to. In
                         addition, if the subpart appears more than once in the BOM, deleting a subpart row only removes the information contained on that row.</p>
                 </div>
                 <div class="section scrollspy">
                     <h3>Uploading a BOM</h3>
-                    <p>A BOM may be uploaded from a comma-separated file. This can be done from the bottom of the Bill of Materials page when a particular BOM is being edited. It can also be done
+                    <p>A BoM may be uploaded from a comma-separated file. This can be done from the bottom of the Bill of Materials page when a particular BoM is being edited. It can also be done
                         using the &ldquo;Upload&rdquo; menu that appears on the Home page and search results pages.</p>
-                    <p>When you upload BOM subparts from a file, errors may prevent a subpart from being uploaded, for example, an improperly formatted part number.
+                    <p>When you upload BoM subparts from a file, errors may prevent a subpart from being uploaded, for example, an improperly formatted part number.
                         The uploading may continue with the next valid subpart in the file, if it can.</p>
                     <p>Here is <a href="{% static 'bom/doc/test_bom_5_intelligent.csv' %}">a sample CSV file for uploading intelligent parts</a> and here is <a
                             href="{% static 'bom/doc/test_full_bom.csv' %}">a sample CSV file for uploading semi-intelligent parts</a></p>
                 </div>
                 <div class="section scrollspy">
                     <h3>CSV File Headers and Values</h3>
-                    <p>Any information that you can enter manually about a BOM via the Bill Of Materials page may also be submitted via the BOM upload file. Here is the complete list of items you can
+                    <p>Any information that you can enter manually about a BoM via the Bill Of Materials page may also be submitted via the BoM upload file. Here is the complete list of items you can
                         upload for a subpart in the list:</p>
                 </div>
                 <div class="section scrollspy">
@@ -1284,7 +1284,7 @@
                                 <p>designator</p>
                             </td>
                             <td>
-                                <p>See the section BOM Reference Designators</p>
+                                <p>See the section BoM Reference Designators</p>
                             </td>
                             <td>
                                 <p>If specified, then the number of reference designators must match the part&rsquo;s count; A warning will be issued for designators already in use elsewhere in the
@@ -1307,7 +1307,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <p>Do not load the part, in other words load it into the BOM but mark as &ldquo;Do Not Load&rdquo; into the assembly</p>
+                                <p>Do not load the part, in other words load it into the BoM but mark as &ldquo;Do Not Load&rdquo; into the assembly</p>
                             </td>
                             <td>
                                 <p>dnl - or -</p>
@@ -1323,11 +1323,11 @@
                 </div>
                 <div class="section scrollspy">
                     <h3>Downloading BOMs</h3>
-                    <p>A BOM CSV file may be downloaded either from the Search Results page or from the Bill Of Materials page.&nbsp;</p>
-                    <p>On the Search Results page, each part listed presents a menu of download choices. If the part is an assembly, then downloading the part results in its entire BOM being
+                    <p>A BoM CSV file may be downloaded either from the Search Results page or from the Bill Of Materials page.&nbsp;</p>
+                    <p>On the Search Results page, each part listed presents a menu of download choices. If the part is an assembly, then downloading the part results in its entire BoM being
                         downloaded.&nbsp;</p>
                     <p>On the Bill of Materials page, the &ldquo;Manage&rdquo; menu on the right side of the page presents download choices.</p>
-                    <p>A BOM may be downloaded as a CSV file that is either indented or flat. An indented BOM lists each part exactly as it was added to the BOM, whereas a flat BOM gathers presents
+                    <p>A BoM may be downloaded as a CSV file that is either indented or flat. An indented BoM lists each part exactly as it was added to the BOM, whereas a flat BoM gathers presents
                         only one row for each part number.&nbsp;</p>
                 </div>
             </article>

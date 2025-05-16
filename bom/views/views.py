@@ -807,7 +807,7 @@ def signup(request):
 def bom_signup(request):
     user = request.user
     organization = user.bom_profile().organization
-    title = "Set Up Your BOM Organization"
+    title = "Set Up Your BoM Organization"
 
     if organization is not None:
         return HttpResponseRedirect(reverse("bom:home"))
@@ -1964,7 +1964,7 @@ def manage_bom(request, part_id, part_revision_id):
         )
         messages.warning(
             request,
-            "Warning: The following BOM references are associated with multiple parts: "
+            "Warning: The following BoM references are associated with multiple parts: "
             + str(sorted_duplicate_references),
         )
 
