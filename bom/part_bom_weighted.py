@@ -5,9 +5,9 @@ from .part_bom import PartBom, PartIndentedBomItem
 
 class PartBomWeighted(PartBom):
     """
-    Part BOM with weighted items. This class is used to calculate the cost of a
-    part BOM with weighted items. It is a subclass of PartBom and adds the
-    functionality to calculate the cost of a part BOM with weighted items.
+    Part BoM with weighted items. This class is used to calculate the cost of a
+    part BoM with weighted items. It is a subclass of PartBom and adds the
+    functionality to calculate the cost of a part BoM with weighted items.
     """
 
     def __init__(self, bom_unit_cost=None, *args, **kwargs):
@@ -20,68 +20,86 @@ class PartBomWeighted(PartBom):
     def update_as_weighted_bom(self, part):
         """
         Update "childs_cost" and "childs_quantity" for parent "PartBomItem"s
-        one by one all the way up to the root node of the tree and
-        calculate unit_cost
+        all the way up to the root node of the tree and calculate unit_cost.
 
-        :param part: BOM item whom parents will be updated
+        :param part: BoM item whose parents will be updated
         :type part: PartBomWeightedItem
         """
-        if (part.seller_part) and (part.seller_part.unit_cost is not None):
-            part.unit_cost = part.seller_part.unit_cost
-
-        if part.indent_level:
-
-            def update_parent(child_part):
-                parent_part = self.parts[child_part.parent_id]
-                parent_part.childs_cost = 0
-                parent_part.childs_quantity = 0
-                parent_part.childs_product_quantity = 0
-                # Update the parent part's cost and quantity based on its children
-                subpart_list = [
-                    x
-                    for x in self.parts.values()
-                    if x.parent_id == child_part.parent_id
-                ]
-                for child in subpart_list:
-                    parent_part.childs_quantity += child.quantity
-                    parent_part.childs_product_quantity += child.product_quantity
-                    if child.childs_product_quantity:
-                        parent_part.childs_cost += (
-                            child.childs_cost
-                            / Decimal(child.childs_product_quantity)
-                            * Decimal(child.quantity)
-                        )
-                    if child.seller_part and child.seller_part.unit_cost is not None:
-                        parent_part.childs_cost += (
-                            child.seller_part.unit_cost * child.quantity
-                        )
-                parent_part.unit_cost = parent_part.childs_cost / Decimal(
-                    parent_part.childs_product_quantity
-                )
-                if parent_part.seller_part and parent_part.seller_part.unit_cost:
-                    parent_part.unit_cost += parent_part.seller_part.unit_cost
-                if parent_part.indent_level:
-                    update_parent(
-                        child_part=parent_part,
-                    )
-                else:
-                    # "part" is root
-                    if (
-                        self.part_revision.part.number_item
-                        == parent_part.part_revision.part.number_item
-                    ):
-                        if parent_part.childs_quantity:
-                            self.bom_unit_cost = parent_part.childs_cost / Decimal(
-                                parent_part.childs_product_quantity
-                            )
-                        self.unit_cost = parent_part.unit_cost
-
-            update_parent(child_part=part)
-        else:
-            # TODO: Fix double calc
-            # "part" is root
-            if (part.seller_part) and (part.seller_part.unit_cost is not None):
+        if not part.indent_level:
+            # If the part is the root, calculate its unit cost directly
+            if part.seller_part and part.seller_part.unit_cost is not None:
                 self.unit_cost = part.seller_part.unit_cost
+            return
+
+        def calculate_parent_values(parent_part, subpart_list):
+            """
+            Calculate and update the parent's cost, quantity, and product quantity
+            based on its children.
+            """
+            parent_part.childs_quantity = sum(child.quantity for child in subpart_list)
+
+            if parent_part.part_revision.material in ["with_loi"]:
+                parent_part.childs_product_quantity = sum(
+                    child.sintered_quantity for child in subpart_list
+                )
+            else:
+                parent_part.childs_product_quantity = sum(
+                    child.quantity for child in subpart_list
+                )
+
+            parent_part.childs_cost = sum(
+                (
+                    child.childs_cost / child.childs_product_quantity * child.quantity
+                    if child.childs_product_quantity
+                    else 0
+                )
+                for child in subpart_list
+            )
+
+            parent_part.childs_cost += sum(
+                (
+                    child.seller_part.unit_cost * child.quantity
+                    if child.seller_part and child.seller_part.unit_cost is not None
+                    else 0
+                )
+                for child in subpart_list
+            )
+
+        def update_parent(child_part):
+            """
+            Recursively update the parent parts up to the root.
+            """
+            parent_part = self.parts[child_part.parent_id]
+            subpart_list = [
+                child
+                for child in self.parts.values()
+                if child.parent_id == child_part.parent_id
+            ]
+
+            # Calculate and update parent values
+            calculate_parent_values(parent_part, subpart_list)
+
+            if parent_part.indent_level:
+                update_parent(parent_part)
+            else:
+                # If the parent is the root, calculate the unit cost
+                if (
+                    self.part_revision.part.number_item
+                    == parent_part.part_revision.part.number_item
+                ):
+                    self.unit_cost = parent_part.childs_unit_cost + (
+                        parent_part.seller_part.unit_cost
+                        if parent_part.seller_part and parent_part.seller_part.unit_cost
+                        else 0
+                    )
+                    if parent_part.childs_quantity:
+                        self.bom_unit_cost = (
+                            parent_part.childs_cost
+                            / parent_part.childs_product_quantity
+                        )
+
+        # Start updating from the given part
+        update_parent(part)
 
     def update_bom_for_part(self, bom_part):
         if bom_part.do_not_load:
@@ -117,8 +135,8 @@ class PartBomWeightedItem(PartIndentedBomItem):
             self.part_revision.tolerance = 0
         # TODO: fix: tolerance should be a float. it is a string
         # in the database
-        self.product_quantity = self.quantity * (
-            1 - (float(self.part_revision.tolerance) / 100) * self.is_sintered_product
+        self.sintered_quantity = self.quantity * (
+            1 - (float(self.part_revision.tolerance) / 100)
         )
 
     @property
@@ -133,14 +151,3 @@ class PartBomWeightedItem(PartIndentedBomItem):
             if self.childs_quantity
             else 0
         )
-
-    @property
-    def is_sintered_product(self):
-        """
-        Check if the part is a sintered product.
-        :return: True if the part is a sintered product, False otherwise
-        :rtype: bool
-        """
-        if self.part_revision.material in ["with_loi"]:
-            return True
-        return False
