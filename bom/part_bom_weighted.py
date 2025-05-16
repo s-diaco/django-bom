@@ -79,6 +79,24 @@ class PartBomWeighted(PartBom):
             # Calculate and update parent values
             calculate_parent_values(parent_part, subpart_list)
 
+            # Update cost_effect_in_bom for child_part
+            if parent_part.childs_cost:
+                if (
+                    child_part.seller_part
+                    and child_part.seller_part.unit_cost is not None
+                ):
+                    child_part.cost_effect_in_bom = (
+                        (child_part.seller_part.unit_cost + child_part.childs_cost)
+                        * child_part.quantity
+                        / parent_part.childs_cost
+                    )
+                else:
+                    child_part.cost_effect_in_bom = (
+                        child_part.childs_cost
+                        * child_part.quantity
+                        / parent_part.childs_product_quantity
+                    )
+
             if parent_part.indent_level:
                 update_parent(parent_part)
             else:
