@@ -78,24 +78,11 @@ class PartBomWeighted(PartBom):
 
             # Calculate and update parent values
             calculate_parent_values(parent_part, subpart_list)
-
-            # Update cost_effect_in_bom for child_part
-            if parent_part.childs_cost:
-                if (
-                    child_part.seller_part
-                    and child_part.seller_part.unit_cost is not None
-                ):
-                    child_part.cost_effect_in_bom = (
-                        (child_part.seller_part.unit_cost + child_part.childs_cost)
-                        * child_part.quantity
-                        / parent_part.childs_cost
-                    )
-                else:
-                    child_part.cost_effect_in_bom = (
-                        child_part.childs_cost
-                        * child_part.quantity
-                        / parent_part.childs_product_quantity
-                    )
+            child_part.cost_in_unit_product = (
+                child_part.unit_cost
+                * child_part.quantity
+                / parent_part.childs_product_quantity
+            )
 
             if parent_part.indent_level:
                 update_parent(parent_part)
@@ -146,9 +133,8 @@ class PartBomWeightedItem(PartIndentedBomItem):
         self.childs_quantity = 0
         self.childs_product_quantity = 0
         self.childs_cost = Money(0, self._currency)
-        self.cost_effect_in_bom = 0
 
-        # Set residue quantity
+        # Set sintered_quantity
         if not self.part_revision.tolerance:
             self.part_revision.tolerance = 0
         # TODO: fix: tolerance should be a float. it is a string
@@ -168,4 +154,17 @@ class PartBomWeightedItem(PartIndentedBomItem):
             self.childs_cost / self.childs_product_quantity
             if self.childs_quantity
             else 0
+        )
+
+    @property
+    def unit_cost(self):
+        """
+        Get the unit cost of the part.
+        :return: unit cost of the part
+        :rtype: Money
+        """
+        return (
+            self.seller_part.unit_cost + self.childs_unit_cost
+            if self.seller_part and self.seller_part.unit_cost is not None
+            else self.childs_unit_cost
         )

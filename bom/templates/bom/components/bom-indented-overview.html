@@ -58,14 +58,10 @@
                     <td class="text-normal printer-hide" id="bom-indented-seller-name-{{ subpart.part_revision.id }}">{{ subpart.part_revision.tolerance | default:"-" }}</td>
                     <td class="text-normal">{{ subpart.quantity | floatformat }}</td>
                     <td class="text-normal" id="bom-indented-unit-cost-{{ subpart.part_revision.id }}">
-                        {% if subpart.unit_cost %}
-                            {{ subpart.unit_cost }}
-                        {% else %}
-                            {{ subpart.seller_part.unit_cost | default:"-" }}
-                        {% endif %}
+                        {{ subpart.unit_cost | default:"-" }}
                     </td>
                     <td class="text-normal" id="bom-indented-total-cost-{{ subpart.part_revision.id }}">
-                        subpart.cost_effect_in_bom
+                        <!-- This will be populated by JavaScript -->
                     </td>
                 </tr>
             {% endif %}
@@ -176,5 +172,35 @@
 
         // Initialize modals
         $('.modal').modal();
+
+        // Get total BOM weight from the template
+        const totalBomWeight = parseFloat("{{ total_bom_weight }}") || 1;
+        const isMaterialLoi = "{{ material }}" === 'with_loi' ? 1 : 0;
+
+        // Iterate over each row in the table
+        $('#indented-bom-overview tbody tr').each(function () {
+            // Extract and clean the unit cost
+            let unitCostText = $(this).find('td:nth-child(6)').text().trim();
+            unitCostText = unitCostText.replace(/ریال/g, "").replace(/,/g, "").replace(/‎ /g, "").trim(); // Remove "ریال" and commas
+            const unitCost = parseFloat(unitCostText) || 0; // Convert to a number, default to 0 if invalid
+
+            // Extract quantity
+            const quantity = parseFloat($(this).find('td:nth-child(5)').text().trim()) || 0;
+
+            // Extract LOI (if applicable)
+            const loi = parseFloat($(this).find('td:nth-child(4)').text().trim()) || 0;
+
+            // Calculate the total cost
+            const totalCost = unitCost * quantity * (1 - ((loi * isMaterialLoi) / 100)) / totalBomWeight;
+
+            // Format totalCost with a thousands separator
+            const formattedTotalCost = totalCost.toLocaleString('en-US',{
+                style: 'currency',
+                currency: 'IRR',
+            }).replace(/IRR/g, 'ریال').trim();
+
+            // Update the total cost cell
+            $(this).find('[id^="bom-indented-total-cost-"]').text(formattedTotalCost);
+        });
     });
 </script>
