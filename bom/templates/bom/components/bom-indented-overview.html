@@ -1,0 +1,210 @@
+{# To include this widget, make sure to pass: `parts`, `order_by`, `part`, `part_revision`, `profile` variables  - TODO Could remove part if we pass part revision #}
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="{% static 'bom/css/treetable-theme.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'bom/css/jquery.treetable.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'bom/css/tablesorter-theme.materialize.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'bom/css/style.css' %}"/>
+{% endblock %}
+
+<div class="responsive-table-wrapper">
+    <table id="indented-bom-overview" class="highlight part-list tight single-line striped">
+        <thead>
+        <tr>
+            <th class="text-normal">کد</th>
+            <!--<th class="text-normal printer-hide">رفرنس</th>-->
+            <!--<th class="text-normal">DNL</th>-->
+            <th class="text-normal printer-hide">ورژن</th>
+            <th class="text-normal">شرح</th>
+            <!-- <th class="text-normal">{% trans "Manufacturer" %}</th>-->
+            <!-- <th class="text-normal">کد تولید کننده</th> -->
+            <!-- <th class="text-normal"><i>Ext. Qty</i></th> -->
+            <!-- <th class="text-normal"><i>Order Qty</i></th> -->
+            <th class="text-normal printer-hide">{% trans "L.O.I" %}</th>
+            <th class="text-normal">مقدار</th>
+            <th class="text-normal">قیمت واحد</th>
+            <th class="text-normal">قیمت در BoM</th>
+            <!-- <th class="text-normal"><i>Ext Cost</i></th> -->
+            <!-- <th class="text-normal">NRE</th> -->
+            <!-- <th class="text-normal">Childs Qty</th> -->
+            <!-- <th class="text-normal">Childs Cst</th> -->
+            {% if profile.role == 'A' and manage %}
+                <th class="sorter-false" data-sorter="false">{% trans "Manage" %}</th>
+            {% endif %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for bom_id, subpart in bom_items.items %}
+            {% if subpart.indent_level == 1 %}
+                {% if subpart.part_revision.description|length > 75 %}
+                    <div id="modal-{{ subpart.part.id }}-synposis" class="modal">
+                        <div class="modal-content">
+                            <h2>{{ subpart.part.full_part_number }} Synposis</h2>
+                            <p>{{ subpart.part_revision.description }}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <a href="#!" class="modal-close waves-effect green lighten-1 waves-green btn-flat">Ok</a>
+                        </div>
+                    </div>
+                {% endif %}
+                <tr data-tt-id="{{ bom_id }}"
+                    {% if subpart.parent_id %}data-tt-parent-id="{{ subpart.parent_id }}"{% endif %}>
+                    <td class="text-normal">{{ subpart.part.full_part_number }}</td>
+                    <td class="text-normal printer-hide">{{ subpart.part_revision.revision }}</td>
+                    <td class="text-normal">{{ subpart.part_revision.description | truncatechars:75 }}{% if subpart.part_revision.description|length > 75 %}
+                        <a class="modal-trigger modal-{{ subpart.part.id }}-synposis" href="#modal-{{ subpart.part.id }}-synposis">&nbsp;[+]</a>
+                    {% endif %}
+                    <td class="text-normal printer-hide" id="bom-indented-seller-name-{{ subpart.part_revision.id }}">{{ subpart.part_revision.tolerance | default:"-" }}</td>
+                    <td class="text-normal">{{ subpart.quantity | floatformat }}</td>
+                    <td class="text-normal" id="bom-indented-unit-cost-{{ subpart.part_revision.id }}">
+                        {% if subpart.unit_cost %}
+                            {{ subpart.unit_cost }}
+                        {% else %}
+                            {{ subpart.seller_part.unit_cost | default:"-" }}
+                        {% endif %}
+                    </td>
+                    <td class="text-normal" id="bom-indented-total-cost-{{ subpart.part_revision.id }}">
+                        <!-- This will be populated by JavaScript -->
+                    </td>
+                </tr>
+            {% endif %}
+        {% empty %}
+            <tr>
+                <td colspan="99" style="text-align: center; height: 20vh;"><i>این متریال شامل هیچ متریال دیگری نیست.</i></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="4" class="text-normal printer-hide">جمع کل</td>
+            <td class="text-normal printer-hide">{{ total_bom_weight }}</td>
+            <td class="text-normal"></td>
+            <td class="text-normal printer-hide">{{ childs_unit_cost }}</td>
+        </tfoot>
+    </table>
+</div>
+
+<!-- Tree Table -->
+<script src="{% static 'bom/js/jquery.treetable.js' %}"></script>
+<script>
+    $("#indented-bom-overview").treetable({
+        expandable: false,
+        indent: 2,
+        initialState: 'collapsed',
+        onInitialized: function () {
+            $("#indented-bom-overview").treetable("reveal", {{ part_revision.id }});
+            $('.button-expand').hide();
+            $('.button-collapse').hide();
+        },
+        onNodeCollapse: function () {
+            $('.button-expand').hide();
+            $('.button-collapse').hide();
+        },
+        onNodeExpand: function () {
+            $('.button-expand').hide();
+            $('.button-collapse').hide();
+        }
+    });
+
+    function expandTree() {
+        $('#indented-bom').treetable('expandAll');
+        $('.button-expand').hide();
+        $('.button-collapse').hide();
+        return false;
+    }
+
+    function collapseTree() {
+        $('#indented-bom-overview').treetable('collapseAll');
+        $('#indented-bom-overview').treetable("reveal", {{ part_revision.id }});
+        $('.button-collapse').hide();
+        $('.button-expand').hide();
+        return false;
+    }
+</script>
+
+<!-- Table Sorter -->
+<script type="text/javascript" src="{% static 'bom/js/jquery.tablesorter.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'bom/js/jquery.tablesorter.widgets.min.js' %}"></script>
+<script>
+    $(function () {
+        $("#indented-bom").on('update', initTableSorterIndented);
+        initTableSorterIndented();
+    });
+
+    function initTableSorterIndented() {
+        $('.button-reset-filter-indented').hide();
+        $("#indented-bom-overview").tablesorter({
+            theme: "materialize",
+            headers: {
+                '.manage': {
+                    sorter: false
+                }
+            }
+        }).bind("sortEnd", function (e, t) {
+            $('.button-reset-filter-indented').show();
+        });
+    }
+
+    function refreshTableSorterIndented() {
+        $('#indented-bom-overview').trigger('sortReset');
+        $('.button-reset-filter-indented').hide();
+        return false;
+    }
+</script>
+
+<script>
+    $(document).ready(function () {
+        // Hide button-expand and button-collapse on page load
+        $('.button-expand').hide();
+        $('.button-collapse').hide();
+
+        // Initialize dropdowns
+        $('.dropdown-trigger-indented').dropdown({
+            inDuration: 200,
+            outDuration: 225,
+            constrainWidth: false, // Does not change width of dropdown to that of the activator
+            hover: false, // Activate on hover
+            gutter: 0, // Spacing from edge
+            alignment: 'left', // Displays dropdown with edge aligned to the left of button
+            stopPropagation: false, // Stops event propagation
+            coverTrigger: false
+        });
+
+        // Initialize tooltips
+        $('.tooltipped').tooltip();
+
+        // Initialize modals
+        $('.modal').modal();
+
+        // Get total BOM weight from the template
+        const totalBomWeight = parseFloat("{{ total_bom_weight }}") || 1;
+        const isMaterialLoi = "{{ material }}" === 'with_loi' ? 1 : 0;
+
+        // Iterate over each row in the table
+        $('#indented-bom-overview tbody tr').each(function () {
+            // Extract and clean the unit cost
+            let unitCostText = $(this).find('td:nth-child(6)').text().trim();
+            unitCostText = unitCostText.replace(/ریال/g, "").replace(/,/g, "").replace(/‎ /g, "").trim(); // Remove "ریال" and commas
+            const unitCost = parseFloat(unitCostText) || 0; // Convert to a number, default to 0 if invalid
+
+            // Extract quantity
+            const quantity = parseFloat($(this).find('td:nth-child(5)').text().trim()) || 0;
+
+            // Extract LOI (if applicable)
+            const loi = parseFloat($(this).find('td:nth-child(4)').text().trim()) || 0;
+
+            // Calculate the total cost
+            const totalCost = unitCost * quantity * (1 - ((loi * isMaterialLoi) / 100)) / totalBomWeight;
+
+            // Format totalCost with a thousands separator
+            const formattedTotalCost = totalCost.toLocaleString('en-US',{
+                style: 'currency',
+                currency: 'IRR',
+            }).replace(/IRR/g, 'ریال').trim();
+
+            // Update the total cost cell
+            $(this).find('[id^="bom-indented-total-cost-"]').text(formattedTotalCost);
+        });
+    });
+</script>
