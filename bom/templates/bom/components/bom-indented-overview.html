@@ -174,8 +174,7 @@
         $('.modal').modal();
 
         // Get total BOM weight from the template
-        const totalBomWeight = parseFloat("{{ total_bom_weight }}") || 1;
-        const isMaterialLoi = "{{ material }}" === 'with_loi' ? 1 : 0;
+        const productWeight = parseFloat("{{ product_weight }}") || 1;
 
         // Iterate over each row in the table
         $('#indented-bom-overview tbody tr').each(function () {
@@ -191,7 +190,7 @@
             const loi = parseFloat($(this).find('td:nth-child(4)').text().trim()) || 0;
 
             // Calculate the total cost
-            const totalCost = unitCost * quantity * (1 - ((loi * isMaterialLoi) / 100)) / totalBomWeight;
+            const totalCost = unitCost * quantity / productWeight;
 
             // Format totalCost with a thousands separator
             const formattedTotalCost = totalCost.toLocaleString('en-US',{

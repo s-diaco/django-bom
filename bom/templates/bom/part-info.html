@@ -297,8 +297,9 @@
                 </div>
                 <div id="overview" class="col s12">
                     <h4 class="printer-show">نمای کلی</h4>
+                    <br />
                     <div id="bom-indented">
-                        {% include 'bom/components/bom-indented-overview.html' with order_by=order_by bom_items=indented_bom.parts part=part part_revision=part_revision profile=profile childs_unit_cost=childs_unit_cost total_bom_weight=total_bom_weight material=part_revision.material %}
+                        {% include 'bom/components/bom-indented-overview.html' with order_by=order_by bom_items=indented_bom.parts part=part part_revision=part_revision profile=profile childs_unit_cost=childs_unit_cost total_bom_weight=total_bom_weight product_weight=product_weight material=part_revision.material %}
                     </div>
                     {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
                         <div class="row">
@@ -306,83 +307,6 @@
                             <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ childs_unit_cost|default_if_none:'-' }}</span></div>
                         </div>
                     {% endif %}
-                    <br>
-                    <div class="responsive-table-wrapper">
-                        <ul class="collapsible" data-collapsible="expandable" style="overflow: scroll;">
-                            <li class="active">
-                                <div class="collapsible-header"><i class="material-icons">my_location</i>موارد استفاده این ورژن</div>
-                                <div class="collapsible-body">
-                                    <table class="highlight tight">
-                                        <thead>
-                                        <tr>
-                                            <th>کد محصول</th>
-                                            <th>محصول</th>
-                                            <th>ورژن</th>
-                                            <th>{% trans "Manufacturer" %}</th>
-                                            <th>کد تولید کننده</th>
-                                        </tr>
-                                        </thead>
-
-                                        <tbody>
-                                        {% for used_part in where_used %}
-                                            <tr>
-                                                <td>
-                                                    <a href="{% url 'bom:part-info-history' part_id=used_part.part.id part_revision_id=used_part.id %}">{{ used_part.part.full_part_number }}</a>
-                                                </td>
-                                                <td>{{ used_part.description }}</td>
-                                                <td>{{ used_part.revision }}</td>
-                                                <td>{{ used_part.part.primary_manufacturer_part.manufacturer.name }}</td>
-                                                <td>{{ used_part.part.primary_manufacturer_part.manufacturer_part_number }}</td>
-                                            </tr>
-                                        {% empty %}
-                                            <tr>
-                                                <td colspan="99" style="text-align: center; height: 20vh;"><i>این متریال در هیج محصولی استفاده نمی‌شود. برای افزودن آن به یک محصول، به درخت محصول مورد نظر بروید و روی "مدیریت", و سپس "ویرایش" کلیک کنید.</i></td>
-                                            </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="collapsible-header"><i class="material-icons">location_searching</i>همه موارد استفاده متریال</div>
-                                <div class="collapsible-body">
-                                    <table class="highlight tight">
-                                        <thead>
-                                        <tr>
-                                            <th>کد محصول</th>
-                                            <th>محصول</th>
-                                            <th>ورژن</th>
-                                            <th>{% trans "Manufacturer" %}</th>
-                                            <th>کد تولید کننده</th>
-                                        </tr>
-                                        </thead>
-
-                                        <tbody>
-                                        {% for used_part in where_used_part %}
-                                            <tr>
-                                                <td>
-                                                    <a href="{% url 'bom:part-info-history' part_id=used_part.part.id part_revision_id=used_part.id %}">{{ used_part.part.full_part_number }}</a>
-                                                </td>
-                                                <td>{{ used_part.description }}</td>
-                                                <td>{{ used_part.revision }}</td>
-                                                <td>{{ used_part.part.primary_manufacturer_part.manufacturer.name }}</td>
-                                                <td>{{ used_part.part.primary_manufacturer_part.manufacturer_part_number }}</td>
-                                            </tr>
-                                        {% empty %}
-                                            <tr>
-                                                <td colspan="99" style="text-align: center; height: 20vh;"><i>این متریال در هیج محصولی استفاده نمی‌شود.
-                                                    {% if profile.role == 'A' %}
-                                                    برای افزودن آن به یک محصول، به درخت محصول مورد نظر بروید و روی "مدیریت", و سپس "ویرایش" کلیک کنید.
-                                                    {% endif %}
-                                                </i></td>
-                                            </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
                 </div>
 
                 <div id="sourcing" class="col s12">
