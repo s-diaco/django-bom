@@ -62,6 +62,7 @@ from .validators import alphanumeric, validate_pct
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
+PERCENTAGE_VALIDATOR = [MinValueValidator(0), MaxValueValidator(100)]
 
 
 class Organization(models.Model):
@@ -601,6 +602,7 @@ class PartRevision(models.Model):
     tolerance = models.CharField(
         max_length=6, validators=[validate_pct], default=None, null=True, blank=True
     )
+    # tolerance=models.DecimalField(max_digits=3, decimal_places=0, default=Decimal(0), validators=PERCENTAGE_VALIDATOR)
     package = models.CharField(
         max_length=16, default=None, null=True, blank=True, choices=PACKAGE_TYPES
     )
