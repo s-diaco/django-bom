@@ -2,14 +2,11 @@
 {% load static %}
 
 {% block head %}
-    <link rel="stylesheet" type="text/css" href="{% static 'bom/css/treetable-theme.css' %}"/>
-    <link rel="stylesheet" type="text/css" href="{% static 'bom/css/jquery.treetable.css' %}"/>
-    <link rel="stylesheet" type="text/css" href="{% static 'bom/css/tablesorter-theme.materialize.css' %}"/>
     <link rel="stylesheet" type="text/css" href="{% static 'bom/css/style.css' %}"/>
 {% endblock %}
 
 <div class="responsive-table-wrapper">
-    <table id="indented-bom-overview" class="highlight part-list tight single-line striped">
+    <table id="indented-bom-overview" class="highlight part-list tight">
         <thead>
         <tr>
             <th class="text-normal">کد</th>
@@ -73,81 +70,16 @@
         </tbody>
         <tfoot>
         <tr>
-            <td colspan="4" class="text-normal printer-hide">جمع کل</td>
-            <td class="text-normal printer-hide">{{ total_bom_weight }}</td>
+            <td class="text-normal">جمع</td>
+            <td class="text-normal printer-hide"></td>
             <td class="text-normal"></td>
-            <td class="text-normal printer-hide">{{ childs_unit_cost }}</td>
+            <td class="text-normal printer-hide"></td>
+            <td class="text-normal">{{ total_bom_weight|floatformat:0 }}</td>
+            <td class="text-normal"></td>
+            <td class="text-normal">{{ childs_unit_cost }}</td>
         </tfoot>
     </table>
 </div>
-
-<!-- Tree Table -->
-<script src="{% static 'bom/js/jquery.treetable.js' %}"></script>
-<script>
-    $("#indented-bom-overview").treetable({
-        expandable: false,
-        indent: 2,
-        initialState: 'collapsed',
-        onInitialized: function () {
-            $("#indented-bom-overview").treetable("reveal", {{ part_revision.id }});
-            $('.button-expand').hide();
-            $('.button-collapse').hide();
-        },
-        onNodeCollapse: function () {
-            $('.button-expand').hide();
-            $('.button-collapse').hide();
-        },
-        onNodeExpand: function () {
-            $('.button-expand').hide();
-            $('.button-collapse').hide();
-        }
-    });
-
-    function expandTree() {
-        $('#indented-bom').treetable('expandAll');
-        $('.button-expand').hide();
-        $('.button-collapse').hide();
-        return false;
-    }
-
-    function collapseTree() {
-        $('#indented-bom-overview').treetable('collapseAll');
-        $('#indented-bom-overview').treetable("reveal", {{ part_revision.id }});
-        $('.button-collapse').hide();
-        $('.button-expand').hide();
-        return false;
-    }
-</script>
-
-<!-- Table Sorter -->
-<script type="text/javascript" src="{% static 'bom/js/jquery.tablesorter.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'bom/js/jquery.tablesorter.widgets.min.js' %}"></script>
-<script>
-    $(function () {
-        $("#indented-bom").on('update', initTableSorterIndented);
-        initTableSorterIndented();
-    });
-
-    function initTableSorterIndented() {
-        $('.button-reset-filter-indented').hide();
-        $("#indented-bom-overview").tablesorter({
-            theme: "materialize",
-            headers: {
-                '.manage': {
-                    sorter: false
-                }
-            }
-        }).bind("sortEnd", function (e, t) {
-            $('.button-reset-filter-indented').show();
-        });
-    }
-
-    function refreshTableSorterIndented() {
-        $('#indented-bom-overview').trigger('sortReset');
-        $('.button-reset-filter-indented').hide();
-        return false;
-    }
-</script>
 
 <script>
     $(document).ready(function () {

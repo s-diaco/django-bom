@@ -599,13 +599,13 @@ class PartRevision(models.Model):
     pin_count = models.DecimalField(
         max_digits=3, decimal_places=0, default=None, null=True, blank=True
     )
-
-    # TODO: Delete
-    # tolerance = models.CharField(
-    #    max_length=6, validators=[validate_pct], default=None, null=True, blank=True
-    # )
     tolerance = models.DecimalField(
-        max_digits=4, decimal_places=2, default=None, null=True, blank=True
+        max_digits=4,
+        decimal_places=2,
+        default=None,
+        null=True,
+        blank=True,
+        validators=PERCENTAGE_VALIDATOR,
     )
     package = models.CharField(
         max_length=16, default=None, null=True, blank=True, choices=PACKAGE_TYPES

@@ -462,4 +462,48 @@ footer.page-footer>div.container>div.row>div.col>p{
         box-shadow: none !important;
         text-shadow: none !important;
     }
+
+    /* Ensure the table is paginated */
+    table.part-list {
+        page-break-inside: auto;
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 12px;
+        border-inline: 1px solid #000 !important;
+    }
+
+    table.part-list th, table.part-list td {
+        border-block: 1px solid black;
+        border-inline: 1px solid #e0e0e0;
+        padding: 4px 8px;
+        text-align: right;
+    }
+
+    table.part-list th {
+        background-color: #f2f2f2;
+    }
+
+    /* Repeat table headers on each page */
+    table.part-list thead {
+        display: table-header-group;
+    }
+
+    table.part-list tbody {
+        display: table-row-group;
+    }
+
+    /* Avoid breaking rows across pages */
+    table.part-list tr {
+        page-break-inside: avoid;
+    }
+
+    .printer-part-number {
+        font-size: 1.5em;
+        font-weight: bold;
+    }
+
+    table.part-list tfoot tr td {
+        font-weight: bold;
+        font-size: 12px;
+    }
 }
