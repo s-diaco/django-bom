@@ -599,10 +599,14 @@ class PartRevision(models.Model):
     pin_count = models.DecimalField(
         max_digits=3, decimal_places=0, default=None, null=True, blank=True
     )
-    tolerance = models.CharField(
-        max_length=6, validators=[validate_pct], default=None, null=True, blank=True
+
+    # TODO: Delete
+    # tolerance = models.CharField(
+    #    max_length=6, validators=[validate_pct], default=None, null=True, blank=True
+    # )
+    tolerance = models.DecimalField(
+        max_digits=4, decimal_places=2, default=None, null=True, blank=True
     )
-    # tolerance=models.DecimalField(max_digits=3, decimal_places=0, default=Decimal(0), validators=PERCENTAGE_VALIDATOR)
     package = models.CharField(
         max_length=16, default=None, null=True, blank=True, choices=PACKAGE_TYPES
     )
@@ -729,8 +733,6 @@ class PartRevision(models.Model):
             ),
         )
         s += verbosify(self.description)
-        # tolerance = self.tolerance.replace("%", "") if self.tolerance else ""
-        # s += verbosify(tolerance, post="%", post_whitespace=False)
         s += verbosify(self.attribute)
         s += verbosify(self.package if make_searchable else self.get_package_display())
         s += verbosify(self.pin_count, post="pins")
@@ -852,8 +854,6 @@ class PartRevision(models.Model):
         )
 
     def save(self, *args, **kwargs):
-        if self.tolerance:
-            self.tolerance = self.tolerance.replace("%", "")
         if self.assembly is None:
             assy = Assembly.objects.create()
             self.assembly = assy
