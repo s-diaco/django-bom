@@ -17,7 +17,6 @@ dependencies = [
     "django-jalali>=7.4.0",
     "jdatetime>=5.2.0",
     "social-auth-app-django>=5.4.3",
-    "importlib>=1.0.4",
 ]
 readme = "README.md"
 requires-python = ">= 3.12"

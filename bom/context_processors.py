@@ -12,4 +12,4 @@ def bom_config(request):
 
 
 def project_version(request):
-    return {"project_version": get_project_version()}
+    return {"PROJECT_VERSION": get_project_version()}

@@ -1,5 +1,5 @@
-import importlib.metadata
 import re
+import tomllib
 
 
 def increment_char(c):
@@ -249,4 +249,9 @@ def convert_arabic_to_english(string):
 
 
 def get_project_version():
-    return importlib.metadata.version("lithium-bom")
+    try:
+        with open("pyproject.toml", "rb") as f:
+            data = tomllib.load(f)
+            return data.get("project", {}).get("version", "Unknown")
+    except FileNotFoundError:
+        return "Unknown"
