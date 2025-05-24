@@ -1,4 +1,4 @@
-# This file is to have no project dependencies
+import importlib.metadata
 import re
 
 
@@ -246,3 +246,7 @@ def convert_arabic_to_english(string):
     translation_table = str.maketrans(arabic, english)
     # Return the translated string
     return no_persian_num.translate(translation_table)
+
+
+def get_project_version():
+    return importlib.metadata.version("lithium-bom")

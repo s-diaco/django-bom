@@ -96,13 +96,12 @@
     <div class="container">
         <div class="row">
             <div class="col left">
-                <h5 class="white-text">سیستم مدیریت BoM و بهای تمام شده لیتیوم</h5>
-                <p class="grey-text text-lighten-4">بر پایه <a href="https://www.djangoproject.com">django</a>
-                    و منشعب شده از <a href="https://github.com/mpkasp/django-bom">django-bom</a></p>
+                <h5 class="white-text">مدیریت BoM و بهای تمام شده لیتیوم</h5>
+                <p class="grey-text text-lighten-4">ویرایش {{ project_version }}</p>
             </div>
             <div class="col left">
             <a href="{% url 'bom:home' %}" title="لیتیوم | خانه" class="brand-logo right">
-                <img width="52" alt="Lithium Logo" src="{% static 'bom/img/lithium.png' %}"/>
+                <img width="52" alt="Lithium Logo" src="{% static 'bom/img/open_source_initiative.png' %}"/>
             </a>
             </div>
             <div class="col l4 offset-l2 s12">
@@ -119,7 +118,7 @@
         <div class="container" style="direction: ltr;">
             <div class="row">
                 <div class="col left">
-                Copyright ©2024 BargWeb. "lithium-bom" is a django open source project.
+                Copyright ©2024 - {% now 'Y' %} BargWeb.
                 <!-- <a class="grey-text text-lighten-4 right" href="#!">More Links</a> -->
                 </div>
             </div>

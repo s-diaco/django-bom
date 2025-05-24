@@ -58,6 +58,7 @@ httplib2==0.22.0
     # via google-auth-httplib2
 idna==3.6
     # via requests
+importlib==1.0.4
 jalali-core==1.0.0
     # via jdatetime
 jdatetime==5.2.0
