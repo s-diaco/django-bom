@@ -4,6 +4,7 @@
         "ms-python.black-formatter",
         "ms-azuretools.vscode-containers",
         "docker.docker",
-        "ms-python.vscode-pylance"
+        "ms-python.vscode-pylance",
+        "ms-python.isort"
     ]
 }
