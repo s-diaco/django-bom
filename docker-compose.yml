@@ -3,7 +3,7 @@ name: lithium_bom
 services:
   web:
     build: .
-    command: gunicorn bom.wsgi:application --bind 0.0.0.0:${API_PORT}
+    command: gunicorn bom.wsgi:application --bind 0.0.0.0:${API_PORT} --timeout 120
     volumes:
       - static_volume:/app/staticfiles
     expose:
