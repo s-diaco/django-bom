@@ -2039,7 +2039,7 @@ def add_subpart(request, part_id, part_revision_id):
 
         else:
             messages.error(request, add_subpart_form.errors)
-
+    part_revision.clear_bom_unit_cost_cache()
     return HttpResponseRedirect(
         reverse(
             "bom:part-manage-bom",
@@ -2053,6 +2053,7 @@ def add_subpart(request, part_id, part_revision_id):
 def remove_subpart(request, part_id, part_revision_id, subpart_id):
     subpart = get_object_or_404(Subpart, pk=subpart_id)
     subpart.delete()
+    subpart.part_revision.clear_bom_unit_cost_cache()
     return HttpResponseRedirect(
         reverse(
             "bom:part-manage-bom",
@@ -2121,6 +2122,7 @@ def edit_subpart(request, part_id, part_revision_id, subpart_id):
             reference_list = listify_string(form.cleaned_data["reference"])
             count = form.cleaned_data["count"]
             form.save()
+            subpart.part_revision.clear_bom_unit_cost_cache()
             return HttpResponseRedirect(
                 reverse(
                     "bom:part-manage-bom",
@@ -2145,6 +2147,7 @@ def edit_subpart(request, part_id, part_revision_id, subpart_id):
 def remove_all_subparts(request, part_id, part_revision_id):
     part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
     part_revision.assembly.subparts.all().delete()
+    part_revision.clear_bom_unit_cost_cache()
     return HttpResponseRedirect(
         reverse(
             "bom:part-manage-bom",
@@ -2184,6 +2187,9 @@ def add_sellerpart(request, manufacturer_part_id):
                 seller_part.seller = new_seller
                 seller_part.manufacturer_part = manufacturer_part
                 seller_part.save()
+                # TODO: don't clear every cached price
+                for part_revision in PartRevision.objects.all():
+                    part_revision.clear_bom_unit_cost_cache()
             return HttpResponseRedirect(
                 reverse("bom:part-info", kwargs={"part_id": manufacturer_part.part.id})
                 + "?tab_anchor=sourcing"
@@ -2381,6 +2387,9 @@ def sellerpart_edit(request, sellerpart_id):
                 seller_part.manufacturer_part = manufacturer_part
                 seller_part.id = sellerpart_id
                 seller_part.save()
+                # TODO: don't clear every cached price
+                for part_revision in PartRevision.objects.all():
+                    part_revision.clear_bom_unit_cost_cache()
             return HttpResponseRedirect(
                 reverse(
                     "bom:part-info",
@@ -2416,6 +2425,9 @@ def sellerpart_delete(request, sellerpart_id):
     sellerpart = get_object_or_404(SellerPart, pk=sellerpart_id)
     part = sellerpart.manufacturer_part.part
     sellerpart.delete()
+    # TODO: don't clear every cached price
+    for part_revision in PartRevision.objects.all():
+        part_revision.clear_bom_unit_cost_cache()
     return HttpResponseRedirect(
         reverse("bom:part-info", kwargs={"part_id": part.id}) + "?tab_anchor=sourcing"
     )
@@ -2573,6 +2585,7 @@ def part_revision_edit(request, part_id, part_revision_id):
         form = PartRevisionForm(request.POST, instance=part_revision)
         if form.is_valid():
             form.save()
+            part_revision.clear_bom_unit_cost_cache()
             return HttpResponseRedirect(
                 reverse("bom:part-info", kwargs={"part_id": part_id})
             )

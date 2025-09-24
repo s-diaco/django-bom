@@ -10,7 +10,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.forms import ValidationError
 from django.utils import timezone
-
+from django.utils.functional import cached_property
 from djmoney.models.fields import CURRENCY_CHOICES, CurrencyField, MoneyField
 from social_django.models import UserSocialAuth
 
@@ -42,11 +42,11 @@ from .constants import (
     ROLE_TYPES,
     SUBSCRIPTION_TYPES,
     TEMPERATURE_UNITS,
+    UNIT_COST_DECIMAL_PLACES,
     VALUE_UNITS,
     VOLTAGE_UNITS,
     WAVELENGTH_UNITS,
     WEIGHT_UNITS,
-    UNIT_COST_DECIMAL_PLACES,
 )
 from .csv_headers import PartsListCSVHeaders, PartsListCSVHeadersSemiIntelligent
 from .part_bom import PartBom, PartBomItem, PartIndentedBomItem
@@ -58,7 +58,6 @@ from .utils import (
     strip_trailing_zeros,
 )
 from .validators import alphanumeric, validate_pct
-
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -864,6 +863,18 @@ class PartRevision(models.Model):
         self.searchable_synopsis = self.generate_synopsis(True)
         self.displayable_synopsis = self.generate_synopsis(False)
         super(PartRevision, self).save(*args, **kwargs)
+
+    @cached_property
+    def bom_unit_cost(self):
+        if self.material == "no_bom" or self.material == None:
+            return self.part.optimal_seller.unit_cost
+        elif self.indented.bom_unit_cost != 0:
+            return self.indented.bom_unit_cost
+
+    def clear_bom_unit_cost_cache(self):
+        """Clear the cached bom_unit_cost property."""
+        if "bom_unit_cost" in self.__dict__:
+            del self.__dict__["bom_unit_cost"]
 
     def indented(self, top_level_quantity=100, is_weighted_bom=True):
         def indented_given_bom(
