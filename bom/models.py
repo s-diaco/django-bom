@@ -870,10 +870,8 @@ class PartRevision(models.Model):
             self.material == "no_bom" or self.material is None
         ) and self.part.optimal_seller():
             return self.part.optimal_seller().unit_cost
-        elif self.indented().bom_unit_cost != 0:
-            return self.indented().bom_unit_cost
         else:
-            return 0
+            return self.indented().bom_unit_cost
 
     def clear_bom_unit_cost_cache(self):
         """Clear the cached bom_unit_cost property."""
