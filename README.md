@@ -12,7 +12,10 @@ If you already have a django project, you can skip to [Add Django Bom To Your Ap
    * [Start from docker](#start-from-docker-recommended)
    * [Backup and restore database](#backup-and-restore-database-if-using-docker-compose-and-postgres)
    * [Uninstall](#uninstall)
+   * [Run the tests](#run-the-tests)
+   * [Test API](#test-api)
    * [Customize Base Template](#customize-base-template)
+   * [Add To Your App](#add-to-your-app)
    * [Integrations](#integrations)
    * [Contributing](#contributing)
    * [Installation pitfalls](#installation-pitfalls)
@@ -81,7 +84,7 @@ Use the obtained token to access the protected endpoint:
 curl -H "Authorization: Bearer youraccesstoken" http://127.0.0.1:1313/api/v1/items/
 ```
 
-## Add Django Bom To Your App
+## Add To Your App
 django-bom is a [reusable django application](https://docs.djangoproject.com/en/1.11/intro/reusable-apps/). If you don't already have a django project, you can follow some quick steps below to get up and running, or read about creating your first django app [here](https://docs.djangoproject.com/en/1.11/intro/tutorial01/).
 
 ```
