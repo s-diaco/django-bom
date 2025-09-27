@@ -1,5 +1,5 @@
 from djmoney.money import Money
-from decimal import Decimal
+
 from .part_bom import PartBom, PartIndentedBomItem
 
 
@@ -150,6 +150,7 @@ class PartBomWeightedItem(PartIndentedBomItem):
         :return: unit cost of the child parts
         :rtype: Money
         """
+        # TODO: is it a duplicate of bom_unit_cost?
         return (
             self.childs_cost / self.childs_product_quantity
             if self.childs_quantity
