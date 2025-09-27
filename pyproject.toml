@@ -34,6 +34,7 @@ dev-dependencies = [
     "ruff>=0.3.3",
     "parameterized>=0.9.0",
     "debugpy>=1.8.14",
+    "django-test>=0.4030",
 ]
 
 [tool.hatch.metadata]

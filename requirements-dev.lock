@@ -39,6 +39,7 @@ django-cors-headers==4.3.1
 django-jalali==7.4.0
 django-materializecss-form==1.1.17
 django-money==3.4.1
+django-test==0.4030
 djangorestframework==3.16.0
     # via djangorestframework-simplejwt
 djangorestframework-simplejwt==5.5.0
