@@ -68,6 +68,8 @@ jalali-core==1.0.0
     # via jdatetime
 jdatetime==5.2.0
     # via django-jalali
+numpy==2.3.3
+    # via pandas
 oauthlib==3.2.2
     # via requests-oauthlib
     # via social-auth-core
@@ -75,6 +77,7 @@ openpyxl==3.1.5
 packaging==24.0
     # via gunicorn
     # via pytest
+pandas==2.3.2
 parameterized==0.9.0
 pluggy==1.5.0
     # via pytest
@@ -99,8 +102,12 @@ pyparsing==3.1.2
 pytest==8.3.5
     # via pytest-django
 pytest-django==4.8.0
+python-dateutil==2.9.0.post0
+    # via pandas
 python3-openid==3.2.0
     # via social-auth-core
+pytz==2025.2
+    # via pandas
 requests==2.31.0
     # via google-api-core
     # via requests-oauthlib
@@ -112,6 +119,8 @@ rsa==4.9
 ruff==0.3.3
 setuptools==69.2.0
     # via django-money
+six==1.17.0
+    # via python-dateutil
 social-auth-app-django==5.4.3
 social-auth-core==4.5.6
     # via social-auth-app-django
@@ -119,6 +128,8 @@ sqlparse==0.4.4
     # via django
 typing-extensions==4.10.0
     # via py-moneyed
+tzdata==2025.2
+    # via pandas
 uritemplate==4.1.1
     # via google-api-python-client
 urllib3==2.2.1

@@ -4,7 +4,7 @@ import operator
 from functools import reduce
 from json import dumps
 
-import openpyxl
+import pandas as pd
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, update_session_auth_hash
@@ -299,16 +299,11 @@ def home(request):
         )
 
     if "download" in request.GET:
-        """
-        TODO: Export search results to both CSV and Excel formats
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = (
-            'attachment; filename="indabom_parts_search.csv"'
-        )
+        # TODO: Export search results to both CSV and Excel formats
         csv_headers = organization.part_list_csv_headers()
         seller_csv_headers = SellerPartCSVHeaders()
-        writer = csv.DictWriter(response, fieldnames=csv_headers.get_default_all())
-        writer.writeheader()
+        rows = []
+
         for part_rev in part_revs:
             if organization.number_scheme == constants.NUMBER_SCHEME_SEMI_INTELLIGENT:
                 row = {
@@ -345,12 +340,8 @@ def home(request):
                         + seller_csv_headers.get_default_all()
                     ):
                         attr = getattr(part_rev, field_name)
-                        row.update(
-                            {
-                                csv_headers.get_default(field_name): (
-                                    attr if attr is not None else ""
-                                )
-                            }
+                        row[csv_headers.get_default(field_name)] = (
+                            attr if attr is not None else ""
                         )
             else:
                 row = {
@@ -383,111 +374,9 @@ def home(request):
                         + seller_csv_headers.get_default_all()
                     ):
                         attr = getattr(part_rev, field_name)
-                        row.update(
-                            {
-                                csv_headers.get_default(field_name): (
-                                    attr if attr is not None else ""
-                                )
-                            }
+                        row[csv_headers.get_default(field_name)] = (
+                            attr if attr is not None else ""
                         )
-
-            sellerparts = part_rev.part.seller_parts()
-            if len(sellerparts) > 0:
-                for sellerpart in part_rev.part.seller_parts():
-                    for field_name in seller_csv_headers.get_default_all():
-                        attr = getattr(sellerpart, field_name)
-                        row.update(
-                            {
-                                csv_headers.get_default(field_name): (
-                                    attr if attr is not None else ""
-                                )
-                            }
-                        )
-                    writer.writerow({k: smart_str(v) for k, v in row.items()})
-            else:
-                writer.writerow({k: smart_str(v) for k, v in row.items()})
-        return response
-        """
-
-        response = HttpResponse(
-            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-        response["Content-Disposition"] = (
-            'attachment; filename="indabom_parts_search.xlsx"'
-        )
-
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "Parts"
-
-        csv_headers = organization.part_list_csv_headers()
-        seller_csv_headers = SellerPartCSVHeaders()
-        headers = csv_headers.get_default_all()
-        ws.append(headers)
-
-        for part_rev in part_revs:
-            if organization.number_scheme == constants.NUMBER_SCHEME_SEMI_INTELLIGENT:
-                row = [
-                    part_rev.part.full_part_number(),
-                    part_rev.part.number_class.name,
-                    part_rev.revision,
-                    (
-                        part_rev.part.primary_manufacturer_part.manufacturer.name
-                        if part_rev.part.primary_manufacturer_part is not None
-                        and part_rev.part.primary_manufacturer_part.manufacturer
-                        is not None
-                        else ""
-                    ),
-                    (
-                        part_rev.part.primary_manufacturer_part.manufacturer_part_number
-                        if part_rev.part.primary_manufacturer_part is not None
-                        else ""
-                    ),
-                ]
-                for field_name in headers:
-                    if field_name not in csv_headers.get_defaults_list(
-                        [
-                            "part_number",
-                            "part_category",
-                            "part_synopsis",
-                            "part_revision",
-                            "part_manufacturer",
-                            "part_manufacturer_part_number",
-                        ]
-                        + seller_csv_headers.get_default_all()
-                    ):
-                        attr = getattr(part_rev, field_name)
-                        row.append(attr if attr is not None else "")
-            else:
-                row = [
-                    part_rev.part.full_part_number(),
-                    part_rev.revision,
-                    (
-                        part_rev.part.primary_manufacturer_part.manufacturer.name
-                        if part_rev.part.primary_manufacturer_part is not None
-                        and part_rev.part.primary_manufacturer_part.manufacturer
-                        is not None
-                        else ""
-                    ),
-                    (
-                        part_rev.part.primary_manufacturer_part.manufacturer_part_number
-                        if part_rev.part.primary_manufacturer_part is not None
-                        else ""
-                    ),
-                ]
-                for field_name in headers:
-                    if field_name not in csv_headers.get_defaults_list(
-                        [
-                            "part_number",
-                            "part_synopsis",
-                            "part_revision",
-                            "part_manufacturer",
-                            "part_manufacturer_part_number",
-                        ]
-                        + seller_csv_headers.get_default_all()
-                    ):
-                        attr = getattr(part_rev, field_name)
-                        row.append(attr if attr is not None else "")
 
             sellerparts = part_rev.part.seller_parts()
             if len(sellerparts) > 0:
@@ -495,24 +384,22 @@ def home(request):
                     seller_row = row.copy()
                     for field_name in seller_csv_headers.get_default_all():
                         attr = getattr(sellerpart, field_name)
-                        seller_row.append(attr if attr is not None else "")
-                    ws.append(seller_row)
+                        seller_row[csv_headers.get_default(field_name)] = (
+                            attr if attr is not None else ""
+                        )
+                    rows.append(seller_row)
             else:
-                ws.append(row)
+                rows.append(row)
 
-        # Optional: Auto-size columns
-        for col in ws.columns:
-            max_length = 0
-            column = col[0].column_letter
-            for cell in col:
-                try:
-                    if len(str(cell.value)) > max_length:
-                        max_length = len(str(cell.value))
-                except Exception:
-                    pass
-            ws.column_dimensions[column].width = max_length + 2
-
-        wb.save(response)
+        df = pd.DataFrame(rows)
+        response = HttpResponse(
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        response["Content-Disposition"] = (
+            'attachment; filename="indabom_parts_search.xlsx"'
+        )
+        with pd.ExcelWriter(response, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Parts")
         return response
 
     page_size = settings.BOM_CONFIG.get("admin_dashboard", {}).get("page_size", 25)
