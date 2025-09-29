@@ -3,7 +3,9 @@ import logging
 import operator
 from functools import reduce
 from json import dumps
+from urllib.parse import urlencode
 
+import pandas as pd
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, update_session_auth_hash
@@ -112,6 +114,11 @@ def home(request):
     if not organization:
         return HttpResponseRedirect(reverse("bom:organization-create"))
 
+    # Build a querystring with all GET params except 'page'
+    query_params = request.GET.copy()
+    query_params.pop("page", None)
+    querystring_except_page = urlencode(query_params)
+
     query = request.GET.get("q", "")
     title = f"{organization.name}"
 
@@ -179,7 +186,11 @@ def home(request):
         "part__number_item",
         "part__number_variation",
     )
-
+    if request.GET.get("product") == "1":
+        product_material_type = ["with_loi", "no_loi"]
+        part_revs = part_revs.filter(material__in=product_material_type)
+    elif request.GET.get("product") == "0":
+        part_revs = part_revs.filter(material="no_bom")
     autocomplete_dict = {}
     enable_autocomplete = settings.BOM_CONFIG.get("admin_dashboard", {}).get(
         "enable_autocomplete", False
@@ -298,14 +309,14 @@ def home(request):
         )
 
     if "download" in request.GET:
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = (
-            'attachment; filename="indabom_parts_search.csv"'
-        )
+        export_format = request.GET.get(
+            "format", "csv"
+        )  # default to csv if not specified
+
         csv_headers = organization.part_list_csv_headers()
         seller_csv_headers = SellerPartCSVHeaders()
-        writer = csv.DictWriter(response, fieldnames=csv_headers.get_default_all())
-        writer.writeheader()
+        rows = []
+
         for part_rev in part_revs:
             if organization.number_scheme == constants.NUMBER_SCHEME_SEMI_INTELLIGENT:
                 row = {
@@ -342,12 +353,8 @@ def home(request):
                         + seller_csv_headers.get_default_all()
                     ):
                         attr = getattr(part_rev, field_name)
-                        row.update(
-                            {
-                                csv_headers.get_default(field_name): (
-                                    attr if attr is not None else ""
-                                )
-                            }
+                        row[csv_headers.get_default(field_name)] = (
+                            attr if attr is not None else ""
                         )
             else:
                 row = {
@@ -380,29 +387,84 @@ def home(request):
                         + seller_csv_headers.get_default_all()
                     ):
                         attr = getattr(part_rev, field_name)
-                        row.update(
-                            {
-                                csv_headers.get_default(field_name): (
-                                    attr if attr is not None else ""
-                                )
-                            }
+                        row[csv_headers.get_default(field_name)] = (
+                            attr if attr is not None else ""
                         )
 
             sellerparts = part_rev.part.seller_parts()
             if len(sellerparts) > 0:
-                for sellerpart in part_rev.part.seller_parts():
+                for sellerpart in sellerparts:
+                    seller_row = row.copy()
                     for field_name in seller_csv_headers.get_default_all():
                         attr = getattr(sellerpart, field_name)
-                        row.update(
-                            {
-                                csv_headers.get_default(field_name): (
-                                    attr if attr is not None else ""
-                                )
-                            }
+                        seller_row[csv_headers.get_default(field_name)] = (
+                            attr if attr is not None else ""
                         )
-                    writer.writerow({k: smart_str(v) for k, v in row.items()})
+                    rows.append(seller_row)
             else:
-                writer.writerow({k: smart_str(v) for k, v in row.items()})
+                rows.append(row)
+
+        df = pd.DataFrame(rows)
+        # TODO: find a better way to handle this
+        df = df.drop(
+            [
+                "manufacturer_name",
+                "manufacturer_part_number",
+                "value",
+                "value_units",
+                "attribute",
+                "package",
+                "pin_count",
+                "frequency",
+                "frequency_units",
+                "wavelength",
+                "wavelength_units",
+                "memory",
+                "memory_units",
+                "interface",
+                "supply_voltage",
+                "supply_voltage_units",
+                "temperature_rating",
+                "temperature_rating_units",
+                "power_rating",
+                "power_rating_units",
+                "voltage_rating",
+                "voltage_rating_units",
+                "current_rating",
+                "current_rating_units",
+                "color",
+                "finish",
+                "length",
+                "length_units",
+                "width",
+                "width_units",
+                "height",
+                "height_units",
+                "weight",
+                "weight_units",
+                "unit_cost",
+                "minimum_order_quantity",
+                "nre_cost",
+                "minimum_pack_quantity",
+                "lead_time_days",
+            ],
+            axis=1,
+            errors="ignore",
+        )
+
+        if export_format == "csv":
+            response = HttpResponse(content_type="text/csv")
+            response["Content-Disposition"] = 'attachment; filename="lithium_parts.csv"'
+            df.to_csv(response, index=False)
+        else:  # default to xlsx
+            response = HttpResponse(
+                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+            response["Content-Disposition"] = (
+                'attachment; filename="lithium_parts.xlsx"'
+            )
+            with pd.ExcelWriter(response, engine="openpyxl") as writer:
+                df.to_excel(writer, index=False, sheet_name="Parts")
         return response
 
     page_size = settings.BOM_CONFIG.get("admin_dashboard", {}).get("page_size", 25)
@@ -717,17 +779,14 @@ def report(request):
 
             sellerparts = part_rev.part.seller_parts()
             if len(sellerparts) > 0:
-                for sellerpart in part_rev.part.seller_parts():
+                for sellerpart in sellerparts:
+                    seller_row = row.copy()
                     for field_name in seller_csv_headers.get_default_all():
                         attr = getattr(sellerpart, field_name)
-                        row.update(
-                            {
-                                csv_headers.get_default(field_name): (
-                                    attr if attr is not None else ""
-                                )
-                            }
+                        seller_row[csv_headers.get_default(field_name)] = (
+                            attr if attr is not None else ""
                         )
-                    writer.writerow({k: smart_str(v) for k, v in row.items()})
+                    writer.writerow({k: smart_str(v) for k, v in seller_row.items()})
             else:
                 writer.writerow({k: smart_str(v) for k, v in row.items()})
         return response
@@ -2039,7 +2098,7 @@ def add_subpart(request, part_id, part_revision_id):
 
         else:
             messages.error(request, add_subpart_form.errors)
-
+    part_revision.clear_bom_unit_cost_cache()
     return HttpResponseRedirect(
         reverse(
             "bom:part-manage-bom",
@@ -2053,6 +2112,7 @@ def add_subpart(request, part_id, part_revision_id):
 def remove_subpart(request, part_id, part_revision_id, subpart_id):
     subpart = get_object_or_404(Subpart, pk=subpart_id)
     subpart.delete()
+    subpart.part_revision.clear_bom_unit_cost_cache()
     return HttpResponseRedirect(
         reverse(
             "bom:part-manage-bom",
@@ -2121,6 +2181,7 @@ def edit_subpart(request, part_id, part_revision_id, subpart_id):
             reference_list = listify_string(form.cleaned_data["reference"])
             count = form.cleaned_data["count"]
             form.save()
+            subpart.part_revision.clear_bom_unit_cost_cache()
             return HttpResponseRedirect(
                 reverse(
                     "bom:part-manage-bom",
@@ -2145,6 +2206,7 @@ def edit_subpart(request, part_id, part_revision_id, subpart_id):
 def remove_all_subparts(request, part_id, part_revision_id):
     part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
     part_revision.assembly.subparts.all().delete()
+    part_revision.clear_bom_unit_cost_cache()
     return HttpResponseRedirect(
         reverse(
             "bom:part-manage-bom",
@@ -2184,6 +2246,9 @@ def add_sellerpart(request, manufacturer_part_id):
                 seller_part.seller = new_seller
                 seller_part.manufacturer_part = manufacturer_part
                 seller_part.save()
+                # TODO: don't clear every cached price
+                for part_revision in PartRevision.objects.all():
+                    part_revision.clear_bom_unit_cost_cache()
             return HttpResponseRedirect(
                 reverse("bom:part-info", kwargs={"part_id": manufacturer_part.part.id})
                 + "?tab_anchor=sourcing"
@@ -2381,6 +2446,9 @@ def sellerpart_edit(request, sellerpart_id):
                 seller_part.manufacturer_part = manufacturer_part
                 seller_part.id = sellerpart_id
                 seller_part.save()
+                # TODO: don't clear every cached price
+                for part_revision in PartRevision.objects.all():
+                    part_revision.clear_bom_unit_cost_cache()
             return HttpResponseRedirect(
                 reverse(
                     "bom:part-info",
@@ -2416,6 +2484,9 @@ def sellerpart_delete(request, sellerpart_id):
     sellerpart = get_object_or_404(SellerPart, pk=sellerpart_id)
     part = sellerpart.manufacturer_part.part
     sellerpart.delete()
+    # TODO: don't clear every cached price
+    for part_revision in PartRevision.objects.all():
+        part_revision.clear_bom_unit_cost_cache()
     return HttpResponseRedirect(
         reverse("bom:part-info", kwargs={"part_id": part.id}) + "?tab_anchor=sourcing"
     )
@@ -2573,6 +2644,7 @@ def part_revision_edit(request, part_id, part_revision_id):
         form = PartRevisionForm(request.POST, instance=part_revision)
         if form.is_valid():
             form.save()
+            part_revision.clear_bom_unit_cost_cache()
             return HttpResponseRedirect(
                 reverse("bom:part-info", kwargs={"part_id": part_id})
             )

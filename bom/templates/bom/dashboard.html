@@ -71,8 +71,27 @@
                     {% endif %}
                 </div>
                 <div class="col s6 left-align">
-                    <a class="button waves-effect waves-green btn-flat btn-icon-round tooltipped" data-position="bottom" data-tooltip="دانلود نتایج با فرمت CSV." href="{% url 'bom:home' %}?download=1"><i
-                            class="material-icons">file_download</i></a>
+                    <a class="button waves-effect waves-green btn-flat btn-icon-round dropdown-trigger tooltipped"
+                       data-position="bottom"
+                       data-tooltip="{% trans "Download" %}"
+                       href="#"
+                       data-target="download-menu">
+                       <i class="material-icons">file_download</i>
+                    </a>
+                    <ul id="download-menu" class="dropdown-content">
+                        <li>
+                            <a href="{% url 'bom:home' %}?download=1&format=xlsx{% if querystring_except_page %}&{{ querystring_except_page }}{% endif %}">
+                                <i class="material-icons left">file_download</i>
+                                {% trans "Download as XLSX" %}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'bom:home' %}?download=1&format=csv{% if querystring_except_page %}&{{ querystring_except_page }}{% endif %}">
+                                <i class="material-icons left">file_download</i>
+                                {% trans "Download as CSV" %}
+                            </a>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
@@ -126,12 +145,8 @@
 
                                 <td class="text-normal td-med">{% if part_rev.part.optimal_seller %}{{ part_rev.part.optimal_seller.seller }}{% endif %}</td>
 
-                                <td class="text-normal td-med">{% if part_rev.material == "no_bom" or part_rev.material == None %}
-                                    {{ part_rev.part.optimal_seller.unit_cost }}
-                                    {% elif part_rev.indented.bom_unit_cost is not 0 %}
-                                    {{ part_rev.indented.bom_unit_cost }}
-                                    {% endif %}</td>
-
+                                <td class="text-normal td-med">
+                                    {{ part_rev.bom_unit_cost }}
                                 <td class="text-normal td-med">
                                     {% if part_rev.configuration == 'W' %}
                                         <a class="green-text text-lighten-1" title="ویرایش این ورژن"
@@ -176,7 +191,7 @@
                 {% if part_revs.has_other_pages %}
                     <ul class="pagination center" style="padding-top: 24px;">
                         {% if part_revs.has_previous %}
-                            <li><a href="?page={{ part_revs.previous_page_number }}{% if part_class %}&part_class={{ part_class }}{% endif %}{% if query %}&q={{ query }}{% endif %}"><i class="material-icons">chevron_right</i></a></li>
+                            <li><a href="?page={{ part_revs.previous_page_number }}{% if part_class %}&part_class={{ part_class }}{% endif %}{% if querystring_except_page %}&{{ querystring_except_page }}{% endif %}"><i class="material-icons">chevron_right</i></a></li>
                         {% else %}
                             <li class="disabled"><i class="material-icons">chevron_right</i></li>
                         {% endif %}
@@ -184,11 +199,11 @@
                             {% if part_revs.number == i %}
                                 <li class="active green lighten-2"><a>{{ i }}</a></li>
                             {% else %}
-                                <li class="waves-effect waves-green"><a href="?page={{ i }}{% if part_class %}&part_class={{ part_class }}{% endif %}{% if query %}&q={{ query }}{% endif %}">{{ i }}</a></li>
+                                <li class="waves-effect waves-green"><a href="?page={{ i }}{% if part_class %}&part_class={{ part_class }}{% endif %}{% if querystring_except_page %}&{{ querystring_except_page }}{% endif %}">{{ i }}</a></li>
                             {% endif %}
                         {% endfor %}
                         {% if part_revs.has_next %}
-                            <li><a href="?page={{ part_revs.next_page_number }}{% if part_class %}&part_class={{ part_class }}{% endif %}{% if query %}&q={{ query }}{% endif %}"><i class="material-icons">chevron_left</i></a></li>
+                            <li><a href="?page={{ part_revs.next_page_number }}{% if part_class %}&part_class={{ part_class }}{% endif %}{% if querystring_except_page %}&{{ querystring_except_page }}{% endif %}"><i class="material-icons">chevron_left</i></a></li>
                         {% else %}
                             <li class="disabled"><i class="material-icons">chevron_left</i></li>
                         {% endif %}
