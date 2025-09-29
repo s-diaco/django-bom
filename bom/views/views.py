@@ -180,7 +180,11 @@ def home(request):
         "part__number_item",
         "part__number_variation",
     )
-
+    if request.GET.get("product") == "1":
+        product_material_type = ["with_loi", "no_loi"]
+        part_revs = part_revs.filter(material__in=product_material_type)
+    elif request.GET.get("product") == "0":
+        part_revs = part_revs.filter(material="no_bom")
     autocomplete_dict = {}
     enable_autocomplete = settings.BOM_CONFIG.get("admin_dashboard", {}).get(
         "enable_autocomplete", False
@@ -299,7 +303,10 @@ def home(request):
         )
 
     if "download" in request.GET:
-        # TODO: Export search results to both CSV and Excel formats
+        export_format = request.GET.get(
+            "format", "xlsx"
+        )  # default to xlsx if not specified
+
         csv_headers = organization.part_list_csv_headers()
         seller_csv_headers = SellerPartCSVHeaders()
         rows = []
@@ -392,14 +399,20 @@ def home(request):
                 rows.append(row)
 
         df = pd.DataFrame(rows)
-        response = HttpResponse(
-            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-        response["Content-Disposition"] = (
-            'attachment; filename="indabom_parts_search.xlsx"'
-        )
-        with pd.ExcelWriter(response, engine="openpyxl") as writer:
-            df.to_excel(writer, index=False, sheet_name="Parts")
+
+        if export_format == "csv":
+            response = HttpResponse(content_type="text/csv")
+            response["Content-Disposition"] = 'attachment; filename="lithium_parts.csv"'
+            df.to_csv(response, index=False)
+        else:  # default to xlsx
+            response = HttpResponse(
+                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+            response["Content-Disposition"] = (
+                'attachment; filename="lithium_parts.xlsx"'
+            )
+            with pd.ExcelWriter(response, engine="openpyxl") as writer:
+                df.to_excel(writer, index=False, sheet_name="Parts")
         return response
 
     page_size = settings.BOM_CONFIG.get("admin_dashboard", {}).get("page_size", 25)
@@ -714,17 +727,14 @@ def report(request):
 
             sellerparts = part_rev.part.seller_parts()
             if len(sellerparts) > 0:
-                for sellerpart in part_rev.part.seller_parts():
+                for sellerpart in sellerparts:
+                    seller_row = row.copy()
                     for field_name in seller_csv_headers.get_default_all():
                         attr = getattr(sellerpart, field_name)
-                        row.update(
-                            {
-                                csv_headers.get_default(field_name): (
-                                    attr if attr is not None else ""
-                                )
-                            }
+                        seller_row[csv_headers.get_default(field_name)] = (
+                            attr if attr is not None else ""
                         )
-                    writer.writerow({k: smart_str(v) for k, v in row.items()})
+                    writer.writerow({k: smart_str(v) for k, v in seller_row.items()})
             else:
                 writer.writerow({k: smart_str(v) for k, v in row.items()})
         return response

@@ -71,8 +71,27 @@
                     {% endif %}
                 </div>
                 <div class="col s6 left-align">
-                    <a class="button waves-effect waves-green btn-flat btn-icon-round tooltipped" data-position="bottom" data-tooltip="دانلود نتایج با فرمت CSV." href="{% url 'bom:home' %}?download=1"><i
-                            class="material-icons">file_download</i></a>
+                    <a class="button waves-effect waves-green btn-flat btn-icon-round dropdown-trigger tooltipped"
+                       data-position="bottom"
+                       data-tooltip="{% trans "Download" %}"
+                       href="#"
+                       data-target="download-menu">
+                       <i class="material-icons">file_download</i>
+                    </a>
+                    <ul id="download-menu" class="dropdown-content">
+                        <li>
+                            <a href="{% url 'bom:home' %}?download=1&format=xlsx">
+                                <i class="material-icons left">file_download</i>
+                                {% trans "Download as XLSX" %}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'bom:home' %}?download=1&format=csv">
+                                <i class="material-icons left">file_download</i>
+                                {% trans "Download as CSV" %}
+                            </a>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
@@ -190,6 +209,26 @@
                         {% endif %}
                     </ul>
                 {% endif %}
+                {% comment %}
+                Build a querystring with all GET params except 'page'
+                {% endcomment %}
+                {% with request.GET.items as items %}
+                    {% for key, value in items %}
+                        {% if key != 'page' %}
+                            {% ifchanged %}
+                                {% if forloop.first %}?{% else %}&{% endif %}
+                            {% endifchanged %}
+                            {{ key }}={{ value|urlencode }}
+                        {% endif %}
+                    {% endfor %}
+                    {% if part_revs.has_previous %}
+                        <a href="{% firstof '?' '' %}{% for key, value in items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ part_revs.previous_page_number }}">Previous</a>
+                    {% endif %}
+                    <span>Page {{ part_revs.number }} of {{ part_revs.paginator.num_pages }}</span>
+                    {% if part_revs.has_next %}
+                        <a href="{% firstof '?' '' %}{% for key, value in items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ part_revs.next_page_number }}">Next</a>
+                    {% endif %}
+                {% endwith %}
             </div>
         </form>
     </div>
