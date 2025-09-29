@@ -3,6 +3,7 @@ import logging
 import operator
 from functools import reduce
 from json import dumps
+from urllib.parse import urlencode
 
 import pandas as pd
 from django.conf import settings
@@ -112,6 +113,11 @@ def home(request):
     organization = profile.organization
     if not organization:
         return HttpResponseRedirect(reverse("bom:organization-create"))
+
+    # Build a querystring with all GET params except 'page'
+    query_params = request.GET.copy()
+    query_params.pop("page", None)
+    querystring_except_page = urlencode(query_params)
 
     query = request.GET.get("q", "")
     title = f"{organization.name}"
@@ -304,8 +310,8 @@ def home(request):
 
     if "download" in request.GET:
         export_format = request.GET.get(
-            "format", "xlsx"
-        )  # default to xlsx if not specified
+            "format", "csv"
+        )  # default to csv if not specified
 
         csv_headers = organization.part_list_csv_headers()
         seller_csv_headers = SellerPartCSVHeaders()
@@ -399,6 +405,52 @@ def home(request):
                 rows.append(row)
 
         df = pd.DataFrame(rows)
+        # TODO: find a better way to handle this
+        df = df.drop(
+            [
+                "manufacturer_name",
+                "manufacturer_part_number",
+                "value",
+                "value_units",
+                "attribute",
+                "package",
+                "pin_count",
+                "frequency",
+                "frequency_units",
+                "wavelength",
+                "wavelength_units",
+                "memory",
+                "memory_units",
+                "interface",
+                "supply_voltage",
+                "supply_voltage_units",
+                "temperature_rating",
+                "temperature_rating_units",
+                "power_rating",
+                "power_rating_units",
+                "voltage_rating",
+                "voltage_rating_units",
+                "current_rating",
+                "current_rating_units",
+                "color",
+                "finish",
+                "length",
+                "length_units",
+                "width",
+                "width_units",
+                "height",
+                "height_units",
+                "weight",
+                "weight_units",
+                "unit_cost",
+                "minimum_order_quantity",
+                "nre_cost",
+                "minimum_pack_quantity",
+                "lead_time_days",
+            ],
+            axis=1,
+            errors="ignore",
+        )
 
         if export_format == "csv":
             response = HttpResponse(content_type="text/csv")
