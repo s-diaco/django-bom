@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-30 02:17+0330\n"
+"POT-Creation-Date: 2025-04-23 10:06+0330\n"
 "PO-Revision-Date: 2024-03-24 06:55+0330\n"
 "Last-Translator: Diaco Soltanpour dyaco8464@yahoo.com\n"
 "Language-Team: Farsi (persian) dyaco8464@yahoo.com\n"
@@ -23,20 +23,19 @@ msgstr "کاربر"
 
 #: bom/forms.py:347 bom/templates/bom/add-manufacturer-part.html:28
 #: bom/templates/bom/add-manufacturer-part.html:33
-#: bom/templates/bom/components/bom-indented-overview.html:17
 #: bom/templates/bom/components/bom-indented.html:67
 #: bom/templates/bom/create-part.html:36
-#: bom/templates/bom/manufacturers.html:39 bom/templates/bom/part-info.html:233
-#: bom/templates/bom/part-info.html:267
+#: bom/templates/bom/manufacturers.html:39 bom/templates/bom/part-info.html:231
+#: bom/templates/bom/part-info.html:265
 msgid "Manufacturer"
 msgstr "تولید کننده"
 
 #: bom/forms.py:397 bom/forms.py:452 bom/templates/bom/add-sellerpart.html:24
 #: bom/templates/bom/components/seller-part-list.html:15
-#: bom/templates/bom/create-part.html:54 bom/templates/bom/dashboard.html:119
-#: bom/templates/bom/part-info.html:98 bom/templates/bom/part-info.html:164
+#: bom/templates/bom/create-part.html:54 bom/templates/bom/dashboard.html:100
+#: bom/templates/bom/part-info.html:97 bom/templates/bom/part-info.html:160
 #: bom/templates/bom/report.html:111 bom/templates/bom/sellerpart-edit.html:22
-#: bom/templates/bom/sellers.html:39 bom/views/views.py:2180
+#: bom/templates/bom/sellers.html:39 bom/views/views.py:2158
 msgid "Seller"
 msgstr "تأمین کننده"
 
@@ -46,7 +45,7 @@ msgid "Price | {unit}"
 msgstr "قیمت | {unit}"
 
 #: bom/forms.py:451 bom/templates/bom/components/seller-part-list.html:16
-#: bom/templates/bom/dashboard.html:117 bom/templates/bom/report.html:109
+#: bom/templates/bom/dashboard.html:98 bom/templates/bom/report.html:109
 msgid "Seller Part Number"
 msgstr "کد تأمین کننده"
 
@@ -111,56 +110,51 @@ msgid "Register"
 msgstr "ایجاد حساب"
 
 #: bom/templates/bom/base.html:52 bom/templates/bom/base.html:55
+#: bom/templates/bom/base.html:69
 msgid "Lithium"
 msgstr "لیتیوم"
 
 #: bom/templates/bom/bom-base-menu.html:2
-msgid "Raw Material"
-msgstr "مواد اولیه"
-
-#: bom/templates/bom/bom-base-menu.html:3
 msgid "Products"
 msgstr "محصولات"
 
-#: bom/templates/bom/bom-base-menu.html:4
+#: bom/templates/bom/bom-base-menu.html:3
 msgid "Reports"
 msgstr "گزارش"
 
-#: bom/templates/bom/bom-base-menu.html:5
+#: bom/templates/bom/bom-base-menu.html:4
 msgid "sellers"
 msgstr "تأمین کنندگان"
 
-#: bom/templates/bom/bom-base-menu.html:6
+#: bom/templates/bom/bom-base-menu.html:5
 msgid "settings"
 msgstr "تنظیمات"
 
-#: bom/templates/bom/bom-base-menu.html:8
+#: bom/templates/bom/bom-base-menu.html:7
 msgid "help"
 msgstr "راهنما"
 
-#: bom/templates/bom/components/bom-indented-overview.html:21
 #: bom/templates/bom/components/bom-indented.html:71
 msgid "L.O.I"
 msgstr "پرت"
 
-#: bom/templates/bom/components/bom-indented-overview.html:30
 #: bom/templates/bom/components/bom-indented.html:78
 #: bom/templates/bom/dashboard.html:70 bom/templates/bom/report.html:81
 msgid "Manage"
 msgstr "مدیریت"
 
-#: bom/templates/bom/components/bom-indented.html:125
+#: bom/templates/bom/components/bom-indented.html:134
 #: bom/templates/bom/components/manufacturer-part-list.html:80
 #: bom/templates/bom/dashboard.html:61
 #: bom/templates/bom/manufacturer-info.html:41
-#: bom/templates/bom/part-info.html:80 bom/templates/bom/report.html:72
+#: bom/templates/bom/part-info.html:79 bom/templates/bom/report.html:72
 #: bom/templates/bom/seller-info.html:41
 msgid "Delete"
 msgstr "حذف"
 
 #: bom/templates/bom/components/manufacturer-part-list.html:79
 #: bom/templates/bom/manufacturer-info.html:36
-#: bom/templates/bom/part-info.html:60 bom/templates/bom/seller-info.html:36
+#: bom/templates/bom/part-info.html:59 bom/templates/bom/seller-info.html:36
 #: bom/templates/bom/settings.html:226
 msgid "Edit"
 msgstr "ویرایش"
@@ -173,23 +167,11 @@ msgstr "متریال"
 msgid "Price"
 msgstr "قیمت"
 
-#: bom/templates/bom/dashboard.html:76
-msgid "Download"
-msgstr "دانلود"
-
-#: bom/templates/bom/dashboard.html:85
-msgid "Download as XLSX"
-msgstr "دانلود با فرمت اکسل"
-
-#: bom/templates/bom/dashboard.html:91
-msgid "Download as CSV"
-msgstr "دانلود با فرمت CSV"
-
-#: bom/templates/bom/dashboard.html:121 bom/templates/bom/report.html:113
+#: bom/templates/bom/dashboard.html:102 bom/templates/bom/report.html:113
 msgid "Unit Cost"
 msgstr "قیمت"
 
-#: bom/templates/bom/dashboard.html:157 bom/templates/bom/report.html:153
+#: bom/templates/bom/dashboard.html:142 bom/templates/bom/report.html:153
 msgid "Cost and Seller"
 msgstr "قیمت و تأمین کننده"
 
@@ -292,34 +274,34 @@ msgstr "ورود به اکانت BoM شما"
 msgid "%(value)s is not a valid pct"
 msgstr "%(value)s درصد معتبر نیست."
 
-#: bom/views/views.py:165 bom/views/views.py:491
+#: bom/views/views.py:160 bom/views/views.py:477
 msgid "Search Results - "
 msgstr " - نتایج جستجو"
 
-#: bom/views/views.py:167 bom/views/views.py:493
+#: bom/views/views.py:162 bom/views/views.py:479
 #, python-brace-format
 msgid "Material List for {title}"
 msgstr "لیست متریال {title}"
 
-#: bom/views/views.py:837
+#: bom/views/views.py:826
 msgid "Settings"
 msgstr "تنظیمات"
 
-#: bom/views/views.py:2382
+#: bom/views/views.py:2357
 msgid "Edit Seller Part"
 msgstr "ویرایش اطلاعات بازرگانی متریال"
 
-#: bom/views/views.py:2656
+#: bom/views/views.py:2609
 #, fuzzy
 #| msgid "Reset Password"
 msgid "Current password is incorrect."
 msgstr "رمز عبور فعلی اشتباه است."
 
-#: bom/views/views.py:2660
+#: bom/views/views.py:2613
 msgid "New passwords do not match."
 msgstr "رمز عبورهای جدید یکسان نیستند."
 
-#: bom/views/views.py:2668
+#: bom/views/views.py:2621
 msgid "Your password has been successfully reset."
 msgstr "رمز عبور شما با موفقیت عوض شد."
 
