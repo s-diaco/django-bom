@@ -451,6 +451,27 @@ def home(request):
             axis=1,
             errors="ignore",
         )
+        df["bom_unit_cost"] = (
+            df["bom_unit_cost"]
+            .astype(str)
+            .str.replace("ریال", "", regex=False)
+            .str.replace(",", "", regex=False)
+            .str.replace(r"\s+", "", regex=True)  # Remove all whitespace (including non-breaking spaces)
+            .str.replace(r"[^\d.]", "", regex=True)  # Remove any non-numeric characters except dots
+        )
+        df["bom_unit_cost"] = pd.to_numeric(df["bom_unit_cost"], errors="coerce")
+        df = df.rename(
+            columns={
+                "part_number": "کد متریال",
+                "revision": "ورژن",
+                "description": "متریال",
+                "tolerance": "پرت",
+                "material": "نوع متریال",
+                "bom_unit_cost": "قیمت",
+                "seller": "تأمین کننده",
+                "seller_part_number": "کد تأمین کننده",
+            }
+        )
 
         if export_format == "csv":
             response = HttpResponse(content_type="text/csv")

@@ -332,6 +332,7 @@ class PartsListCSVHeaders(CSVHeaders):
         CSVHeader("height_units", name_options=[]),
         CSVHeader("weight", name_options=[]),
         CSVHeader("weight_units", name_options=[]),
+        CSVHeader("bom_unit_cost", name_options=[]),
     ]
 
     all_headers_defns = (
