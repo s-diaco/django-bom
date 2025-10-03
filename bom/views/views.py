@@ -161,6 +161,10 @@ def home(request):
     else:
         part_class = None
 
+    if request.GET.get("product") == "1":
+        title += " - " + _("Products")
+    elif request.GET.get("product") == "0":
+        title += " - " + _("Raw Material")
     if part_class or query:
         title += _("Search Results - ")
     else:
@@ -456,8 +460,12 @@ def home(request):
             .astype(str)
             .str.replace("ریال", "", regex=False)
             .str.replace(",", "", regex=False)
-            .str.replace(r"\s+", "", regex=True)  # Remove all whitespace (including non-breaking spaces)
-            .str.replace(r"[^\d.]", "", regex=True)  # Remove any non-numeric characters except dots
+            .str.replace(
+                r"\s+", "", regex=True
+            )  # Remove all whitespace (including non-breaking spaces)
+            .str.replace(
+                r"[^\d.]", "", regex=True
+            )  # Remove any non-numeric characters except dots
         )
         df["bom_unit_cost"] = pd.to_numeric(df["bom_unit_cost"], errors="coerce")
         df = df.rename(
