@@ -1,6 +1,6 @@
 from django.conf import settings
 
-from bom.utils import get_project_version  # import the settings file
+from bom.utils import get_project_version
 
 
 def bom_config(request):
