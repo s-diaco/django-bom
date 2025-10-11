@@ -3,7 +3,7 @@ name = "lithium-bom"
 version = "v1.4.1"
 description = "django app to manage a bill of materials."
 authors = [
-    { name = "Diaco Soltanpour", email = "dyaco8464@yahoo.com" }
+    { name = "Diaco", email = "dyaco8464@yahoo.com" }
 ]
 dependencies = [
     "django>=5.0.3",
