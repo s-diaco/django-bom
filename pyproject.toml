@@ -27,10 +27,11 @@ requires-python = ">= 3.12"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.rye]
-virtual = true
+[tool.uv]
+package = false
 managed = true
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pytest>=8.3.5",
     "pytest-django>=4.8.0",
     "ruff>=0.3.3",

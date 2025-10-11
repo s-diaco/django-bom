@@ -192,11 +192,13 @@ class PartClass(models.Model):
             ],
         ]
         ordering = ["code"]
-        index_together = [
-            [
-                "organization",
-                "code",
-            ],
+        indexes = [
+            models.Index(
+                fields=[
+                    "organization",
+                    "code",
+                ]
+            ),
         ]
 
     def __str__(self):
@@ -261,7 +263,9 @@ class Part(models.Model):
             "number_variation",
             "organization",
         ]
-        index_together = ["organization", "number_class"]
+        indexes = [
+            models.Index(fields=["organization", "number_class"]),
+        ]
 
     def delete(self, *args, **kwargs):
         if self.revisions().exists():
