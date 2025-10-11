@@ -60,7 +60,7 @@ cat dump_file.sql | docker compose exec -T db psql -U bom_user -d bom_db
 ```
 
 ## Uninstall
-to take the server down and remove images and volumes (including database volume):
+To take the server down and remove images and volumes (including database volume):
 ```
 docker compose --env-file .env.prod down --volumes --rmi local
 ```
