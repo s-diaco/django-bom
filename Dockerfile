@@ -1,41 +1,57 @@
-# TODO: Switch to a multi-stage Dockerfile
-FROM python:3.12-slim
+# An example of using standalone Python builds with multistage images.
 
-EXPOSE 8000
+# First, build the application in the `/app` directory
+FROM ghcr.io/astral-sh/uv:bookworm-slim AS builder
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 
-# Keeps Python from generating .pyc files in the container
-ENV PYTHONDONTWRITEBYTECODE=1
+# Configure the Python directory so it is consistent
+ENV UV_PYTHON_INSTALL_DIR=/python
 
-# Turns off buffering for easier container logging
-ENV PYTHONUNBUFFERED=1
+# Only use the managed Python version
+ENV UV_PYTHON_PREFERENCE=only-managed
+
+# Install Python before the project for caching
+RUN uv python install 3.12
+
+WORKDIR /app
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --locked --no-install-project --no-dev
+COPY . /app
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-dev
+
+# Then, use a final image without uv
+FROM debian:bookworm-slim
 
 # Required for "entrypoint.sh, makemessages"
 RUN apt-get update && \
     apt-get install -y netcat-openbsd gettext \
     && rm -rf /var/lib/apt/lists/*
+    
+# Setup a non-root user
+RUN groupadd --system --gid 999 nonroot \
+ && useradd --system --gid 999 --uid 999 --create-home nonroot
 
-# Set the environment variable to use the mirror PyPI URL
-# ENV PIP_INDEX_URL=https://mirrors.sustech.edu.cn/pypi/web/simple
+# Copy the Python version
+COPY --from=builder --chown=python:python /python /python
 
-# Install pip requirements
-ARG REQUIREMENTS_FILE=requirements.lock
-COPY ${REQUIREMENTS_FILE} ./
-RUN --mount=type=cache,target=/root/.cache/pip pip install -r ${REQUIREMENTS_FILE}
-# If caching pip packages is not needed, use this line instead:
-# RUN pip install -r requirements.txt
+# Copy the application from the builder
+COPY --from=builder --chown=nonroot:nonroot /app /app
 
-# TODO: don't copy everything 
+# Place executables in the environment at the front of the path
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Use the non-root user to run our application
+USER nonroot
+
+# Use `/app` as the working directory
 WORKDIR /app
-COPY . /app
 
 RUN mkdir /app/staticfiles
 RUN mkdir /app/log
 
 # Compile translation messages
 RUN python manage.py compilemessages -l fa_IR
-
-# Creates a non-root user with an explicit UID and adds permission to access the /app folder
-# For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
-RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
-USER appuser
 
