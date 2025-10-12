@@ -2,8 +2,9 @@ name: Build and share Docker Image to Docker Hub
 
 on:
   push:
-    branches:
-      - master
+    tags:
+      # Publish on any tag starting with a `v`, e.g., v0.1.0
+      - v*
 
 jobs:
   build-and-share:
