@@ -1,196 +1,319 @@
 # BOM
 
-BoM is a Django app to manage a bill of materials. It supports multiple part numbering schemes, tracking component sourcing information and estimates costs. BoM is written in Python 3 and Django 5.
+BOM is a Django-based bill of materials system with a split application architecture:
 
-BoM can be added to an existing (or new) Django project, or stand alone on its own, which can be more convenient if you're interested in tweaking the tool. 
+- A Django REST Framework API under `/api/v1`
+- A React + Vite + TypeScript client in `frontend/`
+- JWT authentication powered by `djangorestframework-simplejwt`
 
-If you already have a django project, you can skip to [Add Django Bom To Your App](#add-django-bom-to-your-app), otherwise [Start From Scratch: Add to new Django project](#start-from-scratch-add-to-a-new-django-project) to add it to a new django project, or [Start From Scratch: Use as standalone Django project](#start-from-scratch-use-as-a-standalone-django-project).
+The project still includes the original Django app and admin flows, but it now also ships a modern API/client stack for authenticated parts search, part detail views, and BOM exploration.
 
-## Table of contents
-   * [Add Django Bom To Your App](#add-django-bom-to-your-app)
-   * [Start From Scratch: Use as standalone Django project](#start-from-scratch-use-as-a-standalone-django-project)
-   * [Start from docker](#start-from-docker-recommended)
-   * [Backup and restore database](#backup-and-restore-database-if-using-docker-compose-and-postgres)
-   * [Uninstall](#uninstall)
-   * [Run the tests](#run-the-tests)
-   * [Test API](#test-api)
-   * [Customize Base Template](#customize-base-template)
-   * [Add To Your App](#add-to-your-app)
-   * [Integrations](#integrations)
-   * [Contributing](#contributing)
-   * [Installation pitfalls](#installation-pitfalls)
+## What is in the repo
 
-## Start from docker (Recommended)
-1.1. create .env.prod and .env.db files or use example files (just rename them).
+- Django 5 backend for BOM data, admin, legacy views, and integrations
+- DRF API for auth, current user metadata, part list, part detail, and BOM views
+- React client with login, protected routes, parts dashboard, and part detail/BOM page
+- Frontend test coverage with Vitest and React Testing Library
+- GitHub Actions workflow that runs frontend and backend validation in parallel
 
-1.2. If you have a problem accessing pypi add a mirror link to Dockerfile before install pip requirements:
+## Implemented API and client features
+
+### Authentication
+
+JWT endpoints are available under `/api/v1/auth/`:
+
+- `POST /auth/login/`
+- `POST /auth/refresh/`
+- `POST /auth/logout/`
+- `GET /auth/me/`
+
+The React client stores access and refresh tokens locally and automatically attempts token refresh on `401` responses.
+
+### Parts and BOM
+
+Authenticated API endpoints currently include:
+
+- `GET /api/v1/parts/`
+- `GET /api/v1/parts/<part_id>/`
+- `GET /api/v1/parts/<part_id>/bom/`
+
+The frontend currently supports:
+
+- Sign in with existing Django credentials
+- Protected routing
+- Paginated parts list with search
+- Part detail page
+- BOM rendering in `indented` and `flat` modes
+- Quantity-based BOM recalculation
+
+## Quick start
+
+### Requirements
+
+- Python 3.12+
+- Node.js 20+
+- npm
+- Docker and Docker Compose if you want the container workflow
+
+### Backend setup with uv
+
+```bash
+uv venv --python 3.12
+source .venv/bin/activate
+uv pip install -e ".[dev]"
+python manage.py migrate
+python manage.py runserver
 ```
-# Set the environment variable to use the mirror PyPI URL
+
+The Django app will be available at `http://127.0.0.1:8000/`.
+
+### Frontend setup
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+The Vite dev server proxies `/api` requests to `http://127.0.0.1:8000`.
+
+If you need to point the client to a different backend, set `VITE_API_BASE_URL`.
+
+## Docker workflow
+
+### Start from Docker
+
+1. Create `.env.prod` and `.env.db`, or rename the example files.
+2. If you need a PyPI mirror, add it to the Dockerfile before dependency installation:
+
+```Dockerfile
 ENV PIP_INDEX_URL=https://mirrors.sustech.edu.cn/pypi/web/simple
 ```
-1.3. Go to project dir
-```
-cd project_dir
-```
-2. Build and run the containers
-```
+
+3. Start the stack:
+
+```bash
 docker compose --env-file .env.prod up --build -d
 ```
-3. Restore database from dump (optional)
-```
+
+4. Restore the database from a dump if needed:
+
+```bash
 gunzip < dump_file.sql.gz | docker compose exec -T db psql -U bom_user -d bom_db
 ```
-4. Prepare django:
-```
+
+5. Prepare Django:
+
+```bash
 docker compose exec web sh entrypoint.sh
 ```
 
-## Backup and restore database (If using docker-compose and postgres)
+### Backup and restore database
+
 Backup:
-```
+
+```bash
 docker compose exec -T db pg_dump -c -U bom_user bom_db | gzip > ./dump_bom_db_$(date +"%Y-%m-%d_%H_%M_%S").sql.gz
 ```
+
 Restore:
-```
+
+```bash
 gunzip < dump_file.sql.gz | docker compose exec -T db psql -U bom_user -d bom_db
 ```
-Restore (Unzipped dump on Windows):
-```
+
+Restore an unzipped dump on Windows:
+
+```bash
 cat dump_file.sql | docker compose exec -T db psql -U bom_user -d bom_db
 ```
 
-## Uninstall
-To take the server down and remove images and volumes (including database volume):
-```
+### Uninstall containers
+
+```bash
 docker compose --env-file .env.prod down --volumes --rmi local
 ```
 
-## Run the tests
-```
+## Development workflows
+
+### Run backend tests
+
+With Docker:
+
+```bash
 docker compose --env-file .env.test -f docker-compose.test.yml up --abort-on-container-exit --remove-orphans
 ```
-Cleanup after running the tests:
-```
+
+Cleanup after Docker test runs:
+
+```bash
 docker compose -f docker-compose.test.yml down -v --rmi local
 ```
 
-## Test API
+Or locally with uv:
+
+```bash
+uv run pytest
+```
+
+### Run frontend checks
+
+```bash
+cd frontend
+npm run build
+npm run test:run
+```
+
+### CI
+
+GitHub Actions runs two jobs in parallel:
+
+- `frontend`: install, build, and run Vitest
+- `backend`: install Python dependencies and run `pytest`
+
+## API examples
+
 Obtain a token:
-```
-curl -X POST -d "username=yourusername&password=yourpassword" http://127.0.0.1:1313/api/v1/auth/login/
-```
-Use the obtained token to access the protected endpoint:
-```
-curl -H "Authorization: Bearer youraccesstoken" http://127.0.0.1:1313/api/v1/items/
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{"username":"yourusername","password":"yourpassword"}'
 ```
 
-## Add To Your App
-django-bom is a [reusable django application](https://docs.djangoproject.com/en/1.11/intro/reusable-apps/). If you don't already have a django project, you can follow some quick steps below to get up and running, or read about creating your first django app [here](https://docs.djangoproject.com/en/1.11/intro/tutorial01/).
+Fetch the authenticated user:
 
+```bash
+curl http://127.0.0.1:8000/api/v1/auth/me/ \
+  -H "Authorization: Bearer youraccesstoken"
 ```
+
+Fetch parts:
+
+```bash
+curl "http://127.0.0.1:8000/api/v1/parts/?q=resistor&page=1&page_size=25" \
+  -H "Authorization: Bearer youraccesstoken"
+```
+
+Fetch a BOM:
+
+```bash
+curl "http://127.0.0.1:8000/api/v1/parts/42/bom/?view=indented&quantity=100" \
+  -H "Authorization: Bearer youraccesstoken"
+```
+
+## Reusable Django app setup
+
+The original `bom` app can still be embedded into another Django project.
+
+Install the package:
+
+```bash
 pip install django-bom
 ```
 
-1. Add "bom" to your INSTALLED_APPS setting like this::
+Add required apps:
 
-```
+```python
 INSTALLED_APPS = [
-    ...
-    'bom',
-    'social_django', # to enable google drive sync in bom
-    'djmoney', # for currency
-    'djmoney.contrib.exchange', # for currency
-    'materializecssform',
+    ...,
+    "bom",
+    "social_django",
+    "djmoney",
+    "djmoney.contrib.exchange",
+    "materializecssform",
 ]
 ```
 
-2. Update your URLconf in your project urls.py like this::
+Add URLs:
 
-```
-path('bom/', include('bom.urls')),
-```
-
-And don't forget to import include:
-
-```
+```python
 from django.conf.urls import include
+
+path("bom/", include("bom.urls")),
 ```
 
-3. Update your settings.py to add the bom context processor `'bom.context_processors.bom_config',` to your TEMPLATES variable, and create a new empty dictionary BOM_CONFIG.
+Add the BOM context processor and config:
 
-```
+```python
 TEMPLATES = [
     {
-        ...
-        'OPTIONS': {
-            'context_processors': [
-                ...
-                'bom.context_processors.bom_config',
+        ...,
+        "OPTIONS": {
+            "context_processors": [
+                ...,
+                "bom.context_processors.bom_config",
             ],
         },
     },
 ]
-```
 
-and
-
-```
 BOM_CONFIG = {}
 ```
 
-4. Run `python manage.py migrate` to create the bom models.
+Run migrations:
 
-5. Start the development server `python manage.py runserver` and visit http://127.0.0.1:8000/admin/
-   to manage the bom (you'll need the Admin app enabled).
-
-6. Visit http://127.0.0.1:8000/bom/ to begin.
-
-## Customize Base Template
-The base template can be customized to your pleasing. Just add the following configuration to your settings.py:
-
+```bash
+python manage.py migrate
 ```
+
+## Customize base template
+
+```python
 BOM_CONFIG = {
-    'base_template': 'base.html',
+    "base_template": "base.html",
 }
 ```
-
-where `base.html` is your base template.
 
 ## Integrations
 
-### Google Drive Integration
-Make sure to add the following to your settings.py:
-```
+### Google Drive integration
+
+Add the following to `settings.py`:
+
+```python
 AUTHENTICATION_BACKENDS = (
-    'social_core.backends.google.GoogleOpenId',
-    'social_core.backends.google.GoogleOAuth2',
-    'social_core.backends.google.GoogleOAuth',
-    'django.contrib.auth.backends.ModelBackend',
+    "social_core.backends.google.GoogleOpenId",
+    "social_core.backends.google.GoogleOAuth2",
+    "social_core.backends.google.GoogleOAuth",
+    "django.contrib.auth.backends.ModelBackend",
 )
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['email', 'profile', 'https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/plus.login']
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
+    "email",
+    "profile",
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/plus.login",
+]
+
 SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {
-    'access_type': 'offline',
-    'approval_prompt': 'auto'
+    "access_type": "offline",
+    "approval_prompt": "auto",
 }
-``` 
-And if you're using https on production add:
 ```
+
+If production runs behind HTTPS:
+
+```python
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = not DEBUG
 ```
 
-### FIXER
-Fixer.io is used to handle exchange rate calculations. This is helpful if you may be purchasing parts from another currency (especially via Mouser) and you still need to estimate your part costs.
+### Fixer
 
-To set this up you just need to add your API key to local_settings.py as shown in the example.
+Fixer.io is used for exchange-rate calculations when cost estimates involve multiple currencies. Add the API key to `local_settings.py`, then run:
 
-To update rates, migrate and run `python manage.py update_rates`. Some day we will need to add a (celerybeat?) task to update rates on a schedule. Explained more [here](https://github.com/django-money/django-money#working-with-exchange-rates).
+```bash
+python manage.py update_rates
+```
 
-## Installation Pitfalls
+## Installation pitfalls
 
 ### Windows
-#### Sqlite
-You may get an error during your `pip install -r requirements.txt` related to sqlite. This may be fixed by installing Visual C++ for python...
+
+#### SQLite
+
+If `pip install` fails while building SQLite-related packages, you may need the Visual C++ build tools.
 
 #### Cryptography
-Sometimes you'll have issues installing cryptography, if this is the case you may just need to set up some environment variables. This [stackoverflow](https://stackoverflow.com/questions/46288737/error-while-installing-sqlite-using-pip-on-python-2-7-13) may help.
+
+If `cryptography` fails to install, missing environment configuration or native build prerequisites are usually the cause. This [Stack Overflow thread](https://stackoverflow.com/questions/46288737/error-while-installing-sqlite-using-pip-on-python-2-7-13) may help.
