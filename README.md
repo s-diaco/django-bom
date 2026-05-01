@@ -81,16 +81,27 @@ If you need to point the client to a different backend, set `VITE_API_BASE_URL`.
 
 ## Docker workflow
 
-### Start from Docker
+The production stack runs four services defined in `docker-compose.yml`:
 
-1. Create `.env.prod` and `.env.db`, or rename the example files.
-2. If you need a PyPI mirror, add it to the Dockerfile before dependency installation:
+| Service  | Description |
+|----------|-------------|
+| `web`    | Django application served by Gunicorn, exposes the REST API and admin |
+| `caddy`  | Reverse proxy that serves static files and forwards requests to `web` |
+| `db`     | PostgreSQL 17 database |
+| `backup` | Scheduled `pg_dump` that retains the last 7 compressed dumps in `./postgres_backup/` |
+
+### Start the stack
+
+1. Create `.env.prod` (and optionally `.env.db` for backup-specific overrides), or rename the example files.  
+   Required variables: `SECRET_KEY`, `SQL_*`, `POSTGRES_*`, `NGINX_PORT`, `API_PORT`, `DJANGO_ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`.
+
+2. If you need a PyPI mirror, add it to the Dockerfile before the dependency installation step:
 
 ```Dockerfile
 ENV PIP_INDEX_URL=https://mirrors.sustech.edu.cn/pypi/web/simple
 ```
 
-3. Start the stack:
+3. Build and start all services in detached mode:
 
 ```bash
 docker compose --env-file .env.prod up --build -d
@@ -102,7 +113,7 @@ docker compose --env-file .env.prod up --build -d
 gunzip < dump_file.sql.gz | docker compose exec -T db psql -U bom_user -d bom_db
 ```
 
-5. Prepare Django:
+5. Run Django migrations and collect static files:
 
 ```bash
 docker compose exec web sh entrypoint.sh

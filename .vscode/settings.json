@@ -11,5 +11,12 @@
             "source.organizeImports": "explicit"
         },
     },
-    "isort.args":["--profile", "black"],
+    "isort.args": [
+        "--profile",
+        "black"
+    ],
+    "chat.tools.terminal.autoApprove": {
+        "npm create": true,
+        "npm install": true
+    },
 }
