@@ -33,6 +33,7 @@ RUN if [ -n "$APT_MIRROR" ]; then \
         -e "s|http://deb.debian.org/debian|$APT_MIRROR|g" \
         -e "s|http://security.debian.org/debian-security|$APT_MIRROR-security|g" \
         {} +; \
+      echo 'Apt::HTTPS::Verify=false;' > /etc/apt/apt.conf.d/99disable-ssl-verification; \
     fi && \
     apt-get update && \
     apt-get install -y netcat-openbsd gettext \

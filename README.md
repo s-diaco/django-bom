@@ -33,6 +33,7 @@ If you have a problem accessing Debian package repositories during image build, 
 export APT_MIRROR=https://mirror.example.com/debian
 docker compose --env-file .env.prod up --build -d
 ```
+Note: SSL certificate verification is automatically disabled for the mirror to support self-signed certificates.
 1.3. Go to project dir
 ```
 cd project_dir
