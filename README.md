@@ -28,6 +28,11 @@ If you already have a django project, you can skip to [Add Django Bom To Your Ap
 # Set the environment variable to use the mirror PyPI URL
 ENV PIP_INDEX_URL=https://mirrors.sustech.edu.cn/pypi/web/simple
 ```
+If you have a problem accessing Debian package repositories during image build, export `APT_MIRROR` before running Compose:
+```
+export APT_MIRROR=https://mirror.example.com/debian
+docker compose --env-file .env.prod up --build -d
+```
 1.3. Go to project dir
 ```
 cd project_dir

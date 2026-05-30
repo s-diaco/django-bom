@@ -25,8 +25,16 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Then, use a final image without uv
 FROM debian:bookworm-slim
 
+ARG APT_MIRROR
+
 # Required for "entrypoint.sh, makemessages"
-RUN apt-get update && \
+RUN if [ -n "$APT_MIRROR" ]; then \
+      find /etc/apt -type f \( -name 'sources.list' -o -name '*.sources' \) -exec sed -i \
+        -e "s|http://deb.debian.org/debian|$APT_MIRROR|g" \
+        -e "s|http://security.debian.org/debian-security|$APT_MIRROR-security|g" \
+        {} +; \
+    fi && \
+    apt-get update && \
     apt-get install -y netcat-openbsd gettext \
     && rm -rf /var/lib/apt/lists/*
     
