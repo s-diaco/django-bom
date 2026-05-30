@@ -27,16 +27,23 @@ FROM debian:bookworm-slim
 
 ARG APT_MIRROR
 
+# Disable APT and curl certificate verification if mirror is provided
+RUN if [ -n "$APT_MIRROR" ]; then \
+      mkdir -p /etc/apt/apt.conf.d; \
+      echo 'Apt::HTTPS::Verify=false;' > /etc/apt/apt.conf.d/99disable-ssl-verification; \
+      echo 'Apt::Get::AllowUnauthenticated=true;' >> /etc/apt/apt.conf.d/99disable-ssl-verification; \
+      echo 'APT::Get::AllowDowngradeToInsecureRepositories=true;' >> /etc/apt/apt.conf.d/99disable-ssl-verification; \
+    fi
+
 # Required for "entrypoint.sh, makemessages"
 RUN if [ -n "$APT_MIRROR" ]; then \
       find /etc/apt -type f \( -name 'sources.list' -o -name '*.sources' \) -exec sed -i \
         -e "s|http://deb.debian.org/debian|$APT_MIRROR|g" \
         -e "s|http://security.debian.org/debian-security|$APT_MIRROR-security|g" \
         {} +; \
-      echo 'Apt::HTTPS::Verify=false;' > /etc/apt/apt.conf.d/99disable-ssl-verification; \
     fi && \
-    apt-get update && \
-    apt-get install -y netcat-openbsd gettext \
+    apt-get update -o Apt::HTTPS::Verify=false -o Apt::Get::AllowUnauthenticated=true && \
+    apt-get install -y -o Apt::HTTPS::Verify=false -o Apt::Get::AllowUnauthenticated=true netcat-openbsd gettext \
     && rm -rf /var/lib/apt/lists/*
     
 # Setup a non-root user
