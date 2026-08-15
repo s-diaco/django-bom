@@ -65,6 +65,15 @@ class TestBOM(TransactionTestCase):
         )
         self.assertEqual(len(response.context["part_revs"]), 1)
 
+    def test_home_lists_latest_revision_only(self):
+        (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+        self.assertGreaterEqual(p3.revisions().count(), 2)
+        response = self.client.get(reverse("bom:home"))
+        self.assertEqual(response.status_code, 200)
+        p3_revs = [pr for pr in response.context["part_revs"] if pr.part_id == p3.id]
+        self.assertEqual(len(p3_revs), 1)
+        self.assertEqual(p3_revs[0].id, p3.latest().id)
+
     def test_part_info(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
 

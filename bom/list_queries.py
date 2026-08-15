@@ -1,8 +1,13 @@
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Prefetch, prefetch_related_objects
+from django.db.models import Max, Prefetch, Subquery, prefetch_related_objects
 
-from bom.models import ManufacturerPart, SellerPart
+from bom.models import ManufacturerPart, PartRevision, SellerPart
 
+LIST_PAGE_ORDER = (
+    "part__number_class__code",
+    "part__number_item",
+    "part__number_variation",
+)
 LIST_PAGE_SELLER_QUANTITY = 100
 LIST_PAGE_SELECT_RELATED = (
     "part",
@@ -10,6 +15,19 @@ LIST_PAGE_SELECT_RELATED = (
     "part__number_class",
     "part__primary_manufacturer_part",
 )
+
+
+def latest_part_revisions(parts):
+    """Latest PartRevision per part. Groups by part_id before taking Max(id)."""
+    latest_ids = (
+        PartRevision.objects.filter(part__in=parts)
+        .values("part_id")
+        .annotate(max_id=Max("id"))
+        .values("max_id")
+    )
+    return PartRevision.objects.filter(id__in=Subquery(latest_ids)).order_by(
+        *LIST_PAGE_ORDER
+    )
 
 
 def prepare_part_revs_for_list_page(
