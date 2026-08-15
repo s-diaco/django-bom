@@ -21,8 +21,8 @@ ITERATIONS = 3
 
 # Tightened after Stage A. Catches an N+1 regression; not a latency SLA.
 MAX_QUERIES = {
-    "home": 200,
-    "report": 200,
+    "home": 100,
+    "report": 100,
     "part_info": 120,
 }
 

@@ -16,10 +16,8 @@ from django.db.models import (
     Count,
     ProtectedError,
     Q,
-    Subquery,
     prefetch_related_objects,
 )
-from django.db.models.aggregates import Max
 from django.forms import ValidationError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
@@ -82,7 +80,7 @@ from bom.models import (
     User,
     UserMeta,
 )
-from bom.list_queries import paginate_part_revs
+from bom.list_queries import latest_part_revisions, paginate_part_revs
 from bom.utils import (
     check_references_for_duplicates,
     get_session_part_quantity,
@@ -179,19 +177,7 @@ def home(request):
     else:
         parts = Part.objects.filter(organization=organization)
 
-    part_ids = list(parts.values_list("id", flat=True))
-
-    part_revs = PartRevision.objects.filter(
-        id__in=Subquery(
-            PartRevision.objects.filter(part_id__in=part_ids)
-            .annotate(max_id=Max("id"))
-            .values("id")
-        )
-    ).order_by(
-        "part__number_class__code",
-        "part__number_item",
-        "part__number_variation",
-    )
+    part_revs = latest_part_revisions(parts)
     if request.GET.get("product") == "1":
         product_material_type = ["with_loi", "no_loi"]
         part_revs = part_revs.filter(material__in=product_material_type)
@@ -302,17 +288,7 @@ def home(request):
                 | q_primary_mfg
             )
 
-        part_ids = list(parts.values_list("id", flat=True))
-
-        part_revs = PartRevision.objects.filter(
-            id__in=Subquery(
-                PartRevision.objects.filter(part_id__in=part_ids)
-                .annotate(max_id=Max("id"))
-                .values("id")
-            )
-        ).order_by(
-            "part__number_class__code", "part__number_item", "part__number_variation"
-        )
+        part_revs = latest_part_revisions(parts)
 
     if "download" in request.GET:
         export_format = request.GET.get(
@@ -568,19 +544,7 @@ def report(request):
     else:
         parts = Part.objects.filter(organization=organization)
 
-    part_ids = list(parts.values_list("id", flat=True))
-
-    part_revs = PartRevision.objects.filter(
-        id__in=Subquery(
-            PartRevision.objects.filter(part_id__in=part_ids)
-            .annotate(max_id=Max("id"))
-            .values("id")
-        )
-    ).order_by(
-        "part__number_class__code",
-        "part__number_item",
-        "part__number_variation",
-    )
+    part_revs = latest_part_revisions(parts)
 
     autocomplete_dict = {}
     enable_autocomplete = settings.BOM_CONFIG.get("admin_dashboard", {}).get(
@@ -687,17 +651,7 @@ def report(request):
                 | q_primary_mfg
             )
 
-        part_ids = list(parts.values_list("id", flat=True))
-
-        part_revs = PartRevision.objects.filter(
-            id__in=Subquery(
-                PartRevision.objects.filter(part_id__in=part_ids)
-                .annotate(max_id=Max("id"))
-                .values("id")
-            )
-        ).order_by(
-            "part__number_class__code", "part__number_item", "part__number_variation"
-        )
+        part_revs = latest_part_revisions(parts)
 
     if start_date:
         date = jalali_to_gregorian(start_date)

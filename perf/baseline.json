@@ -75,6 +75,29 @@
           "response_bytes": 54528
         }
       }
+    },
+    {
+      "id": "latest-rev",
+      "pages": {
+        "home": {
+          "queries": 61,
+          "db_seconds": 0.0,
+          "wall_seconds": 0.078233,
+          "response_bytes": 205548
+        },
+        "report": {
+          "queries": 61,
+          "db_seconds": 0.0,
+          "wall_seconds": 0.077797,
+          "response_bytes": 209940
+        },
+        "part_info": {
+          "queries": 63,
+          "db_seconds": 0.0,
+          "wall_seconds": 0.041077,
+          "response_bytes": 54528
+        }
+      }
     }
   ]
 }
