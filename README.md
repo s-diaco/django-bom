@@ -13,7 +13,6 @@ If you already have a django project, you can skip to [Add Django Bom To Your Ap
    * [Backup and restore database](#backup-and-restore-database-if-using-docker-compose-and-postgres)
    * [Uninstall](#uninstall)
    * [Run the tests](#run-the-tests)
-   * [Test API](#test-api)
    * [Customize Base Template](#customize-base-template)
    * [Add To Your App](#add-to-your-app)
    * [Integrations](#integrations)
@@ -78,16 +77,6 @@ docker compose --env-file .env.test -f docker-compose.test.yml up --abort-on-con
 Cleanup after running the tests:
 ```
 docker compose -f docker-compose.test.yml down -v --rmi local
-```
-
-## Test API
-Obtain a token:
-```
-curl -X POST -d "username=yourusername&password=yourpassword" http://127.0.0.1:1313/api/v1/auth/login/
-```
-Use the obtained token to access the protected endpoint:
-```
-curl -H "Authorization: Bearer youraccesstoken" http://127.0.0.1:1313/api/v1/items/
 ```
 
 ## Add To Your App

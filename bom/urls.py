@@ -203,10 +203,8 @@ urlpatterns = [
         name="login",
     ),
     path(
-        "api/logout/",
+        "logout/",
         auth_views.LogoutView.as_view(),
-        {"next_page": "/"},
         name="logout",
     ),
-    path("api/v1/", include("api.urls_api")),
 ]
