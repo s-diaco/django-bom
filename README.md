@@ -46,10 +46,6 @@ The web container runs `collectstatic` and migrations automatically on startup.
 ```
 gunzip < dump_file.sql.gz | docker compose exec -T db psql -U bom_user -d bom_db
 ```
-4. Prepare django (only if you need to run setup manually, e.g. createsuperuser):
-```
-docker compose exec web sh entrypoint.sh
-```
 
 ## Backup and restore database (If using docker-compose and postgres)
 Backup:
