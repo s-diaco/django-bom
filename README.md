@@ -22,7 +22,7 @@ If you already have a django project, you can skip to [Add Django Bom To Your Ap
 ## Start from docker (Recommended)
 1.1. create .env.prod and .env.db files or use example files (just rename them).
 
-1.2. If you cannot reach PyPI or Debian package repositories, see [Package mirrors](docs/mirrors.md).
+1.2. If you cannot reach PyPI, Debian, or Docker Hub, see [Package mirrors](docs/mirrors.md).
 1.3. Go to project dir
 ```
 cd project_dir
