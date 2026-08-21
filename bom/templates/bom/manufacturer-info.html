@@ -6,12 +6,18 @@
 {% block head-title %}{{ part.full_part_number }}{% if part_revision %} {{ part_revision.synopsis }}{% endif %}{% endblock %}
 
 {% block head %}
-    <link rel="stylesheet" type="text/css" href="{% static 'bom/css/style.css' %}"/>
     <link rel="stylesheet" type="text/css" href="{% static 'bom/css/part-info.css' %}"/>
 {% endblock %}
 
 {% block content %}
-    {% include 'bom/bom-action-btn.html' with profile=profile %}
+    {% if profile.role == 'A' %}
+    <div class="container-app printer-hide">
+        <div class="bom-action-bar">
+            <a class="bom-btn-primary" href="{% url 'bom:create-part' %}"><i class="material-icons text-base">add</i>متریال جدید</a>
+            <a class="bom-btn-secondary" href="{% url 'bom:upload-parts' %}"><i class="material-icons text-base">cloud_upload</i>آپلود متریال</a>
+        </div>
+    </div>
+    {% endif %}
     <div class="container-app">
         <div class="row" style="margin-bottom: 5px;">
             <div class="col m8 hide-on-small-and-down">
@@ -23,7 +29,7 @@
             {% if profile.role == 'A' and manufacturer %}
                 <div style="margin-top: 1.5rem;">
                     <!-- Dropdown Trigger -->
-                    <button class='dropdown-trigger hide-on-small-and-down waves-effect waves-light grey lighten-4 btn-flat'
+                    <button class='dropdown-trigger hide-on-small-and-down bom-btn-secondary'
                             href='#' data-target='dropdown-revision'><i class="material-icons right">settings</i><i class="material-icons left">arrow_drop_down</i>مدیریت
                     </button>
                     <a class='dropdown-trigger hide-on-med-and-up' href='#' data-target='dropdown-revision'><i
