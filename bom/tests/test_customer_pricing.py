@@ -52,7 +52,7 @@ class TestCustomerPricingHelpers(TransactionTestCase):
         tehran = ZoneInfo("Asia/Tehran")
         dt = datetime(2026, 8, 23, 12, 30, tzinfo=tehran)
         with timezone.override("Asia/Tehran"):
-            self.assertEqual(jalali_datetime(dt), "1405/06/01 12:30")
+            self.assertEqual(jalali_datetime(dt), "۱۴۰۵/۶/۱, ۱۲:۳۰")
 
 
 @override_settings(BOM_CONFIG=settings.BOM_CONFIG_DEFAULT)

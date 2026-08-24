@@ -6,10 +6,15 @@ from django.utils import timezone
 
 register = template.Library()
 
+_PERSIAN_DIGITS = str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹")
+
 
 @register.filter
 def jalali_datetime(value):
-    """Format a datetime as Jalali in Asia/Tehran, e.g. 1405/06/01 23:30."""
+    """Format a datetime like toLocaleString("fa") without seconds.
+
+    Example: ۱۴۰۵/۶/۱, ۱۲:۳۰
+    """
     if value is None:
         return "-"
     if isinstance(value, str):
@@ -21,4 +26,8 @@ def jalali_datetime(value):
     elif timezone.is_naive(value):
         value = timezone.make_aware(value, timezone.get_current_timezone())
     jalali = jdatetime.datetime.fromgregorian(datetime=value)
-    return jalali.strftime("%Y/%m/%d %H:%M")
+    formatted = (
+        f"{jalali.year}/{jalali.month}/{jalali.day}, "
+        f"{jalali.hour}:{jalali.minute:02d}"
+    )
+    return formatted.translate(_PERSIAN_DIGITS)

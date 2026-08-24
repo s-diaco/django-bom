@@ -444,7 +444,13 @@
     <script>
         $(document).ready(function () {
             let revision_configuration_date = new Date("{{ part_revision.timestamp.isoformat }}")
-            $("#specs-revision-timestamp").text(revision_configuration_date.toLocaleString("fa"));
+            $("#specs-revision-timestamp").text(revision_configuration_date.toLocaleString("fa", {
+                year: "numeric",
+                month: "numeric",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+            }));
         })
     </script>
 
