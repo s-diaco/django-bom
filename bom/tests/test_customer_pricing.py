@@ -308,6 +308,7 @@ class TestCustomerPricing(TransactionTestCase):
         row.created_at = datetime(2026, 8, 23, 12, 30, tzinfo=tehran)
         row.save(update_fields=["created_at"])
 
+        translation.activate("fa-IR")
         with timezone.override("Asia/Tehran"):
             expected = jalali_datetime(row.created_at)
             response = self.client.get(
@@ -315,5 +316,7 @@ class TestCustomerPricing(TransactionTestCase):
             )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, expected)
+        # Gregorian localized fa_IR form (e.g. "۲۴ اوت ۲۰۲۶، ساعت ۱۲:۳۰")
+        self.assertNotContains(response, "اوت")
         self.assertNotContains(response, "Aug. 23, 2026")
         self.assertNotContains(response, "2026-08-23")
