@@ -2,7 +2,7 @@
   "use strict";
 
   var pageLoadingShowTimer = null;
-  var PAGE_LOADING_DELAY_MS = 100;
+  var PAGE_LOADING_DELAY_MS = 0;
 
   function pageLoadingEl() {
     return document.getElementById("bom-page-loading");
@@ -31,7 +31,11 @@
   }
 
   function schedulePageLoading() {
-    if (pageLoadingShowTimer) {
+    if (pageLoadingShowTimer || (pageLoadingEl() && pageLoadingEl().classList.contains("is-active"))) {
+      return;
+    }
+    if (PAGE_LOADING_DELAY_MS <= 0) {
+      showPageLoading();
       return;
     }
     pageLoadingShowTimer = setTimeout(function () {
@@ -47,7 +51,7 @@
     if (event.defaultPrevented) {
       return true;
     }
-    if (event.button !== 0) {
+    if (typeof event.button === "number" && event.button !== 0) {
       return true;
     }
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {

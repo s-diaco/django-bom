@@ -101,7 +101,6 @@
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.15s ease, visibility 0.15s ease;
 }
 
 .bom-page-loading.is-active {
@@ -111,29 +110,21 @@
 
 .bom-page-loading-bar {
   height: 100%;
-  width: 0;
+  width: 40%;
   background-color: var(--color-primary);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 55%, transparent);
 }
 
 .bom-page-loading.is-active .bom-page-loading-bar {
-  animation: bom-page-loading-indeterminate 1.2s ease-in-out infinite;
+  animation: bom-page-loading-indeterminate 1s ease-in-out infinite;
 }
 
 @keyframes bom-page-loading-indeterminate {
   0% {
-    width: 0;
-    margin-inline-start: 0;
-    opacity: 1;
-  }
-  50% {
-    width: 55%;
-    margin-inline-start: 20%;
-    opacity: 1;
+    margin-inline-start: -40%;
   }
   100% {
-    width: 0;
     margin-inline-start: 100%;
-    opacity: 0.6;
   }
 }
 
