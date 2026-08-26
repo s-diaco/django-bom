@@ -91,6 +91,52 @@
   display: none !important;
 }
 
+/* Indeterminate page-navigation progress bar (full document loads). */
+.bom-page-loading {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 50;
+  height: 3px;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+.bom-page-loading.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.bom-page-loading-bar {
+  height: 100%;
+  width: 0;
+  background-color: var(--color-primary);
+}
+
+.bom-page-loading.is-active .bom-page-loading-bar {
+  animation: bom-page-loading-indeterminate 1.2s ease-in-out infinite;
+}
+
+@keyframes bom-page-loading-indeterminate {
+  0% {
+    width: 0;
+    margin-inline-start: 0;
+    opacity: 1;
+  }
+  50% {
+    width: 55%;
+    margin-inline-start: 20%;
+    opacity: 1;
+  }
+  100% {
+    width: 0;
+    margin-inline-start: 100%;
+    opacity: 0.6;
+  }
+}
+
 /* Link color must live in @layer base so component buttons (e.g. a.bom-btn-primary)
    can keep white / ink text; unlayered `a {}` overrides layered text-* utilities. */
 @layer base {
