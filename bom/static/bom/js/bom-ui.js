@@ -15,6 +15,7 @@
     }
     el.classList.add("is-active");
     el.setAttribute("aria-hidden", "false");
+    el.setAttribute("aria-busy", "true");
   }
 
   function hidePageLoading() {
@@ -28,6 +29,7 @@
     }
     el.classList.remove("is-active");
     el.setAttribute("aria-hidden", "true");
+    el.setAttribute("aria-busy", "false");
   }
 
   function schedulePageLoading() {
