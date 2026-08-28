@@ -24,7 +24,7 @@
                 <form action="{% url 'bom:upload-bom' %}" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="mb-4 flex flex-wrap items-end gap-3">
-                        <div class="min-w-0 flex-1">
+                        <div>
                             <label class="bom-label" for="{{ bom_csv_form.file.id_for_label }}">انتخاب فایل</label>
                             {{ bom_csv_form.file }}
                             {{ bom_csv_form.file.errors }}
@@ -40,7 +40,7 @@
                             {% endif %}
                         </div>
                     </div>
-                    <div class="mt-4">
+                    <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
                         <a href="{% url 'bom:home' %}" class="bom-btn-ghost">انصراف</a>
                     </div>
                 </form>

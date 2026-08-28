@@ -25,7 +25,7 @@
             <form name="form" action="{% url 'bom:create-part' %}" method="post" class="bom-panel-pad">
                 {% csrf_token %}
                 <h1 class="mb-4 text-lg font-semibold text-ink">متریال جدید</h1>
-                {{ part_form|bom_form:'l2 m3 s12' }}
+                {{ part_form|bom_form:'m4 s12' }}
                 {% include 'bom/part-revision-display.html' with part_revision_form=part_revision_form %}
                 <div class="hidden">
                     <h2 class="mb-3 mt-4 text-base font-semibold text-ink">{% trans "Manufacturer" %}</h2>
@@ -39,15 +39,15 @@
                     </div>
                 </div>
                 <h2 class="mb-3 mt-4 text-base font-semibold text-ink">{% trans "Seller" %}</h2>
-                <div class="row gap-y-3">
+                    <div class="row gap-y-3">
                     {{ seller_form.non_field_errors }}
                     {{ seller_part_form.non_field_errors }}
                     {{ seller_part_form.seller_part_number.errors }}
-                    {{ seller_part_form.seller_part_number|bom_form:'l2 m3 s12' }}
+                    {{ seller_part_form.seller_part_number|bom_form:'m4 s12' }}
                     {{ seller_form.name.errors }}
-                    {{ seller_form.name|bom_form:'l3 m3 s12' }}
+                    {{ seller_form.name|bom_form:'m4 s12' }}
                     {{ seller_part_form.unit_cost.errors }}
-                    {{ seller_part_form.unit_cost|bom_form:'l2 m3 s12' }}
+                    {{ seller_part_form.unit_cost|bom_form:'m4 s12' }}
                 </div>
                 <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
                     <a href="javascript:history.back()" class="bom-btn-ghost">انصراف</a>

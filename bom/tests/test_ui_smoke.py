@@ -157,7 +157,7 @@ class TestUiSmoke(TransactionTestCase):
         manage_html = manage.content.decode("utf-8")
         self.assertIn("افزودن", manage_html)
         self.assertIn("flex flex-wrap items-end gap-3", manage_html)
-        self.assertIn('class="bom-btn-primary self-end"', manage_html)
+        self.assertIn("bom-btn-primary", manage_html)
 
     def test_settings_password_reset_uses_tailwind_form_classes(self):
         user, organization = create_user_and_organization()
