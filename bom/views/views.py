@@ -85,7 +85,11 @@ from bom.models import (
     UserMeta,
 )
 from bom.helpers import build_part_search_q
-from bom.list_queries import paginate_part_revs, prepare_all_part_revs_for_list_page
+from bom.list_queries import (
+    get_list_page_size,
+    paginate_part_revs,
+    prepare_all_part_revs_for_list_page,
+)
 from bom.utils import (
     check_references_for_duplicates,
     get_session_part_quantity,
@@ -443,7 +447,7 @@ def home(request):
         print_confirm_only = True
         return TemplateResponse(request, "bom/dashboard-print-confirm.html", locals())
 
-    page_size = settings.BOM_CONFIG.get("admin_dashboard", {}).get("page_size", 25)
+    page_size = get_list_page_size()
     part_revs = paginate_part_revs(request, part_revs, page_size)
 
     return TemplateResponse(request, "bom/dashboard.html", locals())
@@ -683,7 +687,7 @@ def report(request):
                 writer.writerow({k: smart_str(v) for k, v in row.items()})
         return response
 
-    page_size = settings.BOM_CONFIG.get("admin_dashboard", {}).get("page_size", 25)
+    page_size = get_list_page_size()
     part_revs = paginate_part_revs(request, part_revs, page_size)
 
     # TODO: delete
@@ -1034,7 +1038,7 @@ def manufacturers(request):
         autocomplete_dict.update({manufacturer.name: None})
     autocomplete = dumps(autocomplete_dict)
 
-    paginator = Paginator(manufacturers, 50)
+    paginator = Paginator(manufacturers, get_list_page_size())
 
     page = request.GET.get("page")
     try:
@@ -1124,7 +1128,7 @@ def sellers(request):
 
     autocomplete = dumps(autocomplete_dict)
 
-    paginator = Paginator(sellers, 50)
+    paginator = Paginator(sellers, get_list_page_size())
     page = request.GET.get("page")
     try:
         sellers = paginator.page(page)
@@ -1158,7 +1162,7 @@ def seller_info(request, seller_id):
         "minimum_order_quantity",
     )
 
-    paginator = Paginator(seller_parts, 50)
+    paginator = Paginator(seller_parts, get_list_page_size())
     page = request.GET.get("page")
     try:
         seller_parts = paginator.page(page)
@@ -1223,7 +1227,7 @@ def customers(request):
     autocomplete_dict = {customer.name: None for customer in customers}
     autocomplete = dumps(autocomplete_dict)
 
-    paginator = Paginator(customers, 50)
+    paginator = Paginator(customers, get_list_page_size())
     page = request.GET.get("page")
     try:
         customers = paginator.page(page)
@@ -1273,7 +1277,7 @@ def customer_info(request, customer_id):
         .order_by("-created_at", "-id")
     )
 
-    paginator = Paginator(price_history, 50)
+    paginator = Paginator(price_history, get_list_page_size())
     page = request.GET.get("page")
     try:
         price_history = paginator.page(page)
