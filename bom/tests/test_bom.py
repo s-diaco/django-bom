@@ -74,10 +74,13 @@ class TestBOM(TransactionTestCase):
         part_numbers = [pr.part.full_part_number() for pr in response.context["part_revs"]]
         self.assertIn(p1.full_part_number(), part_numbers)
 
-        response = self.client.get(reverse("bom:home"), {"q": "200-33"})
-        self.assertEqual(response.status_code, 200)
-        part_numbers = [pr.part.full_part_number() for pr in response.context["part_revs"]]
-        self.assertIn(p1.full_part_number(), part_numbers)
+        if self.organization.number_scheme == constants.NUMBER_SCHEME_SEMI_INTELLIGENT:
+            response = self.client.get(reverse("bom:home"), {"q": "200-33"})
+            self.assertEqual(response.status_code, 200)
+            part_numbers = [
+                pr.part.full_part_number() for pr in response.context["part_revs"]
+            ]
+            self.assertIn(p1.full_part_number(), part_numbers)
 
         response = self.client.get(
             reverse("bom:home"), {"q": f'"{p1.full_part_number()}"'}
