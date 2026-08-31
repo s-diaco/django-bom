@@ -459,6 +459,25 @@ class Part(models.Model):
             .first()
         )
 
+    def latest_prices_for_other_customers(self, customer, organization):
+        """Newest CustomerPrice per other active customer for this part."""
+        latest_ids = (
+            CustomerPrice.objects.filter(
+                part=self,
+                customer__organization=organization,
+                customer__is_active=True,
+            )
+            .exclude(customer=customer)
+            .values("customer_id")
+            .annotate(max_id=Max("id"))
+            .values("max_id")
+        )
+        return (
+            CustomerPrice.objects.filter(id__in=Subquery(latest_ids))
+            .select_related("customer", "part_revision", "created_by")
+            .order_by("customer__name")
+        )
+
     def manufacturer_parts(self, exclude_primary=False):
         q = ManufacturerPart.objects.filter(part=self).select_related("manufacturer")
         if (
@@ -1311,13 +1330,6 @@ class Customer(models.Model, AsDictModel):
     tax_id = models.CharField(max_length=64, blank=True, default="")
     notes = models.TextField(blank=True, default="")
     is_active = models.BooleanField(default=True)
-    default_profit_percent = models.DecimalField(
-        max_digits=6,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(0)],
-    )
 
     class Meta:
         unique_together = (("organization", "name"),)
@@ -1325,12 +1337,6 @@ class Customer(models.Model, AsDictModel):
 
     def __str__(self):
         return self.name
-
-    @property
-    def effective_profit_percent(self):
-        if self.default_profit_percent is None:
-            return Decimal("0")
-        return self.default_profit_percent
 
     def latest_prices(self):
         """Return the newest CustomerPrice row per part for this customer."""

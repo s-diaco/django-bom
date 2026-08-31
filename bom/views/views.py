@@ -43,7 +43,9 @@ from bom.forms import (
     BOMCSVForm,
     CustomerForm,
     CustomerPriceBulkForm,
+    CustomerPriceConfirmForm,
     CustomerPriceForm,
+    CustomerPriceLoadForm,
     FileForm,
     ManufacturerForm,
     ManufacturerPartForm,
@@ -91,7 +93,10 @@ from bom.list_queries import (
     querystring_except_page as build_querystring_except_page,
 )
 from bom.utils import (
+    bom_overview_context,
     check_references_for_duplicates,
+    customer_price_preview_from_form,
+    customer_price_preview_context,
     get_session_part_quantity,
     listify_string,
     prep_for_sorting_nicely,
@@ -1341,7 +1346,76 @@ def customer_delete(request, customer_id):
     return HttpResponseRedirect(reverse("bom:customers"))
 
 
+def _customer_price_create_context(
+    request,
+    organization,
+    profile,
+    *,
+    customer,
+    part,
+    part_locked,
+    action,
+    load_form=None,
+    confirm_form=None,
+):
+    show_preview = False
+    preview = None
+    post_action = request.POST.get("action") if request.method == "POST" else None
+    currency_unit_txt = organization.currency
+
+    if post_action == "confirm" and confirm_form is not None:
+        return "confirm", {
+            "title": _("Add Customer Price"),
+            "action": action,
+            "load_form": load_form,
+            "confirm_form": confirm_form,
+            "customer": customer,
+            "part": part,
+            "part_locked": part_locked,
+            "profile": profile,
+            "show_preview": show_preview,
+            "preview": preview,
+            "currency_unit_txt": currency_unit_txt,
+        }
+
+    if load_form is not None and load_form.is_valid():
+        show_preview = True
+        preview = customer_price_preview_context(
+            load_form.cleaned_data["part"],
+            load_form.cleaned_data["customer"],
+            organization,
+        )
+    elif request.method == "GET" and customer is not None and not part_locked:
+        part_id = request.GET.get("part_id")
+        if part_id:
+            try:
+                preview_part = Part.objects.get(
+                    pk=part_id, organization=organization
+                )
+                preview = customer_price_preview_context(
+                    preview_part, customer, organization
+                )
+                show_preview = True
+            except Part.DoesNotExist:
+                pass
+
+    return "preview", {
+        "title": _("Add Customer Price"),
+        "action": action,
+        "load_form": load_form,
+        "confirm_form": confirm_form,
+        "customer": customer,
+        "part": part,
+        "part_locked": part_locked,
+        "profile": profile,
+        "show_preview": show_preview,
+        "preview": preview,
+        "currency_unit_txt": currency_unit_txt,
+    }
+
+
 @login_required(login_url=BOM_LOGIN_URL)
+@organization_admin
 def customer_price_create(request, customer_id):
     profile = request.user.bom_profile()
     organization = profile.organization
@@ -1351,37 +1425,92 @@ def customer_price_create(request, customer_id):
         messages.error(request, _("Can't access a customer that is not yours!"))
         return HttpResponseRedirect(reverse("bom:customers"))
 
-    title = _("Add Customer Price")
     action = reverse(
         "bom:customer-price-create", kwargs={"customer_id": customer_id}
     )
     initial = {}
     part_id = request.GET.get("part_id")
     if part_id:
-        initial["part"] = part_id
+        try:
+            preview_part = Part.objects.get(pk=part_id, organization=organization)
+            initial["part"] = preview_part.full_part_number()
+        except Part.DoesNotExist:
+            pass
+
+    load_form = CustomerPriceLoadForm(
+        organization=organization,
+        customer=customer,
+        initial=initial,
+    )
+    confirm_form = None
 
     if request.method == "POST":
-        form = CustomerPriceForm(
-            request.POST,
-            organization=organization,
-            customer=customer,
-            user=request.user,
-        )
-        if form.is_valid():
-            form.save()
-            messages.success(request, _("Customer price recorded."))
-            return HttpResponseRedirect(
-                reverse("bom:customer-info", kwargs={"customer_id": customer_id})
+        post_action = request.POST.get("action")
+        if post_action == "confirm":
+            confirm_form = CustomerPriceConfirmForm(
+                request.POST,
+                organization=organization,
+                customer=customer,
+                user=request.user,
+            )
+            result, context = _customer_price_create_context(
+                request,
+                organization,
+                profile,
+                customer=customer,
+                part=None,
+                part_locked=False,
+                action=action,
+                load_form=load_form,
+                confirm_form=confirm_form,
+            )
+            if confirm_form.is_valid():
+                confirm_form.save()
+                messages.success(request, _("Customer price recorded."))
+                return HttpResponseRedirect(
+                    reverse("bom:customer-info", kwargs={"customer_id": customer_id})
+                )
+            load_form = CustomerPriceLoadForm(
+                request.POST,
+                organization=organization,
+                customer=customer,
+            )
+            if load_form.is_valid():
+                context["show_preview"] = True
+                context["preview"] = customer_price_preview_context(
+                    load_form.cleaned_data["part"],
+                    customer,
+                    organization,
+                )
+        else:
+            load_form = CustomerPriceLoadForm(
+                request.POST,
+                organization=organization,
+                customer=customer,
+            )
+            result, context = _customer_price_create_context(
+                request,
+                organization,
+                profile,
+                customer=customer,
+                part=None,
+                part_locked=False,
+                action=action,
+                load_form=load_form,
             )
     else:
-        form = CustomerPriceForm(
-            organization=organization,
+        result, context = _customer_price_create_context(
+            request,
+            organization,
+            profile,
             customer=customer,
-            user=request.user,
-            initial=initial,
+            part=None,
+            part_locked=False,
+            action=action,
+            load_form=load_form,
         )
 
-    return TemplateResponse(request, "bom/bom-form.html", locals())
+    return TemplateResponse(request, "bom/customer-price-create.html", context)
 
 
 @login_required(login_url=BOM_LOGIN_URL)
@@ -1395,31 +1524,83 @@ def part_customer_price_create(request, part_id):
         messages.error(request, _("Can't access a part that is not yours!"))
         return HttpResponseRedirect(reverse("bom:home"))
 
-    title = _("Add Customer Price")
     action = reverse(
         "bom:part-customer-price-create", kwargs={"part_id": part_id}
     )
     part_info_url = reverse("bom:part-info", kwargs={"part_id": part_id})
 
+    load_form = CustomerPriceLoadForm(
+        organization=organization,
+        part=part,
+    )
+    confirm_form = None
+
     if request.method == "POST":
-        form = CustomerPriceForm(
-            request.POST,
-            organization=organization,
-            part=part,
-            user=request.user,
-        )
-        if form.is_valid():
-            form.save()
-            messages.success(request, _("Customer price recorded."))
-            return HttpResponseRedirect(f"{part_info_url}#customers")
+        post_action = request.POST.get("action")
+        if post_action == "confirm":
+            confirm_form = CustomerPriceConfirmForm(
+                request.POST,
+                organization=organization,
+                part=part,
+                user=request.user,
+            )
+            result, context = _customer_price_create_context(
+                request,
+                organization,
+                profile,
+                customer=None,
+                part=part,
+                part_locked=True,
+                action=action,
+                load_form=load_form,
+                confirm_form=confirm_form,
+            )
+            if confirm_form.is_valid():
+                confirm_form.save()
+                messages.success(request, _("Customer price recorded."))
+                return HttpResponseRedirect(f"{part_info_url}#customers")
+            load_form = CustomerPriceLoadForm(
+                request.POST,
+                organization=organization,
+                part=part,
+            )
+            if load_form.is_valid():
+                context["show_preview"] = True
+                context["preview"] = customer_price_preview_context(
+                    part,
+                    load_form.cleaned_data["customer"],
+                    organization,
+                )
+        else:
+            load_form = CustomerPriceLoadForm(
+                request.POST,
+                organization=organization,
+                part=part,
+            )
+            result, context = _customer_price_create_context(
+                request,
+                organization,
+                profile,
+                customer=None,
+                part=part,
+                part_locked=True,
+                action=action,
+                load_form=load_form,
+            )
     else:
-        form = CustomerPriceForm(
-            organization=organization,
+        result, context = _customer_price_create_context(
+            request,
+            organization,
+            profile,
+            customer=None,
             part=part,
-            user=request.user,
+            part_locked=True,
+            action=action,
+            load_form=load_form,
         )
 
-    return TemplateResponse(request, "bom/bom-form.html", locals())
+    context["part_info_url"] = part_info_url
+    return TemplateResponse(request, "bom/customer-price-create.html", context)
 
 
 @login_required(login_url=BOM_LOGIN_URL)
@@ -1615,23 +1796,16 @@ def part_info(request, part_id, part_revision_id=None):
 
     set_session_part_quantity(request, part_id, qty)
 
-    try:
-        indented_bom = part_revision.indented(top_level_quantity=qty)
-        # TODO: change "str(part_revision.id)" if possible
-        total_bom_weight = indented_bom.parts[str(part_revision.id)].childs_quantity
-        product_weight = indented_bom.parts[
-            str(part_revision.id)
-        ].childs_product_quantity
-        childs_unit_cost = indented_bom.parts[str(part_revision.id)].childs_unit_cost
-    except (RuntimeError, RecursionError):
+    bom_ctx = bom_overview_context(part_revision, qty) if part_revision else {}
+    indented_bom = bom_ctx.get("indented_bom") or []
+    total_bom_weight = bom_ctx.get("total_bom_weight")
+    product_weight = bom_ctx.get("product_weight")
+    childs_unit_cost = bom_ctx.get("childs_unit_cost")
+    if bom_ctx.get("bom_error") == "infinite_recursion":
         messages.error(
             request,
             "Error: infinite recursion in part relationship.",
         )
-        indented_bom = []
-    except AttributeError:
-        # No part revision found, that's OK
-        indented_bom = []
 
     try:
         flat_bom = part_revision.flat(top_level_quantity=qty)

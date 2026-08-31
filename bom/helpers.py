@@ -208,16 +208,12 @@ def create_a_fake_seller_part(
 def create_a_fake_customer(
     organization,
     name="Acme Customer",
-    default_profit_percent=Decimal("20"),
     **kwargs,
 ):
     customer, _ = Customer.objects.get_or_create(
         organization=organization,
         name=name,
-        defaults={
-            "default_profit_percent": default_profit_percent,
-            **kwargs,
-        },
+        defaults=kwargs,
     )
     return customer
 
@@ -234,7 +230,7 @@ def create_a_fake_customer_price(
 ):
     part_revision = part.latest()
     if profit_percent is None:
-        profit_percent = customer.effective_profit_percent
+        profit_percent = Decimal("0")
     base_cost = part_revision.bom_unit_cost_at_quantity(quantity)
     if base_cost is None:
         currency = customer.organization.currency

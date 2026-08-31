@@ -56,7 +56,6 @@ class CustomerAdmin(admin.ModelAdmin):
         "name",
         "organization",
         "code",
-        "default_profit_percent",
         "is_active",
     )
     list_filter = ("is_active", "organization")

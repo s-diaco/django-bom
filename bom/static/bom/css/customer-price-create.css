@@ -1,0 +1,73 @@
+@media print {
+    @page price-review {
+        size: A5 portrait;
+        margin: 12mm;
+    }
+
+    body.printing-price-review {
+        page: price-review;
+        font-size: 9pt;
+        line-height: 1.3;
+    }
+
+    body.printing-price-review .printer-hide {
+        display: none !important;
+    }
+
+    body.printing-price-review .printer-show {
+        display: block !important;
+    }
+
+    body.printing-price-review h4.printer-show,
+    body.printing-price-review h5.printer-show {
+        font-size: 11pt;
+    }
+
+    body.printing-price-review table.part-list,
+    body.printing-price-review .bom-table,
+    body.printing-price-review #indented-bom-overview {
+        font-size: 8.5pt;
+    }
+
+    body.printing-price-review .price-review-panel {
+        display: block !important;
+    }
+
+    .responsive-table-wrapper {
+        overflow-x: visible !important;
+    }
+}
+
+.price-review-panel {
+    margin-top: 1.5rem;
+}
+
+.price-review-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.price-selection-panel {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.price-select-row {
+    cursor: pointer;
+}
+
+.price-select-row:hover td {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.price-select-row.price-row-selected td {
+    font-weight: 600;
+    background-color: rgba(0, 0, 0, 0.06);
+}
+
+#selected-profit-display {
+    background-color: rgba(0, 0, 0, 0.03);
+}

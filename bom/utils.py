@@ -317,3 +317,106 @@ def implied_profit_percent(base_cost, price):
         return None
     percent = (price_amount / base_amount - Decimal("1")) * Decimal("100")
     return percent.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+CUSTOMER_PRICE_PROFIT_TIERS = (
+    Decimal("15"),
+    Decimal("17.5"),
+    Decimal("20"),
+    Decimal("22.5"),
+    Decimal("25"),
+    Decimal("27.5"),
+    Decimal("30"),
+)
+
+CUSTOMER_PRICE_BASE_MARKUP_PERCENT = Decimal("7")
+
+
+def customer_price_adjusted_base(base_cost, currency=None):
+    """BoM cost with the standard 7% markup applied before tier profit %."""
+    return apply_profit(
+        base_cost, CUSTOMER_PRICE_BASE_MARKUP_PERCENT, currency=currency
+    )
+
+
+def customer_price_profit_tiers(base_cost, currency=None):
+    """Return standard profit % tiers priced from BoM cost + 7% markup."""
+    adjusted_base = customer_price_adjusted_base(base_cost, currency=currency)
+    return [
+        {
+            "profit_percent": profit_percent,
+            "price": apply_profit(adjusted_base, profit_percent, currency=currency),
+        }
+        for profit_percent in CUSTOMER_PRICE_PROFIT_TIERS
+    ]
+
+
+def bom_overview_context(part_revision, quantity=1):
+    """Build BoM overview template context for a part revision."""
+    empty = {
+        "indented_bom": None,
+        "total_bom_weight": None,
+        "product_weight": None,
+        "childs_unit_cost": None,
+        "bom_error": None,
+    }
+    if part_revision is None:
+        return empty
+
+    try:
+        indented_bom = part_revision.indented(top_level_quantity=quantity)
+        revision_key = str(part_revision.id)
+        revision_part = indented_bom.parts[revision_key]
+        return {
+            "indented_bom": indented_bom,
+            "total_bom_weight": revision_part.childs_quantity,
+            "product_weight": revision_part.childs_product_quantity,
+            "childs_unit_cost": revision_part.childs_unit_cost,
+            "bom_error": None,
+        }
+    except (RuntimeError, RecursionError):
+        return {**empty, "bom_error": "infinite_recursion"}
+    except (AttributeError, KeyError):
+        return empty
+
+
+def customer_price_preview_context(part, customer, organization, quantity=1):
+    """Build preview dict for a part/customer pair."""
+    part_revision = part.latest()
+    if part_revision is None:
+        raise ValueError("Part has no revision")
+    base_cost = part_revision.bom_unit_cost_at_quantity(quantity)
+    if base_cost is None:
+        raise ValueError("No BoM cost available")
+    currency = organization.currency
+    return {
+        "customer": customer,
+        "part": part,
+        "part_revision": part_revision,
+        "base_cost": base_cost,
+        "adjusted_base": customer_price_adjusted_base(base_cost, currency=currency),
+        "peer_prices": part.latest_prices_for_other_customers(
+            customer, organization
+        ),
+        "profit_price_tiers": customer_price_profit_tiers(
+            base_cost, currency=currency
+        ),
+        **bom_overview_context(part_revision, quantity),
+    }
+
+
+def customer_price_preview_from_form(form, organization):
+    """Return preview dict from a valid CustomerPriceConfirmForm."""
+    cleaned = form.cleaned_data
+    part = cleaned["part"]
+    customer = cleaned["customer"]
+    preview = customer_price_preview_context(part, customer, organization)
+    preview.update(
+        {
+            "profit_percent": cleaned.get("profit_percent"),
+            "calculated_price": cleaned.get("price"),
+            "is_manual_price": cleaned.get("is_manual_price"),
+            "note": cleaned.get("note") or "",
+        }
+    )
+    return preview
