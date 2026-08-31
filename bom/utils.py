@@ -317,3 +317,53 @@ def implied_profit_percent(base_cost, price):
         return None
     percent = (price_amount / base_amount - Decimal("1")) * Decimal("100")
     return percent.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+def bom_overview_context(part_revision, quantity=1):
+    """Build BoM overview template context for a part revision."""
+    empty = {
+        "indented_bom": None,
+        "total_bom_weight": None,
+        "product_weight": None,
+        "childs_unit_cost": None,
+        "bom_error": None,
+    }
+    if part_revision is None:
+        return empty
+
+    try:
+        indented_bom = part_revision.indented(top_level_quantity=quantity)
+        revision_key = str(part_revision.id)
+        revision_part = indented_bom.parts[revision_key]
+        return {
+            "indented_bom": indented_bom,
+            "total_bom_weight": revision_part.childs_quantity,
+            "product_weight": revision_part.childs_product_quantity,
+            "childs_unit_cost": revision_part.childs_unit_cost,
+            "bom_error": None,
+        }
+    except (RuntimeError, RecursionError):
+        return {**empty, "bom_error": "infinite_recursion"}
+    except (AttributeError, KeyError):
+        return empty
+
+
+def customer_price_preview_from_form(form, organization):
+    """Return preview dict from a valid CustomerPriceForm."""
+    cleaned = form.cleaned_data
+    part = cleaned["part"]
+    customer = cleaned["customer"]
+    return {
+        "customer": customer,
+        "part": part,
+        "part_revision": cleaned["part_revision"],
+        "base_cost": cleaned["base_cost"],
+        "profit_percent": cleaned["profit_percent"],
+        "calculated_price": cleaned["price"],
+        "is_manual_price": cleaned["is_manual_price"],
+        "note": cleaned.get("note") or "",
+        "peer_prices": part.latest_prices_for_other_customers(
+            customer, organization
+        ),
+        **bom_overview_context(cleaned["part_revision"]),
+    }

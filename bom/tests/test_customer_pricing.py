@@ -116,6 +116,7 @@ class TestCustomerPricing(TransactionTestCase):
                 "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
             ),
             {
+                "action": "confirm",
                 "part": self.part.id,
                 "profit_percent": "20",
                 "price": "",
@@ -140,6 +141,7 @@ class TestCustomerPricing(TransactionTestCase):
                 "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
             ),
             {
+                "action": "confirm",
                 "part": self.part.id,
                 "price": str(manual_price),
                 "note": "manual",
@@ -159,6 +161,7 @@ class TestCustomerPricing(TransactionTestCase):
                 "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
             ),
             {
+                "action": "confirm",
                 "part": self.part.id,
                 "profit_percent": "",
                 "price": "",
@@ -325,6 +328,7 @@ class TestCustomerPricing(TransactionTestCase):
                 "bom:part-customer-price-create", kwargs={"part_id": self.part.id}
             ),
             {
+                "action": "confirm",
                 "customer": self.customer.id,
                 "profit_percent": "15",
                 "price": "",
@@ -352,6 +356,138 @@ class TestCustomerPricing(TransactionTestCase):
         )
         self.assertIn(response.status_code, (302, 307))
         self.assertFalse(CustomerPrice.objects.exists())
+
+    def test_viewer_cannot_access_price_create(self):
+        self.profile.role = "V"
+        self.profile.save()
+        response = self.client.get(
+            reverse(
+                "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
+            ),
+            HTTP_REFERER=reverse("bom:customer-info", kwargs={"customer_id": self.customer.id}),
+        )
+        self.assertIn(response.status_code, (302, 307))
+        response = self.client.post(
+            reverse(
+                "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
+            ),
+            {
+                "action": "confirm",
+                "part": self.part.id,
+                "profit_percent": "20",
+                "price": "",
+                "note": "",
+            },
+            HTTP_REFERER=reverse("bom:customer-info", kwargs={"customer_id": self.customer.id}),
+        )
+        self.assertIn(response.status_code, (302, 307))
+        self.assertFalse(CustomerPrice.objects.exists())
+
+    def test_latest_prices_for_other_customers(self):
+        other_customer = create_a_fake_customer(
+            self.organization, name="Buyer Two", default_profit_percent=Decimal("15")
+        )
+        create_a_fake_customer_price(
+            other_customer, self.part, profit_percent=Decimal("10")
+        )
+        create_a_fake_customer_price(
+            other_customer, self.part, profit_percent=Decimal("30")
+        )
+        create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("25")
+        )
+
+        peer_prices = list(
+            self.part.latest_prices_for_other_customers(
+                self.customer, self.organization
+            )
+        )
+        self.assertEqual(len(peer_prices), 1)
+        self.assertEqual(peer_prices[0].customer_id, other_customer.id)
+        self.assertEqual(peer_prices[0].profit_percent, Decimal("30.00"))
+
+    def test_customer_price_create_preview(self):
+        other_customer = create_a_fake_customer(
+            self.organization, name="Peer Buyer", default_profit_percent=Decimal("15")
+        )
+        create_a_fake_customer_price(other_customer, self.part)
+
+        part_revision = self.part.latest()
+        base_cost = part_revision.bom_unit_cost_at_quantity(1)
+        expected_price = apply_profit(base_cost, Decimal("20"))
+
+        response = self.client.post(
+            reverse(
+                "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
+            ),
+            {
+                "action": "preview",
+                "part": self.part.id,
+                "profit_percent": "20",
+                "price": "",
+                "note": "preview test",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, str(base_cost.amount))
+        self.assertContains(response, str(expected_price.amount))
+        self.assertContains(response, "Peer Buyer")
+        self.assertContains(response, "Confirm price")
+        self.assertFalse(CustomerPrice.objects.filter(customer=self.customer).exists())
+
+    def test_customer_price_create_confirm(self):
+        part_revision = self.part.latest()
+        base_cost = part_revision.bom_unit_cost_at_quantity(1)
+
+        response = self.client.post(
+            reverse(
+                "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
+            ),
+            {
+                "action": "confirm",
+                "part": self.part.id,
+                "profit_percent": "20",
+                "price": "",
+                "note": "confirmed",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        row = CustomerPrice.objects.get(customer=self.customer, part=self.part)
+        self.assertEqual(row.note, "confirmed")
+        self.assertEqual(row.base_cost, base_cost)
+        self.assertEqual(row.price, apply_profit(row.base_cost, Decimal("20")))
+
+    def test_preview_shows_bom_overview(self):
+        part_revision = self.part.latest()
+        part_revision.material = "with_loi"
+        part_revision.save()
+
+        response = self.client.post(
+            reverse(
+                "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
+            ),
+            {
+                "action": "preview",
+                "part": self.part.id,
+                "profit_percent": "20",
+                "price": "",
+                "note": "",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "BoM Overview")
+        self.assertContains(response, "indented-bom-overview")
+
+    def test_get_with_part_id_shows_preview(self):
+        response = self.client.get(
+            reverse(
+                "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
+            )
+            + f"?part_id={self.part.id}"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["show_preview"])
+        self.assertContains(response, self.part.full_part_number())
 
     def test_price_history_shows_jalali_created_at(self):
         from datetime import datetime

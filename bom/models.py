@@ -459,6 +459,25 @@ class Part(models.Model):
             .first()
         )
 
+    def latest_prices_for_other_customers(self, customer, organization):
+        """Newest CustomerPrice per other active customer for this part."""
+        latest_ids = (
+            CustomerPrice.objects.filter(
+                part=self,
+                customer__organization=organization,
+                customer__is_active=True,
+            )
+            .exclude(customer=customer)
+            .values("customer_id")
+            .annotate(max_id=Max("id"))
+            .values("max_id")
+        )
+        return (
+            CustomerPrice.objects.filter(id__in=Subquery(latest_ids))
+            .select_related("customer", "part_revision", "created_by")
+            .order_by("customer__name")
+        )
+
     def manufacturer_parts(self, exclude_primary=False):
         q = ManufacturerPart.objects.filter(part=self).select_related("manufacturer")
         if (

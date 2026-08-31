@@ -91,7 +91,9 @@ from bom.list_queries import (
     prepare_all_part_revs_for_list_page,
 )
 from bom.utils import (
+    bom_overview_context,
     check_references_for_duplicates,
+    customer_price_preview_from_form,
     get_session_part_quantity,
     listify_string,
     prep_for_sorting_nicely,
@@ -1334,7 +1336,53 @@ def customer_delete(request, customer_id):
     return HttpResponseRedirect(reverse("bom:customers"))
 
 
+def _customer_price_create_context(
+    request, organization, profile, form, *, customer, part, part_locked, action
+):
+    show_preview = False
+    preview = None
+    post_action = request.POST.get("action") if request.method == "POST" else None
+
+    if request.method == "POST" and form.is_valid():
+        if post_action == "confirm":
+            return "confirm", None
+        show_preview = True
+        preview = customer_price_preview_from_form(form, organization)
+    elif request.method == "GET" and customer is not None:
+        part_id = request.GET.get("part_id")
+        if part_id:
+            preview_form = CustomerPriceForm(
+                data={
+                    "part": part_id,
+                    "profit_percent": "",
+                    "price": "",
+                    "note": "",
+                },
+                organization=organization,
+                customer=customer,
+                user=request.user,
+            )
+            if preview_form.is_valid():
+                show_preview = True
+                preview = customer_price_preview_from_form(
+                    preview_form, organization
+                )
+
+    return "preview", {
+        "title": _("Add Customer Price"),
+        "action": action,
+        "form": form,
+        "customer": customer,
+        "part": part,
+        "part_locked": part_locked,
+        "profile": profile,
+        "show_preview": show_preview,
+        "preview": preview,
+    }
+
+
 @login_required(login_url=BOM_LOGIN_URL)
+@organization_admin
 def customer_price_create(request, customer_id):
     profile = request.user.bom_profile()
     organization = profile.organization
@@ -1344,7 +1392,6 @@ def customer_price_create(request, customer_id):
         messages.error(request, _("Can't access a customer that is not yours!"))
         return HttpResponseRedirect(reverse("bom:customers"))
 
-    title = _("Add Customer Price")
     action = reverse(
         "bom:customer-price-create", kwargs={"customer_id": customer_id}
     )
@@ -1360,7 +1407,17 @@ def customer_price_create(request, customer_id):
             customer=customer,
             user=request.user,
         )
-        if form.is_valid():
+        result, context = _customer_price_create_context(
+            request,
+            organization,
+            profile,
+            form,
+            customer=customer,
+            part=None,
+            part_locked=False,
+            action=action,
+        )
+        if result == "confirm":
             form.save()
             messages.success(request, _("Customer price recorded."))
             return HttpResponseRedirect(
@@ -1373,8 +1430,18 @@ def customer_price_create(request, customer_id):
             user=request.user,
             initial=initial,
         )
+        result, context = _customer_price_create_context(
+            request,
+            organization,
+            profile,
+            form,
+            customer=customer,
+            part=None,
+            part_locked=False,
+            action=action,
+        )
 
-    return TemplateResponse(request, "bom/bom-form.html", locals())
+    return TemplateResponse(request, "bom/customer-price-create.html", context)
 
 
 @login_required(login_url=BOM_LOGIN_URL)
@@ -1388,7 +1455,6 @@ def part_customer_price_create(request, part_id):
         messages.error(request, _("Can't access a part that is not yours!"))
         return HttpResponseRedirect(reverse("bom:home"))
 
-    title = _("Add Customer Price")
     action = reverse(
         "bom:part-customer-price-create", kwargs={"part_id": part_id}
     )
@@ -1401,7 +1467,17 @@ def part_customer_price_create(request, part_id):
             part=part,
             user=request.user,
         )
-        if form.is_valid():
+        result, context = _customer_price_create_context(
+            request,
+            organization,
+            profile,
+            form,
+            customer=None,
+            part=part,
+            part_locked=True,
+            action=action,
+        )
+        if result == "confirm":
             form.save()
             messages.success(request, _("Customer price recorded."))
             return HttpResponseRedirect(f"{part_info_url}#customers")
@@ -1411,8 +1487,19 @@ def part_customer_price_create(request, part_id):
             part=part,
             user=request.user,
         )
+        result, context = _customer_price_create_context(
+            request,
+            organization,
+            profile,
+            form,
+            customer=None,
+            part=part,
+            part_locked=True,
+            action=action,
+        )
 
-    return TemplateResponse(request, "bom/bom-form.html", locals())
+    context["part_info_url"] = part_info_url
+    return TemplateResponse(request, "bom/customer-price-create.html", context)
 
 
 @login_required(login_url=BOM_LOGIN_URL)
@@ -1608,23 +1695,16 @@ def part_info(request, part_id, part_revision_id=None):
 
     set_session_part_quantity(request, part_id, qty)
 
-    try:
-        indented_bom = part_revision.indented(top_level_quantity=qty)
-        # TODO: change "str(part_revision.id)" if possible
-        total_bom_weight = indented_bom.parts[str(part_revision.id)].childs_quantity
-        product_weight = indented_bom.parts[
-            str(part_revision.id)
-        ].childs_product_quantity
-        childs_unit_cost = indented_bom.parts[str(part_revision.id)].childs_unit_cost
-    except (RuntimeError, RecursionError):
+    bom_ctx = bom_overview_context(part_revision, qty) if part_revision else {}
+    indented_bom = bom_ctx.get("indented_bom") or []
+    total_bom_weight = bom_ctx.get("total_bom_weight")
+    product_weight = bom_ctx.get("product_weight")
+    childs_unit_cost = bom_ctx.get("childs_unit_cost")
+    if bom_ctx.get("bom_error") == "infinite_recursion":
         messages.error(
             request,
             "Error: infinite recursion in part relationship.",
         )
-        indented_bom = []
-    except AttributeError:
-        # No part revision found, that's OK
-        indented_bom = []
 
     try:
         flat_bom = part_revision.flat(top_level_quantity=qty)
