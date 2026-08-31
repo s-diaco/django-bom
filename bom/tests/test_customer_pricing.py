@@ -433,6 +433,9 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertContains(response, str(expected_price.amount))
         self.assertContains(response, "Peer Buyer")
         self.assertContains(response, "Confirm price")
+        self.assertContains(response, "Prices by profit %")
+        self.assertContains(response, "17.5")
+        self.assertContains(response, str(apply_profit(base_cost, Decimal("30")).amount))
         self.assertFalse(CustomerPrice.objects.filter(customer=self.customer).exists())
 
     def test_customer_price_create_confirm(self):

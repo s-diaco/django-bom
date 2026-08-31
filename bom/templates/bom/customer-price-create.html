@@ -71,8 +71,31 @@
                             <div class="row"><div class="col s4 l2 text-right">{% trans "Description" %}:</div><div class="col s8 l10">{{ preview.part_revision.description }}</div></div>
                         {% endif %}
                         <div class="row"><div class="col s4 l2 text-right">{% trans "BoM Cost" %}:</div><div class="col s8 l10">{{ preview.base_cost }}</div></div>
-                        <div class="row"><div class="col s4 l2 text-right">{% trans "Profit %" %}:</div><div class="col s8 l10">{{ preview.profit_percent }}</div></div>
-                        <div class="row"><div class="col s4 l2 text-right">{% trans "Price" %}:</div><div class="col s8 l10"><strong>{{ preview.calculated_price }}</strong></div></div>
+
+                        <div class="mt-4 mb-2">
+                            <h6 class="mb-2">{% trans "Prices by profit %" %}</h6>
+                            <div class="bom-table-wrap bom-table-wrap--fit responsive-table-wrapper">
+                                <table class="bom-table part-list single-line">
+                                    <thead>
+                                    <tr>
+                                        <th class="text-normal td-med">{% trans "Profit %" %}</th>
+                                        <th class="text-normal td-med">{% trans "Price" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for tier in preview.profit_price_tiers %}
+                                        <tr{% if not preview.is_manual_price and tier.profit_percent == preview.profit_percent %} class="price-tier-selected"{% endif %}>
+                                            <td class="text-normal td-med">{{ tier.profit_percent }}</td>
+                                            <td class="text-normal td-med">{{ tier.price }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="row"><div class="col s4 l2 text-right">{% trans "Selected profit %" %}:</div><div class="col s8 l10">{{ preview.profit_percent }}</div></div>
+                        <div class="row"><div class="col s4 l2 text-right">{% trans "Price to confirm" %}:</div><div class="col s8 l10"><strong>{{ preview.calculated_price }}</strong></div></div>
                         <div class="row"><div class="col s4 l2 text-right">{% trans "Manual" %}:</div><div class="col s8 l10">{% if preview.is_manual_price %}{% trans "Yes" %}{% else %}{% trans "No" %}{% endif %}</div></div>
                         {% if preview.note %}
                             <div class="row"><div class="col s4 l2 text-right">{% trans "Note" %}:</div><div class="col s8 l10">{{ preview.note }}</div></div>

@@ -319,6 +319,28 @@ def implied_profit_percent(base_cost, price):
     return percent.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
+CUSTOMER_PRICE_PROFIT_TIERS = (
+    Decimal("15"),
+    Decimal("17.5"),
+    Decimal("20"),
+    Decimal("22.5"),
+    Decimal("25"),
+    Decimal("27.5"),
+    Decimal("30"),
+)
+
+
+def customer_price_profit_tiers(base_cost, currency=None):
+    """Return standard profit % tiers with calculated prices for a BoM cost."""
+    return [
+        {
+            "profit_percent": profit_percent,
+            "price": apply_profit(base_cost, profit_percent, currency=currency),
+        }
+        for profit_percent in CUSTOMER_PRICE_PROFIT_TIERS
+    ]
+
+
 def bom_overview_context(part_revision, quantity=1):
     """Build BoM overview template context for a part revision."""
     empty = {
@@ -364,6 +386,9 @@ def customer_price_preview_from_form(form, organization):
         "note": cleaned.get("note") or "",
         "peer_prices": part.latest_prices_for_other_customers(
             customer, organization
+        ),
+        "profit_price_tiers": customer_price_profit_tiers(
+            cleaned["base_cost"], currency=organization.currency
         ),
         **bom_overview_context(cleaned["part_revision"]),
     }
