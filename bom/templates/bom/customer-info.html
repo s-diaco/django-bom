@@ -42,7 +42,6 @@
                 <div class="row"><div class="col s4 l2 text-right">{% trans "Contact" %}:</div><div class="col s8 l10">{{ customer.contact_name|default:"-" }}</div></div>
                 <div class="row"><div class="col s4 l2 text-right">{% trans "Email" %}:</div><div class="col s8 l10">{{ customer.email|default:"-" }}</div></div>
                 <div class="row"><div class="col s4 l2 text-right">{% trans "Phone" %}:</div><div class="col s8 l10">{{ customer.phone|default:"-" }}</div></div>
-                <div class="row"><div class="col s4 l2 text-right">{% trans "Default Profit %" %}:</div><div class="col s8 l10">{{ customer.effective_profit_percent }}</div></div>
                 <div class="row"><div class="col s4 l2 text-right">{% trans "Notes" %}:</div><div class="col s8 l10">{{ customer.notes|default:"-" }}</div></div>
             </li>
         </ul>

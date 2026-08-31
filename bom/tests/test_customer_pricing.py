@@ -94,17 +94,26 @@ class TestCustomerPricing(TransactionTestCase):
         part_revision.material = "no_bom"
         part_revision.save()
         self.customer = create_a_fake_customer(
-            self.organization, name="Buyer One", default_profit_percent=Decimal("25")
+            self.organization, name="Buyer One"
         )
 
-    def test_effective_profit_percent_null_means_zero(self):
-        customer = create_a_fake_customer(
-            self.organization, name="No Default", default_profit_percent=None
+    def test_blank_profit_defaults_to_zero(self):
+        response = self.client.post(
+            reverse(
+                "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
+            ),
+            {
+                "action": "confirm",
+                "part": self.part.id,
+                "profit_percent": "",
+                "price": "",
+                "note": "",
+            },
         )
-        # get_or_create may not overwrite; force null
-        customer.default_profit_percent = None
-        customer.save()
-        self.assertEqual(customer.effective_profit_percent, Decimal("0"))
+        self.assertEqual(response.status_code, 302)
+        row = CustomerPrice.objects.get(customer=self.customer, part=self.part)
+        self.assertEqual(row.quantity, 1)
+        self.assertEqual(row.profit_percent, Decimal("0.00"))
 
     def test_customer_price_create_derived(self):
         part_revision = self.part.latest()
@@ -154,24 +163,6 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertEqual(row.quantity, 1)
         self.assertTrue(row.is_manual_price)
         self.assertEqual(row.profit_percent, Decimal("50.00"))
-
-    def test_default_profit_used_when_blank(self):
-        response = self.client.post(
-            reverse(
-                "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
-            ),
-            {
-                "action": "confirm",
-                "part": self.part.id,
-                "profit_percent": "",
-                "price": "",
-                "note": "",
-            },
-        )
-        self.assertEqual(response.status_code, 302)
-        row = CustomerPrice.objects.get(customer=self.customer, part=self.part)
-        self.assertEqual(row.quantity, 1)
-        self.assertEqual(row.profit_percent, Decimal("25.00"))
 
     def test_latest_prices_returns_newest_per_part(self):
         older = create_a_fake_customer_price(
@@ -271,7 +262,6 @@ class TestCustomerPricing(TransactionTestCase):
                 "tax_id": "",
                 "notes": "",
                 "is_active": "on",
-                "default_profit_percent": "15",
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -385,7 +375,7 @@ class TestCustomerPricing(TransactionTestCase):
 
     def test_latest_prices_for_other_customers(self):
         other_customer = create_a_fake_customer(
-            self.organization, name="Buyer Two", default_profit_percent=Decimal("15")
+            self.organization, name="Buyer Two"
         )
         create_a_fake_customer_price(
             other_customer, self.part, profit_percent=Decimal("10")
@@ -408,7 +398,7 @@ class TestCustomerPricing(TransactionTestCase):
 
     def test_customer_price_create_preview(self):
         other_customer = create_a_fake_customer(
-            self.organization, name="Peer Buyer", default_profit_percent=Decimal("15")
+            self.organization, name="Peer Buyer"
         )
         create_a_fake_customer_price(other_customer, self.part)
 

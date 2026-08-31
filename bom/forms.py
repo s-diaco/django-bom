@@ -519,8 +519,6 @@ class CustomerForm(forms.ModelForm):
         self.fields["tax_id"].label = _("Tax ID")
         self.fields["notes"].label = _("Notes")
         self.fields["is_active"].label = _("Active")
-        self.fields["default_profit_percent"].label = _("Default Profit % (markup on cost)")
-        self.fields["default_profit_percent"].required = False
         self.fields["name"].required = True
 
     def clean_name(self):
@@ -584,10 +582,6 @@ class CustomerPriceForm(forms.ModelForm):
 
         self.fields["profit_percent"].label = _("Profit % (markup on cost)")
         self.fields["profit_percent"].required = False
-        if self.customer is not None:
-            self.fields["profit_percent"].initial = (
-                self.customer.effective_profit_percent
-            )
         self.fields["price"].label = _("Price | {unit}").format(unit=currency_unit_txt)
         self.fields["price"].help_text = _(
             "Optional. Leave blank to compute from BoM cost and profit %. "
@@ -646,7 +640,7 @@ class CustomerPriceForm(forms.ModelForm):
         cleaned_data["part_revision"] = part_revision
 
         if profit_percent is None:
-            profit_percent = customer.effective_profit_percent
+            profit_percent = Decimal("0")
             cleaned_data["profit_percent"] = profit_percent
 
         if price is not None:
@@ -723,20 +717,12 @@ class CustomerPriceBulkForm(forms.Form):
         self.fields["parts"].queryset = parts_qs.order_by(
             "number_class__code", "number_item", "number_variation"
         )
-        if self.customer is not None:
-            self.fields["profit_percent"].initial = (
-                self.customer.effective_profit_percent
-            )
 
     def save(self):
         quantity = self.UNIT_QUANTITY
         profit_percent = self.cleaned_data.get("profit_percent")
         if profit_percent is None:
-            profit_percent = (
-                self.customer.effective_profit_percent
-                if self.customer is not None
-                else Decimal("0")
-            )
+            profit_percent = Decimal("0")
 
         created = []
         skipped = []

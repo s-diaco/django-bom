@@ -1330,13 +1330,6 @@ class Customer(models.Model, AsDictModel):
     tax_id = models.CharField(max_length=64, blank=True, default="")
     notes = models.TextField(blank=True, default="")
     is_active = models.BooleanField(default=True)
-    default_profit_percent = models.DecimalField(
-        max_digits=6,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(0)],
-    )
 
     class Meta:
         unique_together = (("organization", "name"),)
@@ -1344,12 +1337,6 @@ class Customer(models.Model, AsDictModel):
 
     def __str__(self):
         return self.name
-
-    @property
-    def effective_profit_percent(self):
-        if self.default_profit_percent is None:
-            return Decimal("0")
-        return self.default_profit_percent
 
     def latest_prices(self):
         """Return the newest CustomerPrice row per part for this customer."""
