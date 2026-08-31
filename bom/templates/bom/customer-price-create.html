@@ -122,7 +122,7 @@
 
                 <div class="price-selection-panel printer-hide" id="price-selection-panel">
                     <h5 class="mb-2">{% trans "Selected price" %}</h5>
-                    <form action="{{ action }}" method="post" id="price-confirm-form">
+                    <form action="{{ action }}" method="post" id="price-confirm-form" data-base-cost="{{ preview.base_cost.amount }}">
                         {% csrf_token %}
                         <input type="hidden" name="part" value="{{ preview.part.id }}">
                         {% if part_locked %}
@@ -183,8 +183,65 @@
             var priceInput = document.getElementById('confirm-price');
             var profitDisplay = document.getElementById('selected-profit-display');
             var confirmButton = document.getElementById('confirm-price-button');
-            if (!profitInput || !priceInput || !confirmButton) {
+            var confirmForm = document.getElementById('price-confirm-form');
+            if (!profitInput || !priceInput || !confirmButton || !confirmForm) {
                 return;
+            }
+
+            var baseCost = parseFloat(confirmForm.getAttribute('data-base-cost') || '0');
+            var selectedProfitPercent = '';
+
+            function roundHalfUp(value, decimals) {
+                var factor = Math.pow(10, decimals);
+                return Math.round((value + Number.EPSILON) * factor) / factor;
+            }
+
+            function pricesMatch(left, right) {
+                if (left === '' || right === '') {
+                    return false;
+                }
+                return roundHalfUp(parseFloat(left), 2) === roundHalfUp(parseFloat(right), 2);
+            }
+
+            function impliedProfitPercent(price) {
+                if (!baseCost) {
+                    return null;
+                }
+                return roundHalfUp((price / baseCost - 1) * 100, 2);
+            }
+
+            function updateProfitFromPrice() {
+                var priceValue = priceInput.value.trim();
+                if (!priceValue) {
+                    profitDisplay.value = '—';
+                    confirmButton.disabled = true;
+                    return;
+                }
+
+                var price = parseFloat(priceValue);
+                if (!Number.isFinite(price)) {
+                    profitDisplay.value = '—';
+                    confirmButton.disabled = true;
+                    return;
+                }
+
+                if (!baseCost) {
+                    profitDisplay.value = '—';
+                    confirmButton.disabled = true;
+                    return;
+                }
+
+                var referencePrice = referenceInput.value;
+                if (selectedProfitPercent && pricesMatch(priceValue, referencePrice)) {
+                    profitDisplay.value = selectedProfitPercent;
+                    profitInput.value = selectedProfitPercent;
+                } else {
+                    var implied = impliedProfitPercent(price);
+                    profitDisplay.value = implied === null ? '—' : String(implied);
+                    profitInput.value = implied === null ? '' : String(implied);
+                }
+
+                confirmButton.disabled = false;
             }
 
             function clearSelectedRows() {
@@ -196,11 +253,11 @@
             function selectRow(row) {
                 clearSelectedRows();
                 row.classList.add('price-row-selected');
-                profitInput.value = row.getAttribute('data-profit-percent') || '';
+                selectedProfitPercent = row.getAttribute('data-profit-percent') || '';
+                profitInput.value = selectedProfitPercent;
                 referenceInput.value = row.getAttribute('data-price') || '';
                 priceInput.value = row.getAttribute('data-price') || '';
-                profitDisplay.value = profitInput.value || '—';
-                confirmButton.disabled = !priceInput.value;
+                updateProfitFromPrice();
             }
 
             document.querySelectorAll('.price-select-row').forEach(function (row) {
@@ -215,9 +272,7 @@
                 });
             });
 
-            priceInput.addEventListener('input', function () {
-                confirmButton.disabled = !priceInput.value;
-            });
+            priceInput.addEventListener('input', updateProfitFromPrice);
         })();
     </script>
 {% endblock %}
