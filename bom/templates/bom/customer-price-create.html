@@ -61,6 +61,20 @@
 
                 <h4 class="printer-show">{% trans "Price Review" %}</h4>
 
+                {% if preview.part_revision.material == 'with_loi' or preview.part_revision.material == 'no_loi' %}
+                    {% if preview.indented_bom %}
+                        <h5 class="mb-2 printer-show">{% trans "BoM Overview" %}</h5>
+                        <h5 class="mb-2 printer-hide">{% trans "BoM Overview" %}</h5>
+                        <div id="bom-indented" class="mb-4">
+                            {% include 'bom/components/bom-indented-overview.html' with order_by='indented' bom_items=preview.indented_bom.parts part=preview.part part_revision=preview.part_revision profile=profile childs_unit_cost=preview.childs_unit_cost total_bom_weight=preview.total_bom_weight product_weight=preview.product_weight material=preview.part_revision.material %}
+                        </div>
+                    {% elif preview.bom_error == 'infinite_recursion' %}
+                        <p class="red-text">{% trans "Error: infinite recursion in part relationship." %}</p>
+                    {% endif %}
+                {% else %}
+                    <p class="opacity-70 mb-4">{% trans "Unit cost only — no BoM breakdown for this part." %}</p>
+                {% endif %}
+
                 <ul class="collection with-header bom-panel mb-4">
                     <li class="collection-header"><h5>{% trans "Pricing summary" %}</h5></li>
                     <li class="collection-item">
@@ -105,20 +119,6 @@
                 <h5 class="mb-2 printer-show">{% trans "Other customers' latest prices" %}</h5>
                 <h5 class="mb-2 printer-hide">{% trans "Other customers' latest prices" %}</h5>
                 {% include 'bom/components/customer-price-peer-list.html' with peer_prices=preview.peer_prices %}
-
-                {% if preview.part_revision.material == 'with_loi' or preview.part_revision.material == 'no_loi' %}
-                    {% if preview.indented_bom %}
-                        <h5 class="mb-2 printer-show">{% trans "BoM Overview" %}</h5>
-                        <h5 class="mb-2 printer-hide">{% trans "BoM Overview" %}</h5>
-                        <div id="bom-indented">
-                            {% include 'bom/components/bom-indented-overview.html' with order_by='indented' bom_items=preview.indented_bom.parts part=preview.part part_revision=preview.part_revision profile=profile childs_unit_cost=preview.childs_unit_cost total_bom_weight=preview.total_bom_weight product_weight=preview.product_weight material=preview.part_revision.material %}
-                        </div>
-                    {% elif preview.bom_error == 'infinite_recursion' %}
-                        <p class="red-text">{% trans "Error: infinite recursion in part relationship." %}</p>
-                    {% endif %}
-                {% else %}
-                    <p class="opacity-70">{% trans "Unit cost only — no BoM breakdown for this part." %}</p>
-                {% endif %}
 
                 <div class="price-selection-panel printer-hide" id="price-selection-panel">
                     <h5 class="mb-2">{% trans "Selected price" %}</h5>
