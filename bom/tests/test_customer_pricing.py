@@ -15,7 +15,12 @@ from bom.helpers import (
     create_user_and_organization,
 )
 from bom.models import Customer, CustomerPrice, Organization, User
-from bom.utils import apply_profit, implied_profit_percent
+from bom.utils import (
+    apply_profit,
+    customer_price_adjusted_base,
+    customer_price_profit_tiers,
+    implied_profit_percent,
+)
 
 
 @override_settings(BOM_CONFIG=settings.BOM_CONFIG_DEFAULT)
@@ -38,6 +43,18 @@ class TestCustomerPricingHelpers(TransactionTestCase):
         )
         self.assertIsNone(implied_profit_percent(Decimal("0"), Decimal("10")))
         self.assertIsNone(implied_profit_percent(None, Decimal("10")))
+
+    def test_customer_price_profit_tiers_use_seven_percent_base_markup(self):
+        tiers = customer_price_profit_tiers(
+            Decimal("100"), currency="USD"
+        )
+        adjusted = customer_price_adjusted_base(Decimal("100"), currency="USD")
+        self.assertEqual(adjusted, Money(107, "USD"))
+        tier_20 = next(t for t in tiers if t["profit_percent"] == Decimal("20"))
+        self.assertEqual(
+            tier_20["price"],
+            apply_profit(adjusted, Decimal("20"), currency="USD"),
+        )
 
     def test_format_datetime_helper(self):
         from datetime import datetime
@@ -97,72 +114,79 @@ class TestCustomerPricing(TransactionTestCase):
             self.organization, name="Buyer One"
         )
 
-    def test_blank_profit_defaults_to_zero(self):
-        response = self.client.post(
-            reverse(
-                "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
-            ),
-            {
-                "action": "confirm",
-                "part": self.part.id,
-                "profit_percent": "",
-                "price": "",
-                "note": "",
-            },
+    def _tier_price(self, base_cost, profit_percent):
+        adjusted = customer_price_adjusted_base(
+            base_cost, currency=self.organization.currency
         )
-        self.assertEqual(response.status_code, 302)
-        row = CustomerPrice.objects.get(customer=self.customer, part=self.part)
-        self.assertEqual(row.quantity, 1)
-        self.assertEqual(row.profit_percent, Decimal("0.00"))
+        return apply_profit(
+            adjusted, profit_percent, currency=self.organization.currency
+        )
+
+    def _confirm_payload(self, profit_percent, price_amount, reference_price=None, note=""):
+        reference = (
+            price_amount if reference_price is None else reference_price
+        )
+        return {
+            "action": "confirm",
+            "part": self.part.id,
+            "profit_percent": str(profit_percent),
+            "price": str(price_amount),
+            "reference_price": str(reference),
+            "note": note,
+        }
 
     def test_customer_price_create_derived(self):
         part_revision = self.part.latest()
         base_cost = part_revision.bom_unit_cost_at_quantity(1)
         self.assertIsNotNone(base_cost)
+        tier_price = self._tier_price(base_cost, Decimal("20"))
 
         response = self.client.post(
             reverse(
                 "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
             ),
-            {
-                "action": "confirm",
-                "part": self.part.id,
-                "profit_percent": "20",
-                "price": "",
-                "note": "auto",
-            },
+            self._confirm_payload(
+                Decimal("20"), tier_price.amount, note="auto"
+            ),
         )
         self.assertEqual(response.status_code, 302)
         row = CustomerPrice.objects.get(customer=self.customer, part=self.part)
         self.assertEqual(row.quantity, 1)
         self.assertFalse(row.is_manual_price)
         self.assertEqual(row.profit_percent, Decimal("20.00"))
-        self.assertEqual(row.price, apply_profit(row.base_cost, row.profit_percent))
+        self.assertEqual(row.price, tier_price)
         self.assertEqual(row.base_cost, base_cost)
 
     def test_customer_price_create_manual_back_computes_percent(self):
         part_revision = self.part.latest()
         base_cost = part_revision.bom_unit_cost_at_quantity(1)
-        manual_price = apply_profit(base_cost, Decimal("50")).amount
+        tier_price = self._tier_price(base_cost, Decimal("20"))
+        manual_price = tier_price.amount + 1
 
         response = self.client.post(
             reverse(
                 "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
             ),
-            {
-                "action": "confirm",
-                "part": self.part.id,
-                "price": str(manual_price),
-                "note": "manual",
-            },
+            self._confirm_payload(
+                Decimal("20"),
+                manual_price,
+                reference_price=tier_price.amount,
+                note="manual",
+            ),
         )
         if response.status_code != 302:
-            form = response.context.get("form")
-            self.fail(f"Expected redirect, got {response.status_code}: {getattr(form, 'errors', None)}")
+            form = response.context.get("confirm_form")
+            self.fail(
+                f"Expected redirect, got {response.status_code}: "
+                f"{getattr(form, 'errors', None)}"
+            )
         row = CustomerPrice.objects.get(customer=self.customer, part=self.part)
         self.assertEqual(row.quantity, 1)
         self.assertTrue(row.is_manual_price)
-        self.assertEqual(row.profit_percent, Decimal("50.00"))
+        self.assertEqual(
+            row.profit_percent,
+            implied_profit_percent(base_cost, manual_price),
+        )
 
     def test_latest_prices_returns_newest_per_part(self):
         older = create_a_fake_customer_price(
@@ -319,9 +343,21 @@ class TestCustomerPricing(TransactionTestCase):
             ),
             {
                 "action": "confirm",
+                "part": self.part.id,
                 "customer": self.customer.id,
                 "profit_percent": "15",
-                "price": "",
+                "price": str(
+                    self._tier_price(
+                        self.part.latest().bom_unit_cost_at_quantity(1),
+                        Decimal("15"),
+                    ).amount
+                ),
+                "reference_price": str(
+                    self._tier_price(
+                        self.part.latest().bom_unit_cost_at_quantity(1),
+                        Decimal("15"),
+                    ).amount
+                ),
                 "note": "from part",
             },
         )
@@ -361,13 +397,7 @@ class TestCustomerPricing(TransactionTestCase):
             reverse(
                 "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
             ),
-            {
-                "action": "confirm",
-                "part": self.part.id,
-                "profit_percent": "20",
-                "price": "",
-                "note": "",
-            },
+            self._confirm_payload(Decimal("20"), Decimal("100"), note=""),
             HTTP_REFERER=reverse("bom:customer-info", kwargs={"customer_id": self.customer.id}),
         )
         self.assertIn(response.status_code, (302, 307))
@@ -404,7 +434,7 @@ class TestCustomerPricing(TransactionTestCase):
 
         part_revision = self.part.latest()
         base_cost = part_revision.bom_unit_cost_at_quantity(1)
-        expected_price = apply_profit(base_cost, Decimal("20"))
+        expected_price = self._tier_price(base_cost, Decimal("20"))
 
         response = self.client.post(
             reverse(
@@ -412,10 +442,7 @@ class TestCustomerPricing(TransactionTestCase):
             ),
             {
                 "action": "preview",
-                "part": self.part.id,
-                "profit_percent": "20",
-                "price": "",
-                "note": "preview test",
+                "part": self.part.full_part_number(),
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -425,30 +452,50 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertContains(response, "Confirm price")
         self.assertContains(response, "Prices by profit %")
         self.assertContains(response, "17.5")
-        self.assertContains(response, str(apply_profit(base_cost, Decimal("30")).amount))
+        self.assertContains(response, str(self._tier_price(base_cost, Decimal("30")).amount))
+        self.assertContains(response, "Adjusted base (BoM + 7%)")
         self.assertFalse(CustomerPrice.objects.filter(customer=self.customer).exists())
 
-    def test_customer_price_create_confirm(self):
-        part_revision = self.part.latest()
-        base_cost = part_revision.bom_unit_cost_at_quantity(1)
+    def test_customer_price_create_confirm_from_peer_price(self):
+        peer_customer = create_a_fake_customer(
+            self.organization, name="Peer Buyer"
+        )
+        peer_row = create_a_fake_customer_price(peer_customer, self.part)
 
         response = self.client.post(
             reverse(
                 "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
             ),
-            {
-                "action": "confirm",
-                "part": self.part.id,
-                "profit_percent": "20",
-                "price": "",
-                "note": "confirmed",
-            },
+            self._confirm_payload(
+                peer_row.profit_percent,
+                peer_row.price.amount,
+                note="peer",
+            ),
+        )
+        self.assertEqual(response.status_code, 302)
+        row = CustomerPrice.objects.get(customer=self.customer, part=self.part)
+        self.assertEqual(row.note, "peer")
+        self.assertEqual(row.price, peer_row.price)
+        self.assertFalse(row.is_manual_price)
+
+    def test_customer_price_create_confirm(self):
+        part_revision = self.part.latest()
+        base_cost = part_revision.bom_unit_cost_at_quantity(1)
+        tier_price = self._tier_price(base_cost, Decimal("20"))
+
+        response = self.client.post(
+            reverse(
+                "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
+            ),
+            self._confirm_payload(
+                Decimal("20"), tier_price.amount, note="confirmed"
+            ),
         )
         self.assertEqual(response.status_code, 302)
         row = CustomerPrice.objects.get(customer=self.customer, part=self.part)
         self.assertEqual(row.note, "confirmed")
         self.assertEqual(row.base_cost, base_cost)
-        self.assertEqual(row.price, apply_profit(row.base_cost, Decimal("20")))
+        self.assertEqual(row.price, tier_price)
 
     def test_preview_shows_bom_overview(self):
         part_revision = self.part.latest()
@@ -461,10 +508,7 @@ class TestCustomerPricing(TransactionTestCase):
             ),
             {
                 "action": "preview",
-                "part": self.part.id,
-                "profit_percent": "20",
-                "price": "",
-                "note": "",
+                "part": self.part.full_part_number(),
             },
         )
         self.assertEqual(response.status_code, 200)

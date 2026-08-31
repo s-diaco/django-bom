@@ -33,9 +33,9 @@
         </div>
 
         <div class="bom-panel-pad printer-hide" id="price-input-panel">
-            <form action="{{ action }}" method="post">
+            <form action="{{ action }}" method="post" id="price-load-form">
                 {% csrf_token %}
-                {{ form|bom_form:'m6 s12' }}
+                {{ load_form|bom_form:'m6 s12' }}
                 <div class="mt-4 flex justify-between">
                     {% if part_locked and part_info_url %}
                         <a href="{{ part_info_url }}#customers" class="bom-btn-ghost">{% trans "Cancel" %}</a>
@@ -71,37 +71,36 @@
                             <div class="row"><div class="col s4 l2 text-right">{% trans "Description" %}:</div><div class="col s8 l10">{{ preview.part_revision.description }}</div></div>
                         {% endif %}
                         <div class="row"><div class="col s4 l2 text-right">{% trans "BoM Cost" %}:</div><div class="col s8 l10">{{ preview.base_cost }}</div></div>
-
-                        <div class="mt-4 mb-2">
-                            <h6 class="mb-2">{% trans "Prices by profit %" %}</h6>
-                            <div class="bom-table-wrap bom-table-wrap--fit responsive-table-wrapper">
-                                <table class="bom-table part-list single-line">
-                                    <thead>
-                                    <tr>
-                                        <th class="text-normal td-med">{% trans "Profit %" %}</th>
-                                        <th class="text-normal td-med">{% trans "Price" %}</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for tier in preview.profit_price_tiers %}
-                                        <tr{% if not preview.is_manual_price and tier.profit_percent == preview.profit_percent %} class="price-tier-selected"{% endif %}>
-                                            <td class="text-normal td-med">{{ tier.profit_percent }}</td>
-                                            <td class="text-normal td-med">{{ tier.price }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="row"><div class="col s4 l2 text-right">{% trans "Selected profit %" %}:</div><div class="col s8 l10">{{ preview.profit_percent }}</div></div>
-                        <div class="row"><div class="col s4 l2 text-right">{% trans "Price to confirm" %}:</div><div class="col s8 l10"><strong>{{ preview.calculated_price }}</strong></div></div>
-                        <div class="row"><div class="col s4 l2 text-right">{% trans "Manual" %}:</div><div class="col s8 l10">{% if preview.is_manual_price %}{% trans "Yes" %}{% else %}{% trans "No" %}{% endif %}</div></div>
-                        {% if preview.note %}
-                            <div class="row"><div class="col s4 l2 text-right">{% trans "Note" %}:</div><div class="col s8 l10">{{ preview.note }}</div></div>
-                        {% endif %}
+                        <div class="row"><div class="col s4 l2 text-right">{% trans "Adjusted base (BoM + 7%)" %}:</div><div class="col s8 l10">{{ preview.adjusted_base }}</div></div>
                     </li>
                 </ul>
+
+                <h5 class="mb-2 printer-show">{% trans "Prices by profit %" %}</h5>
+                <h5 class="mb-2 printer-hide">{% trans "Prices by profit %" %}</h5>
+                <p class="opacity-70 printer-hide mb-2">{% trans "Click a row to select profit % and price." %}</p>
+                <div class="bom-table-wrap bom-table-wrap--fit responsive-table-wrapper mb-4">
+                    <table class="bom-table part-list single-line" id="customer-price-tier-table">
+                        <thead>
+                        <tr>
+                            <th class="text-normal td-med">{% trans "Profit %" %}</th>
+                            <th class="text-normal td-med">{% trans "Price" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for tier in preview.profit_price_tiers %}
+                            <tr class="price-select-row"
+                                role="button"
+                                tabindex="0"
+                                data-profit-percent="{{ tier.profit_percent }}"
+                                data-price="{{ tier.price.amount }}"
+                                data-source="tier">
+                                <td class="text-normal td-med">{{ tier.profit_percent }}</td>
+                                <td class="text-normal td-med">{{ tier.price }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
 
                 <h5 class="mb-2 printer-show">{% trans "Other customers' latest prices" %}</h5>
                 <h5 class="mb-2 printer-hide">{% trans "Other customers' latest prices" %}</h5>
@@ -121,21 +120,42 @@
                     <p class="opacity-70">{% trans "Unit cost only — no BoM breakdown for this part." %}</p>
                 {% endif %}
 
-                <div class="price-review-actions printer-hide">
-                    <button type="button" class="bom-btn-secondary" id="price-review-print-button">
-                        <i class="material-icons text-base">print</i>{% trans "Print" %}
-                    </button>
-                    <form action="{{ action }}" method="post" class="inline">
+                <div class="price-selection-panel printer-hide" id="price-selection-panel">
+                    <h5 class="mb-2">{% trans "Selected price" %}</h5>
+                    <form action="{{ action }}" method="post" id="price-confirm-form">
                         {% csrf_token %}
+                        <input type="hidden" name="part" value="{{ preview.part.id }}">
                         {% if part_locked %}
-                            <input type="hidden" name="customer" value="{{ form.customer.value }}">
-                        {% else %}
-                            <input type="hidden" name="part" value="{{ form.part.value }}">
+                            <input type="hidden" name="customer" value="{{ preview.customer.id }}">
                         {% endif %}
-                        <input type="hidden" name="profit_percent" value="{{ form.profit_percent.value|default_if_none:'' }}">
-                        <input type="hidden" name="price" value="{{ form.price.value|default_if_none:'' }}">
-                        <input type="hidden" name="note" value="{{ form.note.value|default_if_none:'' }}">
-                        <button class="bom-btn-primary" type="submit" name="action" value="confirm">{% trans "Confirm price" %}</button>
+                        <input type="hidden" name="profit_percent" id="confirm-profit-percent" value="">
+                        <input type="hidden" name="reference_price" id="confirm-reference-price" value="">
+
+                        <div class="row mb-2">
+                            <div class="col s12 m4">
+                                <label class="bom-label" for="selected-profit-display">{% trans "Selected profit %" %}</label>
+                                <input type="text" id="selected-profit-display" class="bom-input" readonly value="—">
+                            </div>
+                            <div class="col s12 m4">
+                                <label class="bom-label" for="confirm-price">{% trans "Price" %} | {{ currency_unit_txt }}</label>
+                                <input type="number" name="price" id="confirm-price" class="bom-input" min="0" step="any" required>
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col s12">
+                                <label class="bom-label" for="confirm-note">{% trans "Note" %}</label>
+                                <textarea name="note" id="confirm-note" class="bom-input" rows="3">{% if confirm_form %}{{ confirm_form.note.value|default_if_none:'' }}{% endif %}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="price-review-actions">
+                            <button type="button" class="bom-btn-secondary" id="price-review-print-button">
+                                <i class="material-icons text-base">print</i>{% trans "Print" %}
+                            </button>
+                            <button class="bom-btn-primary" type="submit" name="action" value="confirm" id="confirm-price-button" disabled>
+                                {% trans "Confirm price" %}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -147,20 +167,57 @@
     <script>
         (function () {
             var printButton = document.getElementById('price-review-print-button');
-            if (!printButton) {
+            if (printButton) {
+                function clearPrintMode() {
+                    document.body.classList.remove('printing-price-review');
+                }
+                printButton.addEventListener('click', function () {
+                    document.body.classList.add('printing-price-review');
+                    window.print();
+                });
+                window.addEventListener('afterprint', clearPrintMode);
+            }
+
+            var profitInput = document.getElementById('confirm-profit-percent');
+            var referenceInput = document.getElementById('confirm-reference-price');
+            var priceInput = document.getElementById('confirm-price');
+            var profitDisplay = document.getElementById('selected-profit-display');
+            var confirmButton = document.getElementById('confirm-price-button');
+            if (!profitInput || !priceInput || !confirmButton) {
                 return;
             }
 
-            function clearPrintMode() {
-                document.body.classList.remove('printing-price-review');
+            function clearSelectedRows() {
+                document.querySelectorAll('.price-select-row.price-row-selected').forEach(function (row) {
+                    row.classList.remove('price-row-selected');
+                });
             }
 
-            printButton.addEventListener('click', function () {
-                document.body.classList.add('printing-price-review');
-                window.print();
+            function selectRow(row) {
+                clearSelectedRows();
+                row.classList.add('price-row-selected');
+                profitInput.value = row.getAttribute('data-profit-percent') || '';
+                referenceInput.value = row.getAttribute('data-price') || '';
+                priceInput.value = row.getAttribute('data-price') || '';
+                profitDisplay.value = profitInput.value || '—';
+                confirmButton.disabled = !priceInput.value;
+            }
+
+            document.querySelectorAll('.price-select-row').forEach(function (row) {
+                row.addEventListener('click', function () {
+                    selectRow(row);
+                });
+                row.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        selectRow(row);
+                    }
+                });
             });
 
-            window.addEventListener('afterprint', clearPrintMode);
+            priceInput.addEventListener('input', function () {
+                confirmButton.disabled = !priceInput.value;
+            });
         })();
     </script>
 {% endblock %}

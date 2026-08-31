@@ -2,7 +2,7 @@
 {% load bom_dates %}
 
 <div class="bom-table-wrap bom-table-wrap--fit responsive-table-wrapper mb-4">
-    <table class="bom-table part-list single-line">
+    <table class="bom-table part-list single-line" id="customer-price-peer-table">
         <thead>
         <tr>
             <th class="text-normal td-med">{% trans "Customer" %}</th>
@@ -14,9 +14,14 @@
         </thead>
         <tbody>
         {% for row in peer_prices %}
-            <tr>
+            <tr class="price-select-row"
+                role="button"
+                tabindex="0"
+                data-profit-percent="{{ row.profit_percent }}"
+                data-price="{{ row.price.amount }}"
+                data-source="peer">
                 <td class="text-normal td-med">
-                    <a href="{% url 'bom:customer-info' customer_id=row.customer.id %}">{{ row.customer.name }}</a>
+                    <a href="{% url 'bom:customer-info' customer_id=row.customer.id %}" onclick="event.stopPropagation();">{{ row.customer.name }}</a>
                 </td>
                 <td class="text-normal td-med">{{ row.base_cost|default:"-" }}</td>
                 <td class="text-normal td-med">{{ row.profit_percent }}</td>

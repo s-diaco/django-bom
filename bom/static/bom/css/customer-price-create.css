@@ -49,7 +49,25 @@
     margin-top: 1rem;
 }
 
-.price-tier-selected td {
+.price-selection-panel {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.price-select-row {
+    cursor: pointer;
+}
+
+.price-select-row:hover td {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.price-select-row.price-row-selected td {
     font-weight: 600;
-    background-color: rgba(0, 0, 0, 0.04);
+    background-color: rgba(0, 0, 0, 0.06);
+}
+
+#selected-profit-display {
+    background-color: rgba(0, 0, 0, 0.03);
 }
