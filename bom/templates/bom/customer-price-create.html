@@ -66,7 +66,7 @@
                         <h5 class="mb-2 printer-show">{% trans "BoM Overview" %}</h5>
                         <h5 class="mb-2 printer-hide">{% trans "BoM Overview" %}</h5>
                         <div id="bom-indented" class="mb-4">
-                            {% include 'bom/components/bom-indented-overview.html' with order_by='indented' bom_items=preview.indented_bom.parts part=preview.part part_revision=preview.part_revision profile=profile childs_unit_cost=preview.childs_unit_cost total_bom_weight=preview.total_bom_weight product_weight=preview.product_weight material=preview.part_revision.material %}
+                            {% include 'bom/components/bom-indented-overview.html' with order_by='indented' bom_items=preview.indented_bom.parts part=preview.part part_revision=preview.part_revision profile=profile childs_unit_cost=preview.childs_unit_cost total_bom_weight=preview.total_bom_weight product_weight=preview.product_weight material=preview.part_revision.material show_print_button=False %}
                         </div>
                     {% elif preview.bom_error == 'infinite_recursion' %}
                         <p class="red-text">{% trans "Error: infinite recursion in part relationship." %}</p>
