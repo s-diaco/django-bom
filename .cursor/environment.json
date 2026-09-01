@@ -1,0 +1,17 @@
+{
+  "name": "Lithium BoM (dev)",
+  "install": "curl -LsSf https://astral.sh/uv/install.sh | sh && export PATH=\"$HOME/.local/bin:$PATH\" && uv sync --locked && npm ci && npm run build:css && DEBUG=True SECRET_KEY=dev-secret-key uv run python manage.py migrate --noinput",
+  "terminals": [
+    {
+      "name": "web",
+      "command": "export PATH=\"$HOME/.local/bin:$PATH\"; export DEBUG=True SECRET_KEY=dev-secret-key DJANGO_ALLOWED_HOSTS=\"localhost 127.0.0.1 [::1]\"; uv run python manage.py runserver 0.0.0.0:8000",
+      "description": "Django dev server (SQLite) at http://localhost:8000"
+    }
+  ],
+  "ports": [
+    {
+      "name": "web server",
+      "port": 8000
+    }
+  ]
+}
