@@ -159,7 +159,7 @@ class TestBOM(TransactionTestCase):
         config["admin_dashboard"]["page_size"] = 1
 
         with override_settings(BOM_CONFIG=config):
-            response = self.client.get(reverse("bom:sellers"))
+            response = self.client.get(reverse("bom:sellers"), {"page": 2})
             self.assertEqual(response.status_code, 200)
             html = response.content.decode("utf-8")
             nav_start = html.find('<nav class="bom-pagination')
