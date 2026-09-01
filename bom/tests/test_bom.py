@@ -114,6 +114,8 @@ class TestBOM(TransactionTestCase):
             self.assertNotIn("/ صفحه", nav)
             self.assertNotIn("…", nav)
             self.assertIn("?page=1", nav)
+            self.assertIn("first_page", nav)
+            self.assertIn("last_page", nav)
             self.assertIn("per_page=", nav)
 
     def test_home_pagination_per_page(self):
@@ -159,15 +161,17 @@ class TestBOM(TransactionTestCase):
             nav_end = html.find("</nav>", nav_start)
             self.assertNotEqual(nav_start, -1)
             nav = html[nav_start:nav_end]
+            first_idx = nav.find("first_page")
             right_idx = nav.find("chevron_right")
             left_idx = nav.find("chevron_left")
+            last_idx = nav.find("last_page")
+            self.assertNotEqual(first_idx, -1)
             self.assertNotEqual(right_idx, -1)
             self.assertNotEqual(left_idx, -1)
+            self.assertNotEqual(last_idx, -1)
+            self.assertLess(first_idx, right_idx)
             self.assertLess(right_idx, left_idx)
-            first_chevron = nav.find("chevron_")
-            self.assertTrue(
-                nav[first_chevron : first_chevron + 20].startswith("chevron_right")
-            )
+            self.assertLess(left_idx, last_idx)
 
     def test_home_print_all_rows(self):
         (p1, p2, p3, _p4) = create_some_fake_parts(organization=self.organization)

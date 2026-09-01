@@ -344,23 +344,31 @@
   }
 
   .bom-pagination {
-    @apply flex items-center gap-3 pt-3 text-sm;
+    @apply flex flex-nowrap items-center gap-2 pt-3 text-xs;
   }
 
   .bom-pagination-controls {
-    @apply flex shrink-0 items-center gap-0.5;
+    @apply flex shrink-0 flex-nowrap items-center gap-0.5;
+  }
+
+  .bom-pagination-btn {
+    @apply inline-flex size-7 shrink-0 items-center justify-center rounded-md text-primary hover:bg-primary-light;
+  }
+
+  .bom-pagination-btn .material-icons {
+    @apply text-base leading-none;
   }
 
   .bom-pagination-range {
-    @apply min-w-0 flex-1 text-center text-sm text-ink-muted;
+    @apply min-w-0 flex-1 truncate text-center text-xs text-ink-muted;
   }
 
   .bom-pagination-size {
-    @apply flex shrink-0 items-center;
+    @apply flex shrink-0 flex-nowrap items-center whitespace-nowrap;
   }
 
   .bom-pagination-select {
-    @apply h-9 w-auto min-w-16 py-0;
+    @apply inline-block h-7 w-auto min-w-0 shrink-0 py-0 ps-2 pe-6 text-xs leading-none;
   }
 
   .bom-dl {

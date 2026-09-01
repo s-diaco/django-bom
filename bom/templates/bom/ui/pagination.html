@@ -3,22 +3,40 @@
 {% querystring_except 'page' 'per_page' as per_page_query %}
 <nav class="bom-pagination printer-hide" aria-label="pagination">
     <div class="bom-pagination-controls">
-        {% if page_obj.has_previous %}
-            <a class="bom-btn-icon" href="?page={{ page_obj.previous_page_number }}{% if extra_query %}&{{ extra_query }}{% endif %}" aria-label="قبلی">
-                <i class="material-icons text-xl">chevron_right</i>
+        {% if page_obj.number > 1 %}
+            <a class="bom-pagination-btn" href="?page=1{% if extra_query %}&{{ extra_query }}{% endif %}" aria-label="اول">
+                <i class="material-icons">first_page</i>
             </a>
         {% else %}
-            <span class="bom-btn-icon pointer-events-none opacity-40" aria-hidden="true">
-                <i class="material-icons text-xl">chevron_right</i>
+            <span class="bom-pagination-btn pointer-events-none opacity-40" aria-hidden="true">
+                <i class="material-icons">first_page</i>
+            </span>
+        {% endif %}
+        {% if page_obj.has_previous %}
+            <a class="bom-pagination-btn" href="?page={{ page_obj.previous_page_number }}{% if extra_query %}&{{ extra_query }}{% endif %}" aria-label="قبلی">
+                <i class="material-icons">chevron_right</i>
+            </a>
+        {% else %}
+            <span class="bom-pagination-btn pointer-events-none opacity-40" aria-hidden="true">
+                <i class="material-icons">chevron_right</i>
             </span>
         {% endif %}
         {% if page_obj.has_next %}
-            <a class="bom-btn-icon" href="?page={{ page_obj.next_page_number }}{% if extra_query %}&{{ extra_query }}{% endif %}" aria-label="بعدی">
-                <i class="material-icons text-xl">chevron_left</i>
+            <a class="bom-pagination-btn" href="?page={{ page_obj.next_page_number }}{% if extra_query %}&{{ extra_query }}{% endif %}" aria-label="بعدی">
+                <i class="material-icons">chevron_left</i>
             </a>
         {% else %}
-            <span class="bom-btn-icon pointer-events-none opacity-40" aria-hidden="true">
-                <i class="material-icons text-xl">chevron_left</i>
+            <span class="bom-pagination-btn pointer-events-none opacity-40" aria-hidden="true">
+                <i class="material-icons">chevron_left</i>
+            </span>
+        {% endif %}
+        {% if page_obj.number < page_obj.paginator.num_pages %}
+            <a class="bom-pagination-btn" href="?page={{ page_obj.paginator.num_pages }}{% if extra_query %}&{{ extra_query }}{% endif %}" aria-label="آخر">
+                <i class="material-icons">last_page</i>
+            </a>
+        {% else %}
+            <span class="bom-pagination-btn pointer-events-none opacity-40" aria-hidden="true">
+                <i class="material-icons">last_page</i>
             </span>
         {% endif %}
     </div>
