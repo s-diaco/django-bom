@@ -87,7 +87,7 @@ class TestBOM(TransactionTestCase):
         )
         self.assertEqual(len(response.context["part_revs"]), 1)
 
-    def test_home_pagination_elided_page_range(self):
+    def test_home_pagination_footer_bar(self):
         pc1 = create_some_fake_part_classes(self.organization)[0]
         for i in range(15):
             part = Part(
@@ -102,15 +102,50 @@ class TestBOM(TransactionTestCase):
         config["admin_dashboard"]["page_size"] = 1
 
         with override_settings(BOM_CONFIG=config):
-            response = self.client.get(reverse("bom:home"))
+            response = self.client.get(reverse("bom:home"), {"page": 2})
             self.assertEqual(response.status_code, 200)
             html = response.content.decode("utf-8")
             nav_start = html.find('<nav class="bom-pagination')
             nav_end = html.find("</nav>", nav_start)
             self.assertNotEqual(nav_start, -1)
             nav = html[nav_start:nav_end]
-            self.assertIn("…", nav)
-            self.assertNotIn("?page=10", nav)
+            self.assertIn("از", nav)
+            self.assertNotIn("نمایش", nav)
+            self.assertNotIn("/ صفحه", nav)
+            self.assertNotIn("…", nav)
+            self.assertIn("?page=1", nav)
+            first_btn = nav.find('aria-label="اول"')
+            last_btn = nav.find('aria-label="آخر"')
+            self.assertNotEqual(first_btn, -1)
+            self.assertNotEqual(last_btn, -1)
+            self.assertIn("last_page", nav[first_btn : first_btn + 120])
+            self.assertIn("first_page", nav[last_btn : last_btn + 120])
+            self.assertIn("expand_more", nav)
+            self.assertIn("per_page=", nav)
+
+    def test_home_pagination_per_page(self):
+        pc1 = create_some_fake_part_classes(self.organization)[0]
+        for i in range(30):
+            part = Part(
+                number_class=pc1,
+                number_item=str(2000 + i),
+                organization=self.organization,
+            )
+            part.save()
+            create_a_fake_part_revision(part, None)
+
+        config = deepcopy(settings.BOM_CONFIG_DEFAULT)
+        config["admin_dashboard"]["page_size"] = 25
+
+        with override_settings(BOM_CONFIG=config):
+            default = self.client.get(reverse("bom:home"))
+            self.assertEqual(len(default.context["part_revs"]), 25)
+
+            larger = self.client.get(reverse("bom:home"), {"per_page": 50})
+            self.assertEqual(len(larger.context["part_revs"]), 30)
+
+            invalid = self.client.get(reverse("bom:home"), {"per_page": 999})
+            self.assertEqual(len(invalid.context["part_revs"]), 25)
 
     def test_sellers_pagination_rtl_arrows(self):
         Seller.objects.bulk_create(
@@ -124,22 +159,26 @@ class TestBOM(TransactionTestCase):
         config["admin_dashboard"]["page_size"] = 1
 
         with override_settings(BOM_CONFIG=config):
-            response = self.client.get(reverse("bom:sellers"))
+            response = self.client.get(reverse("bom:sellers"), {"page": 2})
             self.assertEqual(response.status_code, 200)
             html = response.content.decode("utf-8")
             nav_start = html.find('<nav class="bom-pagination')
             nav_end = html.find("</nav>", nav_start)
             self.assertNotEqual(nav_start, -1)
             nav = html[nav_start:nav_end]
+            first_btn = nav.find('aria-label="اول"')
             right_idx = nav.find("chevron_right")
             left_idx = nav.find("chevron_left")
+            last_btn = nav.find('aria-label="آخر"')
+            self.assertNotEqual(first_btn, -1)
             self.assertNotEqual(right_idx, -1)
             self.assertNotEqual(left_idx, -1)
+            self.assertNotEqual(last_btn, -1)
+            self.assertLess(first_btn, right_idx)
             self.assertLess(right_idx, left_idx)
-            first_chevron = nav.find("chevron_")
-            self.assertTrue(
-                nav[first_chevron : first_chevron + 20].startswith("chevron_right")
-            )
+            self.assertLess(left_idx, last_btn)
+            self.assertIn("last_page", nav[first_btn : first_btn + 120])
+            self.assertIn("first_page", nav[last_btn : last_btn + 120])
 
     def test_home_print_all_rows(self):
         (p1, p2, p3, _p4) = create_some_fake_parts(organization=self.organization)
