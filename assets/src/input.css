@@ -363,20 +363,24 @@
     @apply min-w-0 flex-1 truncate text-center text-xs text-ink-muted;
   }
 
-  .bom-pagination-size {
-    @apply flex shrink-0 flex-nowrap items-center whitespace-nowrap;
+  .bom-pagination-per-page {
+    @apply inline-flex h-7 shrink-0 items-center overflow-hidden rounded-md border border-border bg-surface;
   }
 
-  .bom-pagination-select-wrap {
-    @apply inline-flex h-7 shrink-0 items-center gap-0.5 rounded-md border border-border bg-surface ps-1.5 pe-0.5;
+  .bom-pagination-per-page-field {
+    @apply h-full min-w-[1.75rem] max-w-[2.5rem] cursor-pointer border-0 bg-transparent py-0 ps-2 pe-0 text-start text-xs tabular-nums leading-none text-ink shadow-none focus:border-0 focus:outline-none focus:ring-0;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: none !important;
+    background-position: initial !important;
+    background-repeat: no-repeat !important;
+    background-size: initial !important;
+    padding-right: 0 !important;
   }
 
-  .bom-pagination-select {
-    @apply h-full w-auto min-w-[1.5rem] cursor-pointer appearance-none border-0 bg-transparent py-0 text-xs tabular-nums leading-none shadow-none focus:border-0 focus:outline-none focus:ring-0;
-  }
-
-  .bom-pagination-select-icon {
-    @apply shrink-0 text-base leading-none text-ink-muted;
+  .bom-pagination-per-page-chevron {
+    @apply pe-1 text-base leading-none text-ink-muted;
   }
 
   .bom-dl {
