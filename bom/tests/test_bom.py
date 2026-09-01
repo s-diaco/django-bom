@@ -120,6 +120,7 @@ class TestBOM(TransactionTestCase):
             self.assertNotEqual(last_btn, -1)
             self.assertIn("last_page", nav[first_btn : first_btn + 120])
             self.assertIn("first_page", nav[last_btn : last_btn + 120])
+            self.assertIn("expand_more", nav)
             self.assertIn("per_page=", nav)
 
     def test_home_pagination_per_page(self):
