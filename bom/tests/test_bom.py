@@ -87,7 +87,7 @@ class TestBOM(TransactionTestCase):
         )
         self.assertEqual(len(response.context["part_revs"]), 1)
 
-    def test_home_pagination_elided_page_range(self):
+    def test_home_pagination_footer_bar(self):
         pc1 = create_some_fake_part_classes(self.organization)[0]
         for i in range(15):
             part = Part(
@@ -109,11 +109,11 @@ class TestBOM(TransactionTestCase):
             nav_end = html.find("</nav>", nav_start)
             self.assertNotEqual(nav_start, -1)
             nav = html[nav_start:nav_end]
-            self.assertIn("نمایش", nav)
-            self.assertIn("…", nav)
-            self.assertNotIn("?page=10", nav)
+            self.assertIn("از", nav)
+            self.assertNotIn("نمایش", nav)
+            self.assertNotIn("/ صفحه", nav)
+            self.assertNotIn("…", nav)
             self.assertIn("?page=1", nav)
-            self.assertIn("آخر", nav)
             self.assertIn("per_page=", nav)
 
     def test_home_pagination_per_page(self):

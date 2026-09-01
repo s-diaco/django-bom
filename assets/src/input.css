@@ -344,31 +344,23 @@
   }
 
   .bom-pagination {
-    @apply flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between;
-  }
-
-  .bom-pagination-range {
-    @apply text-center text-sm text-ink-muted sm:text-start;
+    @apply flex items-center gap-3 pt-3 text-sm;
   }
 
   .bom-pagination-controls {
-    @apply flex flex-wrap items-center justify-center gap-1;
+    @apply flex shrink-0 items-center gap-0.5;
   }
 
-  .bom-pagination-numbers {
-    @apply items-center gap-1;
+  .bom-pagination-range {
+    @apply min-w-0 flex-1 text-center text-sm text-ink-muted;
   }
 
   .bom-pagination-size {
-    @apply flex items-center justify-center gap-2 text-sm sm:justify-end;
+    @apply flex shrink-0 items-center;
   }
 
-  .bom-page-link {
-    @apply inline-flex min-w-8 items-center justify-center rounded-md px-2 py-1 text-sm text-ink hover:bg-surface-muted;
-  }
-
-  .bom-page-link-active {
-    @apply bg-primary text-white hover:bg-primary-hover;
+  .bom-pagination-select {
+    @apply h-9 w-auto min-w-16 py-0;
   }
 
   .bom-dl {
