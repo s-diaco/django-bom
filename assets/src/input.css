@@ -364,11 +364,11 @@
   }
 
   .bom-pagination-per-page {
-    @apply inline-flex h-7 shrink-0 items-center gap-1 rounded-md border border-border bg-surface px-2 text-xs transition-colors hover:bg-surface-muted focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20;
+    @apply inline-flex h-7 shrink-0 cursor-pointer items-center gap-0.5 rounded-md text-primary hover:bg-primary-light;
   }
 
   .bom-pagination-per-page-field {
-    @apply h-full w-7 cursor-pointer border-0 bg-transparent p-0 text-center text-xs font-medium tabular-nums leading-none text-ink shadow-none focus:border-0 focus:outline-none focus:ring-0;
+    @apply h-7 w-7 cursor-pointer border-0 bg-transparent p-0 text-center text-xs tabular-nums leading-none text-ink-muted shadow-none focus:border-0 focus:outline-none focus:ring-0;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
@@ -379,8 +379,8 @@
     padding-right: 0 !important;
   }
 
-  .bom-pagination-per-page-chevron {
-    @apply text-sm leading-none text-ink-muted;
+  .bom-pagination-per-page-icon {
+    @apply flex size-7 shrink-0 items-center justify-center text-base leading-none;
   }
 
   .bom-dl {
