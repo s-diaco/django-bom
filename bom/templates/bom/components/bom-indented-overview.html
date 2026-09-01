@@ -4,6 +4,7 @@
 {% block head %}
 {% endblock %}
 
+{% if show_print_button|default:True %}
 <div class="bom-action-bar printer-hide overview-print-actions">
     <div class="flex flex-wrap items-center gap-2"></div>
     <div class="flex flex-wrap items-center gap-2">
@@ -12,6 +13,7 @@
         </button>
     </div>
 </div>
+{% endif %}
 
 <div class="bom-table-wrap bom-table-wrap--fit mb-4">
     <table id="indented-bom-overview" class="bom-table part-list">

@@ -514,6 +514,8 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "BoM Overview")
         self.assertContains(response, "indented-bom-overview")
+        self.assertNotContains(response, 'id="overview-print-button"')
+        self.assertContains(response, 'id="price-review-print-button"')
 
     def test_get_with_part_id_shows_preview(self):
         response = self.client.get(
