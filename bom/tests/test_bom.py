@@ -102,15 +102,43 @@ class TestBOM(TransactionTestCase):
         config["admin_dashboard"]["page_size"] = 1
 
         with override_settings(BOM_CONFIG=config):
-            response = self.client.get(reverse("bom:home"))
+            response = self.client.get(reverse("bom:home"), {"page": 2})
             self.assertEqual(response.status_code, 200)
             html = response.content.decode("utf-8")
             nav_start = html.find('<nav class="bom-pagination')
             nav_end = html.find("</nav>", nav_start)
             self.assertNotEqual(nav_start, -1)
             nav = html[nav_start:nav_end]
+            self.assertIn("نمایش", nav)
             self.assertIn("…", nav)
             self.assertNotIn("?page=10", nav)
+            self.assertIn("?page=1", nav)
+            self.assertIn("آخر", nav)
+            self.assertIn("per_page=", nav)
+
+    def test_home_pagination_per_page(self):
+        pc1 = create_some_fake_part_classes(self.organization)[0]
+        for i in range(30):
+            part = Part(
+                number_class=pc1,
+                number_item=str(2000 + i),
+                organization=self.organization,
+            )
+            part.save()
+            create_a_fake_part_revision(part, None)
+
+        config = deepcopy(settings.BOM_CONFIG_DEFAULT)
+        config["admin_dashboard"]["page_size"] = 25
+
+        with override_settings(BOM_CONFIG=config):
+            default = self.client.get(reverse("bom:home"))
+            self.assertEqual(len(default.context["part_revs"]), 25)
+
+            larger = self.client.get(reverse("bom:home"), {"per_page": 50})
+            self.assertEqual(len(larger.context["part_revs"]), 30)
+
+            invalid = self.client.get(reverse("bom:home"), {"per_page": 999})
+            self.assertEqual(len(invalid.context["part_revs"]), 25)
 
     def test_sellers_pagination_rtl_arrows(self):
         Seller.objects.bulk_create(

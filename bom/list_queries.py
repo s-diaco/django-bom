@@ -6,6 +6,8 @@ from django.db.models import Prefetch, prefetch_related_objects
 
 from bom.models import ManufacturerPart, SellerPart
 
+PAGE_SIZE_CHOICES = (10, 25, 50, 100)
+
 LIST_PAGE_SELLER_QUANTITY = 100
 LIST_PAGE_SELECT_RELATED = (
     "part",
@@ -19,11 +21,45 @@ def get_list_page_size():
     return settings.BOM_CONFIG.get("admin_dashboard", {}).get("page_size", 25)
 
 
-def querystring_except_page(request, *exclude):
+def resolve_page_size(request):
+    default = get_list_page_size()
+    raw = request.GET.get("per_page")
+    if raw is None:
+        return default
+    try:
+        size = int(raw)
+    except (TypeError, ValueError):
+        return default
+    if size in PAGE_SIZE_CHOICES:
+        return size
+    return default
+
+
+def build_querystring(request, *exclude):
     query_params = request.GET.copy()
-    for key in ("page", *exclude):
+    for key in exclude:
         query_params.pop(key, None)
     return urlencode(query_params)
+
+
+def querystring_except_page(request, *exclude):
+    return build_querystring(request, "page", *exclude)
+
+
+def querystring_for_per_page(request, *exclude):
+    return build_querystring(request, "page", "per_page", *exclude)
+
+
+def paginate_queryset(request, queryset, *, per_page=None):
+    page_size = per_page if per_page is not None else resolve_page_size(request)
+    paginator = Paginator(queryset, page_size)
+    page = request.GET.get("page")
+    try:
+        return paginator.page(page)
+    except PageNotAnInteger:
+        return paginator.page(1)
+    except EmptyPage:
+        return paginator.page(paginator.num_pages)
 
 
 def prepare_part_revs_for_list_page(
@@ -61,17 +97,11 @@ def prepare_part_revs_for_list_page(
     return part_revs_page
 
 
-def paginate_part_revs(request, part_revs, page_size):
+def paginate_part_revs(request, part_revs, page_size=None):
+    page_size = page_size if page_size is not None else resolve_page_size(request)
     part_revs = part_revs.select_related(*LIST_PAGE_SELECT_RELATED)
-    paginator = Paginator(part_revs, page_size)
-    page = request.GET.get("page")
-    try:
-        part_revs = paginator.page(page)
-    except PageNotAnInteger:
-        part_revs = paginator.page(1)
-    except EmptyPage:
-        part_revs = paginator.page(paginator.num_pages)
-    return prepare_part_revs_for_list_page(part_revs)
+    page_obj = paginate_queryset(request, part_revs, per_page=page_size)
+    return prepare_part_revs_for_list_page(page_obj)
 
 
 class UnpaginatedPartRevList:

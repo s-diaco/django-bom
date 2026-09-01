@@ -1,6 +1,18 @@
 from django import template
 
+from bom.list_queries import PAGE_SIZE_CHOICES, build_querystring
+
 register = template.Library()
+
+
+@register.simple_tag
+def page_size_choices():
+    return PAGE_SIZE_CHOICES
+
+
+@register.simple_tag(takes_context=True)
+def querystring_except(context, *keys):
+    return build_querystring(context["request"], *keys)
 
 
 @register.simple_tag

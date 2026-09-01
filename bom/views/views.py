@@ -7,7 +7,6 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import IntegrityError
 from django.db.models import (
     Count,
@@ -87,8 +86,8 @@ from bom.models import (
 )
 from bom.helpers import build_part_search_q
 from bom.list_queries import (
-    get_list_page_size,
     paginate_part_revs,
+    paginate_queryset,
     prepare_all_part_revs_for_list_page,
     querystring_except_page as build_querystring_except_page,
 )
@@ -448,8 +447,7 @@ def home(request):
         print_confirm_only = True
         return TemplateResponse(request, "bom/dashboard-print-confirm.html", locals())
 
-    page_size = get_list_page_size()
-    part_revs = paginate_part_revs(request, part_revs, page_size)
+    part_revs = paginate_part_revs(request, part_revs)
 
     return TemplateResponse(request, "bom/dashboard.html", locals())
 
@@ -688,8 +686,7 @@ def report(request):
                 writer.writerow({k: smart_str(v) for k, v in row.items()})
         return response
 
-    page_size = get_list_page_size()
-    part_revs = paginate_part_revs(request, part_revs, page_size)
+    part_revs = paginate_part_revs(request, part_revs)
     querystring_except_page = build_querystring_except_page(request)
 
     # TODO: delete
@@ -1040,16 +1037,7 @@ def manufacturers(request):
         autocomplete_dict.update({manufacturer.name: None})
     autocomplete = dumps(autocomplete_dict)
 
-    paginator = Paginator(manufacturers, get_list_page_size())
-
-    page = request.GET.get("page")
-    try:
-        manufacturers = paginator.page(page)
-    except PageNotAnInteger:
-        manufacturers = paginator.page(1)
-    except EmptyPage:
-        manufacturers = paginator.page(paginator.num_pages)
-
+    manufacturers = paginate_queryset(request, manufacturers)
     querystring_except_page = build_querystring_except_page(request)
 
     return TemplateResponse(request, "bom/manufacturers.html", locals())
@@ -1132,15 +1120,7 @@ def sellers(request):
 
     autocomplete = dumps(autocomplete_dict)
 
-    paginator = Paginator(sellers, get_list_page_size())
-    page = request.GET.get("page")
-    try:
-        sellers = paginator.page(page)
-    except PageNotAnInteger:
-        sellers = paginator.page(1)
-    except EmptyPage:
-        sellers = paginator.page(paginator.num_pages)
-
+    sellers = paginate_queryset(request, sellers)
     querystring_except_page = build_querystring_except_page(request)
 
     return TemplateResponse(request, "bom/sellers.html", locals())
@@ -1168,15 +1148,7 @@ def seller_info(request, seller_id):
         "minimum_order_quantity",
     )
 
-    paginator = Paginator(seller_parts, get_list_page_size())
-    page = request.GET.get("page")
-    try:
-        seller_parts = paginator.page(page)
-    except PageNotAnInteger:
-        seller_parts = paginator.page(1)
-    except EmptyPage:
-        seller_parts = paginator.page(paginator.num_pages)
-
+    seller_parts = paginate_queryset(request, seller_parts)
     querystring_except_page = build_querystring_except_page(request)
 
     return TemplateResponse(request, "bom/seller-info.html", locals())
@@ -1235,15 +1207,7 @@ def customers(request):
     autocomplete_dict = {customer.name: None for customer in customers}
     autocomplete = dumps(autocomplete_dict)
 
-    paginator = Paginator(customers, get_list_page_size())
-    page = request.GET.get("page")
-    try:
-        customers = paginator.page(page)
-    except PageNotAnInteger:
-        customers = paginator.page(1)
-    except EmptyPage:
-        customers = paginator.page(paginator.num_pages)
-
+    customers = paginate_queryset(request, customers)
     querystring_except_page = build_querystring_except_page(request)
 
     return TemplateResponse(request, "bom/customers.html", locals())
@@ -1287,15 +1251,7 @@ def customer_info(request, customer_id):
         .order_by("-created_at", "-id")
     )
 
-    paginator = Paginator(price_history, get_list_page_size())
-    page = request.GET.get("page")
-    try:
-        price_history = paginator.page(page)
-    except PageNotAnInteger:
-        price_history = paginator.page(1)
-    except EmptyPage:
-        price_history = paginator.page(paginator.num_pages)
-
+    price_history = paginate_queryset(request, price_history)
     querystring_except_page = build_querystring_except_page(request)
 
     return TemplateResponse(request, "bom/customer-info.html", locals())

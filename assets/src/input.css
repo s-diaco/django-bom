@@ -344,7 +344,23 @@
   }
 
   .bom-pagination {
-    @apply flex flex-wrap items-center justify-center gap-1 pt-4;
+    @apply flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between;
+  }
+
+  .bom-pagination-range {
+    @apply text-center text-sm text-ink-muted sm:text-start;
+  }
+
+  .bom-pagination-controls {
+    @apply flex flex-wrap items-center justify-center gap-1;
+  }
+
+  .bom-pagination-numbers {
+    @apply items-center gap-1;
+  }
+
+  .bom-pagination-size {
+    @apply flex items-center justify-center gap-2 text-sm sm:justify-end;
   }
 
   .bom-page-link {
