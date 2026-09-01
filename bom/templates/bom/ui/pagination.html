@@ -45,12 +45,15 @@
     </p>
     <div class="bom-pagination-size">
         <label class="sr-only" for="bom-per-page-{{ page_obj.number }}">تعداد در صفحه</label>
-        <select id="bom-per-page-{{ page_obj.number }}" class="bom-select bom-pagination-select" onchange="if (this.value) window.location.href = this.value">
-            {% page_size_choices as sizes %}
-            {% for size in sizes %}
-                <option value="?per_page={{ size }}{% if per_page_query %}&{{ per_page_query }}{% endif %}"{% if page_obj.paginator.per_page == size %} selected{% endif %}>{{ size }}</option>
-            {% endfor %}
-        </select>
+        <div class="bom-pagination-select-wrap">
+            <select id="bom-per-page-{{ page_obj.number }}" class="bom-select bom-pagination-select" onchange="if (this.value) window.location.href = this.value">
+                {% page_size_choices as sizes %}
+                {% for size in sizes %}
+                    <option value="?per_page={{ size }}{% if per_page_query %}&{{ per_page_query }}{% endif %}"{% if page_obj.paginator.per_page == size %} selected{% endif %}>{{ size }}</option>
+                {% endfor %}
+            </select>
+            <i class="material-icons bom-pagination-select-icon" aria-hidden="true">expand_more</i>
+        </div>
     </div>
 </nav>
 {% endif %}
