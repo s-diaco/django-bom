@@ -562,6 +562,23 @@ def _resolve_part_for_organization(organization, part_value):
     raise forms.ValidationError(_("Unknown material."), code="invalid")
 
 
+def _resolve_customer_for_organization(organization, customer_value):
+    if customer_value is None or not str(customer_value).strip():
+        raise forms.ValidationError(_("Customer is required."), code="required")
+    customer_value = str(customer_value).strip()
+    customers_qs = Customer.objects.filter(
+        organization=organization, is_active=True
+    )
+    if customer_value.isdigit():
+        customer = customers_qs.filter(pk=int(customer_value)).first()
+        if customer is not None:
+            return customer
+    customer = customers_qs.filter(name=customer_value).first()
+    if customer is not None:
+        return customer
+    raise forms.ValidationError(_("Unknown customer."), code="invalid")
+
+
 class CustomerPriceLoadForm(forms.Form):
     UNIT_QUANTITY = 1
 
@@ -572,12 +589,16 @@ class CustomerPriceLoadForm(forms.Form):
         super().__init__(*args, **kwargs)
 
         if self.part is not None:
-            self.fields["customer"] = forms.ModelChoiceField(
-                queryset=Customer.objects.filter(
-                    organization=self.organization, is_active=True
-                ).order_by("name"),
+            self.fields["customer"] = forms.CharField(
                 label=_("Customer"),
                 required=True,
+                widget=AutocompleteTextInput(
+                    queryset=Customer.objects.filter(
+                        organization=self.organization, is_active=True
+                    ).order_by("name"),
+                    autocomplete_min_length=0,
+                    autocomplete_limit=12,
+                ),
             )
         else:
             self.fields["part"] = forms.CharField(
@@ -599,7 +620,9 @@ class CustomerPriceLoadForm(forms.Form):
         cleaned_data = super().clean()
         if self.part is not None:
             part = self.part
-            customer = cleaned_data.get("customer")
+            customer = _resolve_customer_for_organization(
+                self.organization, cleaned_data.get("customer")
+            )
         else:
             part = _resolve_part_for_organization(
                 self.organization, cleaned_data.get("part")
