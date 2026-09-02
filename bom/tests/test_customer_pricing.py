@@ -1,10 +1,13 @@
 from decimal import Decimal
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.test import Client, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.utils import translation
 from djmoney.money import Money
+
+from bom.forms import _resolve_customer_for_organization
 
 from bom.helpers import (
     create_a_fake_customer,
@@ -336,6 +339,8 @@ class TestCustomerPricing(TransactionTestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.customer.name)
+        self.assertContains(response, 'id="id_customer"')
+        self.assertNotContains(response, '<select')
 
         response = self.client.post(
             reverse(
@@ -370,6 +375,59 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertEqual(row.quantity, 1)
         self.assertEqual(row.profit_percent, Decimal("15.00"))
         self.assertEqual(row.note, "from part")
+
+    def test_part_customer_price_create_preview(self):
+        part_revision = self.part.latest()
+        base_cost = part_revision.bom_unit_cost_at_quantity(1)
+        expected_price = self._tier_price(base_cost, Decimal("20"))
+
+        response = self.client.post(
+            reverse(
+                "bom:part-customer-price-create", kwargs={"part_id": self.part.id}
+            ),
+            {
+                "action": "preview",
+                "customer": self.customer.name,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, str(base_cost.amount))
+        self.assertContains(response, str(expected_price.amount))
+        self.assertContains(response, "Confirm price")
+        self.assertContains(response, "Prices by profit %")
+        self.assertFalse(CustomerPrice.objects.filter(customer=self.customer).exists())
+
+        response = self.client.post(
+            reverse(
+                "bom:part-customer-price-create", kwargs={"part_id": self.part.id}
+            ),
+            {
+                "action": "preview",
+                "customer": str(self.customer.id),
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Confirm price")
+
+    def test_resolve_customer_for_organization(self):
+        resolved = _resolve_customer_for_organization(
+            self.organization, str(self.customer.pk)
+        )
+        self.assertEqual(resolved, self.customer)
+
+        resolved = _resolve_customer_for_organization(
+            self.organization, self.customer.name
+        )
+        self.assertEqual(resolved, self.customer)
+
+        with self.assertRaises(ValidationError):
+            _resolve_customer_for_organization(self.organization, "Unknown Buyer")
+
+        inactive = create_a_fake_customer(self.organization, name="Inactive Buyer")
+        inactive.is_active = False
+        inactive.save()
+        with self.assertRaises(ValidationError):
+            _resolve_customer_for_organization(self.organization, inactive.name)
 
     def test_viewer_cannot_create_part_customer_price(self):
         self.profile.role = "V"
