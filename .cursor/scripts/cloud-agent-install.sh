@@ -38,7 +38,15 @@ if [[ -n "$DUMP_PATH" && -f "$DUMP_PATH" ]]; then
     echo "Restoring dump: $DUMP_PATH"
     sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$SQL_DATABASE" -c \
       "DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO $SQL_USER; GRANT ALL ON SCHEMA public TO public;"
-    gunzip -c "$DUMP_PATH" | sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$SQL_DATABASE"
+    # Strip PG17-only settings so restores work on PG16 dev VMs too.
+    gunzip -c "$DUMP_PATH" | sed '/^SET transaction_timeout/d' \
+      | sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$SQL_DATABASE"
+    PART_COUNT="$(sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$SQL_DATABASE" -tc "SELECT COUNT(*) FROM bom_part" | tr -d ' ')"
+    if [[ "${PART_COUNT:-0}" -eq 0 ]]; then
+      echo "Restore finished but bom_part is empty — check dump URL and PostgreSQL version." >&2
+      exit 1
+    fi
+    echo "Restored $PART_COUNT parts from dump."
     mkdir -p "$(dirname "$MARKER")"
     echo "$DUMP_PATH" >"$MARKER"
   else
