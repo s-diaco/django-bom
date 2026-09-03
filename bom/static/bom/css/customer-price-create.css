@@ -18,6 +18,11 @@
         display: block !important;
     }
 
+    /* Hide shared base print header; page-specific printer-doc stays. */
+    body.printing-price-review > .printer-doc {
+        display: none !important;
+    }
+
     body.printing-price-review h4.printer-show,
     body.printing-price-review h5.printer-show {
         font-size: 11pt;
