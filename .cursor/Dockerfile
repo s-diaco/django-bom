@@ -1,6 +1,7 @@
 FROM debian:bookworm-slim
 
 ARG DEBIAN_FRONTEND=noninteractive
+ARG UV_VERSION=0.12.9
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -23,8 +24,14 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
+# Bake uv into the image so install does not download the installer every build.
+COPY --from=ghcr.io/astral-sh/uv:${UV_VERSION} /uv /usr/local/bin/uv
+
 RUN useradd -m -s /bin/bash ubuntu \
     && echo "ubuntu ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 USER ubuntu
 WORKDIR /home/ubuntu
+ENV PATH="/home/ubuntu/.local/bin:/usr/local/bin:$PATH"
+# Preinstall CPython so `uv sync` skips the ~34MiB interpreter download on each install.
+RUN uv python install 3.14

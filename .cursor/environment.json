@@ -11,7 +11,7 @@
     {
       "name": "web",
       "command": "bash .cursor/scripts/cloud-agent-runserver.sh",
-      "description": "Django dev server (Postgres + restored dump) at http://localhost:8000"
+      "description": "Django runserver at http://localhost:8000 (deps + dump come from env builds; start only brings up Postgres)"
     }
   ],
   "ports": [
