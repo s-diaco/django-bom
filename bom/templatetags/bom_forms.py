@@ -75,6 +75,8 @@ def widget_kind(field):
         return "textarea"
     if "file" in name or "clearablefile" in name:
         return "file"
+    if input_type == "password" or "password" in name:
+        return "password"
     return "input"
 
 
@@ -94,6 +96,8 @@ def render_bound_field(field, spec=""):
     attrs = {}
     if kind in ("input", "textarea", "select", "file"):
         attrs["class"] = INPUT_CLASS
+    elif kind == "password":
+        attrs["class"] = f"{INPUT_CLASS} pe-10"
     elif kind == "checkbox":
         attrs["class"] = CHECKBOX_CLASS
     widget = field.as_widget(attrs=merge_attrs(field.field.widget.attrs, attrs)) if kind != "hidden" else field.as_widget()
