@@ -48,6 +48,7 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn("گذرواژه / Password", html)
         self.assertIn(">person</i>", html)
         self.assertIn(">lock</i>", html)
+        self.assertIn("bom-login-field-icon", html)
         self.assertIn("bom-password-toggle", html)
         self.assertIn("Show password", html)
         self.assertIn("visibility", html)
