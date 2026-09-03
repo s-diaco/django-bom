@@ -14,24 +14,9 @@
     {% if field.label %}
     <label class="bom-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
     {% endif %}
-    {% if kind == "password" %}
-    <div class="relative" x-data="{ show: false }">
-        <div x-ref="wrap">{{ widget }}</div>
-        <button
-            type="button"
-            class="absolute inset-y-0 end-0 flex items-center px-2 text-ink-muted hover:text-ink"
-            @click="show = !show; $refs.wrap.querySelector('input').type = show ? 'text' : 'password'"
-            :aria-label="show ? '{% trans "Hide password" %}' : '{% trans "Show password" %}'"
-            :aria-pressed="show.toString()"
-        >
-            <i class="material-icons text-base" aria-hidden="true" x-text="show ? 'visibility_off' : 'visibility'"></i>
-        </button>
-    </div>
-    {% else %}
     <div class="{% if kind == 'radio' %}bom-radio{% endif %}">
         {{ widget }}
     </div>
-    {% endif %}
     {% if field.help_text %}<p class="bom-help">{{ field.help_text }}</p>{% endif %}
     {% if field.errors %}<p class="bom-error">{{ field.errors.0 }}</p>{% endif %}
 </div>

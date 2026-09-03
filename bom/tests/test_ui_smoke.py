@@ -24,17 +24,6 @@ class TestBomFormHelpers(SimpleTestCase):
         self.assertIn('type="checkbox"', html)
         self.assertIn("col-span-12 grid grid-cols-12", html)
 
-    def test_render_password_field_with_show_toggle(self):
-        class SampleForm(forms.Form):
-            password = forms.CharField(widget=forms.PasswordInput)
-
-        html = str(bom_form(SampleForm()))
-        self.assertIn('type="password"', html)
-        self.assertIn("pe-10", html)
-        self.assertIn("Show password", html)
-        self.assertIn("visibility", html)
-        self.assertIn("x-data=\"{ show: false }\"", html)
-
 
 @override_settings(BOM_CONFIG=settings.BOM_CONFIG_DEFAULT)
 class TestUiSmoke(TransactionTestCase):
@@ -53,6 +42,13 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn('name="username"', html)
         self.assertIn('name="password"', html)
         self.assertIn('type="password"', html)
+        self.assertIn("bom-login", html)
+        self.assertIn("bom/img/login-side.webp", html)
+        self.assertIn("نام کاربری / Login", html)
+        self.assertIn("گذرواژه / Password", html)
+        self.assertIn(">person</i>", html)
+        self.assertIn(">lock</i>", html)
+        self.assertIn("bom-password-toggle", html)
         self.assertIn("Show password", html)
         self.assertIn("visibility", html)
         self.assertIn("x-data=\"{ show: false }\"", html)
