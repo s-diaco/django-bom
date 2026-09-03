@@ -1,7 +1,6 @@
 FROM debian:bookworm-slim
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG UV_VERSION=0.12.9
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -25,7 +24,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Bake uv into the image so install does not download the installer every build.
-COPY --from=ghcr.io/astral-sh/uv:${UV_VERSION} /uv /usr/local/bin/uv
+# Pin matches the official distroless copy path from Astral docs.
+COPY --from=ghcr.io/astral-sh/uv:0.12.9 /uv /uvx /usr/local/bin/
 
 RUN useradd -m -s /bin/bash ubuntu \
     && echo "ubuntu ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
