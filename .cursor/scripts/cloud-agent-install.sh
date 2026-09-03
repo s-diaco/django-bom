@@ -4,7 +4,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$REPO_ROOT"
 
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="/usr/local/bin:$HOME/.local/bin:$PATH"
 
 # --- PostgreSQL (restore before migrate; see README) ---
 bash .cursor/scripts/cloud-agent-start.sh
@@ -23,8 +23,13 @@ fi
 if [[ -z "$DUMP_PATH" && -n "${BOM_DB_DUMP_URL:-}" ]]; then
   mkdir -p "$HOME/.cache/bom-dumps"
   DUMP_PATH="$HOME/.cache/bom-dumps/bom_db.sql.gz"
-  echo "Downloading database dump..."
-  curl -fsSL "$BOM_DB_DUMP_URL" -o "$DUMP_PATH"
+  # Reuse cached dump across install reruns / snapshot boots.
+  if [[ ! -s "$DUMP_PATH" ]]; then
+    echo "Downloading database dump..."
+    curl -fsSL "$BOM_DB_DUMP_URL" -o "$DUMP_PATH"
+  else
+    echo "Using cached dump: $DUMP_PATH"
+  fi
 fi
 
 sudo -u postgres psql -v ON_ERROR_STOP=1 -tc "SELECT 1 FROM pg_roles WHERE rolname = '$SQL_USER'" | grep -q 1 \
@@ -57,14 +62,18 @@ else
 fi
 
 # --- App dependencies ---
+# Prefer image-baked uv; fall back to installer only on older snapshots.
 if ! command -v uv >/dev/null 2>&1; then
   curl -LsSf https://astral.sh/uv/install.sh | sh
+  export PATH="$HOME/.local/bin:$PATH"
 fi
-export PATH="$HOME/.local/bin:$PATH"
 
-uv sync --locked
+# Overlap Python and Node installs — largest remaining install cost after the dump.
+uv sync --locked &
+UV_PID=$!
 npm ci
 npm run build:css
+wait "$UV_PID"
 
 set -a
 # shellcheck disable=SC1091
