@@ -19,6 +19,7 @@
 <script src="{% static 'bom/js/jquery.autocomplete-bom.js' %}"></script>
 <script src="{% static 'bom/js/bom-ui.js' %}"></script>
 
+{% block navbar %}
 <header class="bom-navbar printer-hide sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur">
     <div class="bom-navbar-inner">
         <a href="{% if user.is_authenticated %}{% url 'bom:home' %}{% else %}{% url 'login' %}{% endif %}" title="لیتیوم | خانه" class="flex shrink-0 items-center gap-2">
@@ -40,6 +41,7 @@
         </nav>
     </div>
 </header>
+{% endblock %}
 <div class="printer-show printer-doc">
     <img class="printer-logo" width="56" height="56" alt="Lithium" src="{% static 'bom/img/lithium.png' %}">
     <div class="printer-doc-text">
@@ -65,7 +67,9 @@
     {% block action-btn %}{% endblock %}
 </main>
 
+{% block footer %}
 {% include 'bom/ui/footer.html' %}
+{% endblock %}
 
 <script defer src="{% static 'bom/js/alpine.min.js' %}"></script>
 {% block script %}{% endblock script %}

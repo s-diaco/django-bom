@@ -2,6 +2,7 @@ from django import forms
 from django.test import Client, SimpleTestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.conf import settings
+import re
 
 from bom.helpers import create_some_fake_parts, create_user_and_organization
 from bom.templatetags.bom_forms import bom_form, grid_classes
@@ -53,6 +54,20 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn('name="username"', html)
         self.assertIn('name="password"', html)
         self.assertIn('type="password"', html)
+        self.assertIn("bom-login", html)
+        self.assertIn("bom/img/login-side.webp", html)
+        username_ph = re.search(r'id="id_username"[^>]*placeholder="([^"]*)"', html)
+        password_ph = re.search(r'id="id_password"[^>]*placeholder="([^"]*)"', html)
+        self.assertIsNotNone(username_ph)
+        self.assertIsNotNone(password_ph)
+        self.assertNotIn(" / ", username_ph.group(1))
+        self.assertNotIn(" / ", password_ph.group(1))
+        self.assertIn(username_ph.group(1), ("نام کاربری", "Login"))
+        self.assertIn(password_ph.group(1), ("گذرواژه", "Password"))
+        self.assertIn(">person</i>", html)
+        self.assertIn(">lock</i>", html)
+        self.assertIn("bom-login-field-icon", html)
+        self.assertIn("bom-password-toggle", html)
         self.assertIn("Show password", html)
         self.assertIn("visibility", html)
         self.assertIn("x-data=\"{ show: false }\"", html)

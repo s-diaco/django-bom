@@ -217,6 +217,92 @@
     @apply block w-full rounded-md border-border bg-surface text-ink shadow-sm focus:border-primary focus:ring-primary text-sm;
   }
 
+  .bom-login-page {
+    @apply flex min-h-screen items-center justify-center px-4 py-10;
+  }
+
+  .bom-login {
+    @apply flex w-full max-w-4xl overflow-hidden rounded-lg border border-border bg-surface;
+    box-shadow: var(--shadow-panel);
+  }
+
+  .bom-login-form {
+    @apply flex w-full flex-col justify-center px-6 py-8 sm:px-8 lg:w-1/2;
+  }
+
+  .bom-login-photo {
+    display: none;
+    min-height: 24rem;
+    background-size: cover;
+    background-position: center;
+  }
+
+  @media (width >= 64rem) {
+    .bom-login-photo {
+      display: block;
+      width: 50%;
+      min-height: 0;
+    }
+  }
+
+  .bom-login-field {
+    position: relative;
+  }
+
+  .bom-login-field .bom-input {
+    padding-inline-start: 2.5rem;
+  }
+
+  .bom-login-field-password .bom-input {
+    padding-inline-end: 2.5rem;
+  }
+
+  .bom-login-field-icon {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 1;
+    display: inline-flex;
+    width: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-ink-muted);
+    pointer-events: none;
+    font-size: 1.25rem;
+  }
+
+  .bom-password-toggle {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    z-index: 2;
+    display: inline-flex;
+    width: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    color: var(--color-ink-muted);
+    cursor: pointer;
+  }
+
+  .bom-password-toggle:hover,
+  .bom-password-toggle:focus-visible {
+    color: var(--color-ink);
+  }
+
+  .bom-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
   .bom-select {
     @apply block w-full rounded-md border-border bg-surface text-ink shadow-sm focus:border-primary focus:ring-primary text-sm;
   }

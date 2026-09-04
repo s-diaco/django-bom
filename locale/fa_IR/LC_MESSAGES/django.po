@@ -302,12 +302,21 @@ msgid "Confirm New Password"
 msgstr "تکرار رمز عبور جدید"
 
 #: bom/templates/registration/login.html:5
-#: bom/templates/registration/login.html:10
-#: bom/templates/registration/login.html:30
+#: bom/templates/registration/login.html:16
+#: bom/templates/registration/login.html:49
 msgid "Login"
 msgstr "ورود"
 
-#: bom/templates/registration/login.html:18
+#: bom/templates/registration/login.html:28
+msgctxt "username_placeholder"
+msgid "Login"
+msgstr "نام کاربری"
+
+#: bom/templates/registration/login.html:36
+msgid "Password"
+msgstr "گذرواژه"
+
+#: bom/templates/registration/login.html:17
 msgid "Login into your BoM account"
 msgstr "ورود به اکانت BoM شما"
 
