@@ -73,3 +73,4 @@ set +a
 
 # After a restore, migrate applies only newer migrations than the dump.
 uv run python manage.py migrate --noinput
+uv run python manage.py compilemessages -l fa_IR || true

@@ -2,6 +2,7 @@ from django import forms
 from django.test import Client, SimpleTestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.conf import settings
+import re
 
 from bom.helpers import create_some_fake_parts, create_user_and_organization
 from bom.templatetags.bom_forms import bom_form, grid_classes
@@ -44,8 +45,14 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn('type="password"', html)
         self.assertIn("bom-login", html)
         self.assertIn("bom/img/login-side.webp", html)
-        self.assertIn("نام کاربری / Login", html)
-        self.assertIn("گذرواژه / Password", html)
+        username_ph = re.search(r'id="id_username"[^>]*placeholder="([^"]*)"', html)
+        password_ph = re.search(r'id="id_password"[^>]*placeholder="([^"]*)"', html)
+        self.assertIsNotNone(username_ph)
+        self.assertIsNotNone(password_ph)
+        self.assertNotIn(" / ", username_ph.group(1))
+        self.assertNotIn(" / ", password_ph.group(1))
+        self.assertIn(username_ph.group(1), ("نام کاربری", "Login"))
+        self.assertIn(password_ph.group(1), ("گذرواژه", "Password"))
         self.assertIn(">person</i>", html)
         self.assertIn(">lock</i>", html)
         self.assertIn("bom-login-field-icon", html)
