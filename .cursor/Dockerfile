@@ -23,8 +23,15 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
+# Bake uv into the image so install does not download the installer every build.
+# Pin matches the official distroless copy path from Astral docs.
+COPY --from=ghcr.io/astral-sh/uv:0.12.9 /uv /uvx /usr/local/bin/
+
 RUN useradd -m -s /bin/bash ubuntu \
     && echo "ubuntu ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 USER ubuntu
 WORKDIR /home/ubuntu
+ENV PATH="/home/ubuntu/.local/bin:/usr/local/bin:$PATH"
+# Preinstall CPython so `uv sync` skips the ~34MiB interpreter download on each install.
+RUN uv python install 3.14
