@@ -317,8 +317,8 @@ msgid "Password"
 msgstr "گذرواژه"
 
 #: bom/templates/registration/login.html:17
-msgid "Login into your BoM account"
-msgstr "ورود به اکانت BoM شما"
+msgid "Sign in with your account to continue."
+msgstr "برای ادامه با حساب کاربری وارد شوید."
 
 #: bom/validators.py:23
 #, python-format
