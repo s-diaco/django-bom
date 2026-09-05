@@ -119,31 +119,23 @@
                                 <h5 class="printer-show">{% trans "Prices by profit %" %}</h5>
                                 <h5 class="printer-hide">{% trans "Prices by profit %" %}</h5>
                             </header>
-                            <div class="price-pair-panel__body price-pair-panel__body--table">
-                                <p class="price-pair-panel__hint printer-hide">{% trans "Click a row to select profit % and price." %}</p>
-                                <div class="bom-table-wrap bom-table-wrap--fit responsive-table-wrapper mb-0">
-                                    <table class="bom-table part-list single-line" id="customer-price-tier-table">
-                                        <thead>
-                                        <tr>
-                                            <th class="text-normal td-med">{% trans "Profit %" %}</th>
-                                            <th class="text-normal td-med">{% trans "Price" %}</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        {% for tier in preview.profit_price_tiers %}
-                                            <tr class="price-select-row"
-                                                role="button"
-                                                tabindex="0"
-                                                data-profit-percent="{{ tier.profit_percent }}"
-                                                data-price="{{ tier.price.amount }}"
-                                                data-source="tier">
-                                                <td class="text-normal td-med">{{ tier.profit_percent }}</td>
-                                                <td class="text-normal td-med">{{ tier.price }}</td>
-                                            </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <div class="price-pair-panel__body price-pair-panel__body--list">
+                                <p class="price-pair-panel__hint printer-hide">{% trans "Click an item to select profit % and price." %}</p>
+                                <ul class="price-tier-list" id="customer-price-tier-list">
+                                    {% for tier in preview.profit_price_tiers %}
+                                        <li class="price-select-row price-tier-list__item"
+                                            role="button"
+                                            tabindex="0"
+                                            data-profit-percent="{{ tier.profit_percent }}"
+                                            data-price="{{ tier.price.amount }}"
+                                            data-source="tier">
+                                            <span class="price-tier-list__row">
+                                                <span class="price-tier-list__profit">{{ tier.profit_percent }}%</span>
+                                                <span class="price-tier-list__price">{{ tier.price }}</span>
+                                            </span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
                             </div>
                         </section>
                     </div>
