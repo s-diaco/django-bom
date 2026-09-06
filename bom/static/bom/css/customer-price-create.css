@@ -4,6 +4,14 @@
         margin: 12mm;
     }
 
+    /* Sticky thead detaches across page breaks in Chromium print. */
+    .bom-table thead th,
+    table.part-list thead th {
+        position: static !important;
+        top: auto !important;
+        z-index: auto !important;
+    }
+
     /* Flex ancestors suppress page breaks in Chromium — reset for print. */
     body.printing-price-review,
     body.printing-price-review main {
@@ -49,13 +57,6 @@
     body.printing-price-review .bom-table,
     body.printing-price-review #indented-bom-overview {
         font-size: 8.5pt;
-    }
-
-    /* Sticky thead floats mid-page over rows in Chromium print. */
-    body.printing-price-review .bom-table thead th {
-        position: static !important;
-        top: auto !important;
-        z-index: auto !important;
     }
 
     body.printing-price-review .price-review-panel {

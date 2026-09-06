@@ -193,14 +193,24 @@
         (function () {
             var printButton = document.getElementById('price-review-print-button');
             if (printButton) {
-                function clearPrintMode() {
-                    document.body.classList.remove('printing-price-review');
+                function setPrintMode(on) {
+                    document.body.classList.toggle('printing-price-review', on);
                 }
-                printButton.addEventListener('click', function () {
-                    document.body.classList.add('printing-price-review');
-                    window.print();
+                function clearPrintMode() {
+                    setPrintMode(false);
+                }
+                window.addEventListener('beforeprint', function () {
+                    setPrintMode(true);
                 });
                 window.addEventListener('afterprint', clearPrintMode);
+                printButton.addEventListener('click', function () {
+                    setPrintMode(true);
+                    // Flush layout so sticky→static and page breaks apply before Chrome snapshots.
+                    void document.body.offsetHeight;
+                    requestAnimationFrame(function () {
+                        window.print();
+                    });
+                });
             }
 
             var profitInput = document.getElementById('confirm-profit-percent');
