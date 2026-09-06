@@ -869,6 +869,14 @@ ul.errorlist {
     display: table-header-group;
   }
 
+  /* Sticky thead detaches across page breaks in Chromium print. */
+  table.part-list thead th,
+  .bom-table thead th {
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+  }
+
   table.part-list tbody,
   .bom-table tbody {
     display: table-row-group;
