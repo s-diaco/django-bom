@@ -51,6 +51,13 @@
         font-size: 8.5pt;
     }
 
+    /* Sticky thead floats mid-page over rows in Chromium print. */
+    body.printing-price-review .bom-table thead th {
+        position: static !important;
+        top: auto !important;
+        z-index: auto !important;
+    }
+
     body.printing-price-review .price-review-panel {
         display: block !important;
         overflow: visible !important;
