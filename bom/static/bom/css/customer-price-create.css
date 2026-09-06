@@ -4,14 +4,21 @@
         margin: 12mm;
     }
 
-    body.printing-price-review #price-summary-and-tiers {
-        break-before: page;
+    /* Flex ancestors suppress page breaks in Chromium — reset for print. */
+    body.printing-price-review,
+    body.printing-price-review main {
+        display: block !important;
     }
 
     body.printing-price-review {
         page: price-review;
         font-size: 9pt;
         line-height: 1.3;
+    }
+
+    body.printing-price-review #price-summary-and-tiers {
+        break-before: page;
+        page-break-before: always;
     }
 
     body.printing-price-review .printer-hide {
@@ -35,6 +42,12 @@
 
     body.printing-price-review .price-review-panel {
         display: block !important;
+        overflow: visible !important;
+    }
+
+    body.printing-price-review .price-pair-panel {
+        overflow: visible !important;
+        height: auto;
     }
 
     .responsive-table-wrapper {
