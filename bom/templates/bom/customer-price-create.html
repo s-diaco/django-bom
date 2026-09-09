@@ -32,23 +32,6 @@
             {% endif %}
         </div>
 
-        <div class="bom-panel-pad printer-hide" id="price-input-panel">
-            <form action="{{ action }}" method="post" id="price-load-form">
-                {% csrf_token %}
-                {{ load_form|bom_form:'m6 s12' }}
-                <div class="mt-4 flex justify-between">
-                    {% if part_locked and part_info_url %}
-                        <a href="{{ part_info_url }}#customers" class="bom-btn-ghost">{% trans "Cancel" %}</a>
-                    {% elif customer %}
-                        <a href="{% url 'bom:customer-info' customer_id=customer.id %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
-                    {% else %}
-                        <a href="javascript:history.back()" class="bom-btn-ghost">{% trans "Cancel" %}</a>
-                    {% endif %}
-                    <button class="bom-btn-primary" type="submit" name="action" value="preview">{% trans "Preview" %}</button>
-                </div>
-            </form>
-        </div>
-
         {% if show_preview and preview %}
             <div class="price-review-panel" id="price-review-panel">
                 <div class="printer-show printer-doc mb-4">
@@ -74,16 +57,35 @@
                 {% else %}
                     <p class="opacity-70 mb-4">{% trans "Unit cost only — no BoM breakdown for this part." %}</p>
                 {% endif %}
+            </div>
+        {% endif %}
 
-                <div class="row mb-4 price-pair-row" id="price-summary-and-tiers">
-                    <div class="col s12 m6 price-pair-col">
-                        <section class="bom-panel price-pair-panel">
-                            <header class="price-pair-panel__header">
-                                <h5>{% trans "Pricing summary" %}</h5>
-                            </header>
-                            <div class="price-pair-panel__body">
-                                <dl class="price-summary-list">
-                                    <div class="price-summary-list__row">
+        <div class="row mb-4 price-pair-row" id="price-summary-and-tiers">
+            <div class="col s12 {% if show_preview and preview %}m6{% endif %} price-pair-col">
+                <section class="bom-panel price-pair-panel">
+                    <header class="price-pair-panel__header">
+                        <h5>{% trans "Pricing summary" %}</h5>
+                    </header>
+                    <div class="price-pair-panel__body">
+                        <form action="{{ action }}" method="post" id="price-load-form" class="price-summary-select printer-hide">
+                            {% csrf_token %}
+                            {{ load_form|bom_form:'s12' }}
+                            <div class="price-summary-select__actions flex justify-between">
+                                {% if part_locked and part_info_url %}
+                                    <a href="{{ part_info_url }}#customers" class="bom-btn-ghost">{% trans "Cancel" %}</a>
+                                {% elif customer %}
+                                    <a href="{% url 'bom:customer-info' customer_id=customer.id %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
+                                {% else %}
+                                    <a href="javascript:history.back()" class="bom-btn-ghost">{% trans "Cancel" %}</a>
+                                {% endif %}
+                                <button class="bom-btn-primary" type="submit" name="action" value="preview">{% trans "Preview" %}</button>
+                            </div>
+                        </form>
+
+                        {% if show_preview and preview %}
+                            <dl class="price-summary-list{% if load_form %} price-summary-list--after-select{% endif %}">
+                                {% if part_locked %}
+                                    <div class="price-summary-list__row printer-show">
                                         <dt>{% trans "Customer" %}</dt>
                                         <dd>{{ preview.customer.name }}</dd>
                                     </div>
@@ -91,56 +93,71 @@
                                         <dt>{% trans "Part" %}</dt>
                                         <dd>{{ preview.part.full_part_number }}</dd>
                                     </div>
-                                    {% if preview.part_revision %}
-                                        <div class="price-summary-list__row">
-                                            <dt>{% trans "Revision" %}</dt>
-                                            <dd>{{ preview.part_revision.revision }}</dd>
-                                        </div>
-                                        <div class="price-summary-list__row">
-                                            <dt>{% trans "Description" %}</dt>
-                                            <dd>{{ preview.part_revision.description }}</dd>
-                                        </div>
-                                    {% endif %}
+                                {% else %}
                                     <div class="price-summary-list__row">
-                                        <dt>{% trans "BoM Cost" %}</dt>
-                                        <dd>{{ preview.base_cost }}</dd>
+                                        <dt>{% trans "Customer" %}</dt>
+                                        <dd>{{ preview.customer.name }}</dd>
+                                    </div>
+                                    <div class="price-summary-list__row printer-show">
+                                        <dt>{% trans "Part" %}</dt>
+                                        <dd>{{ preview.part.full_part_number }}</dd>
+                                    </div>
+                                {% endif %}
+                                {% if preview.part_revision %}
+                                    <div class="price-summary-list__row">
+                                        <dt>{% trans "Revision" %}</dt>
+                                        <dd>{{ preview.part_revision.revision }}</dd>
                                     </div>
                                     <div class="price-summary-list__row">
-                                        <dt>{% trans "Adjusted base (BoM + 7%)" %}</dt>
-                                        <dd>{{ preview.adjusted_base }}</dd>
+                                        <dt>{% trans "Description" %}</dt>
+                                        <dd>{{ preview.part_revision.description }}</dd>
                                     </div>
-                                </dl>
-                            </div>
-                        </section>
+                                {% endif %}
+                                <div class="price-summary-list__row">
+                                    <dt>{% trans "BoM Cost" %}</dt>
+                                    <dd>{{ preview.base_cost }}</dd>
+                                </div>
+                                <div class="price-summary-list__row">
+                                    <dt>{% trans "Adjusted base (BoM + 7%)" %}</dt>
+                                    <dd>{{ preview.adjusted_base }}</dd>
+                                </div>
+                            </dl>
+                        {% endif %}
                     </div>
-                    <div class="col s12 m6 price-pair-col">
-                        <section class="bom-panel price-pair-panel">
-                            <header class="price-pair-panel__header">
-                                <h5 class="printer-show">{% trans "Prices by profit %" %}</h5>
-                                <h5 class="printer-hide">{% trans "Prices by profit %" %}</h5>
-                            </header>
-                            <div class="price-pair-panel__body price-pair-panel__body--list">
-                                <p class="price-pair-panel__hint printer-hide">{% trans "Click an item to select profit % and price." %}</p>
-                                <ul class="price-tier-list" id="customer-price-tier-list">
-                                    {% for tier in preview.profit_price_tiers %}
-                                        <li class="price-select-row price-tier-list__item"
-                                            role="button"
-                                            tabindex="0"
-                                            data-profit-percent="{{ tier.profit_percent }}"
-                                            data-price="{{ tier.price.amount }}"
-                                            data-source="tier">
-                                            <span class="price-tier-list__row">
-                                                <span class="price-tier-list__profit">{{ tier.profit_percent }}%</span>
-                                                <span class="price-tier-list__price">{{ tier.price }}</span>
-                                            </span>
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </section>
-                    </div>
+                </section>
+            </div>
+            {% if show_preview and preview %}
+                <div class="col s12 m6 price-pair-col">
+                    <section class="bom-panel price-pair-panel">
+                        <header class="price-pair-panel__header">
+                            <h5 class="printer-show">{% trans "Prices by profit %" %}</h5>
+                            <h5 class="printer-hide">{% trans "Prices by profit %" %}</h5>
+                        </header>
+                        <div class="price-pair-panel__body price-pair-panel__body--list">
+                            <p class="price-pair-panel__hint printer-hide">{% trans "Click an item to select profit % and price." %}</p>
+                            <ul class="price-tier-list" id="customer-price-tier-list">
+                                {% for tier in preview.profit_price_tiers %}
+                                    <li class="price-select-row price-tier-list__item"
+                                        role="button"
+                                        tabindex="0"
+                                        data-profit-percent="{{ tier.profit_percent }}"
+                                        data-price="{{ tier.price.amount }}"
+                                        data-source="tier">
+                                        <span class="price-tier-list__row">
+                                            <span class="price-tier-list__profit">{{ tier.profit_percent }}%</span>
+                                            <span class="price-tier-list__price">{{ tier.price }}</span>
+                                        </span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </section>
                 </div>
+            {% endif %}
+        </div>
 
+        {% if show_preview and preview %}
+            <div class="price-review-panel" id="price-review-rest">
                 <h5 class="mb-2 printer-show">{% trans "Other customers' latest prices" %}</h5>
                 <h5 class="mb-2 printer-hide">{% trans "Other customers' latest prices" %}</h5>
                 {% include 'bom/components/customer-price-peer-list.html' with peer_prices=preview.peer_prices %}

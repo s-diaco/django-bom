@@ -512,6 +512,14 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertContains(response, "17.5")
         self.assertContains(response, str(self._tier_price(base_cost, Decimal("30")).amount))
         self.assertContains(response, "Adjusted base (BoM + 7%)")
+        # Material selection lives inside Pricing summary (not a separate top panel).
+        self.assertContains(response, 'id="price-load-form"')
+        self.assertNotContains(response, 'id="price-input-panel"')
+        html = response.content.decode()
+        summary_idx = html.find("Pricing summary")
+        load_idx = html.find('id="price-load-form"')
+        self.assertGreater(summary_idx, -1)
+        self.assertGreater(load_idx, summary_idx)
         self.assertFalse(CustomerPrice.objects.filter(customer=self.customer).exists())
 
     def test_customer_price_create_confirm_from_peer_price(self):
