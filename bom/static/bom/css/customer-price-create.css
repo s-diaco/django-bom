@@ -25,8 +25,6 @@
     }
 
     body.printing-price-review #price-summary-and-tiers {
-        break-before: page;
-        page-break-before: always;
         /* Print viewport often misses the m6 breakpoint — keep twin panels side by side. */
         display: grid !important;
         grid-template-columns: 1fr 1fr;
@@ -38,6 +36,11 @@
         grid-column: auto !important;
         width: auto;
         max-width: none;
+    }
+
+    body.printing-price-review #price-review-bom {
+        break-before: page;
+        page-break-before: always;
     }
 
     body.printing-price-review .printer-hide {

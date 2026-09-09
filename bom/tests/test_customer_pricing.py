@@ -582,7 +582,15 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertContains(response, "indented-bom-overview")
         self.assertNotContains(response, 'id="overview-print-button"')
         self.assertContains(response, 'id="price-review-print-button"')
-
+        html = response.content.decode()
+        self.assertLess(
+            html.find("Pricing summary"),
+            html.find('id="price-review-bom"'),
+        )
+        self.assertLess(
+            html.find('id="price-selection-panel"'),
+            html.find('id="bom-indented"'),
+        )
     def test_get_with_part_id_shows_preview(self):
         response = self.client.get(
             reverse(

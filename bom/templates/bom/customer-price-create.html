@@ -33,31 +33,14 @@
         </div>
 
         {% if show_preview and preview %}
-            <div class="price-review-panel" id="price-review-panel">
-                <div class="printer-show printer-doc mb-4">
-                    <img class="printer-logo" width="56" height="56" alt="Lithium" src="{% static 'bom/img/lithium.png' %}">
-                    <div class="printer-doc-text">
-                        <p class="printer-doc-title">{% trans "Customer Price Review" %}</p>
-                        <p class="printer-doc-meta">{{ preview.customer.name }} · {{ preview.part.full_part_number }}</p>
-                    </div>
+            <div class="printer-show printer-doc mb-4">
+                <img class="printer-logo" width="56" height="56" alt="Lithium" src="{% static 'bom/img/lithium.png' %}">
+                <div class="printer-doc-text">
+                    <p class="printer-doc-title">{% trans "Customer Price Review" %}</p>
+                    <p class="printer-doc-meta">{{ preview.customer.name }} · {{ preview.part.full_part_number }}</p>
                 </div>
-
-                <h4 class="printer-show">{% trans "Price Review" %}</h4>
-
-                {% if preview.part_revision.material == 'with_loi' or preview.part_revision.material == 'no_loi' %}
-                    {% if preview.indented_bom %}
-                        <h5 class="mb-2 printer-show">{% trans "BoM Overview" %}</h5>
-                        <h5 class="mb-2 printer-hide">{% trans "BoM Overview" %}</h5>
-                        <div id="bom-indented" class="mb-4">
-                            {% include 'bom/components/bom-indented-overview.html' with order_by='indented' bom_items=preview.indented_bom.parts part=preview.part part_revision=preview.part_revision profile=profile childs_unit_cost=preview.childs_unit_cost total_bom_weight=preview.total_bom_weight product_weight=preview.product_weight material=preview.part_revision.material show_print_button=False %}
-                        </div>
-                    {% elif preview.bom_error == 'infinite_recursion' %}
-                        <p class="red-text">{% trans "Error: infinite recursion in part relationship." %}</p>
-                    {% endif %}
-                {% else %}
-                    <p class="opacity-70 mb-4">{% trans "Unit cost only — no BoM breakdown for this part." %}</p>
-                {% endif %}
             </div>
+            <h4 class="printer-show">{% trans "Price Review" %}</h4>
         {% endif %}
 
         <div class="row mb-4 price-pair-row" id="price-summary-and-tiers">
@@ -200,6 +183,22 @@
                         </div>
                     </form>
                 </div>
+            </div>
+
+            <div class="price-review-panel" id="price-review-bom">
+                {% if preview.part_revision.material == 'with_loi' or preview.part_revision.material == 'no_loi' %}
+                    {% if preview.indented_bom %}
+                        <h5 class="mb-2 printer-show">{% trans "BoM Overview" %}</h5>
+                        <h5 class="mb-2 printer-hide">{% trans "BoM Overview" %}</h5>
+                        <div id="bom-indented" class="mb-4">
+                            {% include 'bom/components/bom-indented-overview.html' with order_by='indented' bom_items=preview.indented_bom.parts part=preview.part part_revision=preview.part_revision profile=profile childs_unit_cost=preview.childs_unit_cost total_bom_weight=preview.total_bom_weight product_weight=preview.product_weight material=preview.part_revision.material show_print_button=False %}
+                        </div>
+                    {% elif preview.bom_error == 'infinite_recursion' %}
+                        <p class="red-text">{% trans "Error: infinite recursion in part relationship." %}</p>
+                    {% endif %}
+                {% else %}
+                    <p class="opacity-70 mb-4">{% trans "Unit cost only — no BoM breakdown for this part." %}</p>
+                {% endif %}
             </div>
         {% endif %}
     </div>
