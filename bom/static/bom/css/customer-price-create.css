@@ -25,8 +25,6 @@
     }
 
     body.printing-price-review #price-summary-and-tiers {
-        break-before: page;
-        page-break-before: always;
         /* Print viewport often misses the m6 breakpoint — keep twin panels side by side. */
         display: grid !important;
         grid-template-columns: 1fr 1fr;
@@ -40,12 +38,22 @@
         max-width: none;
     }
 
+    body.printing-price-review #price-review-bom {
+        break-before: page;
+        page-break-before: always;
+    }
+
     body.printing-price-review .printer-hide {
         display: none !important;
     }
 
     body.printing-price-review .printer-show {
         display: block !important;
+    }
+
+    /* Keep summary rows as label|value grid (beats .printer-show { display: block }). */
+    body.printing-price-review .price-summary-list__row.printer-show {
+        display: grid !important;
     }
 
     body.printing-price-review h4.printer-show,
@@ -165,6 +173,14 @@
     text-align: end;
 }
 
+.price-summary-select {
+    margin: 0;
+}
+
+.price-summary-select__actions {
+    margin-top: 0.75rem;
+}
+
 .price-summary-list {
     margin: 0;
 }
@@ -176,6 +192,25 @@
     align-items: baseline;
     padding: 0.4rem 0;
     border-bottom: 1px solid var(--color-border-subtle, rgba(0, 0, 0, 0.06));
+}
+
+.price-summary-list__row--field {
+    align-items: center;
+}
+
+.price-summary-list__row--field dd {
+    min-width: 0;
+    position: relative;
+}
+
+.price-summary-list__row--field .bom-input {
+    width: 100%;
+    margin: 0;
+}
+
+/* Beat .price-summary-list__row { display: grid } so print-only rows stay hidden on screen. */
+.price-summary-list__row.printer-show {
+    display: none;
 }
 
 .price-summary-list__row:last-child {
@@ -191,6 +226,13 @@
     margin: 0;
     font-size: 0.8125rem;
     color: var(--color-ink-muted, rgba(0, 0, 0, 0.55));
+}
+
+.price-summary-list__row dt label {
+    font-size: inherit;
+    font-weight: inherit;
+    color: inherit;
+    margin: 0;
 }
 
 .price-summary-list__row dd {
