@@ -598,6 +598,7 @@ class CustomerPriceLoadForm(forms.Form):
                     ).order_by("name"),
                     autocomplete_min_length=0,
                     autocomplete_limit=12,
+                    attrs={"class": "bom-input"},
                 ),
             )
         else:
@@ -613,6 +614,7 @@ class CustomerPriceLoadForm(forms.Form):
                     verbose_string_function=lambda part: part.verbose_str(),
                     autocomplete_min_length=0,
                     autocomplete_limit=12,
+                    attrs={"class": "bom-input"},
                 ),
             )
 

@@ -50,10 +50,82 @@
                         <h5>{% trans "Pricing summary" %}</h5>
                     </header>
                     <div class="price-pair-panel__body">
-                        <form action="{{ action }}" method="post" id="price-load-form" class="price-summary-select printer-hide">
+                        <form action="{{ action }}" method="post" id="price-load-form" class="price-summary-select">
                             {% csrf_token %}
-                            {{ load_form|bom_form:'s12' }}
-                            <div class="price-summary-select__actions flex justify-between">
+                            <dl class="price-summary-list">
+                                {% if part_locked %}
+                                    <div class="price-summary-list__row price-summary-list__row--field printer-hide">
+                                        <dt>
+                                            <label for="{{ load_form.customer.id_for_label }}">{{ load_form.customer.label }}{% if load_form.customer.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+                                        </dt>
+                                        <dd>
+                                            {{ load_form.customer }}
+                                            {% if load_form.customer.errors %}<p class="bom-error">{{ load_form.customer.errors.0 }}</p>{% endif %}
+                                        </dd>
+                                    </div>
+                                {% else %}
+                                    <div class="price-summary-list__row price-summary-list__row--field printer-hide">
+                                        <dt>
+                                            <label for="{{ load_form.part.id_for_label }}">{{ load_form.part.label }}{% if load_form.part.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+                                        </dt>
+                                        <dd>
+                                            {{ load_form.part }}
+                                            {% if load_form.part.errors %}<p class="bom-error">{{ load_form.part.errors.0 }}</p>{% endif %}
+                                        </dd>
+                                    </div>
+                                {% endif %}
+                                {% if load_form.non_field_errors %}
+                                    <div class="price-summary-list__row printer-hide">
+                                        <dt></dt>
+                                        <dd>
+                                            {% for err in load_form.non_field_errors %}
+                                                <p class="bom-error">{{ err }}</p>
+                                            {% endfor %}
+                                        </dd>
+                                    </div>
+                                {% endif %}
+
+                                {% if show_preview and preview %}
+                                    {% if part_locked %}
+                                        <div class="price-summary-list__row printer-show">
+                                            <dt>{% trans "Customer" %}</dt>
+                                            <dd>{{ preview.customer.name }}</dd>
+                                        </div>
+                                        <div class="price-summary-list__row">
+                                            <dt>{% trans "Part" %}</dt>
+                                            <dd>{{ preview.part.full_part_number }}</dd>
+                                        </div>
+                                    {% else %}
+                                        <div class="price-summary-list__row">
+                                            <dt>{% trans "Customer" %}</dt>
+                                            <dd>{{ preview.customer.name }}</dd>
+                                        </div>
+                                        <div class="price-summary-list__row printer-show">
+                                            <dt>{% trans "Part" %}</dt>
+                                            <dd>{{ preview.part.full_part_number }}</dd>
+                                        </div>
+                                    {% endif %}
+                                    {% if preview.part_revision %}
+                                        <div class="price-summary-list__row">
+                                            <dt>{% trans "Revision" %}</dt>
+                                            <dd>{{ preview.part_revision.revision }}</dd>
+                                        </div>
+                                        <div class="price-summary-list__row">
+                                            <dt>{% trans "Description" %}</dt>
+                                            <dd>{{ preview.part_revision.description }}</dd>
+                                        </div>
+                                    {% endif %}
+                                    <div class="price-summary-list__row">
+                                        <dt>{% trans "BoM Cost" %}</dt>
+                                        <dd>{{ preview.base_cost }}</dd>
+                                    </div>
+                                    <div class="price-summary-list__row">
+                                        <dt>{% trans "Adjusted base (BoM + 7%)" %}</dt>
+                                        <dd>{{ preview.adjusted_base }}</dd>
+                                    </div>
+                                {% endif %}
+                            </dl>
+                            <div class="price-summary-select__actions flex justify-between printer-hide">
                                 {% if part_locked and part_info_url %}
                                     <a href="{{ part_info_url }}#customers" class="bom-btn-ghost">{% trans "Cancel" %}</a>
                                 {% elif customer %}
@@ -64,48 +136,6 @@
                                 <button class="bom-btn-primary" type="submit" name="action" value="preview">{% trans "Preview" %}</button>
                             </div>
                         </form>
-
-                        {% if show_preview and preview %}
-                            <dl class="price-summary-list{% if load_form %} price-summary-list--after-select{% endif %}">
-                                {% if part_locked %}
-                                    <div class="price-summary-list__row printer-show">
-                                        <dt>{% trans "Customer" %}</dt>
-                                        <dd>{{ preview.customer.name }}</dd>
-                                    </div>
-                                    <div class="price-summary-list__row">
-                                        <dt>{% trans "Part" %}</dt>
-                                        <dd>{{ preview.part.full_part_number }}</dd>
-                                    </div>
-                                {% else %}
-                                    <div class="price-summary-list__row">
-                                        <dt>{% trans "Customer" %}</dt>
-                                        <dd>{{ preview.customer.name }}</dd>
-                                    </div>
-                                    <div class="price-summary-list__row printer-show">
-                                        <dt>{% trans "Part" %}</dt>
-                                        <dd>{{ preview.part.full_part_number }}</dd>
-                                    </div>
-                                {% endif %}
-                                {% if preview.part_revision %}
-                                    <div class="price-summary-list__row">
-                                        <dt>{% trans "Revision" %}</dt>
-                                        <dd>{{ preview.part_revision.revision }}</dd>
-                                    </div>
-                                    <div class="price-summary-list__row">
-                                        <dt>{% trans "Description" %}</dt>
-                                        <dd>{{ preview.part_revision.description }}</dd>
-                                    </div>
-                                {% endif %}
-                                <div class="price-summary-list__row">
-                                    <dt>{% trans "BoM Cost" %}</dt>
-                                    <dd>{{ preview.base_cost }}</dd>
-                                </div>
-                                <div class="price-summary-list__row">
-                                    <dt>{% trans "Adjusted base (BoM + 7%)" %}</dt>
-                                    <dd>{{ preview.adjusted_base }}</dd>
-                                </div>
-                            </dl>
-                        {% endif %}
                     </div>
                 </section>
             </div>
