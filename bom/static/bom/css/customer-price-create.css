@@ -51,6 +51,11 @@
         display: block !important;
     }
 
+    /* Keep summary rows as label|value grid (beats .printer-show { display: block }). */
+    body.printing-price-review .price-summary-list__row.printer-show {
+        display: grid !important;
+    }
+
     body.printing-price-review h4.printer-show,
     body.printing-price-review h5.printer-show {
         font-size: 11pt;
@@ -206,16 +211,6 @@
 /* Beat .price-summary-list__row { display: grid } so print-only rows stay hidden on screen. */
 .price-summary-list__row.printer-show {
     display: none;
-}
-
-body.printing-price-review .price-summary-list__row.printer-show {
-    display: grid;
-}
-
-@media print {
-    .price-summary-list__row.printer-show {
-        display: grid !important;
-    }
 }
 
 .price-summary-list__row:last-child {
