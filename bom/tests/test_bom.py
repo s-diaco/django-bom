@@ -618,14 +618,23 @@ class TestBOM(TransactionTestCase):
                 bom_list[idx].part_revision.revision,
                 assertion_message,
             )
+            primary_mp = bom_list[idx].part.primary_manufacturer_part
+            manufacturer_name = (
+                primary_mp.manufacturer.name
+                if primary_mp is not None and primary_mp.manufacturer is not None
+                else ""
+            )
+            manufacturer_part_number = (
+                primary_mp.manufacturer_part_number if primary_mp is not None else ""
+            )
             self.assertEqual(
-                item["manufacturer_name"],
-                bom_list[idx].part.primary_manufacturer_part.manufacturer.name,
+                item["manufacturer_name"] or "",
+                manufacturer_name,
                 assertion_message,
             )
             self.assertEqual(
-                item["manufacturer_part_number"],
-                bom_list[idx].part.primary_manufacturer_part.manufacturer_part_number,
+                item["manufacturer_part_number"] or "",
+                manufacturer_part_number,
                 assertion_message,
             )
             if bom_list[idx].indent_level > 0:

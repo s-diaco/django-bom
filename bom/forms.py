@@ -2503,50 +2503,56 @@ class BOMCSVForm(forms.Form):
                     info_msg += f" به درخت {parent_part_revision.part.full_part_number()} افزوده شد"
                 self.successes.append(info_msg + ".")
 
+                # Blank manufacturer+MPN used to insert Manufacturer(name="") +
+                # ManufacturerPart(mpn="") per CSV row and overwrite primary.
+                has_manufacturer_info = (manufacturer_name or "").strip() or (
+                    manufacturer_part_number or ""
+                ).strip()
+                if has_manufacturer_info:
+                    existing_manufacturer = Manufacturer.objects.filter(
+                        name=manufacturer_name, organization=self.organization
+                    ).first()
+                    manufacturer_form = ManufacturerForm(
+                        {"name": manufacturer_name}, instance=existing_manufacturer
+                    )
+                    if not manufacturer_form.is_valid():
+                        add_nonfield_error_from_existing(
+                            manufacturer_form, self, f"Row {row_count} - "
+                        )
+
+                    manufacturer = manufacturer_form.save(commit=False)
+                    manufacturer.organization = self.organization
+                    manufacturer.save()
+
+                    existing_manufacturer_part = ManufacturerPart.objects.filter(
+                        part=part,
+                        manufacturer=manufacturer,
+                        manufacturer_part_number=manufacturer_part_number
+                        if manufacturer_part_number
+                        else "",
+                    ).first()
+
+                    manufacturer_part_data = {
+                        "manufacturer_part_number": manufacturer_part_number
+                    }
+                    manufacturer_part_form = ManufacturerPartForm(
+                        manufacturer_part_data, instance=existing_manufacturer_part
+                    )
+                    if not manufacturer_part_form.is_valid():
+                        add_nonfield_error_from_existing(
+                            manufacturer_part_form, self, f"Row {row_count} - "
+                        )
+
+                    manufacturer_part = manufacturer_part_form.save(commit=False)
+                    manufacturer_part.manufacturer = manufacturer
+                    manufacturer_part.part = part
+                    manufacturer_part.save()
+
+                    part.primary_manufacturer_part = manufacturer_part
+                    part.save()
+
                 last_part_revision = part_revision
                 last_level = level
-
-                # Now validate & save optional fields - Manufacturer, ManufacturerPart, SellerParts
-                existing_manufacturer = Manufacturer.objects.filter(
-                    name=manufacturer_name, organization=self.organization
-                ).first()
-                manufacturer_form = ManufacturerForm(
-                    {"name": manufacturer_name}, instance=existing_manufacturer
-                )
-                if not manufacturer_form.is_valid():
-                    add_nonfield_error_from_existing(
-                        manufacturer_form, self, f"Row {row_count} - "
-                    )
-
-                manufacturer = manufacturer_form.save(commit=False)
-                manufacturer.organization = self.organization
-                manufacturer.save()
-
-                # Look up existing ManufacturerPart BEFORE creating the form
-                existing_manufacturer_part = ManufacturerPart.objects.filter(
-                    part=part,
-                    manufacturer=manufacturer,
-                    manufacturer_part_number=manufacturer_part_number if manufacturer_part_number else "",
-                ).first()
-
-                manufacturer_part_data = {
-                    "manufacturer_part_number": manufacturer_part_number
-                }
-                manufacturer_part_form = ManufacturerPartForm(
-                    manufacturer_part_data, instance=existing_manufacturer_part
-                )
-                if not manufacturer_part_form.is_valid():
-                    add_nonfield_error_from_existing(
-                        manufacturer_part_form, self, f"Row {row_count} - "
-                    )
-
-                manufacturer_part = manufacturer_part_form.save(commit=False)
-                manufacturer_part.manufacturer = manufacturer
-                manufacturer_part.part = part
-                manufacturer_part.save()
-
-                part.primary_manufacturer_part = manufacturer_part
-                part.save()
 
                 # TODO: Add SellerParts
         except UnicodeDecodeError as e:
