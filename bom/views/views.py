@@ -25,6 +25,7 @@ from django.utils.dateparse import parse_date
 from django.utils.encoding import smart_str
 from django.utils.text import smart_split
 from django.utils.translation import gettext as _
+from django.utils import translation
 from django.views.generic.base import TemplateView
 from jdatetime import datetime
 
@@ -798,12 +799,20 @@ def bom_settings(request, tab_anchor=None):
             if user_form.is_valid():
                 user = user_form.save()
                 calendar = request.POST.get("calendar")
+                language = request.POST.get("language")
+                fields_to_update = []
                 if calendar in (
                     constants.CALENDAR_JALALI,
                     constants.CALENDAR_GREGORIAN,
                 ):
                     profile.calendar = calendar
-                    profile.save(update_fields=["calendar"])
+                    fields_to_update.append("calendar")
+                if language in dict(settings.LANGUAGES).keys() or language == settings.LANGUAGE_CODE:
+                    profile.language = language
+                    fields_to_update.append("language")
+                    translation.activate(language)
+                if fields_to_update:
+                    profile.save(update_fields=fields_to_update)
             else:
                 messages.error(request, user_form.errors)
 

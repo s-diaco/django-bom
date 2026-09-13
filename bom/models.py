@@ -144,6 +144,9 @@ class UserMeta(models.Model):
     calendar = models.CharField(
         max_length=1, choices=CALENDAR_TYPES, default=CALENDAR_JALALI
     )
+    language = models.CharField(
+        max_length=10, choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE
+    )
 
     def get_or_create_organization(self):
         if self.organization is None:
