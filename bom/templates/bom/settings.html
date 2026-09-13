@@ -44,6 +44,13 @@
                             <option value="G" {% if profile.calendar == "G" %}selected{% endif %}>{% trans "Gregorian" %}</option>
                         </select>
                     </div>
+                    <div class="col s12 m4">
+                        <label class="bom-label" for="id_language">{% trans "Language" %}</label>
+                        <select class="bom-select" name="language" id="id_language">
+                            <option value="fa-IR" {% if profile.language == "fa-IR" or profile.language == "fa" %}selected{% endif %}>{% trans "Persian" %}</option>
+                            <option value="en" {% if profile.language == "en" %}selected{% endif %}>{% trans "English" %}</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="row">
                     <div class="col s12 right-align">
