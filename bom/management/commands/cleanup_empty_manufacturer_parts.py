@@ -8,6 +8,8 @@ Default is a dry run. Pass --execute to apply.
 
 Does not delete ManufacturerParts that have SellerPart pricing, and does not
 touch the parts-upload placeholder manufacturer "انتخاب نشده (پیش فرض)".
+
+Runbook: docs/cleanup-empty-manufacturer-parts.md
 """
 
 from collections import defaultdict
