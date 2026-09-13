@@ -1,0 +1,3 @@
+part_number,quantity,manufacturer_part_number,manufacturer,dnp,reference,description
+200-3333-00,1,STM32F401CEU6,STMicroelectronics,,U1,Existing MFR part
+200-3333-00,2,STM32F401CEU6,STMicroelectronics,,U2; U3,Same MFR part again
