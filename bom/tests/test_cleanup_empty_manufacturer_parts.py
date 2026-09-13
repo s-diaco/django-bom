@@ -9,6 +9,7 @@ from io import StringIO
 from bom import constants
 from bom.helpers import (
     create_a_fake_seller_part,
+    create_some_fake_part_classes,
     create_some_fake_parts,
     create_some_fake_sellers,
     create_user_and_organization,
@@ -95,7 +96,7 @@ class CleanupEmptyManufacturerPartsTests(TestCase):
 
     def test_keeps_placeholder_manufacturer(self):
         placeholder = Manufacturer.objects.create(
-            name="انتخاب نشده (پیش فرض)", organization=self.organization
+            name=constants.DEFAULT_MANUFACTURER_NAME, organization=self.organization
         )
         mp = ManufacturerPart.objects.create(
             part=self.p2,
@@ -172,4 +173,94 @@ class BomCsvImportSkipsEmptyManufacturerPartsTests(TestCase):
         )
         self.assertTrue(
             self.p2.latest().assembly.subparts.filter(part_revision__part=self.p1).exists()
+        )
+
+
+@override_settings(BOM_CONFIG=settings.BOM_CONFIG_DEFAULT)
+class DefaultManufacturerPartOnSellerTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user, self.organization = create_user_and_organization()
+        self.user.bom_profile(organization=self.organization)
+        self.client.login(username="kasper", password="ghostpassword")
+        (self.p1, self.p2, self.p3, self.p4) = create_some_fake_parts(
+            organization=self.organization
+        )
+
+    def test_parts_csv_without_manufacturer_or_cost_skips_mp(self):
+        create_some_fake_part_classes(self.organization)
+        csv_bytes = (
+            b"part_class,description,revision\n500,No manufacturer no cost,1\n"
+        )
+        uploaded = SimpleUploadedFile("parts.csv", csv_bytes, content_type="text/csv")
+        response = self.client.post(
+            reverse("bom:upload-parts"), {"file": uploaded}, follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+        part = Part.objects.get(
+            organization=self.organization,
+            partrevision__description="No manufacturer no cost",
+        )
+        self.assertIsNone(part.primary_manufacturer_part_id)
+        self.assertEqual(ManufacturerPart.objects.filter(part=part).count(), 0)
+
+    def test_parts_csv_with_cost_creates_default_mp(self):
+        create_some_fake_part_classes(self.organization)
+        csv_bytes = (
+            b"part_class,description,revision,unit_cost\n500,Has a price,1,10\n"
+        )
+        uploaded = SimpleUploadedFile(
+            "parts_cost.csv", csv_bytes, content_type="text/csv"
+        )
+        response = self.client.post(
+            reverse("bom:upload-parts"), {"file": uploaded}, follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+        part = Part.objects.filter(
+            organization=self.organization, number_class__code=500
+        ).latest("id")
+        mp = part.primary_manufacturer_part
+        self.assertIsNotNone(mp)
+        self.assertEqual(mp.manufacturer.name, constants.DEFAULT_MANUFACTURER_NAME)
+        self.assertEqual(mp.manufacturer_part_number, part.number_item)
+        self.assertTrue(SellerPart.objects.filter(manufacturer_part=mp).exists())
+
+    def test_add_seller_on_part_without_mp_creates_default(self):
+        self.p4.primary_manufacturer_part = None
+        self.p4.save(update_fields=["primary_manufacturer_part"])
+        ManufacturerPart.objects.filter(part=self.p4).delete()
+        response = self.client.get(
+            reverse("bom:part-add-sellerpart", kwargs={"part_id": self.p4.id})
+        )
+        self.assertEqual(response.status_code, 302)
+        self.p4.refresh_from_db()
+        self.assertIsNotNone(self.p4.primary_manufacturer_part_id)
+        self.assertEqual(
+            self.p4.primary_manufacturer_part.manufacturer.name,
+            constants.DEFAULT_MANUFACTURER_NAME,
+        )
+        self.assertIn(
+            reverse(
+                "bom:manufacturer-part-add-sellerpart",
+                kwargs={
+                    "manufacturer_part_id": self.p4.primary_manufacturer_part_id
+                },
+            ),
+            response.url,
+        )
+
+    def test_add_seller_on_part_with_primary_uses_existing(self):
+        real_id = self.p1.primary_manufacturer_part_id
+        response = self.client.get(
+            reverse("bom:part-add-sellerpart", kwargs={"part_id": self.p1.id})
+        )
+        self.assertEqual(response.status_code, 302)
+        self.p1.refresh_from_db()
+        self.assertEqual(self.p1.primary_manufacturer_part_id, real_id)
+        self.assertIn(
+            reverse(
+                "bom:manufacturer-part-add-sellerpart",
+                kwargs={"manufacturer_part_id": real_id},
+            ),
+            response.url,
         )

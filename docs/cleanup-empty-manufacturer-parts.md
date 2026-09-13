@@ -1,6 +1,8 @@
 # Clean up empty manufacturer parts
 
-BOM CSV import used to create a blank `Manufacturer` plus a `ManufacturerPart` with an empty MPN on every row that had no manufacturer name and no MPN. It also overwrote that part's primary manufacturer part. New imports skip that path; this command removes rows already in the database.
+BOM CSV import used to create a blank `Manufacturer` plus a `ManufacturerPart` with an empty MPN on every row that had no manufacturer name and no MPN. It also overwrote that part's primary manufacturer part.
+
+New BOM and parts CSV imports **skip** creating a manufacturer part when manufacturer name and MPN are both blank. A default manufacturer (`انتخاب نشده (پیش فرض)`) is created later if a seller price is added (UI or a parts CSV row that includes cost). This command removes blank-name rows already in the database.
 
 Do this on production **after this code is deployed**. Dry-run first. Take a backup before `--execute`.
 

@@ -111,6 +111,11 @@ bom_patterns = [
         name="part-add-manufacturer-part",
     ),
     path(
+        "part/<int:part_id>/add-sellerpart/",
+        views.add_sellerpart_for_part,
+        name="part-add-sellerpart",
+    ),
+    path(
         "part/<int:part_id>/rev/new/", views.part_revision_new, name="part-revision-new"
     ),
     path(

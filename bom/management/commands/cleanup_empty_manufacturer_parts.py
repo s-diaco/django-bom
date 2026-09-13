@@ -9,6 +9,10 @@ Default is a dry run. Pass --execute to apply.
 Does not delete ManufacturerParts that have SellerPart pricing, and does not
 touch the parts-upload placeholder manufacturer "انتخاب نشده (پیش فرض)".
 
+New BOM/parts CSV rows with no manufacturer name and no MPN skip creating a
+manufacturer part. A default manufacturer part is created later if a seller
+price is added.
+
 Runbook: docs/cleanup-empty-manufacturer-parts.md
 """
 

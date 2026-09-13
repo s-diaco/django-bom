@@ -22,6 +22,7 @@ from .constants import (
     CALENDAR_TYPES,
     CONFIGURATION_TYPES,
     CURRENT_UNITS,
+    DEFAULT_MANUFACTURER_NAME,
     DISTANCE_UNITS,
     FREQUENCY_UNITS,
     INTERFACE_TYPES,
@@ -490,6 +491,30 @@ class Part(models.Model):
         ):
             return q.exclude(id=self.primary_manufacturer_part.id)
         return q
+
+    def ensure_default_manufacturer_part(self):
+        mfg, _created = Manufacturer.objects.get_or_create(
+            name__iexact=DEFAULT_MANUFACTURER_NAME,
+            organization=self.organization,
+            defaults={"name": DEFAULT_MANUFACTURER_NAME},
+        )
+        manufacturer_part, _created = ManufacturerPart.objects.get_or_create(
+            part=self,
+            manufacturer=mfg,
+            manufacturer_part_number=self.number_item or "",
+        )
+        if self.primary_manufacturer_part_id is None:
+            self.primary_manufacturer_part = manufacturer_part
+            self.save(update_fields=["primary_manufacturer_part"])
+        return manufacturer_part
+
+    def manufacturer_part_for_new_seller(self):
+        if self.primary_manufacturer_part_id:
+            return self.primary_manufacturer_part
+        existing = self.manufacturerpart_set.order_by("id").first()
+        if existing is not None:
+            return existing
+        return self.ensure_default_manufacturer_part()
 
     def where_used(self):
         revisions = PartRevision.objects.filter(part=self)

@@ -1474,6 +1474,7 @@ class PartCSVForm(forms.Form):
                     part_revision.part = part
                     part_revision.save()
 
+                    manufacturer_part = None
                     if mfg_name and mpn:
                         mfg, created = Manufacturer.objects.get_or_create(
                             name__iexact=mfg_name,
@@ -1486,24 +1487,8 @@ class PartCSVForm(forms.Form):
                         ) = ManufacturerPart.objects.get_or_create(
                             part=part, manufacturer_part_number=mpn, manufacturer=mfg
                         )
-                    else:
-                        default_manufacturer_name = "انتخاب نشده (پیش فرض)"
-                        (
-                            mfg,
-                            created,
-                        ) = Manufacturer.objects.get_or_create(
-                            name__iexact=default_manufacturer_name,
-                            organization=self.organization,
-                            defaults={"name": default_manufacturer_name},
-                        )
-                        (
-                            manufacturer_part,
-                            created,
-                        ) = ManufacturerPart.objects.get_or_create(
-                            part=part,
-                            manufacturer_part_number=part.number_item,  # TODO: is it unique?
-                            manufacturer=mfg,
-                        )
+                    elif unit_cost:
+                        manufacturer_part = part.ensure_default_manufacturer_part()
                     if (
                         part.primary_manufacturer_part is None
                         and manufacturer_part is not None
@@ -1515,7 +1500,9 @@ class PartCSVForm(forms.Form):
                     if seller_part_number is None:
                         seller_part_number = ""
 
-                    if seller_name and unit_cost and nre_cost:
+                    if manufacturer_part is None:
+                        pass
+                    elif seller_name and unit_cost and nre_cost:
                         nre_cost = Money(nre_cost, self.organization.currency)
                         unit_cost = Money(unit_cost, self.organization.currency)
                         seller, created = Seller.objects.get_or_create(
@@ -2505,6 +2492,8 @@ class BOMCSVForm(forms.Form):
 
                 # Blank manufacturer+MPN used to insert Manufacturer(name="") +
                 # ManufacturerPart(mpn="") per CSV row and overwrite primary.
+                # Skip that path; a default manufacturer part is created later
+                # if a seller price is added.
                 has_manufacturer_info = (manufacturer_name or "").strip() or (
                     manufacturer_part_number or ""
                 ).strip()
