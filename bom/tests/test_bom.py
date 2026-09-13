@@ -19,7 +19,7 @@ from bom.helpers import (
     create_some_fake_parts,
     create_user_and_organization,
 )
-from bom.models import Part, PartClass, Seller, Subpart
+from bom.models import ManufacturerPart, Part, PartClass, Seller, Subpart
 from bom.utils import convert_arabic_to_english
 
 TEST_FILES_DIR = "bom/test_files"
@@ -505,6 +505,50 @@ class TestBOM(TransactionTestCase):
         p1.refresh_from_db()
         bom = p1.latest().indented()
         self.assertEqual(len(bom.parts), 3)
+
+    def test_part_upload_bom_no_duplicate_manufacturer_parts(self):
+        """CSV BOM import should reuse existing ManufacturerPart records, not create duplicates."""
+        (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+
+        # p1 already has a ManufacturerPart with manufacturer_part_number="STM32F401CEU6"
+        # and manufacturer="STMicroelectronics" (created by create_some_fake_parts)
+        initial_mp_count = ManufacturerPart.objects.filter(
+            part=p1,
+            manufacturer_part_number="STM32F401CEU6",
+        ).count()
+        self.assertEqual(initial_mp_count, 1)
+
+        test_file = (
+            "test_bom_existing_mfr_part.csv"
+            if self.organization.number_variation_len > 0
+            else "test_bom_existing_mfr_part_no_variations.csv"
+        )
+
+        # Upload a CSV that references the same part with the same manufacturer part number
+        with open(
+            f"{TEST_FILES_DIR}/{test_file}"
+        ) as test_csv:
+            response = self.client.post(
+                reverse("bom:part-upload-bom", kwargs={"part_id": p2.id}),
+                {"file": test_csv},
+                follow=True,
+            )
+        self.assertEqual(response.status_code, 200)
+
+        messages = list(response.context.get("messages"))
+        for msg in messages:
+            self.assertNotEqual(msg.tags, "error")
+
+        # Verify no duplicate ManufacturerPart was created
+        final_mp_count = ManufacturerPart.objects.filter(
+            part=p1,
+            manufacturer_part_number="STM32F401CEU6",
+        ).count()
+        self.assertEqual(
+            final_mp_count,
+            initial_mp_count,
+            "CSV import should reuse existing ManufacturerPart, not create a duplicate.",
+        )
 
     def test_upload_bom(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
