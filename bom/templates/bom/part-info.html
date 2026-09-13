@@ -289,11 +289,11 @@
                 <div id="sourcing" class="col s12">
                     <h4 class="printer-show">تولید و تأمین</h4>
                     {% include 'bom/components/seller-part-list.html' with seller_parts=part.seller_parts part_revision=part_revision profile=profile %}
-                    {% if profile.role == 'A' and part.primary_manufacturer_part.id %}
+                    {% if profile.role == 'A' %}
                         <div class="row" style="padding-top: 16px;">
                             <div class="col s12 center-align">
                                 <a class="bom-btn-secondary"
-                                   href="{% url 'bom:manufacturer-part-add-sellerpart' manufacturer_part_id=part.primary_manufacturer_part.id %}">افزودن کد تأمین کننده</a>
+                                   href="{% url 'bom:part-add-sellerpart' part_id=part.id %}">افزودن کد تأمین کننده</a>
                             </div>
                         </div>
                     {% endif %}

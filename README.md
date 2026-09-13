@@ -76,6 +76,8 @@ View alerts:
 tail -f monitoring/restart-loops.log
 ```
 
+Empty manufacturer parts left by BOM CSV import: see [Clean up empty manufacturer parts](docs/cleanup-empty-manufacturer-parts.md).
+
 ## Backup and restore database (If using docker-compose and postgres)
 
 Always pass `--env-file .env.prod` on every `docker compose` command (including `exec`).

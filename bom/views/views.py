@@ -2292,6 +2292,8 @@ def create_part(request):
                         "کد تأمین کننده اختصاص داده نشده است. هیچ تأمین کننده‌ای انتخاب یا ایجاد نشد.",
                     )
                 if seller is not None:
+                    if manufacturer_part is None:
+                        manufacturer_part = new_part.manufacturer_part_for_new_seller()
                     (
                         seller_part,
                         seller_created,
@@ -2586,6 +2588,18 @@ def remove_all_subparts(request, part_id, part_revision_id):
         reverse(
             "bom:part-manage-bom",
             kwargs={"part_id": part_id, "part_revision_id": part_revision_id},
+        )
+    )
+
+
+@login_required(login_url=BOM_LOGIN_URL)
+def add_sellerpart_for_part(request, part_id):
+    part = get_object_or_404(Part, pk=part_id)
+    manufacturer_part = part.manufacturer_part_for_new_seller()
+    return HttpResponseRedirect(
+        reverse(
+            "bom:manufacturer-part-add-sellerpart",
+            kwargs={"manufacturer_part_id": manufacturer_part.id},
         )
     )
 
