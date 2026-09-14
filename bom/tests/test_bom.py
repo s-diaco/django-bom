@@ -322,6 +322,10 @@ class TestBOM(TransactionTestCase):
         self.assertIn('id="overview-print-button"', html)
         self.assertIn("printing-overview", html)
         self.assertIn('id="indented-bom-overview"', html)
+        self.assertIn("data-unit-cost=", html)
+        self.assertIn("data-quantity=", html)
+        self.assertIn(".data('unit-cost')", html)
+        self.assertIn(".data('quantity')", html)
 
     def test_part_manage_bom(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
