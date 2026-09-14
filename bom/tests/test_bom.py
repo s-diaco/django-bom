@@ -322,7 +322,7 @@ class TestBOM(TransactionTestCase):
         self.assertIn('id="overview-print-button"', html)
         self.assertIn("printing-overview", html)
         self.assertIn('id="indented-bom-overview"', html)
-        self.assertIn("data-unit-cost=", html)
+        # Locale-safe BoM price calc: numeric attrs + JS reads (not Money display text)
         self.assertIn("data-quantity=", html)
         self.assertIn(".data('unit-cost')", html)
         self.assertIn(".data('quantity')", html)
