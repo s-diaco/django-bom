@@ -320,6 +320,8 @@ class TestBOM(TransactionTestCase):
         html = response.content.decode("utf-8")
         self.assertIn('id="overview-tab"', html)
         self.assertIn('id="overview-print-button"', html)
+        self.assertIn("دانلود CSV درخت محصول", html)
+        self.assertNotIn("مدیریت درخت محصول", html)
         self.assertIn("printing-overview", html)
         self.assertIn('id="indented-bom-overview"', html)
         # Locale-safe BoM price calc: numeric attrs + JS reads (not Money display text)
