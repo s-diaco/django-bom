@@ -94,17 +94,34 @@ from bom.list_queries import (
 )
 from bom.utils import (
     bom_overview_context,
-    check_references_for_duplicates,
     customer_price_preview_from_form,
     customer_price_preview_context,
     get_session_part_quantity,
     listify_string,
-    prep_for_sorting_nicely,
     set_session_part_quantity,
 )
 
 logger = logging.getLogger(__name__)
 BOM_LOGIN_URL = getattr(settings, "BOM_LOGIN_URL", None) or settings.LOGIN_URL
+
+
+def part_info_tab_url(part, part_revision, tab="bom"):
+    latest = part.latest()
+    if latest is not None and part_revision.pk == latest.pk:
+        url = reverse("bom:part-info", kwargs={"part_id": part.id})
+    else:
+        url = reverse(
+            "bom:part-info-history",
+            kwargs={"part_id": part.id, "part_revision_id": part_revision.id},
+        )
+    return f"{url}?tab_anchor={tab}"
+
+
+def redirect_if_revision_locked(request, part_revision):
+    if part_revision.configuration == constants.CONFIGURATION_TYPE_WORKING:
+        return None
+    messages.error(request, "Can't edit a released part!")
+    return HttpResponseRedirect(part_info_tab_url(part_revision.part, part_revision))
 
 
 # TODO: Move this to a utils file
@@ -1794,6 +1811,22 @@ def part_info(request, part_id, part_revision_id=None):
     except AttributeError:
         mouser_parts = False
 
+    can_manage_bom = (
+        profile.role == "A"
+        and part_revision is not None
+        and part_revision.material in ("with_loi", "no_loi")
+        and part_revision.configuration == constants.CONFIGURATION_TYPE_WORKING
+    )
+    add_subpart_form = None
+    upload_subparts_csv_form = None
+    if can_manage_bom:
+        add_subpart_form = AddSubpartForm(
+            initial={"count": 1},
+            organization=organization,
+            part_id=part_id,
+        )
+        upload_subparts_csv_form = FileForm()
+
     where_used_part = part.where_used()
     seller_parts = part.seller_parts()
     customer_prices = (
@@ -2012,7 +2045,13 @@ def part_upload_bom(request, part_id):
         messages.error(request, "No part found with given part_id {}.".format(part_id))
         return HttpResponseRedirect(request.META.get("HTTP_REFERER"), "/")
 
-    if request.method == "POST" and request.FILES["file"] is not None:
+    latest = parent_part.latest()
+    if latest is not None:
+        locked = redirect_if_revision_locked(request, latest)
+        if locked:
+            return locked
+
+    if request.method == "POST" and request.FILES.get("file") is not None:
         bom_csv_form = BOMCSVForm(
             request.POST,
             request.FILES,
@@ -2030,9 +2069,9 @@ def part_upload_bom(request, part_id):
         upload_bom_form = UploadBOMForm(initial={"organization": organization})
         bom_csv_form = BOMCSVForm()
 
-    return HttpResponseRedirect(
-        request.META.get("HTTP_REFERER", reverse("bom:home")), locals()
-    )
+    if latest is not None:
+        return HttpResponseRedirect(part_info_tab_url(parent_part, latest))
+    return HttpResponseRedirect(reverse("bom:part-info", kwargs={"part_id": part_id}))
 
 
 @login_required(login_url=BOM_LOGIN_URL)
@@ -2356,56 +2395,13 @@ def manage_bom(request, part_id, part_revision_id):
     organization = profile.organization
 
     part = get_object_or_404(Part, pk=part_id)
-
     part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
-
-    title = "ویرایش درخت محصول (BOM) متریال " + part.full_part_number()
 
     if part.organization != organization:
         messages.error(request, "Cant access a part that is not yours!")
         return HttpResponseRedirect(request.META.get("HTTP_REFERER"), "/")
 
-    add_subpart_form = AddSubpartForm(
-        initial={
-            "count": 1,
-        },
-        organization=organization,
-        part_id=part_id,
-    )
-    upload_subparts_csv_form = FileForm()
-
-    qty = get_session_part_quantity(request, part_id, default=100)
-
-    try:
-        indented_bom = part_revision.indented(top_level_quantity=qty)
-    except (RuntimeError, RecursionError):
-        messages.error(
-            request,
-            "Error: infinite recursion in part relationship.",
-        )
-        indented_bom = []
-    except AttributeError as err:
-        messages.error(request, err)
-        indented_bom = []
-
-    references_seen = set()
-    duplicate_references = set()
-    for sp in part_revision.assembly.subparts.all():
-        check_references_for_duplicates(
-            sp.reference, references_seen, duplicate_references
-        )
-
-    if len(duplicate_references) > 0:
-        sorted_duplicate_references = sorted(
-            duplicate_references, key=prep_for_sorting_nicely
-        )
-        messages.warning(
-            request,
-            "Warning: The following BoM references are associated with multiple parts: "
-            + str(sorted_duplicate_references),
-        )
-
-    return TemplateResponse(request, "bom/part-revision-manage-bom.html", locals())
+    return HttpResponseRedirect(part_info_tab_url(part, part_revision))
 
 
 @login_required(login_url=BOM_LOGIN_URL)
@@ -2430,6 +2426,9 @@ def add_subpart(request, part_id, part_revision_id):
     organization = profile.organization
 
     part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
+    locked = redirect_if_revision_locked(request, part_revision)
+    if locked:
+        return locked
 
     if request.method == "POST":
         add_subpart_form = AddSubpartForm(
@@ -2476,26 +2475,20 @@ def add_subpart(request, part_id, part_revision_id):
         else:
             messages.error(request, add_subpart_form.errors)
     part_revision.clear_bom_unit_cost_cache()
-    return HttpResponseRedirect(
-        reverse(
-            "bom:part-manage-bom",
-            kwargs={"part_id": part_id, "part_revision_id": part_revision_id},
-        )
-    )
+    return HttpResponseRedirect(part_info_tab_url(part_revision.part, part_revision))
 
 
 @login_required(login_url=BOM_LOGIN_URL)
 @organization_admin
 def remove_subpart(request, part_id, part_revision_id, subpart_id):
+    part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
+    locked = redirect_if_revision_locked(request, part_revision)
+    if locked:
+        return locked
     subpart = get_object_or_404(Subpart, pk=subpart_id)
     subpart.delete()
     subpart.part_revision.clear_bom_unit_cost_cache()
-    return HttpResponseRedirect(
-        reverse(
-            "bom:part-manage-bom",
-            kwargs={"part_id": part_id, "part_revision_id": part_revision_id},
-        )
-    )
+    return HttpResponseRedirect(part_info_tab_url(part_revision.part, part_revision))
 
 
 @login_required(login_url=BOM_LOGIN_URL)
@@ -2541,6 +2534,10 @@ def edit_subpart(request, part_id, part_revision_id, subpart_id):
     )
 
     part = get_object_or_404(Part, pk=part_id)
+    part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
+    locked = redirect_if_revision_locked(request, part_revision)
+    if locked:
+        return locked
     subpart = get_object_or_404(Subpart, pk=subpart_id)
     title = "Edit Subpart"
     h1 = "{} {}".format(
@@ -2559,12 +2556,7 @@ def edit_subpart(request, part_id, part_revision_id, subpart_id):
             count = form.cleaned_data["count"]
             form.save()
             subpart.part_revision.clear_bom_unit_cost_cache()
-            return HttpResponseRedirect(
-                reverse(
-                    "bom:part-manage-bom",
-                    kwargs={"part_id": part_id, "part_revision_id": part_revision_id},
-                )
-            )
+            return HttpResponseRedirect(part_info_tab_url(part, part_revision))
         else:
             return TemplateResponse(request, "bom/bom-form.html", locals())
 
@@ -2582,14 +2574,12 @@ def edit_subpart(request, part_id, part_revision_id, subpart_id):
 @organization_admin
 def remove_all_subparts(request, part_id, part_revision_id):
     part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
+    locked = redirect_if_revision_locked(request, part_revision)
+    if locked:
+        return locked
     part_revision.assembly.subparts.all().delete()
     part_revision.clear_bom_unit_cost_cache()
-    return HttpResponseRedirect(
-        reverse(
-            "bom:part-manage-bom",
-            kwargs={"part_id": part_id, "part_revision_id": part_revision_id},
-        )
-    )
+    return HttpResponseRedirect(part_info_tab_url(part_revision.part, part_revision))
 
 
 @login_required(login_url=BOM_LOGIN_URL)

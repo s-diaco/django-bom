@@ -190,17 +190,33 @@ class TestUiSmoke(TransactionTestCase):
 
         part = organization.part_set.first()
         part_rev = part.latest()
+        part_rev.material = "with_loi"
+        part_rev.save(update_fields=["material"])
+
         manage = self.client.get(
             reverse(
                 "bom:part-manage-bom",
                 kwargs={"part_id": part.id, "part_revision_id": part_rev.id},
             )
         )
-        self.assertEqual(manage.status_code, 200)
-        manage_html = manage.content.decode("utf-8")
-        self.assertIn("افزودن", manage_html)
-        self.assertIn("flex flex-wrap items-end gap-3", manage_html)
-        self.assertIn("bom-btn-primary", manage_html)
+        self.assertEqual(manage.status_code, 302)
+        self.assertIn("tab_anchor=bom", manage["Location"])
+
+        info = self.client.get(reverse("bom:part-info", kwargs={"part_id": part.id}))
+        self.assertEqual(info.status_code, 200)
+        info_html = info.content.decode("utf-8")
+        self.assertIn("افزودن", info_html)
+        self.assertIn("flex flex-wrap items-end gap-3", info_html)
+        self.assertIn("bom-btn-primary", info_html)
+        self.assertNotIn("مدیریت درخت محصول", info_html)
+        self.assertIn("دانلود CSV درخت محصول", info_html)
+        self.assertIn(
+            reverse(
+                "bom:part-revision-export-bom",
+                kwargs={"part_revision_id": part_rev.id},
+            ),
+            info_html,
+        )
 
     def test_settings_password_reset_uses_tailwind_form_classes(self):
         user, organization = create_user_and_organization()

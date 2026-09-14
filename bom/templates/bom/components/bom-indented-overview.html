@@ -11,6 +11,18 @@
         <button type="button" class="bom-btn-secondary" id="overview-print-button">
             <i class="material-icons text-base">print</i>{% trans "Print" %}
         </button>
+        {% if part_revision %}
+        <div class="relative" x-data="{ open: false }">
+            <button type="button" class="bom-btn-secondary" @click="open = !open" title="{% trans "Download" %}">
+                <i class="material-icons text-base">file_download</i>{% trans "Download" %}
+            </button>
+            <div x-show="open" x-cloak @click.outside="open = false" class="bom-dropdown">
+                <a href="{% url 'bom:part-revision-export-bom' part_revision_id=part_revision.id %}">دانلود CSV درخت محصول</a>
+                <a href="{% url 'bom:part-revision-export-bom-sourcing' part_revision_id=part_revision.id %}">دانلود CSV (منابع تأمین)</a>
+                <a href="{% url 'bom:part-revision-export-bom-sourcing-detailed' part_revision_id=part_revision.id %}">دانلود CSV (جزئیات تأمین)</a>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endif %}
@@ -97,18 +109,6 @@
         // Hide button-expand and button-collapse on page load
         $('.button-expand').hide();
         $('.button-collapse').hide();
-
-        // Initialize dropdowns
-        $('.dropdown-trigger-indented').dropdown({
-            inDuration: 200,
-            outDuration: 225,
-            constrainWidth: false, // Does not change width of dropdown to that of the activator
-            hover: false, // Activate on hover
-            gutter: 0, // Spacing from edge
-            alignment: 'left', // Displays dropdown with edge aligned to the left of button
-            stopPropagation: false, // Stops event propagation
-            coverTrigger: false
-        });
 
         // Initialize tooltips
         $('.tooltipped').tooltip();

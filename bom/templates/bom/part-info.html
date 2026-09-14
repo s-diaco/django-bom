@@ -3,6 +3,7 @@
 {% load static %}
 {% load djmoney %}
 {% load bom_dates %}
+{% load bom_forms %}
 
 {% block head-title %}{{ part.full_part_number }}{% if part_revision %} {{ part_revision.description }}{% endif %}{% endblock %}
 
@@ -186,20 +187,56 @@
                 {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
                 <div id="bom" class="col s12">
                     <h4 class="printer-show">درخت محصول</h4>
-                    <div id="bom-indented">
+                    {% if add_subpart_form %}{{ add_subpart_form.media }}{% endif %}
+                    <div id="bom-tree">
                         {% comment %}
                         <div class="text-center" style="padding-top: 8px;">
                             <span>Indented</span> | <a onclick="showFlatBOM()" href="#">Flat</a>
                         </div>
                         {% endcomment %}
-                        {% include 'bom/components/bom-indented.html' with order_by=order_by bom_items=indented_bom.parts part=part part_revision=part_revision profile=profile %}
+                        {% include 'bom/components/bom-indented.html' with order_by=order_by bom_items=indented_bom.parts part=part part_revision=part_revision profile=profile manage=can_manage_bom %}
                     </div>
                     <div id="bom-flat" style="display: none;">
                         <div class="text-center" style="padding-top: 8px;">
                             <a onclick="showIndentedBOM()" href="#">Indented</a> | <span>Flat</span>
                         </div>
-                        {% include 'bom/components/bom-flat.html' with order_by=order_by bom_items=flat_bom.parts part=part part_revision=part_revision profile=profile %}
+                        {% include 'bom/components/bom-flat.html' with order_by=order_by bom_items=flat_bom.parts part=part part_revision=part_revision profile=profile manage=can_manage_bom %}
                     </div>
+                    {% if can_manage_bom %}
+                    <div class="bom-panel-pad mt-4">
+                        <h2 class="mb-3 text-base font-semibold text-ink">افزودن زیرشاخه</h2>
+                        <form action="{% url 'bom:part-add-subpart' part_id=part.id part_revision_id=part_revision.id %}"
+                                method="post" class="flex flex-wrap items-end gap-3">
+                            {% csrf_token %}
+                            <div class="min-w-0 flex-1">
+                                {{ add_subpart_form.subpart_part_number|bom_form }}
+                            </div>
+                            <div class="min-w-40">
+                                {{ add_subpart_form.count|bom_form }}
+                            </div>
+                            {{ add_subpart_form.do_not_load|bom_form:'hidden' }}
+                            {{ add_subpart_form.reference|bom_form:'hidden' }}
+                            <button class="bom-btn-primary" type="submit" name="action">افزودن</button>
+                        </form>
+                    </div>
+                    <div class="bom-panel-pad mt-4">
+                        <h2 class="mb-2 text-base font-semibold text-ink">افزودن کل زیرشاخه‌ها</h2>
+                        <p class="mb-2 text-sm text-ink-muted">برای افزودن زیرشاخه‌ها یک فایل csv آپلود کنید که حداقل دو ستون داشته باشد:
+                            <b>part_number</b> <i>یا</i> <b>manufacturer_part_number</b> و <b>quantity</b>; ستون‌های 'part_number' یا
+                            'manufacturer_part_number' باید کدهایی باشند که قبلاً در این سیستم تعریف شده‌اند.</p>
+                        <p class="mb-4 text-sm text-ink-muted">ستون‌های اضافه: 'reference' یا 'designator' برای افزودن فیلد رفرنس به زیرشاخه ;
+                           'do_not_load' اگر نمی‌خواهید متریال به در درخت لود شود.</p>
+                        <form action="{% url 'bom:part-upload-bom' part_id=part.id %}" method="post" enctype="multipart/form-data" class="flex flex-wrap items-end gap-3">
+                            {% csrf_token %}
+                            <div class="min-w-0 flex-1">
+                                <label class="bom-label" for="{{ upload_subparts_csv_form.file.id_for_label }}">انتخاب فایل</label>
+                                {{ upload_subparts_csv_form.file }}
+                                {{ upload_subparts_csv_form.file.errors }}
+                            </div>
+                            <button class="bom-btn-primary" type="submit">آپلود</button>
+                        </form>
+                    </div>
+                    {% endif %}
                     <div class="row">
                         <div class="col s4 l2 text-right">قیمت واحد (کیلو گرم):</div>
                         <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ childs_unit_cost|default_if_none:'-' }}</span></div>
@@ -238,7 +275,7 @@
                                             </tr>
                                         {% empty %}
                                             <tr>
-                                                <td colspan="99" style="text-align: center; height: 20vh;"><i>این متریال در هیج محصولی استفاده نمی‌شود. برای افزودن آن به یک محصول، به درخت محصول مورد نظر بروید و روی "مدیریت درخت محصول", و سپس "ویرایش" کلیک کنید.</i></td>
+                                                <td colspan="99" style="text-align: center; height: 20vh;"><i>این متریال در هیج محصولی استفاده نمی‌شود. برای افزودن آن به یک محصول، به درخت محصول مورد نظر بروید و زیرشاخه را اضافه کنید.</i></td>
                                             </tr>
                                         {% endfor %}
                                         </tbody>
@@ -274,7 +311,7 @@
                                             <tr>
                                                 <td colspan="99" style="text-align: center; height: 20vh;"><i>این متریال در هیج محصولی استفاده نمی‌شود.
                                                     {% if profile.role == 'A' %}
-                                                    برای افزودن آن به یک محصول، به درخت محصول مورد نظر بروید و روی "مدیریت درخت محصول", و سپس "ویرایش" کلیک کنید.
+                                                    برای افزودن آن به یک محصول، به درخت محصول مورد نظر بروید و زیرشاخه را اضافه کنید.
                                                     {% endif %}
                                                 </i></td>
                                             </tr>
@@ -353,7 +390,7 @@
                 <div id="overview" class="col s12">
                     <h4 class="printer-show">نمای کلی</h4>
                     <br />
-                    <div id="bom-indented">
+                    <div id="overview-tree">
                         {% include 'bom/components/bom-indented-overview.html' with order_by=order_by bom_items=indented_bom.parts part=part part_revision=part_revision profile=profile childs_unit_cost=childs_unit_cost total_bom_weight=total_bom_weight product_weight=product_weight material=part_revision.material %}
                     </div>
                     <div class="row">
@@ -474,13 +511,13 @@
 
     <script>
         function showFlatBOM() {
-            $('#bom-indented').hide();
+            $('#bom-tree').hide();
             $('#bom-flat').show();
         }
 
         function showIndentedBOM() {
             $('#bom-flat').hide();
-            $('#bom-indented').show();
+            $('#bom-tree').show();
         }
     </script>
 

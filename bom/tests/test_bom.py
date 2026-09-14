@@ -339,7 +339,9 @@ class TestBOM(TransactionTestCase):
                 },
             )
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("bom:part-info", kwargs={"part_id": p1.id}), response.url)
+        self.assertIn("tab_anchor=bom", response.url)
 
         response = self.client.post(
             reverse(
@@ -350,7 +352,7 @@ class TestBOM(TransactionTestCase):
                 },
             )
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
         response = self.client.post(
             reverse(
@@ -361,7 +363,8 @@ class TestBOM(TransactionTestCase):
                 },
             )
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("tab_anchor=bom", response.url)
 
     def test_part_export_bom(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
