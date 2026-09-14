@@ -8,49 +8,19 @@
 {% endblock %}
 
 <div class="row printer-hide" style="padding-top: 16px;">
-    <div class="col s6 left left-align">
+    <div class="col {% if manage and profile.role == 'A' %}s6{% else %}s12{% endif %} left left-align">
         <a class="bom-btn-icon button-expand" data-position="bottom" data-tooltip="Expand BOM" onclick="expandTree()"><i class="material-icons">unfold_more</i></a>
         <a class="bom-btn-icon button-collapse" data-position="bottom" data-tooltip="Collapse BOM" onclick="collapseTree()"><i class="material-icons">unfold_less</i></a>
         <a class="bom-btn-icon button-reset-filter-indented" data-position="bottom" data-tooltip="Reset filter" onclick="refreshTableSorterIndented()"><i
                 class="material-icons">refresh</i></a>
     </div>
+    {% if manage and profile.role == 'A' %}
     <div class="col s6 right-align">
-        {% if manage and profile.role == 'A' %}
             <a class="bom-btn-danger"
-               href="{% url 'bom:part-remove-all-subparts' part_id=part.id part_revision_id=part_revision_id %}"
+               href="{% url 'bom:part-remove-all-subparts' part_id=part.id part_revision_id=part_revision.id %}"
                onclick="return confirm('همه زیرشاخه‌های درخت محصول  {{ part.full_part_number }} خذف شوند?')">حذف همه زیرشاخه‌ها</a>
-        {% else %}
-            <!-- Dropdown Trigger -->
-            <button class="dropdown-trigger-indented bom-btn-secondary" data-target='manage-bom-{{ part.id }}-indented'>
-                <i class="material-icons right">settings</i><i class="material-icons left">arrow_drop_down</i>مدیریت
-            </button>
-            <!-- Dropdown Structure -->
-            <ul id='manage-bom-{{ part.id }}-indented' class='dropdown-content'>
-                {% if profile.role == 'A' %}
-                    <li>{% if part_revision.configuration == 'W' %}
-                        <a class="green-text text-lighten-1" href="{% url 'bom:part-manage-bom' part_id=part.id part_revision_id=part_revision.id %}">
-                            <i class="material-icons green-text text-lighten-1 right">edit</i>ویرایش درخت محصول</a>
-                    {% else %}
-                        <a class="grey-text text-lighten-1" onclick="alert('Can\'t edit a released part!')"><i class="material-icons grey-text text-lighten-1">edit</i>ویرایش درخت محصول (BOM)</a>
-                    {% endif %}
-                    </li>
-                {% endif %}
-                {% if part_revision %}
-                    <li><a class="green-text text-lighten-1" href="{% url 'bom:part-revision-export-bom' part_revision_id=part_revision.id %}">
-                        <i class="material-icons green-text text-lighten-1 right">cloud_download</i>دانلود CSV</a>
-                    </li>
-                    <li><a class="green-text text-lighten-1" href="{% url 'bom:part-revision-export-bom-sourcing' part_revision_id=part_revision.id %}">
-                        <i class="material-icons green-text text-lighten-1 right">cloud_download</i>دانلود CSV (منابع تأمین)</a>
-                    </li>
-                    <li><a class="green-text text-lighten-1" href="{% url 'bom:part-revision-export-bom-sourcing-detailed' part_revision_id=part_revision.id %}">
-                        <i class="material-icons green-text text-lighten-1 right">cloud_download</i>دانلود CSV (جزئیات تأمین)</a>
-                    </li>
-                {% else %}
-                    <li><a class="green-text text-lighten-1 disabled" href=""><i class="material-icons green-text text-lighten-1 right">cloud_download</i>دانلود CSV</a></li>
-                {% endif %}
-            </ul>
-        {% endif %}
     </div>
+    {% endif %}
 </div>
 <div class="bom-table-wrap responsive-table-wrapper">
     <table id="indented-bom" class="bom-table part-list single-line">
@@ -115,7 +85,7 @@
                             <!-- Dropdown Structure -->
                             <ul id='dropdown{{ subpart.subpart.id }}' class='dropdown-content'>
                                 <li><a class="green-text text-lighten-1"
-                                    href="{% url 'bom:part-edit-subpart' part_id=part.id part_revision_id=part_revision_id subpart_id=subpart.subpart.id %}"><i
+                                    href="{% url 'bom:part-edit-subpart' part_id=part.id part_revision_id=part_revision.id subpart_id=subpart.subpart.id %}"><i
                                         class="material-icons green-text text-lighten-1 right">edit</i>ویرایش با تغییر ورژن</a>
                                 <li class="divider" tabindex="-1"></li>
                                 <li><a class="red-text text-lighten-1"
@@ -203,17 +173,6 @@
 
 <script>
     $(document).ready(function () {
-        $('.dropdown-trigger-indented').dropdown({
-            inDuration: 200,
-            outDuration: 225,
-            constrainWidth: false, // Does not change width of dropdown to that of the activator
-            hover: false, // Activate on hover
-            gutter: 0, // Spacing from edge
-            alignment: 'left', // Displays dropdown with edge aligned to the left of button
-            stopPropagation: false, // Stops event propagation
-            coverTrigger: false
-        });
-
         $('.tooltipped').tooltip();
     });
 </script>

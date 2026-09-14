@@ -320,6 +320,8 @@ class TestBOM(TransactionTestCase):
         html = response.content.decode("utf-8")
         self.assertIn('id="overview-tab"', html)
         self.assertIn('id="overview-print-button"', html)
+        self.assertIn("دانلود CSV درخت محصول", html)
+        self.assertNotIn("مدیریت درخت محصول", html)
         self.assertIn("printing-overview", html)
         self.assertIn('id="indented-bom-overview"', html)
         # Locale-safe BoM price calc: numeric attrs + JS reads (not Money display text)
@@ -339,7 +341,9 @@ class TestBOM(TransactionTestCase):
                 },
             )
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("bom:part-info", kwargs={"part_id": p1.id}), response.url)
+        self.assertIn("tab_anchor=bom", response.url)
 
         response = self.client.post(
             reverse(
@@ -350,7 +354,7 @@ class TestBOM(TransactionTestCase):
                 },
             )
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
         response = self.client.post(
             reverse(
@@ -361,7 +365,8 @@ class TestBOM(TransactionTestCase):
                 },
             )
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("tab_anchor=bom", response.url)
 
     def test_part_export_bom(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
