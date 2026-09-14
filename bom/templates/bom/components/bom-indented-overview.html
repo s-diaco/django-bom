@@ -122,8 +122,9 @@
         // Iterate over each row in the table
         $('#indented-bom-overview tbody tr').each(function () {
             // Use numeric data attrs — display text is locale-dependent (ریال vs IRR)
-            const unitCost = parseFloat($(this).find('[id^="bom-indented-unit-cost-"]').data('unit-cost')) || 0;
-            const quantity = parseFloat($(this).find('td:nth-child(5)').data('quantity')) || 0;
+            // Prefer .attr over .data: jQuery camelCases data-unit-cost → unitCost
+            const unitCost = parseFloat($(this).find('[id^="bom-indented-unit-cost-"]').attr('data-unit-cost')) || 0;
+            const quantity = parseFloat($(this).find('td:nth-child(5)').attr('data-quantity')) || 0;
 
             // Calculate the total cost
             const totalCost = unitCost * quantity / productWeight;
