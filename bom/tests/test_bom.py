@@ -322,6 +322,10 @@ class TestBOM(TransactionTestCase):
         self.assertIn('id="overview-print-button"', html)
         self.assertIn("printing-overview", html)
         self.assertIn('id="indented-bom-overview"', html)
+        # Locale-safe BoM price calc: numeric attrs + JS reads (not Money display text)
+        self.assertIn("data-quantity=", html)
+        self.assertIn(".attr('data-unit-cost')", html)
+        self.assertIn(".attr('data-quantity')", html)
 
     def test_part_manage_bom(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
