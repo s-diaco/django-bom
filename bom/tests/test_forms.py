@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.db import connection
 from django.test import Client, TestCase, override_settings
+from django.test.utils import CaptureQueriesContext
 from django.utils import translation
 
 from bom.forms import (
@@ -112,6 +114,14 @@ class TestForms(TestCase):
         self.assertFalse(form.is_valid())
         self.assertTrue("subpart_part_number" in str(form.errors))
         self.assertTrue("This field is required." in str(form.errors))
+
+    def test_add_subpart_form_render_query_budget(self):
+        (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+        with CaptureQueriesContext(connection) as ctx:
+            form = AddSubpartForm(organization=self.organization, part_id=p1.id)
+            html = str(form["subpart_part_number"])
+        self.assertLessEqual(len(ctx), 5)
+        self.assertIn(p2.full_part_number(), html)
 
     def test_add_sellerpart_form(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)

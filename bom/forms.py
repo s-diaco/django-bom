@@ -13,6 +13,7 @@ from django.core.validators import (
     MinLengthValidator,
 )
 from django.db import IntegrityError
+from django.db.models import OuterRef, Subquery
 from django.forms.models import model_to_dict
 from django.utils.translation import gettext_lazy as _
 
@@ -1959,6 +1960,10 @@ class SubpartForm(forms.ModelForm):
         return cleaned_data
 
 
+def _part_autocomplete_label(part):
+    return f"{part.full_part_number()} ┆ {part._autocomplete_synopsis or ''}"
+
+
 class AddSubpartForm(forms.Form):
     subpart_part_number = forms.CharField(required=True, label="Subpart part number")
     count = forms.FloatField(required=False, label=_("weight"))
@@ -1968,23 +1973,34 @@ class AddSubpartForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
         self.part_id = kwargs.pop("part_id", None)
-        self.part = Part.objects.get(id=self.part_id)
-        self.part_revision = self.part.latest()
-        self.unusable_part_rev_ids = [
-            pr.id for pr in self.part_revision.where_used_full()
-        ]
-        self.unusable_part_rev_ids.append(self.part_revision.id)
         super(AddSubpartForm, self).__init__(*args, **kwargs)
+        latest_synopsis = (
+            PartRevision.objects.filter(part_id=OuterRef("pk"))
+            .order_by("-id")
+            .values("displayable_synopsis")[:1]
+        )
         self.fields["subpart_part_number"] = forms.CharField(
             required=True,
             label=_("کد زیرشاخه"),
             widget=AutocompleteTextInput(
-                queryset=Part.objects.filter(organization=self.organization).exclude(
-                    id=self.part_id
-                ),
-                verbose_string_function=Part.verbose_str,
+                queryset=Part.objects.filter(organization=self.organization)
+                .exclude(id=self.part_id)
+                .select_related("organization", "number_class")
+                .annotate(_autocomplete_synopsis=Subquery(latest_synopsis)),
+                verbose_string_function=_part_autocomplete_label,
             ),
         )
+
+    @property
+    def unusable_part_rev_ids(self):
+        cached = getattr(self, "_unusable_part_rev_ids", None)
+        if cached is None:
+            part = Part.objects.get(id=self.part_id)
+            part_revision = part.latest()
+            cached = [pr.id for pr in part_revision.where_used_full()]
+            cached.append(part_revision.id)
+            self._unusable_part_rev_ids = cached
+        return cached
 
     def clean_count(self):
         count = self.cleaned_data["count"]
