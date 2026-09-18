@@ -65,7 +65,7 @@ msgstr "پسورد را دوباره برای تأیید وارد کنید."
 #: bom/forms.py:109 bom/templates/registration/login.html:33
 #: bom/templates/registration/login.html:36
 msgid "Password"
-msgstr "رمز"
+msgstr "گذرواژه"
 
 #: bom/forms.py:110
 #| msgid "Confirm New Password"
@@ -1162,7 +1162,7 @@ msgstr "وزن BoM"
 #: bom/templates/bom/part-info.html:206 bom/templates/bom/part-info.html:399
 #| msgid "Unit Cost"
 msgid "Unit cost (kg)"
-msgstr "قیمت واحد (کیلوگرم)"
+msgstr "قیمت واحد (کیلو گرم)"
 
 #: bom/templates/bom/part-info.html:212
 #, python-format

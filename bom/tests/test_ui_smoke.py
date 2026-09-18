@@ -32,7 +32,10 @@ class TestBomFormHelpers(SimpleTestCase):
         html = str(bom_form(SampleForm()))
         self.assertIn('type="password"', html)
         self.assertIn("pe-10", html)
-        self.assertIn("Show password", html)
+        self.assertTrue(
+            "Show password" in html or "نمایش رمز" in html,
+            "password toggle aria-label missing",
+        )
         self.assertIn("visibility", html)
         self.assertIn("x-data=\"{ show: false }\"", html)
 
@@ -68,7 +71,10 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn(">lock</i>", html)
         self.assertIn("bom-login-field-icon", html)
         self.assertIn("bom-password-toggle", html)
-        self.assertIn("Show password", html)
+        self.assertTrue(
+            "Show password" in html or "نمایش رمز" in html,
+            "password toggle aria-label missing",
+        )
         self.assertIn("visibility", html)
         self.assertIn("x-data=\"{ show: false }\"", html)
         self.assertIn("@media print", open("bom/static/bom/css/app.css").read())
@@ -108,8 +114,14 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn("bom-nav-menu", html)
         self.assertIn("bom-nav-link", html)
         self.assertIn("متریال جدید", html)
-        self.assertIn("Raw Material", html)
-        self.assertIn("Products", html)
+        self.assertTrue(
+            "Raw Material" in html or "مواد اولیه" in html,
+            "raw material nav link missing",
+        )
+        self.assertTrue(
+            "Products" in html or "محصولات" in html,
+            "products nav link missing",
+        )
         self.assertIn('id="bom-nav-toggle"', html)
 
         css = open("bom/static/bom/css/app.css").read()

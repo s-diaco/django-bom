@@ -2499,7 +2499,7 @@ class BOMCSVForm(forms.Form):
                     contains_parent = False
                     indented_bom = existing_part_revision.indented()
                     for (
-                        _,
+                        _indent,
                         sp,
                     ) in (
                         indented_bom.parts.items()

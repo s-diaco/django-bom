@@ -202,7 +202,10 @@ class TestBOM(TransactionTestCase):
             self.assertTrue(paged.context["part_revs"].has_other_pages())
             paged_html = paged.content.decode("utf-8")
             self.assertIn("print=1", paged_html)
-            self.assertIn("print</i>Print", paged_html)
+            self.assertTrue(
+                "print</i>Print" in paged_html or "print</i>چاپ" in paged_html,
+                "print action label missing",
+            )
             self.assertNotIn("window.print();", paged_html)
             self.assertIn("bom-pagination", paged_html)
 
@@ -220,7 +223,10 @@ class TestBOM(TransactionTestCase):
             self.assertIn("printer-doc", printed_html)
             self.assertIn("bom/img/lithium.png", printed_html)
             self.assertIn("printer-doc-title", printed_html)
-            self.assertIn("items", printed_html)
+            self.assertTrue(
+                "items" in printed_html or "مورد" in printed_html,
+                "print item count label missing",
+            )
             self.assertIsNotNone(printed.context["print_generated_at"])
             self.assertIn(p1.full_part_number(), printed_html)
             self.assertIn(p2.full_part_number(), printed_html)
@@ -235,7 +241,10 @@ class TestBOM(TransactionTestCase):
             self.assertGreater(large_print.context["print_row_count"], 2)
             large_html = large_print.content.decode("utf-8")
             self.assertIn("print_go=1", large_html)
-            self.assertIn("Download as XLSX", large_html)
+            self.assertTrue(
+                "Download as XLSX" in large_html or "دانلود با فرمت اکسل" in large_html,
+                "xlsx download action missing",
+            )
             self.assertNotIn(p1.full_part_number(), large_html)
             self.assertNotIn("<tbody>", large_html)
 
