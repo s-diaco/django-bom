@@ -1784,3 +1784,12 @@ msgstr "رمز عبورهای جدید یکسان نیستند."
 #: bom/views/views.py:3188
 msgid "Your password has been successfully reset."
 msgstr "رمز عبور شما با موفقیت عوض شد."
+
+msgid "Category"
+msgstr "دسته"
+
+msgid "Part class"
+msgstr "کلاس متریال"
+
+msgid "Select a part class."
+msgstr "یک کلاس متریال انتخاب کنید."

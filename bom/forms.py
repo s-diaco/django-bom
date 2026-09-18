@@ -1047,8 +1047,9 @@ class PartClassSelectionForm(forms.Form):
         super(PartClassSelectionForm, self).__init__(*args, **kwargs)
         self.fields["part_class"] = forms.CharField(
             required=False,
+            label=_("Part class"),
             widget=AutocompleteTextInput(
-                attrs={"placeholder": "Select a part class."},
+                attrs={"placeholder": _("Select a part class.")},
                 autocomplete_submit=True,
                 queryset=PartClass.objects.filter(organization=self.organization),
             ),
