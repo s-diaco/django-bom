@@ -131,7 +131,7 @@
                             </div>
                             {% else %}
                             <div class="row">
-                                <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Loss" %}:</div>
+                                <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "LoI" %}:</div>
                                 <div class="col s8 l10">{{ part_revision.tolerance|default:'-' }}{% if part_revision.tolerance %} %{% endif %}</div>
                             </div>
                             {% endif %}
@@ -255,7 +255,7 @@
                                     <table class="bom-table">
                                         <thead>
                                         <tr>
-                                            <th>{% trans "Product number" %}</th>
+                                            <th>{% trans "Part Number" context "where_used" %}</th>
                                             <th>{% trans "Product" %}</th>
                                             <th>{% trans "Revision" %}</th>
                                             <th>{% trans "Manufacturer" %}</th>
@@ -289,7 +289,7 @@
                                     <table class="bom-table">
                                         <thead>
                                         <tr>
-                                            <th>{% trans "Product number" %}</th>
+                                            <th>{% trans "Part Number" context "where_used" %}</th>
                                             <th>{% trans "Product" %}</th>
                                             <th>{% trans "Revision" %}</th>
                                             <th>{% trans "Manufacturer" %}</th>

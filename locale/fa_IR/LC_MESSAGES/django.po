@@ -1092,7 +1092,7 @@ msgid "Cost excluding loss (LOI)"
 msgstr "محاسبه بدون احتساب پرت (LOI)"
 
 #: bom/templates/bom/part-info.html:134
-msgid "Loss"
+msgid "LoI"
 msgstr "پرت"
 
 #: bom/templates/bom/part-info.html:139
@@ -1171,7 +1171,8 @@ msgid "Where this revision is used"
 msgstr "موارد استفاده این ورژن"
 
 #: bom/templates/bom/part-info.html:259 bom/templates/bom/part-info.html:293
-msgid "Product number"
+msgctxt "where_used"
+msgid "Part Number"
 msgstr "کد محصول"
 
 #: bom/templates/bom/part-info.html:260 bom/templates/bom/part-info.html:294
