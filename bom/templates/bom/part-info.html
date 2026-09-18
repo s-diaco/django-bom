@@ -202,7 +202,15 @@
                         </div>
                         {% include 'bom/components/bom-flat.html' with order_by=order_by bom_items=flat_bom.parts part=part part_revision=part_revision profile=profile manage=can_manage_bom %}
                     </div>
+                    <p class="mt-3 text-sm text-ink">قیمت واحد (کیلو گرم): {{ childs_unit_cost|default_if_none:'-' }}</p>
                     {% if can_manage_bom %}
+                    {% if part_revision.assembly.subparts.exists %}
+                    <div class="mt-4 printer-hide">
+                        <a class="bom-btn-danger"
+                           href="{% url 'bom:part-remove-all-subparts' part_id=part.id part_revision_id=part_revision.id %}"
+                           onclick="return confirm('همه زیرشاخه‌های درخت محصول {{ part.full_part_number }} حذف شوند?')">حذف همه زیرشاخه‌ها</a>
+                    </div>
+                    {% endif %}
                     <div class="bom-panel-pad mt-4">
                         <h2 class="mb-3 text-base font-semibold text-ink">افزودن زیرشاخه</h2>
                         <form action="{% url 'bom:part-add-subpart' part_id=part.id part_revision_id=part_revision.id %}"
@@ -237,10 +245,6 @@
                         </form>
                     </div>
                     {% endif %}
-                    <div class="row">
-                        <div class="col s4 l2 text-right">قیمت واحد (کیلو گرم):</div>
-                        <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ childs_unit_cost|default_if_none:'-' }}</span></div>
-                    </div>
                 </div>
                 {% endif %}
                 <div id="used" class="col s12">

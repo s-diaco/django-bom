@@ -97,7 +97,7 @@ class TestUiSmoke(TransactionTestCase):
         profile.role = "A"
         profile.save()
         self.client.login(username="kasper", password="ghostpassword")
-        create_some_fake_parts(organization=organization)
+        _p1, _p2, assembly_part, _p4 = create_some_fake_parts(organization=organization)
 
         home = self.client.get(reverse("bom:home"))
         self.assertEqual(home.status_code, 200)
@@ -217,6 +217,27 @@ class TestUiSmoke(TransactionTestCase):
             ),
             info_html,
         )
+
+        assembly_rev = assembly_part.latest()
+        assembly_rev.material = "with_loi"
+        assembly_rev.save(update_fields=["material"])
+        bom = self.client.get(reverse("bom:part-info", kwargs={"part_id": assembly_part.id}))
+        self.assertEqual(bom.status_code, 200)
+        bom_html = bom.content.decode("utf-8")
+        unfold_at = bom_html.find("unfold_more")
+        table_at = bom_html.find('id="indented-bom"')
+        cost_at = bom_html.find("قیمت واحد (کیلو گرم):")
+        delete_at = bom_html.find("حذف همه زیرشاخه‌ها")
+        add_at = bom_html.find("افزودن زیرشاخه")
+        self.assertNotEqual(unfold_at, -1)
+        self.assertNotEqual(table_at, -1)
+        self.assertNotEqual(cost_at, -1)
+        self.assertNotEqual(delete_at, -1)
+        self.assertNotEqual(add_at, -1)
+        self.assertLess(unfold_at, table_at)
+        self.assertLess(table_at, cost_at)
+        self.assertLess(cost_at, delete_at)
+        self.assertLess(delete_at, add_at)
 
     def test_settings_password_reset_uses_tailwind_form_classes(self):
         user, organization = create_user_and_organization()
