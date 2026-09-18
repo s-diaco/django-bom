@@ -1124,6 +1124,7 @@ a.btn-flat {
   color: var(--color-ink-muted);
   border-bottom: 2px solid transparent;
   text-decoration: none;
+  white-space: nowrap;
   transition: color 0.15s, border-color 0.15s;
 }
 .tabs .tab a.active,
@@ -1132,7 +1133,7 @@ a.btn-flat {
   border-bottom-color: var(--color-primary);
 }
 .tabs-fixed-width .tab {
-  flex: 1;
+  flex: 1 0 auto;
   text-align: center;
 }
 .tabs-fixed-width .tab a {
