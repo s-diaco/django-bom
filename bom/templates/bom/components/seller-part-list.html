@@ -15,6 +15,9 @@
             <th>{% trans "Seller" %}</th>
             <th>{% trans "Seller Part Number" %}</th>
             <th class="bom-num">قیمت</th>
+            <th class="bom-num">حمل</th>
+            <th class="bom-num">عوارض %</th>
+            <th class="bom-num">قیمت تمام‌شده</th>
             <th colspan="2">گزینه‌ها</th>
         </tr>
         </thead>
@@ -25,6 +28,9 @@
                     <td>{{ seller_part.seller.name }}</td>
                     <td>{{ seller_part.seller_part_number }}</td>
                     <td class="bom-num">{{ seller_part.unit_cost }}</td>
+                    <td class="bom-num">{{ seller_part.shipping }}</td>
+                    <td class="bom-num">{{ seller_part.customs_duty_percent }}</td>
+                    <td class="bom-num">{{ seller_part.landed_unit_cost }}</td>
                     <td>{% if profile.role == 'A' %}
                         <a href="{% url 'bom:sellerpart-edit' sellerpart_id=seller_part.id %}"><i
                             class="material-icons green-text text-lighten-1 right">edit</i></a>

@@ -68,7 +68,7 @@
                         {% if subpart.unit_cost %}
                             {{ subpart.unit_cost }}
                         {% else %}
-                            {{ subpart.seller_part.unit_cost | default:"-" }}
+                            {{ subpart.seller_part.landed_unit_cost | default:"-" }}
                         {% endif %}
                     </td>
                     {% if subpart.indent_level == 1 and subpart.subpart is not None and manage %}

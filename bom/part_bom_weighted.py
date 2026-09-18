@@ -27,8 +27,8 @@ class PartBomWeighted(PartBom):
         """
         if not part.indent_level:
             # If the part is the root, calculate its unit cost directly
-            if part.seller_part and part.seller_part.unit_cost is not None:
-                self.unit_cost = part.seller_part.unit_cost
+            if part.seller_part and part.seller_part.landed_unit_cost is not None:
+                self.unit_cost = part.seller_part.landed_unit_cost
             return
 
         def calculate_parent_values(parent_part, subpart_list):
@@ -58,8 +58,9 @@ class PartBomWeighted(PartBom):
 
             parent_part.childs_cost += sum(
                 (
-                    child.seller_part.unit_cost * child.quantity
-                    if child.seller_part and child.seller_part.unit_cost is not None
+                    child.seller_part.landed_unit_cost * child.quantity
+                    if child.seller_part
+                    and child.seller_part.landed_unit_cost is not None
                     else 0
                 )
                 for child in subpart_list
@@ -93,8 +94,9 @@ class PartBomWeighted(PartBom):
                     == parent_part.part_revision.part.number_item
                 ):
                     self.unit_cost = parent_part.childs_unit_cost + (
-                        parent_part.seller_part.unit_cost
-                        if parent_part.seller_part and parent_part.seller_part.unit_cost
+                        parent_part.seller_part.landed_unit_cost
+                        if parent_part.seller_part
+                        and parent_part.seller_part.landed_unit_cost
                         else 0
                     )
                     if parent_part.childs_quantity:
@@ -119,7 +121,8 @@ class PartBomWeighted(PartBom):
                     bom_part.total_extended_quantity
                 )
                 bom_part.order_cost = (
-                    bom_part.total_extended_quantity * bom_part.seller_part.unit_cost
+                    bom_part.total_extended_quantity
+                    * bom_part.seller_part.landed_unit_cost
                 )
             except AttributeError:
                 pass
@@ -165,7 +168,7 @@ class PartBomWeightedItem(PartIndentedBomItem):
         :rtype: Money
         """
         return (
-            self.seller_part.unit_cost + self.childs_unit_cost
-            if self.seller_part and self.seller_part.unit_cost is not None
+            self.seller_part.landed_unit_cost + self.childs_unit_cost
+            if self.seller_part and self.seller_part.landed_unit_cost is not None
             else self.childs_unit_cost
         )

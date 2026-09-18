@@ -86,6 +86,8 @@ class SellerPartAdmin(admin.ModelAdmin):
         "minimum_order_quantity",
         "minimum_pack_quantity",
         "unit_cost",
+        "shipping",
+        "customs_duty_percent",
         "lead_time_days",
         "nre_cost",
         "ncnr",

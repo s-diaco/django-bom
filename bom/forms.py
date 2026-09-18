@@ -427,6 +427,8 @@ class SellerPartForm(forms.ModelForm):
     field_order = [
         "seller",
         "unit_cost",
+        "shipping",
+        "customs_duty_percent",
     ]
 
     def __init__(self, *args, **kwargs):
@@ -438,11 +440,27 @@ class SellerPartForm(forms.ModelForm):
             label=_("Price | {unit}").format(unit=currency_unit_txt),
             initial=0,
         )
+        self.base_fields["shipping"] = forms.DecimalField(
+            required=False,
+            label=_("Shipping | {unit}").format(unit=currency_unit_txt),
+            initial=0,
+            min_value=0,
+        )
+        self.base_fields["customs_duty_percent"] = forms.DecimalField(
+            required=False,
+            label=_("Customs Duty (%)"),
+            initial=0,
+            min_value=0,
+        )
 
         instance = kwargs.get("instance")
         if instance:
             initial = kwargs.get("initial", {})
             initial["unit_cost"] = instance.unit_cost.amount
+            initial["shipping"] = (
+                instance.shipping.amount if instance.shipping is not None else 0
+            )
+            initial["customs_duty_percent"] = instance.customs_duty_percent
             initial["nre_cost"] = instance.nre_cost.amount
             initial["seller_part_number"] = instance.seller_part_number
             kwargs["initial"] = initial
@@ -467,11 +485,21 @@ class SellerPartForm(forms.ModelForm):
         seller = cleaned_data.get("seller")
         new_seller = cleaned_data.get("new_seller")
         unit_cost = cleaned_data.get("unit_cost")
+        shipping = cleaned_data.get("shipping")
+        customs_duty_percent = cleaned_data.get("customs_duty_percent")
         nre_cost = cleaned_data.get("nre_cost")
         seller_part_number = cleaned_data.get("seller_part_number")
         if unit_cost is None:
             raise forms.ValidationError("Invalid unit cost.", code="invalid")
         self.instance.unit_cost = Money(unit_cost, self.organization.currency)
+
+        if shipping is None:
+            shipping = Decimal(0)
+        self.instance.shipping = Money(shipping, self.organization.currency)
+
+        if customs_duty_percent is None:
+            customs_duty_percent = Decimal(0)
+        self.instance.customs_duty_percent = customs_duty_percent
 
         if nre_cost is None:
             # raise forms.ValidationError("Invalid NRE cost.", code="invalid")
