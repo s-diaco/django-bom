@@ -26,6 +26,15 @@ class SellerPartLandedUnitCostTest(SimpleTestCase):
         )
         self.assertEqual(seller_part.landed_unit_cost, Money(50, "USD"))
 
+    def test_landed_unit_cost_coerces_mismatched_shipping_currency(self):
+        # Post-0058: shipping defaulted to USD while unit_cost is org currency.
+        seller_part = SellerPart(
+            unit_cost=Money(50, "IRR"),
+            shipping=Money(0, "USD"),
+            customs_duty_percent=Decimal("0"),
+        )
+        self.assertEqual(seller_part.landed_unit_cost, Money(50, "IRR"))
+
 
 class SellerPartLandedUnitCostFXTest(TestCase):
     def test_landed_unit_cost_uses_manual_org_fx_table(self):

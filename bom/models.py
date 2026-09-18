@@ -1322,11 +1322,11 @@ class SellerPart(models.Model, AsDictModel):
         if self.unit_cost is None:
             return None
         duty = Decimal(self.customs_duty_percent or 0) / Decimal("100")
-        shipping = (
-            self.shipping
-            if self.shipping is not None
-            else Money(0, self.unit_cost.currency)
+        # Coerce shipping into unit_cost currency (0058 defaulted shipping to USD).
+        shipping_amount = (
+            self.shipping.amount if self.shipping is not None else Decimal(0)
         )
+        shipping = Money(shipping_amount, self.unit_cost.currency)
         landed = self.unit_cost * (Decimal("1") + duty) + shipping
 
         org_currency = None
