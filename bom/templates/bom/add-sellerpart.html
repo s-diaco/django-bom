@@ -9,43 +9,69 @@
 {% endblock %}
 
 {% block bom-menu %}
-    <a class="bom-nav-link" href="{% url 'bom:part-info' part_id=manufacturer_part.part.id %}">انصراف</a>
+    <a class="bom-nav-link" href="{% url 'bom:part-info' part_id=manufacturer_part.part.id %}?tab_anchor=sourcing">انصراف</a>
 {% endblock %}
 
 {% block content %}
     <div class="container-app">
     {% if profile.role == 'A' %}
-        <h5>{{ manufacturer_part.part.full_part_number }} | {{ manufacturer_part.part.description }}</h5>
+        <div class="bom-panel-pad max-w-3xl">
+            <header class="mb-5 border-b border-border-subtle pb-4">
+                <h1 class="mb-1 text-xl font-semibold text-ink">{% trans "Seller" %}</h1>
+                <p class="mb-0 text-sm text-ink-muted">
+                    <a class="font-medium" dir="ltr" href="{% url 'bom:part-info' part_id=manufacturer_part.part.id %}">{{ manufacturer_part.part.full_part_number }}</a>
+                    {% if manufacturer_part.part.description %}
+                        <span class="text-ink-subtle">·</span>
+                        {{ manufacturer_part.part.description }}
+                    {% endif %}
+                </p>
+                {% if manufacturer_part.manufacturer or manufacturer_part.manufacturer_part_number %}
+                    <p class="mb-0 mt-1 text-sm text-ink-muted">
+                        {% if manufacturer_part.manufacturer %}{{ manufacturer_part.manufacturer.name }}{% endif %}
+                        {% if manufacturer_part.manufacturer and manufacturer_part.manufacturer_part_number %}
+                            <span class="text-ink-subtle">·</span>
+                        {% endif %}
+                        {% if manufacturer_part.manufacturer_part_number %}
+                            <span dir="ltr">{{ manufacturer_part.manufacturer_part_number }}</span>
+                        {% endif %}
+                    </p>
+                {% endif %}
+            </header>
 
-        <div class="row">
-            <form name="seller" action="{% url 'bom:manufacturer-part-add-sellerpart' manufacturer_part_id=manufacturer_part.id %}" method="post" class="col s12">
+            <form name="seller" action="{% url 'bom:manufacturer-part-add-sellerpart' manufacturer_part_id=manufacturer_part.id %}" method="post">
                 {% csrf_token %}
-                <h2>{% trans "Seller" %}</h2>
-                <p>در صورت محصول بودن "{{ organization }}" را به عنوان تأمین کننده انتخاب کنید.</p>
-                <div class="row">
-                    {{ seller_form.non_field_errors }}
-                    {{ seller_part_form.non_field_errors }}
-                    {{ seller_part_form.seller_part_number|bom_form:'l2 m3 s12' }}
-                    {{ seller_form.name|bom_form:'l3 m3 s12' }}
-                    {{ seller_part_form.currency|bom_form:'l2 m2 s6' }}
-                    {{ seller_part_form.unit_cost|bom_form:'l2 m3 s12' }}
-                    {{ seller_part_form.shipping|bom_form:'l2 m3 s12' }}
-                    {{ seller_part_form.customs_duty_percent|bom_form:'l2 m3 s12' }}
-                </div>
-                <div class="row">
-                    {% include 'bom/components/sellerpart-fx-hint.html' %}
-                </div>
-                <div class="row">
-                    <div class="col l3 m5 s6">
-                        <a href="javascript:history.back()" class="bom-btn-ghost">انصراف</a>
+                {{ seller_form.non_field_errors }}
+                {{ seller_part_form.non_field_errors }}
+
+                <section class="mb-5">
+                    <h2 class="mb-1 text-base font-semibold text-ink">{% trans "Seller" %}</h2>
+                    <p class="mb-3 text-sm text-ink-muted">در صورت محصول بودن "{{ organization }}" را به عنوان تأمین کننده انتخاب کنید.</p>
+                    <div class="row gap-y-3">
+                        {{ seller_part_form.seller_part_number|bom_form:'m6 s12' }}
+                        {{ seller_form.name|bom_form:'m6 s12' }}
                     </div>
-                    <div class="col l4 m5 s6 left-align">
-                        <button class="bom-btn-primary" type="submit" name="action">{% trans "Save" %}</button>
+                </section>
+
+                <section class="mb-4">
+                    <h2 class="mb-3 text-base font-semibold text-ink">{% trans "Price" %}</h2>
+                    <div class="row gap-y-3">
+                        {{ seller_part_form.currency|bom_form:'m3 s6' }}
+                        {{ seller_part_form.unit_cost|bom_form:'m3 s6' }}
+                        {{ seller_part_form.shipping|bom_form:'m3 s6' }}
+                        {{ seller_part_form.customs_duty_percent|bom_form:'m3 s6' }}
                     </div>
+                    <div class="row mt-2">
+                        {% include 'bom/components/sellerpart-fx-hint.html' %}
+                    </div>
+                </section>
+
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border-subtle pt-4">
+                    <a href="{% url 'bom:part-info' part_id=manufacturer_part.part.id %}?tab_anchor=sourcing" class="bom-btn-ghost">انصراف</a>
+                    <button class="bom-btn-primary" type="submit" name="action">{% trans "Save" %}</button>
                 </div>
             </form>
-            {% include 'bom/components/sellerpart-fx-modal.html' %}
         </div>
+        {% include 'bom/components/sellerpart-fx-modal.html' %}
     {% else %}
         {% include 'bom/nothing-to-see.html' with required_privilege='Admin' %}
     {% endif %}
