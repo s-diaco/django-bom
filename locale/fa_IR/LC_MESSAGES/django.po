@@ -18,7 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: bom/constants.py:29
-#| msgid "Active"
 msgid "Inactive"
 msgstr "غیر فعال"
 
@@ -36,7 +35,6 @@ msgid "Without loss (LOI) (compound, ink, …)"
 msgstr "بدون احتساب پرت (کامپوند، جوهر یا …)"
 
 #: bom/constants.py:130
-#| msgid "Raw Material"
 msgid "Raw materials"
 msgstr "مواد اولیه"
 
@@ -68,7 +66,6 @@ msgid "Password"
 msgstr "گذرواژه"
 
 #: bom/forms.py:110
-#| msgid "Confirm New Password"
 msgid "Confirm password"
 msgstr "تأیید رمز"
 
@@ -110,7 +107,6 @@ msgid "Manufacturer"
 msgstr "تولید کننده"
 
 #: bom/forms.py:382
-#| msgid "Subpart part number"
 msgid "Manufacturer part number"
 msgstr "کد تولید کننده"
 
@@ -367,7 +363,6 @@ msgid "Subpart part number"
 msgstr "کد زیرشاخه"
 
 #: bom/forms.py:2224
-#| msgid "Subpart part number"
 msgid "Parent part number"
 msgstr "کد سر شاخه"
 
@@ -423,7 +418,6 @@ msgstr "انصراف"
 #: bom/templates/bom/components/bom-flat.html:21
 #: bom/templates/bom/components/manufacturer-part-list.html:13
 #: bom/templates/bom/part-info.html:263 bom/templates/bom/part-info.html:297
-#| msgid "Seller Part Number"
 msgid "Manufacturer Part Number"
 msgstr "کد تولید کننده"
 
@@ -539,12 +533,10 @@ msgid "Download"
 msgstr "دانلود"
 
 #: bom/templates/bom/components/bom-indented-overview.html:20
-#| msgid "Download as CSV"
 msgid "Download BOM CSV"
 msgstr "دانلود CSV درخت محصول"
 
 #: bom/templates/bom/components/bom-indented-overview.html:21
-#| msgid "Download as CSV"
 msgid "Download CSV (sourcing)"
 msgstr "دانلود CSV (تأمین)"
 
@@ -620,10 +612,9 @@ msgstr "هزینه صورت مواد"
 #: bom/templates/bom/components/customer-price-list.html:10
 #: bom/templates/bom/components/customer-price-peer-list.html:10
 #: bom/templates/bom/part-info.html:348
-#, python-format
-#| msgid "Profit %"
-msgid "Profit %%"
+msgid "Profit %"
 msgstr "درصد سود"
+
 
 #: bom/templates/bom/components/customer-price-list.html:13
 #: bom/views/views.py:1734
@@ -682,14 +673,10 @@ msgstr "هیچ تأمین کننده‌ای برای این متریال مشخ�
 msgid "No data"
 msgstr "بدون داده"
 
-#: bom/templates/bom/components/seller-part-list.html:20
-#, python-format
-#| msgid "Customs Duty (%)"
-msgid "Customs Duty (%%)"
-msgstr "حقوق گمرکی (٪)"
+
+
 
 #: bom/templates/bom/components/seller-part-list.html:21
-#| msgid "Unit Cost"
 msgid "Landed Cost"
 msgstr "هزینه نهایی"
 
@@ -735,7 +722,6 @@ msgid "not set"
 msgstr "تنظیم نشده"
 
 #: bom/templates/bom/create-part.html:27 bom/templates/bom/dashboard.html:57
-#| msgid "Raw Material"
 msgid "New Material"
 msgstr "متریال جدید"
 
@@ -793,10 +779,9 @@ msgid "Pricing summary"
 msgstr "خلاصه قیمت‌گذاری"
 
 #: bom/templates/bom/customer-price-create.html:123
-#, python-format
-#| msgid "Adjusted base (BoM + 7%)"
-msgid "Adjusted base (BoM + 7%%)"
+msgid "Adjusted base (BoM + 7%)"
 msgstr "پایه تعدیل‌شده (BoM + ۷٪)"
+
 
 #: bom/templates/bom/customer-price-create.html:136
 msgid "Preview"
@@ -804,16 +789,14 @@ msgstr "پیش‌نمایش"
 
 #: bom/templates/bom/customer-price-create.html:146
 #: bom/templates/bom/customer-price-create.html:147
-#, python-format
-#| msgid "Prices by profit %"
-msgid "Prices by profit %%"
+msgid "Prices by profit %"
 msgstr "قیمت‌ها بر اساس درصد سود"
 
+
 #: bom/templates/bom/customer-price-create.html:150
-#, python-format
-#| msgid "Click an item to select profit % and price."
-msgid "Click an item to select profit %% and price."
+msgid "Click an item to select profit % and price."
 msgstr "برای انتخاب درصد سود و قیمت روی یک مورد کلیک کنید."
+
 
 #: bom/templates/bom/customer-price-create.html:174
 #: bom/templates/bom/customer-price-create.html:175
@@ -825,10 +808,9 @@ msgid "Selected price"
 msgstr "قیمت انتخاب‌شده"
 
 #: bom/templates/bom/customer-price-create.html:191
-#, python-format
-#| msgid "Selected profit %"
-msgid "Selected profit %%"
+msgid "Selected profit %"
 msgstr "درصد سود انتخاب‌شده"
+
 
 #: bom/templates/bom/customer-price-create.html:201 bom/views/views.py:1735
 msgid "Note"
@@ -888,7 +870,6 @@ msgid "Upload"
 msgstr "آپلود"
 
 #: bom/templates/bom/dashboard-menu.html:5
-#| msgid "Download as CSV"
 msgid "Upload materials CSV"
 msgstr "آپلود CSV متریال"
 
@@ -916,12 +897,10 @@ msgstr "بازگشت به لیست"
 
 #: bom/templates/bom/dashboard-print.html:10
 #: bom/templates/bom/dashboard.html:85 bom/templates/bom/report.html:86
-#| msgid "Seller Part Number"
 msgid "Part Number"
 msgstr "کد متریال"
 
 #: bom/templates/bom/dashboard-print.html:38
-#| msgid "No customers found."
 msgid "No materials found."
 msgstr "هیچ متریالی پیدا نشد."
 
@@ -934,7 +913,6 @@ msgid "Search materials in selected assembly:"
 msgstr "جستجوی متریال در ترکیب انتخاب شده:"
 
 #: bom/templates/bom/dashboard.html:29 bom/templates/bom/report.html:34
-#| msgid "Search customers:"
 msgid "Search materials:"
 msgstr "جستجوی متریال:"
 
@@ -944,12 +922,10 @@ msgstr "انتخاب عملیات"
 
 #: bom/templates/bom/dashboard.html:53 bom/templates/bom/report.html:68
 #: bom/templates/bom/signup.html:15
-#| msgid "Confirm price"
 msgid "Confirm"
 msgstr "تأیید"
 
 #: bom/templates/bom/dashboard.html:58
-#| msgid "Unknown material."
 msgid "Upload materials"
 msgstr "آپلود متریال"
 
@@ -958,7 +934,6 @@ msgid "Download as CSV"
 msgstr "دانلود با فرمت CSV"
 
 #: bom/templates/bom/dashboard.html:116 bom/templates/bom/report.html:140
-#| msgid "No revision"
 msgid "Edit this revision"
 msgstr "ویرایش این ورژن"
 
@@ -976,12 +951,10 @@ msgid "Where used"
 msgstr "موارد استفاده"
 
 #: bom/templates/bom/dashboard.html:133 bom/templates/bom/report.html:161
-#| msgid "Download as CSV"
 msgid "Download CSV (indented)"
 msgstr "دانلود CSV (indented)"
 
 #: bom/templates/bom/dashboard.html:135 bom/templates/bom/report.html:166
-#| msgid "Download as CSV"
 msgid "Download CSV (flat)"
 msgstr "دانلود CSV (flat)"
 
@@ -1014,22 +987,18 @@ msgstr ""
 
 #: bom/templates/bom/manufacturer-info.html:16
 #, python-format
-#| msgid "Manufacturer"
 msgid "Manufacturer / %(name)s"
 msgstr "تولید کننده / %(name)s"
 
 #: bom/templates/bom/manufacturer-info.html:17
-#| msgid "Back to list"
 msgid "Back to manufacturers list"
 msgstr "بازگشت به لیست تولید کنندگان"
 
 #: bom/templates/bom/manufacturers.html:17
-#| msgid "Search customers:"
 msgid "Search manufacturers:"
 msgstr "جستجوی تولید کننده:"
 
 #: bom/templates/bom/manufacturers.html:37 bom/templates/bom/sellers.html:37
-#| msgid "Material"
 msgid "Material count"
 msgstr "تعداد متریال"
 
@@ -1057,7 +1026,6 @@ msgstr ""
 
 #: bom/templates/bom/part-info.html:15
 #, python-format
-#| msgid "Revision"
 msgid "Revision: %(rev)s"
 msgstr "ورژن: %(rev)s"
 
@@ -1067,22 +1035,18 @@ msgstr "اطلاعات مربوط به ورژن انتخاب شده"
 
 #: bom/templates/bom/part-info.html:39
 #, python-format
-#| msgid "Revision"
 msgid "Revision %(rev)s"
 msgstr "ورژن %(rev)s"
 
 #: bom/templates/bom/part-info.html:48
-#| msgid "No revision"
 msgid "Manage revision"
 msgstr "مدیریت ورژن"
 
 #: bom/templates/bom/part-info.html:62
-#| msgid "No revision"
 msgid "Deactivate revision"
 msgstr "غیر فعال کردن ورژن"
 
 #: bom/templates/bom/part-info.html:67
-#| msgid "No revision"
 msgid "New revision"
 msgstr "ورژن جدید"
 
@@ -1091,7 +1055,6 @@ msgid "Re-enable editing"
 msgstr "باز کردن امکان ویرایش"
 
 #: bom/templates/bom/part-info.html:83
-#| msgid "No revision"
 msgid "Add revision"
 msgstr "افزودن ورژن"
 
@@ -1100,7 +1063,6 @@ msgid "Specifications"
 msgstr "مشخصات"
 
 #: bom/templates/bom/part-info.html:92 bom/templates/bom/part-info.html:189
-#| msgid "Material"
 msgid "Bill of Materials"
 msgstr "درخت محصول"
 
@@ -1110,17 +1072,14 @@ msgid "Customers"
 msgstr "مشتریان"
 
 #: bom/templates/bom/part-info.html:98 bom/templates/bom/part-info.html:393
-#| msgid "BoM Overview"
 msgid "Overview"
 msgstr "نمای کلی"
 
 #: bom/templates/bom/part-info.html:107
-#| msgid "Customer details"
 msgid "Material details"
 msgstr "جزئیات متریال"
 
 #: bom/templates/bom/part-info.html:129
-#| msgid "Cost Calculations"
 msgid "Cost calculation model"
 msgstr "مدل محاسبه قیمت"
 
@@ -1137,7 +1096,6 @@ msgid "Loss"
 msgstr "پرت"
 
 #: bom/templates/bom/part-info.html:139
-#| msgid "Revision"
 msgid "Revision status"
 msgstr "وضعیت ورژن"
 
@@ -1150,17 +1108,14 @@ msgid "Last edited"
 msgstr "آخرین ویرایش"
 
 #: bom/templates/bom/part-info.html:165
-#| msgid "Material is required."
 msgid "Materials without price"
 msgstr "تعداد متریال بدون قیمت"
 
 #: bom/templates/bom/part-info.html:169
-#| msgid "weight"
 msgid "BoM weight"
 msgstr "وزن BoM"
 
 #: bom/templates/bom/part-info.html:206 bom/templates/bom/part-info.html:399
-#| msgid "Unit Cost"
 msgid "Unit cost (kg)"
 msgstr "قیمت واحد (کیلو گرم)"
 
@@ -1178,7 +1133,6 @@ msgid "Add subpart"
 msgstr "افزودن زیرشاخه"
 
 #: bom/templates/bom/part-info.html:228
-#| msgid "Address"
 msgid "Add"
 msgstr "افزودن"
 
@@ -1209,7 +1163,6 @@ msgstr ""
 
 #: bom/templates/bom/part-info.html:238 bom/templates/bom/upload-bom.html:27
 #: bom/templates/bom/upload-parts.html:26
-#| msgid "Selected price"
 msgid "Select file"
 msgstr "انتخاب فایل"
 
@@ -1218,12 +1171,10 @@ msgid "Where this revision is used"
 msgstr "موارد استفاده این ورژن"
 
 #: bom/templates/bom/part-info.html:259 bom/templates/bom/part-info.html:293
-#| msgid "Products"
 msgid "Product number"
 msgstr "کد محصول"
 
 #: bom/templates/bom/part-info.html:260 bom/templates/bom/part-info.html:294
-#| msgid "Products"
 msgid "Product"
 msgstr "محصول"
 
@@ -1256,7 +1207,6 @@ msgid "Manufacturing and sourcing"
 msgstr "تولید و تأمین"
 
 #: bom/templates/bom/part-info.html:335
-#| msgid "Seller Part Number"
 msgid "Add seller part number"
 msgstr "افزودن کد تأمین کننده"
 
@@ -1298,7 +1248,6 @@ msgid "End Date"
 msgstr "تاریخ پایان"
 
 #: bom/templates/bom/report.html:74
-#| msgid "Download as CSV"
 msgid "Download results as CSV."
 msgstr "دانلود نتایج با فرمت CSV."
 
@@ -1315,12 +1264,10 @@ msgid "Seller: %(name)s"
 msgstr "تأمین کننده: %(name)s"
 
 #: bom/templates/bom/seller-info.html:17
-#| msgid "Back to list"
 msgid "Back to sellers list"
 msgstr "بازگشت به لیست تأمین کنندگان"
 
 #: bom/templates/bom/sellers.html:17
-#| msgid "Search customers:"
 msgid "Search sellers:"
 msgstr "جستجوی تأمین کننده:"
 
@@ -1334,12 +1281,10 @@ msgid "Number scheme"
 msgstr "ساختار کد"
 
 #: bom/templates/bom/settings.html:19 bom/templates/bom/settings.html:187
-#| msgid "Leave Organization"
 msgid "Organization"
 msgstr "شرکت"
 
 #: bom/templates/bom/settings.html:24
-#| msgid "User"
 msgid "User Info"
 msgstr "اطلاعات کاربر"
 
@@ -1403,7 +1348,6 @@ msgid "Open dedicated rates page"
 msgstr "باز کردن صفحه اختصاصی نرخ‌ها"
 
 #: bom/templates/bom/settings.html:228
-#| msgid "User"
 msgid "Users"
 msgstr "کاربران"
 
@@ -1439,12 +1383,10 @@ msgid "Leave Organization"
 msgstr "جدا شدن از سازمان"
 
 #: bom/templates/bom/settings.html:330
-#| msgid "Reset Password"
 msgid "Current Password"
 msgstr "رمز عبور فعلی"
 
 #: bom/templates/bom/settings.html:334
-#| msgid "Reset Password"
 msgid "New Password"
 msgstr "رمز عبور جدید"
 
@@ -1483,7 +1425,6 @@ msgid "First"
 msgstr "اول"
 
 #: bom/templates/bom/ui/pagination.html:16
-#| msgid "Preview"
 msgid "Previous"
 msgstr "قبلی"
 
@@ -1525,7 +1466,6 @@ msgstr ""
 "می‌شود؛ اگر"
 
 #: bom/templates/bom/upload-bom.html:20
-#| msgid "not set"
 msgid "not"
 msgstr "نیست"
 
@@ -1555,7 +1495,6 @@ msgid "Go to %(pn)s"
 msgstr "رفتن به %(pn)s"
 
 #: bom/templates/bom/upload-parts.html:19
-#| msgid "Material List for {title}"
 msgid "Upload materials list file"
 msgstr "آپلود فایل لیست متریال"
 
@@ -1589,10 +1528,7 @@ msgstr "ورود"
 msgid "Sign in with your account to continue."
 msgstr "برای ادامه با حساب کاربری وارد شوید."
 
-#: bom/templates/registration/login.html:28
-msgctxt "username_placeholder"
-msgid "Login"
-msgstr "نام کاربری"
+
 
 #: bom/validators.py:23
 #, python-format
@@ -1609,7 +1545,6 @@ msgid "Material List for {title}"
 msgstr "لیست متریال {title}"
 
 #: bom/views/views.py:428 bom/views/views.py:1722
-#| msgid "Seller Part Number"
 msgid "Part number"
 msgstr "کد متریال"
 
@@ -1618,7 +1553,6 @@ msgid "Scrap"
 msgstr "پرت"
 
 #: bom/views/views.py:432
-#| msgid "Material"
 msgid "Material type"
 msgstr "نوع متریال"
 
@@ -1628,7 +1562,6 @@ msgstr "تنظیمات"
 
 #: bom/views/views.py:854
 #, python-brace-format
-#| msgid "Part does not belong to your organization."
 msgid "{first} {last} was added to your organization."
 msgstr "{first} {last} به شرکت شما اضافه شد."
 
@@ -1637,12 +1570,10 @@ msgid "Exchange rates saved."
 msgstr "نرخ‌های ارز ذخیره شدند."
 
 #: bom/views/views.py:1067
-#| msgid "Manufacturer"
 msgid "Manufacturers"
 msgstr "تولید کنندگان"
 
 #: bom/views/views.py:1070 bom/views/views.py:1193
-#| msgid "Search Results"
 msgid " - search results"
 msgstr " - نتایج جستجو"
 
@@ -1655,7 +1586,6 @@ msgid "Exchange rate saved."
 msgstr "نرخ ارز ذخیره شد."
 
 #: bom/views/views.py:1190
-#| msgid "Seller"
 msgid "Sellers"
 msgstr "تأمین کنندگان"
 
@@ -1703,16 +1633,12 @@ msgid "Customer price deleted."
 msgstr "قیمت مشتری حذف شد."
 
 #: bom/views/views.py:1729
-#| msgid "No BoM cost"
 msgid "Base cost"
 msgstr "هزینه پایه"
 
-#: bom/views/views.py:1732
-msgid "Profit %"
-msgstr "درصد سود"
+
 
 #: bom/views/views.py:1736
-#| msgid "End Date"
 msgid "Date"
 msgstr "تاریخ"
 
@@ -1768,12 +1694,10 @@ msgid "Deactivate {} revision {} {} from <b>active</b> to <b>inactive</b>?"
 msgstr "غیرفعال کردن {} ورژن {} {} از <b>فعال</b> به <b>غیر فعال</b>؟"
 
 #: bom/views/views.py:3025
-#| msgid "No revision"
 msgid "New revision for {}"
 msgstr "ورژن جدید برای {}"
 
 #: bom/views/views.py:3176
-#| msgid "Reset Password"
 msgid "Current password is incorrect."
 msgstr "رمز عبور فعلی اشتباه است."
 
