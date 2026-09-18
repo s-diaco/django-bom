@@ -17,7 +17,7 @@
                     {{ part_class_form.comment|bom_form:'s12 m12' }}
                 </div>
                 <div class="mt-4 flex justify-between">
-                    <a href="{% url 'bom:settings' %}indabom" class="bom-btn-ghost">انصراف</a>
+                    <a href="{% url 'bom:settings' %}indabom" class="bom-btn-ghost">{% trans "Cancel" %}</a>
                     <button class="bom-btn-primary" type="submit" name="action">{% trans "Save" %}</button>
                 </div>
             </form>

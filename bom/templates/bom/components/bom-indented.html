@@ -19,19 +19,19 @@
     <table id="indented-bom" class="bom-table part-list single-line">
         <thead>
         <tr>
-            <th class="text-normal printer-hide">سطح</th>
-            <th class="text-normal">کد</th>
-            <th class="text-normal">مقدار</th>
+            <th class="text-normal printer-hide">{% trans "Level" %}</th>
+            <th class="text-normal">{% trans "Code" %}</th>
+            <th class="text-normal">{% trans "Quantity" %}</th>
             <!--<th class="text-normal printer-hide">رفرنس</th>-->
             <!--<th class="text-normal">DNL</th>-->
-            <th class="text-normal">شرح</th>
-            <th class="text-normal printer-hide">ورژن</th>
+            <th class="text-normal">{% trans "Description" %}</th>
+            <th class="text-normal printer-hide">{% trans "Revision" %}</th>
             <!-- <th class="text-normal">{% trans "Manufacturer" %}</th>-->
             <!-- <th class="text-normal">کد تولید کننده</th> -->
             <!-- <th class="text-normal"><i>Ext. Qty</i></th> -->
             <!-- <th class="text-normal"><i>Order Qty</i></th> -->
             <th class="text-normal printer-hide">{% trans "L.O.I" %}</th>
-            <th class="text-normal bom-num">قیمت</th>
+            <th class="text-normal bom-num">{% trans "Price" %}</th>
             <!-- <th class="text-normal"><i>Ext Cost</i></th> -->
             <!-- <th class="text-normal">NRE</th> -->
             <!-- <th class="text-normal">Childs Qty</th> -->
@@ -79,7 +79,7 @@
                             <ul id='dropdown{{ subpart.subpart.id }}' class='dropdown-content'>
                                 <li><a class="green-text text-lighten-1"
                                     href="{% url 'bom:part-edit-subpart' part_id=part.id part_revision_id=part_revision.id subpart_id=subpart.subpart.id %}"><i
-                                        class="material-icons green-text text-lighten-1 right">edit</i>ویرایش با تغییر ورژن</a>
+                                        class="material-icons green-text text-lighten-1 right">edit</i>{% trans "Edit with revision change" %}</a>
                                 <li class="divider" tabindex="-1"></li>
                                 <li><a class="red-text text-lighten-1"
                                     href="{% url 'bom:part-remove-subpart' part_id=part.id part_revision_id=part_revision.id subpart_id=subpart.subpart.id %}"
@@ -95,7 +95,7 @@
             {% endif %}
         {% empty %}
             <tr>
-                <td colspan="99" style="text-align: center; height: 20vh;"><i>این متریال شامل هیچ متریال دیگری نیست.</i></td>
+                <td colspan="99" style="text-align: center; height: 20vh;"><i>{% trans "This material does not contain any other materials." %}</i></td>
             </tr>
         {% endfor %}
     </table>

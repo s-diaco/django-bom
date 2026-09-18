@@ -1,9 +1,9 @@
 {% if profile.role == 'A' %}
     <div class="relative" x-data="{ open: false }">
-        <button type="button" class="bom-nav-link" @click="open = !open">آپلود<i class="material-icons text-base">arrow_drop_down</i></button>
+        <button type="button" class="bom-nav-link" @click="open = !open">{% trans "Upload" %}<i class="material-icons text-base">arrow_drop_down</i></button>
         <div x-show="open" x-cloak @click.outside="open = false" class="bom-dropdown">
-            <a href="{% url 'bom:upload-parts' %}"><i class="material-icons text-base">cloud_upload</i>آپلود فایل CSV متریال</a>
-            <a href="{% url 'bom:upload-bom' %}"><i class="material-icons text-base">cloud_upload</i>آپلود فایل CSV درخت محصول (BOM)</a>
+            <a href="{% url 'bom:upload-parts' %}"><i class="material-icons text-base">cloud_upload</i>{% trans "Upload materials CSV" %}</a>
+            <a href="{% url 'bom:upload-bom' %}"><i class="material-icons text-base">cloud_upload</i>{% trans "Upload bill of materials CSV (BOM)" %}</a>
         </div>
     </div>
 {% endif %}

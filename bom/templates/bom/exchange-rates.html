@@ -23,7 +23,7 @@
                 {% csrf_token %}
                 {% include 'bom/components/exchange-rates-fields.html' with exchange_rates_form=exchange_rates_form %}
                 <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
-                    <a href="javascript:history.back()" class="bom-btn-ghost">انصراف</a>
+                    <a href="javascript:history.back()" class="bom-btn-ghost">{% trans "Cancel" %}</a>
                     <button class="bom-btn-primary" type="submit" name="submit-exchange-rates">{% trans "Save" %}</button>
                 </div>
             </form>

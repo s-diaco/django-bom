@@ -17,9 +17,9 @@
                 <i class="material-icons text-base">file_download</i>{% trans "Download" %}
             </button>
             <div x-show="open" x-cloak @click.outside="open = false" class="bom-dropdown">
-                <a href="{% url 'bom:part-revision-export-bom' part_revision_id=part_revision.id %}">دانلود CSV درخت محصول</a>
-                <a href="{% url 'bom:part-revision-export-bom-sourcing' part_revision_id=part_revision.id %}">دانلود CSV (منابع تأمین)</a>
-                <a href="{% url 'bom:part-revision-export-bom-sourcing-detailed' part_revision_id=part_revision.id %}">دانلود CSV (جزئیات تأمین)</a>
+                <a href="{% url 'bom:part-revision-export-bom' part_revision_id=part_revision.id %}">{% trans "Download BOM CSV" %}</a>
+                <a href="{% url 'bom:part-revision-export-bom-sourcing' part_revision_id=part_revision.id %}">{% trans "Download CSV (sourcing)" %}</a>
+                <a href="{% url 'bom:part-revision-export-bom-sourcing-detailed' part_revision_id=part_revision.id %}">{% trans "Download CSV (sourcing details)" %}</a>
             </div>
         </div>
         {% endif %}
@@ -31,19 +31,19 @@
     <table id="indented-bom-overview" class="bom-table part-list">
         <thead>
         <tr>
-            <th class="text-normal">کد</th>
+            <th class="text-normal">{% trans "Code" %}</th>
             <!--<th class="text-normal printer-hide">رفرنس</th>-->
             <!--<th class="text-normal">DNL</th>-->
-            <th class="text-normal printer-hide">ورژن</th>
-            <th class="text-normal">شرح</th>
+            <th class="text-normal printer-hide">{% trans "Revision" %}</th>
+            <th class="text-normal">{% trans "Description" %}</th>
             <!-- <th class="text-normal">{% trans "Manufacturer" %}</th>-->
             <!-- <th class="text-normal">کد تولید کننده</th> -->
             <!-- <th class="text-normal"><i>Ext. Qty</i></th> -->
             <!-- <th class="text-normal"><i>Order Qty</i></th> -->
             <th class="text-normal printer-hide">{% trans "L.O.I" %}</th>
-            <th class="text-normal">مقدار</th>
-            <th class="text-normal bom-num">قیمت واحد</th>
-            <th class="text-normal bom-num">قیمت در BoM</th>
+            <th class="text-normal">{% trans "Quantity" %}</th>
+            <th class="text-normal bom-num">{% trans "Unit Cost" %}</th>
+            <th class="text-normal bom-num">{% trans "Cost in BoM" %}</th>
             <!-- <th class="text-normal"><i>Ext Cost</i></th> -->
             <!-- <th class="text-normal">NRE</th> -->
             <!-- <th class="text-normal">Childs Qty</th> -->
@@ -86,13 +86,13 @@
             {% endif %}
         {% empty %}
             <tr>
-                <td colspan="99" style="text-align: center; height: 20vh;"><i>این متریال شامل هیچ متریال دیگری نیست.</i></td>
+                <td colspan="99" style="text-align: center; height: 20vh;"><i>{% trans "This material does not contain any other materials." %}</i></td>
             </tr>
         {% endfor %}
         </tbody>
         <tfoot>
         <tr>
-            <td class="text-normal">جمع</td>
+            <td class="text-normal">{% trans "Total" %}</td>
             <td class="text-normal printer-hide"></td>
             <td class="text-normal"></td>
             <td class="text-normal printer-hide"></td>

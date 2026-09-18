@@ -14,13 +14,13 @@
             {% csrf_token %}
             <div class="row items-end">
                 <div class="col s12 m10">
-                    <label class="bom-label" for="autocomplete-input">جستجوی تأمین کننده:</label>
+                    <label class="bom-label" for="autocomplete-input">{% trans "Search sellers:" %}</label>
                     <input type="search" id="autocomplete-input" autocomplete="off" class="bom-input autocomplete" name="q" value="{% if query %}{{ query }}{% endif %}">
                 </div>
                 <div class="col s12 m2 flex flex-wrap items-end gap-1 self-end">
-                    <button type="submit" class="bom-btn-primary" name="action">جستجو</button>
+                    <button type="submit" class="bom-btn-primary" name="action">{% trans "Search" %}</button>
                     {% if query %}
-                        <button type="button" class="bom-btn-icon" onclick="clearSearchExpression()" title="پاک کردن"><i class="material-icons">clear</i></button>
+                        <button type="button" class="bom-btn-icon" onclick="clearSearchExpression()" title="{% trans "Clear" %}"><i class="material-icons">clear</i></button>
                     {% endif %}
                 </div>
             </div>
@@ -34,7 +34,7 @@
                                 <th class="text-normal td-small action-checkbox-column" style="display: none;"><label><input type="checkbox" id="action-select-all"><span></span></label></th>
                             {% endif %}
                             <th class="text-normal td-med">{% trans "Seller" %}</th>
-                            <th class="text-normal td-med">تعداد متریال</th>
+                            <th class="text-normal td-med">{% trans "Material count" %}</th>
                         </tr>
                         </thead>
                         <tbody>
