@@ -250,6 +250,19 @@ class SellerPartCSVHeaders(CSVHeaders):
             ],
         ),
         CSVHeader(
+            "shipping",
+            name_options=["shipping", "part_shipping"],
+        ),
+        CSVHeader(
+            "customs_duty_percent",
+            name_options=[
+                "customs_duty_percent",
+                "customs_duty",
+                "duty_percent",
+                "part_customs_duty_percent",
+            ],
+        ),
+        CSVHeader(
             "minimum_order_quantity",
             name_options=[
                 "minimum_order_quantity",
