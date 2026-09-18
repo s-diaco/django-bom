@@ -13,8 +13,8 @@
     <div class="container-app">
         <div class="row" style="margin-bottom: 5px;">
             <div class="col m8 hide-on-small-and-down">
-                <h3 class="light">تأمین کننده: {{ seller.name }}</h3>
-                <a href="{% url 'bom:sellers' %}">بازگشت به لیست تأمین کنندگان</a>
+                <h3 class="light">{% blocktrans with name=seller.name %}Seller: {{ name }}{% endblocktrans %}</h3>
+                <a href="{% url 'bom:sellers' %}">{% trans "Back to sellers list" %}</a>
             </div>
         </div>
         <div class="col {% if seller %}m3 s1{% else %}m3 s12{% endif %}">
@@ -22,7 +22,7 @@
                 <div style="margin-top: 1.5rem;">
                     <!-- Dropdown Trigger -->
                     <button class='dropdown-trigger hide-on-small-and-down bom-btn-secondary'
-                            href='#' data-target='dropdown-revision'><i class="material-icons text-base">settings</i>مدیریت<i class="material-icons text-base">arrow_drop_down</i>
+                            href='#' data-target='dropdown-revision'><i class="material-icons text-base">settings</i>{% trans "Manage" %}<i class="material-icons text-base">arrow_drop_down</i>
                     </button>
                     <a class='dropdown-trigger hide-on-med-and-up' href='#' data-target='dropdown-revision'><i
                             class="material-icons green-text text-lighten-1">more_vert</i></a>

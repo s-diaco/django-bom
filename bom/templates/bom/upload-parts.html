@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block bom-menu %}
-    <a class="bom-nav-link" href="{% url 'bom:home' %}">انصراف</a>
+    <a class="bom-nav-link" href="{% url 'bom:home' %}">{% trans "Cancel" %}</a>
 {% endblock %}
 
 
@@ -16,21 +16,18 @@
     <div class="container-app">
         {% if profile.role == 'A' %}
             <div class="bom-panel-pad">
-                <h5 class="mb-2 text-lg font-semibold">آپلود فایل لیست متریال</h5>
-                <p class="mb-2 text-sm text-ink-muted">برای آپلود همزمان چندین متریال، یک فایل CSV آپلود کنید که شامل ستون‌های <b>'کد'</b>، <b>'نوع متریال'</b>
-                ، <b>'ورژن'</b> باشد.</p>
-                <p class="mb-2 text-sm text-ink-muted">کد متریال نباید تکراری باشد.
-                 اگر کد متریال را مشخص نکنید یک کد اتوماتیک به متریال اختصاص داده خواهد شد.
-                </p>
-                <p class="mb-4 text-sm">برای مشاهده سایر ستون‌های اختیاری <a href="{% url 'bom:upload-parts-help' %}">اینجا</a> کلیک کنید.</p>
+                <h5 class="mb-2 text-lg font-semibold">{% trans "Upload materials list file" %}</h5>
+                <p class="mb-2 text-sm text-ink-muted">{% trans "To upload multiple materials at once, upload a CSV file that includes the columns" %} <b>'part_number'</b>, <b>'description'</b>, <b>'revision'</b>.</p>
+                <p class="mb-2 text-sm text-ink-muted">{% trans "Part numbers must be unique. If you do not specify a part number, one will be assigned automatically." %}</p>
+                <p class="mb-4 text-sm">{% trans "For other optional columns," %} <a href="{% url 'bom:upload-parts-help' %}">{% trans "click here" %}</a>.</p>
                 <form action="{% url 'bom:upload-parts' %}" method="post" enctype="multipart/form-data" class="flex flex-wrap items-end gap-3">
                     {% csrf_token %}
                     <div class="min-w-0 flex-1">
-                        <label class="bom-label" for="{{ form.file.id_for_label }}">انتخاب فایل</label>
+                        <label class="bom-label" for="{{ form.file.id_for_label }}">{% trans "Select file" %}</label>
                         {{ form.file }}
                         {{ form.file.errors }}
                     </div>
-                    <button class="bom-btn-primary" type="submit">آپلود</button>
+                    <button class="bom-btn-primary" type="submit">{% trans "Upload" %}</button>
                 </form>
             </div>
         {% else %}

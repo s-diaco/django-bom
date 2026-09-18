@@ -13,10 +13,10 @@
     <div class="row container-app">
         <div class="col s12">
             <ul id="tabs" class="tabs tabs-fixed-width bom-tabs" role="tablist">
-                <li class="tab"><a id="user-tab" href="#user">کاربر</a></li>
+                <li class="tab"><a id="user-tab" href="#user">{% trans "User" %}</a></li>
                 <li class="tab"><a id="password-reset-tab" href="#password-reset">{% trans "Reset Password" %}</a></li>
-                <li class="tab"><a id="indabom-tab" href="#indabom">ساختار کد</a></li>
-                <li class="tab"><a id="organization-tab" href="#organization">شرکت</a></li>
+                <li class="tab"><a id="indabom-tab" href="#indabom">{% trans "Number scheme" %}</a></li>
+                <li class="tab"><a id="organization-tab" href="#organization">{% trans "Organization" %}</a></li>
             </ul>
         </div>
 
@@ -184,7 +184,7 @@
 
         <div id="organization" class="col s12">
             {% if owner == user %}
-                <h3>شرکت</h3>
+                <h3>{% trans "Organization" %}</h3>
                 <div class="row">
                     <div class="col s12">
                         <form name="seller" action="{% url 'bom:settings' tab_anchor=ORGANIZATION_TAB %}" method="post" class="col s12" enctype="multipart/form-data">
@@ -225,7 +225,7 @@
                 </div>
                 <div class="row">
                     <div class="col s12">
-                        <h3>کاربران</h3>
+                        <h3>{% trans "Users" %}</h3>
                         {% if users_in_organization.count > 0 %}
                             <form name="seller" action="{% url 'bom:settings' tab_anchor=ORGANIZATION_TAB %}" method="post" class="col s12" enctype="multipart/form-data">
                                 {% csrf_token %}
@@ -233,10 +233,10 @@
                                     <thead>
                                     <tr>
                                         <th class="text-normal"><label><input type="checkbox" id="user-select-all"><span></span></label></th>
-                                        <th class="text-normal">نقش</th>
-                                        <th class="text-normal">نام کاربری</th>
-                                        <th class="text-normal">نام و نام خانوادگی</th>
-                                        <th class="text-normal">ایمیل</th>
+                                        <th class="text-normal">{% trans "Role" %}</th>
+                                        <th class="text-normal">{% trans "Username" %}</th>
+                                        <th class="text-normal">{% trans "Full name" %}</th>
+                                        <th class="text-normal">{% trans "Email" %}</th>
                                         <th class="text-normal"></th>
                                     </tr>
                                     </thead>
@@ -262,7 +262,7 @@
                                     <div class="col s6">
                                         {% comment %}TODO: not working{% endcomment %}
                                         <button class="bom-btn-danger" type="submit" name="submit-remove-user"
-                                                onclick="return confirm('کاربر/کاربران انتخاب شده از شرکت {{ organization }} حذف شوند?')">{% trans "Remove selected user" %}
+                                                onclick="return confirm('{% blocktrans %}Remove selected user(s) from organization {{ organization }}?{% endblocktrans %}')">{% trans "Remove selected user" %}
                                         </button>
                                     </div>
                                     <div class="col s6 left-align">

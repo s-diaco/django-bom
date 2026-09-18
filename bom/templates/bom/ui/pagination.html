@@ -4,7 +4,7 @@
 <nav class="bom-pagination printer-hide" aria-label="pagination">
     <div class="bom-pagination-controls">
         {% if page_obj.number > 1 %}
-            <a class="bom-pagination-btn" href="?page=1{% if extra_query %}&{{ extra_query }}{% endif %}" aria-label="اول">
+            <a class="bom-pagination-btn" href="?page=1{% if extra_query %}&{{ extra_query }}{% endif %}" aria-label="{% trans "First" %}">
                 <i class="material-icons">last_page</i>
             </a>
         {% else %}
@@ -13,7 +13,7 @@
             </span>
         {% endif %}
         {% if page_obj.has_previous %}
-            <a class="bom-pagination-btn" href="?page={{ page_obj.previous_page_number }}{% if extra_query %}&{{ extra_query }}{% endif %}" aria-label="قبلی">
+            <a class="bom-pagination-btn" href="?page={{ page_obj.previous_page_number }}{% if extra_query %}&{{ extra_query }}{% endif %}" aria-label="{% trans "Previous" %}">
                 <i class="material-icons">chevron_right</i>
             </a>
         {% else %}
@@ -22,7 +22,7 @@
             </span>
         {% endif %}
         {% if page_obj.has_next %}
-            <a class="bom-pagination-btn" href="?page={{ page_obj.next_page_number }}{% if extra_query %}&{{ extra_query }}{% endif %}" aria-label="بعدی">
+            <a class="bom-pagination-btn" href="?page={{ page_obj.next_page_number }}{% if extra_query %}&{{ extra_query }}{% endif %}" aria-label="{% trans "Next" %}">
                 <i class="material-icons">chevron_left</i>
             </a>
         {% else %}
@@ -31,7 +31,7 @@
             </span>
         {% endif %}
         {% if page_obj.number < page_obj.paginator.num_pages %}
-            <a class="bom-pagination-btn" href="?page={{ page_obj.paginator.num_pages }}{% if extra_query %}&{{ extra_query }}{% endif %}" aria-label="آخر">
+            <a class="bom-pagination-btn" href="?page={{ page_obj.paginator.num_pages }}{% if extra_query %}&{{ extra_query }}{% endif %}" aria-label="{% trans "Last" %}">
                 <i class="material-icons">first_page</i>
             </a>
         {% else %}
@@ -41,10 +41,10 @@
         {% endif %}
     </div>
     <p class="bom-pagination-range">
-        {{ page_obj.start_index }}–{{ page_obj.end_index }} از {{ page_obj.paginator.count }}
+        {% blocktrans with start=page_obj.start_index end=page_obj.end_index count=page_obj.paginator.count %}{{ start }}–{{ end }} of {{ count }}{% endblocktrans %}
     </p>
     <label class="bom-pagination-per-page" for="bom-per-page-{{ page_obj.number }}">
-        <span class="sr-only">تعداد در صفحه</span>
+        <span class="sr-only">{% trans "Per page" %}</span>
         <select id="bom-per-page-{{ page_obj.number }}" class="bom-pagination-per-page-field" onchange="if (this.value) window.location.href = this.value">
             {% page_size_choices as sizes %}
             {% for size in sizes %}

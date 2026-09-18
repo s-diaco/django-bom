@@ -10,7 +10,7 @@
     <table id="manufacturer-parts" class="bom-table treetable">
         <thead>
         <tr>
-            <th>کد تولید کننده</th>
+            <th>{% trans "Manufacturer Part Number" %}</th>
             <th>Manufacturer</th>
             {% if show_part %}<th>Part</th>{% endif %}
             <th>Seller</th>
@@ -81,12 +81,12 @@
                 </tr>
             {% empty %}
                 <tr data-tt-id="0" data-tt-parent-id="{{ manufacturer_part.id }}">
-                    <td colspan="99" style="text-align: center;"><i>هیچ تأمین کننده‌ای برای این متریال مشخص نشده است.</i></td>
+                    <td colspan="99" style="text-align: center;"><i>{% trans "No seller has been specified for this material." %}</i></td>
                 </tr>
             {% endfor %}
         {% empty %}
             <tr>
-                <td colspan="99" style="text-align: center; height: 20vh;"><i>بدون داده</i></td>
+                <td colspan="99" style="text-align: center; height: 20vh;"><i>{% trans "No data" %}</i></td>
             </tr>
         {% endfor %}
         </tbody>

@@ -3,16 +3,16 @@
 {% load bom_forms %}
 {% load static %}
 
-{% block head-title %}ایجاد حساب{% endblock %}
+{% block head-title %}{% trans "Create account" %}{% endblock %}
 
 {% block content %}
     <div class="mx-auto max-w-lg px-4 py-12">
         <div class="bom-panel-pad">
-            <h1 class="mb-6 text-xl font-semibold text-ink">ایجاد حساب کاربری</h1>
+            <h1 class="mb-6 text-xl font-semibold text-ink">{% trans "Create user account" %}</h1>
             <form method="post" class="space-y-4">
                 {% csrf_token %}
                 {{ form|bom_form }}
-                <button class="bom-btn-primary w-full" type="submit">تأیید</button>
+                <button class="bom-btn-primary w-full" type="submit">{% trans "Confirm" %}</button>
             </form>
         </div>
     </div>

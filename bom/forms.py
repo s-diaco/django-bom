@@ -94,24 +94,24 @@ class UserCreateForm(UserCreationForm):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.fields["username"].help_text = (
-            "الزامی. حداکثر ۱۵۰ کاراکتر. فقط حروف (فارسی، انگلیسی) اعداد و @/./+/-/_."
+        self.fields["username"].help_text = _(
+            "Required. 150 characters or fewer. Letters (Persian, English), digits and @/./+/-/_ only."
         )
-        self.fields[
-            "password1"
-        ].help_text = """
-            مشابه نام یا نام کاربری نباشد.
-            حداقل ۸ کاراکتر داشته باشد.
-            خیلی واضح نباشد.
-            حداقل دارای یک کاراکتر غیر عددی باشد.
-            """
-        self.fields["password2"].help_text = "پسورد را دوباره برای تأیید وارد کنید."
-        self.fields["password1"].label = "رمز"
-        self.fields["password2"].label = "تأیید رمز"
-        self.fields["username"].label = "نام کاربری"
-        self.fields["first_name"].label = "نام"
-        self.fields["last_name"].label = "نام خانوادگی"
-        self.fields["email"].label = "ایمیل"
+        self.fields["password1"].help_text = _(
+            "Your password can't be too similar to your name or username. "
+            "Your password must contain at least 8 characters. "
+            "Your password can't be a commonly used password. "
+            "Your password can't be entirely numeric."
+        )
+        self.fields["password2"].help_text = _(
+            "Enter the same password as before, for verification."
+        )
+        self.fields["password1"].label = _("Password")
+        self.fields["password2"].label = _("Confirm password")
+        self.fields["username"].label = _("Username")
+        self.fields["first_name"].label = _("First name")
+        self.fields["last_name"].label = _("Last name")
+        self.fields["email"].label = _("Email")
 
     def clean_email(self):
         email = self.cleaned_data["email"]
@@ -335,7 +335,7 @@ class OrganizationNumberLenForm(forms.ModelForm):
 
 
 class PartInfoForm(forms.Form):
-    quantity = forms.IntegerField(label="محاسبه قیمت برای:", min_value=1)
+    quantity = forms.IntegerField(label=_("Calculate price for:"), min_value=1)
 
 
 class ManufacturerForm(forms.ModelForm):
@@ -379,8 +379,8 @@ class ManufacturerPartForm(forms.ModelForm):
             organization=self.organization
         ).order_by("name")
         self.fields["mouser_disable"].initial = True
-        self.fields["manufacturer_part_number"].label = "کد تولید کننده"
-        self.fields["manufacturer"].label = "تولید کننده"
+        self.fields["manufacturer_part_number"].label = _("Manufacturer part number")
+        self.fields["manufacturer"].label = _("Manufacturer")
 
 
 class SellerForm(forms.ModelForm):
@@ -1311,24 +1311,26 @@ class PartCSVForm(forms.Form):
                             )
                             self.add_error(
                                 None,
-                                "متریال {0} در سطر {1} قبلاً تعریف شده است. این متریال آپلود نشد.".format(
-                                    part_number, row_count
-                                ),
+                                _(
+                                    "Part {0} on row {1} already exists. This part was not uploaded."
+                                ).format(part_number, row_count),
                             )
                             continue
                         except AttributeError as e:
                             self.add_error(
                                 None,
                                 str(e)
-                                + " on row {}. این متریال آپلود نشد.".format(row_count),
+                                + _(" on row {}. This part was not uploaded.").format(
+                                    row_count
+                                ),
                             )
                             continue
                         except PartClass.DoesNotExist:
                             self.add_error(
                                 None,
-                                "No part class found for part number {0} in row {1}. این متریال آپلود نشد.".format(
-                                    part_number, row_count
-                                ),
+                                _(
+                                    "No part class found for part number {0} in row {1}. This part was not uploaded."
+                                ).format(part_number, row_count),
                             )
                             continue
                         except Part.DoesNotExist:
@@ -1344,7 +1346,9 @@ class PartCSVForm(forms.Form):
                             )
                             self.add_error(
                                 None,
-                                f"کد {part_number} در سطر {row_count} قبلاً تعریف شده است. متریال آپلود نشد.",
+                                _(
+                                    "Part number {0} on row {1} already exists. Part was not uploaded."
+                                ).format(part_number, row_count),
                             )
                             continue
                         except Part.DoesNotExist:
@@ -1745,7 +1749,7 @@ class PartFormIntelligent(forms.ModelForm):
         self.ignore_unique_constraint = kwargs.pop("ignore_unique_constraint", False)
         super(PartFormIntelligent, self).__init__(*args, **kwargs)
         self.fields["number_item"].required = True
-        self.fields["number_item"].label = "کد"
+        self.fields["number_item"].label = _("Code")
         self.fields["number_item"].widget.attrs["oninput"] = "updateTargetInput()"
         del self.fields["primary_manufacturer_part"]
         # for _, value in self.fields.items():
@@ -1931,15 +1935,15 @@ class PartRevisionForm(forms.ModelForm):
             # f.value = strip_trailing_zeros(f.value) # Harmless if field is not a number
         self.fields["supply_voltage"].label = "Vsupply"
         self.fields["attribute"].label = ""
-        self.fields["revision"].label = "ورژن"
-        self.fields["tolerance"].label = "درصد پرت (LOI)"
+        self.fields["revision"].label = _("Revision")
+        self.fields["tolerance"].label = _("Scrap percent (LOI)")
         self.fields["tolerance"].initial = 0
         # TODO: read choices from PartRevision model
         self.fields["material"].choices = MATERIAL_TYPES
         self.fields["material"].initial = "no_bom"
         self.fields["description"] = forms.CharField(
             # TODO: Delete if not working
-            error_messages={"required": "شرح نمی‌تواند خالی باشد!"},
+            error_messages={"required": _("Description cannot be empty!")},
             required=True,
             label=_("Description"),
             widget=AutocompleteTextInput(
@@ -1998,7 +2002,9 @@ class PartRevisionForm(forms.ModelForm):
 
 class PartRevisionNewForm(PartRevisionForm):
     copy_assembly = forms.BooleanField(
-        label="کپی درخت محصول از آخرین ورژن", initial=False, required=False
+        label=_("Copy product tree from latest revision"),
+        initial=False,
+        required=False,
     )
 
     def __init__(self, *args, **kwargs):
@@ -2100,7 +2106,7 @@ class AddSubpartForm(forms.Form):
         )
         self.fields["subpart_part_number"] = forms.CharField(
             required=True,
-            label=_("کد زیرشاخه"),
+            label=_("Subpart part number"),
             widget=AutocompleteTextInput(
                 queryset=Part.objects.filter(organization=self.organization)
                 .exclude(id=self.part_id)
@@ -2214,7 +2220,9 @@ class AddSubpartForm(forms.Form):
 
 
 class UploadBOMForm(forms.Form):
-    parent_part_number = forms.CharField(required=False, label="کد سر شاخه")
+    parent_part_number = forms.CharField(
+        required=False, label=_("Parent part number")
+    )
 
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
@@ -2618,11 +2626,17 @@ class BOMCSVForm(forms.Form):
                         assembly=parent_part_revision.assembly, subpart=subpart
                     )
 
-                info_msg = f"سطر {row_count}: زیر مجموعه {part_number}"
+                info_msg = _("Row {row_count}: subassembly {part_number}").format(
+                    row_count=row_count, part_number=part_number
+                )
                 if reference:
-                    info_msg += f" با مشخصات {reference}"
+                    info_msg += _(" with reference {reference}").format(
+                        reference=reference
+                    )
                 if parent_part_revision:
-                    info_msg += f" به درخت {parent_part_revision.part.full_part_number()} افزوده شد"
+                    info_msg += _(" added to tree {part}").format(
+                        part=parent_part_revision.part.full_part_number()
+                    )
                 self.successes.append(info_msg + ".")
 
                 # Blank manufacturer+MPN used to insert Manufacturer(name="") +

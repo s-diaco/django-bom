@@ -6,7 +6,7 @@
 {% block head-title %}{{ title }}{% endblock %}
 
 {% block bom-menu %}
-    <a class="bom-nav-link" href="javascript:history.back()">انصراف</a>
+    <a class="bom-nav-link" href="javascript:history.back()">{% trans "Cancel" %}</a>
 {% endblock %}
 
 {% block content %}
@@ -16,7 +16,7 @@
         {% csrf_token %}
         {{ form|bom_form:'m6 s12' }}
         <div class="mt-4 flex justify-between">
-            <a href="javascript:history.back()" class="bom-btn-ghost">انصراف</a>
+            <a href="javascript:history.back()" class="bom-btn-ghost">{% trans "Cancel" %}</a>
             <button class="bom-btn-primary" type="submit" name="action">{% trans "Save" %}</button>
         </div>
     </form>

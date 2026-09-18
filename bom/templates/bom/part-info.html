@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block content %}
-    <span class="printer-show">ورژن: {{ part_revision.revision }}</span>
+    <span class="printer-show">{% blocktrans with rev=part_revision.revision %}Revision: {{ rev }}{% endblocktrans %}</span>
     <div class="container-app">
         <div class="part-info">
             <div class="row" style="margin-bottom: 5px;">
@@ -20,7 +20,7 @@
                     <h3 class="light printer-hide">{{ part.full_part_number }}</h3>
                     {% if part_revision %}
                         {% if profile.role == 'A' %}
-                            <p class="printer-hide">اطلاعات مربوط به ورژن انتخاب شده</p>
+                            <p class="printer-hide">{% trans "Information about the selected revision" %}</p>
                         {% else %}
                             <p class="printer-hide">Select a revision for viewing</p>
                         {% endif %}
@@ -30,13 +30,13 @@
             <div class="row printer-hide items-end part-info-revision-row">
                 {% if part_revision %}
                     <div class="col l2 m3 s5">
-                        <label class="bom-label" for="select-revision">ورژن</label>
+                        <label class="bom-label" for="select-revision">{% trans "Revision" %}</label>
                         <select id="select-revision" class="bom-select">
                                 {% for r in revisions.all %}
                                     <option {% if part_revision.id == r.id %}selected{% endif %}
                                             value="{% if r == part.latest %}{% url 'bom:part-info' part_id=part.id %}
                                                     {% else %}{% url 'bom:part-info-history' part_id=part.id part_revision_id=r.id %}
-                                                    {% endif %}">ورژن {{ r.revision }}{% if r.configuration == 'W' %} (فعال){% endif %}</option>
+                                                    {% endif %}">{% blocktrans with rev=r.revision %}Revision {{ rev }}{% endblocktrans %}{% if r.configuration == 'W' %} ({% trans "Active" %}){% endif %}</option>
                                 {% endfor %}
                         </select>
                     </div>
@@ -45,7 +45,7 @@
                     {% if profile.role == 'A' and part_revision %}
                             <!-- Dropdown Trigger -->
                             <button class='dropdown-trigger hide-on-small-and-down bom-btn-secondary'
-                                    href='#' data-target='dropdown-revision'><i class="material-icons text-base">settings</i>مدیریت ورژن<i class="material-icons text-base">arrow_drop_down</i>
+                                    href='#' data-target='dropdown-revision'><i class="material-icons text-base">settings</i>{% trans "Manage revision" %}<i class="material-icons text-base">arrow_drop_down</i>
                             </button>
                             <a class='dropdown-trigger hide-on-med-and-up' href='#' data-target='dropdown-revision'><i
                                     class="material-icons green-text text-lighten-1">more_vert</i></a>
@@ -59,17 +59,17 @@
                                     </li>
                                     <li>
                                         <a class="green-text text-lighten-1" href="{% url 'bom:part-revision-release' part_id=part.id part_revision_id=part_revision.id %}">
-                                            <i class="material-icons green-text text-lighten-1 right">check</i>غیر فعال کردن ورژن</a>
+                                            <i class="material-icons green-text text-lighten-1 right">check</i>{% trans "Deactivate revision" %}</a>
                                     </li>
                                 {% endif %}
                                 <li>
                                     <a class="green-text text-lighten-1" href="{% url 'bom:part-revision-new' part_id=part.id %}">
-                                        <i class="material-icons green-text text-lighten-1 right">add</i>ورژن جدید</a>
+                                        <i class="material-icons green-text text-lighten-1 right">add</i>{% trans "New revision" %}</a>
                                 </li>
                                 {% if part_revision.configuration == 'R' %}
                                     <li>
                                         <a class="green-text text-lighten-1 disabled" onclick="revertPartRevision()">
-                                            <i class="material-icons green-text text-lighten-1 right">undo</i>باز کردن امکان ویرایش</a>
+                                            <i class="material-icons green-text text-lighten-1 right">undo</i>{% trans "Re-enable editing" %}</a>
                                     </li>
                                 {% endif %}
                                 <li class="divider" tabindex="-1"></li>
@@ -80,31 +80,31 @@
                             </ul>
                     {% elif profile.role == 'A' and not part_revision %}
                         <a class='bom-btn-secondary'
-                           href='{% url 'bom:part-revision-new' part_id=part.id %}'><i class="material-icons left">add</i>افزودن ورژن</a>
+                           href='{% url 'bom:part-revision-new' part_id=part.id %}'><i class="material-icons left">add</i>{% trans "Add revision" %}</a>
                     {% endif %}
                 </div>
             </div>
             <div class="row">
                 <div class="col s12 printer-hide">
                     <ul id="tabs" class="tabs tabs-fixed-width bom-tabs" role="tablist">
-                        <li class="tab"><a id="specs-tab" href="#specs">مشخصات</a></li>
+                        <li class="tab"><a id="specs-tab" href="#specs">{% trans "Specifications" %}</a></li>
                         {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
-                        <li class="tab"><a id="bom-tab" href="#bom">درخت محصول</a></li>
+                        <li class="tab"><a id="bom-tab" href="#bom">{% trans "Bill of Materials" %}</a></li>
                         {% endif %}
-                        <li class="tab"><a id="used-tab" href="#used">موارد استفاده</a></li>
+                        <li class="tab"><a id="used-tab" href="#used">{% trans "Where used" %}</a></li>
                         <li class="tab"><a id="sourcing-tab" href="#sourcing">{% trans "Seller" %}</a></li>
                         <li class="tab"><a id="customers-tab" href="#customers">{% trans "Customers" %}</a></li>
                         {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
-                        <li class="tab"><a id="overview-tab" href="#overview">نمای کلی</a></li>
+                        <li class="tab"><a id="overview-tab" href="#overview">{% trans "Overview" %}</a></li>
                         {% endif %}
                     </ul>
                 </div>
 
                 <div id="specs" class="col s12">
-                    <h4 class="printer-show">مشخصات</h4>
+                    <h4 class="printer-show">{% trans "Specifications" %}</h4>
                     <br>
                     <ul class="collection with-header bom-panel">
-                        <li class="collection-header"><h5>جزئیات متریال</h5></li>
+                        <li class="collection-header"><h5>{% trans "Material details" %}</h5></li>
                         <li class="collection-item">
                             {% if organization.number_scheme == 'S' %}
                                 <div class="row">
@@ -113,7 +113,7 @@
                                 </div>
                             {% endif %}
                             <div class="row">
-                                <div class="col s4 l2 text-right" style="padding-left: 0px;">کد:</div>
+                                <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Code" %}:</div>
                                 <div class="col s8 l10"><span class="right">{{ part.full_part_number }}</span>
                                     {% if profile.role == 'A' %}
                                         <a href="{% url 'bom:part-edit' part_id=part.id %}"><i class="material-icons">edit</i></a>
@@ -121,23 +121,23 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col s4 l2 text-right" style="padding-left: 0px;">متریال:</div>
+                                <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Material" %}:</div>
                                 <div class="col s8 l10">{{ part_revision.description }}</div>
                             </div>
                             {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
                             <div class="row">
-                                <div class="col s4 l2 text-right" style="padding-left: 0px;">مدل محاسبه قیمت:</div>
-                                <div class="col s8 l10">{% if part_revision.material == 'with_loi' %}محاسبه با احتساب پرت (LOI){% else %}محاسبه بدون احتساب پرت (LOI){% endif %}</div>
+                                <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Cost calculation model" %}:</div>
+                                <div class="col s8 l10">{% if part_revision.material == 'with_loi' %}{% trans "Cost including loss (LOI)" %}{% else %}{% trans "Cost excluding loss (LOI)" %}{% endif %}</div>
                             </div>
                             {% else %}
                             <div class="row">
-                                <div class="col s4 l2 text-right" style="padding-left: 0px;">پرت:</div>
+                                <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Loss" %}:</div>
                                 <div class="col s8 l10">{{ part_revision.tolerance|default:'-' }}{% if part_revision.tolerance %} %{% endif %}</div>
                             </div>
                             {% endif %}
                             <div class="row">
-                                <div class="col s4 l2 text-right" style="padding-left: 0px;">وضعیت ورژن:</div>
-                                <div class="col s8 l10">{{ part_revision.get_configuration_display|default:'نامشخص' }}&nbsp;{% if part_revision %}(آخرین ویرایش: {% user_datetime part_revision.timestamp %})
+                                <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Revision status" %}:</div>
+                                <div class="col s8 l10">{% if part_revision.get_configuration_display %}{{ part_revision.get_configuration_display }}{% else %}{% trans "Unknown" %}{% endif %}&nbsp;{% if part_revision %}({% trans "Last edited" %}: {% user_datetime part_revision.timestamp %})
                                     {% endif %}
                                 </div>
                             </div>
@@ -158,15 +158,15 @@
                         <li class="collection-item">
                             {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
                                 <div class="row{% if indented_bom.missing_item_costs > 0 %} red-text{% endif %}">
-                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">قیمت:</div>
+                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Price" %}:</div>
                                     <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ childs_unit_cost|default_if_none:'-' }}</span></div>
                                 </div>
                                 <div class="row{% if indented_bom.missing_item_costs > 0 %} red-text{% endif %}">
-                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">تعداد متریال بدون قیمت:</div>
+                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Materials without price" %}:</div>
                                     <div class="col s8 l10"><span id="mouser-missing-item-costs"></span><span><span class="right">{{ indented_bom.missing_item_costs }}{% if indented_bom.missing_item_costs > 0 %} </span><i class="material-icons red-text">error</i>{% else %} <i class="material-icons green-text">check_circle</i>{% endif %}</span></div>
                                 </div>
                                 <div class="row">
-                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">وزن BoM:</div>
+                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "BoM weight" %}:</div>
                                     <div class="col s8 l10"><span id="bom_weight"></span><span>{{ total_bom_weight|default_if_none:'-' }}</span></div>
                                 </div>
                                 <!--
@@ -177,7 +177,7 @@
                                 -->
                             {% else %}
                                 <div class="row">
-                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">قیمت:</div>
+                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Price" %}:</div>
                                     <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ indented_bom.unit_cost|default_if_none:'-' }}</span></div>
                                 </div>
                             {% endif %}
@@ -186,7 +186,7 @@
                 </div>
                 {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
                 <div id="bom" class="col s12">
-                    <h4 class="printer-show">درخت محصول</h4>
+                    <h4 class="printer-show">{% trans "Bill of Materials" %}</h4>
                     {% if add_subpart_form %}{{ add_subpart_form.media }}{% endif %}
                     <div id="bom-tree">
                         {% comment %}
@@ -202,17 +202,17 @@
                         </div>
                         {% include 'bom/components/bom-flat.html' with order_by=order_by bom_items=flat_bom.parts part=part part_revision=part_revision profile=profile manage=can_manage_bom %}
                     </div>
-                    <p class="mt-3 text-sm text-ink">قیمت واحد (کیلو گرم): {{ childs_unit_cost|default_if_none:'-' }}</p>
+                    <p class="mt-3 text-sm text-ink">{% trans "Unit cost (kg)" %}: {{ childs_unit_cost|default_if_none:'-' }}</p>
                     {% if can_manage_bom %}
                     {% if part_revision.assembly.subparts.exists %}
                     <div class="mt-4 printer-hide">
                         <a class="bom-btn-danger"
                            href="{% url 'bom:part-remove-all-subparts' part_id=part.id part_revision_id=part_revision.id %}"
-                           onclick="return confirm('همه زیرشاخه‌های درخت محصول {{ part.full_part_number }} حذف شوند?')">حذف همه زیرشاخه‌ها</a>
+                           onclick="return confirm('{% blocktrans with pn=part.full_part_number %}Delete all subparts from the bill of materials for {{ pn }}?{% endblocktrans %}')">{% trans "Delete all subparts" %}</a>
                     </div>
                     {% endif %}
                     <div class="bom-panel-pad mt-4">
-                        <h2 class="mb-3 text-base font-semibold text-ink">افزودن زیرشاخه</h2>
+                        <h2 class="mb-3 text-base font-semibold text-ink">{% trans "Add subpart" %}</h2>
                         <form action="{% url 'bom:part-add-subpart' part_id=part.id part_revision_id=part_revision.id %}"
                                 method="post" class="flex flex-wrap items-end gap-3">
                             {% csrf_token %}
@@ -224,45 +224,42 @@
                             </div>
                             {{ add_subpart_form.do_not_load|bom_form:'hidden' }}
                             {{ add_subpart_form.reference|bom_form:'hidden' }}
-                            <button class="bom-btn-primary" type="submit" name="action">افزودن</button>
+                            <button class="bom-btn-primary" type="submit" name="action">{% trans "Add" %}</button>
                         </form>
                     </div>
                     <div class="bom-panel-pad mt-4">
-                        <h2 class="mb-2 text-base font-semibold text-ink">افزودن کل زیرشاخه‌ها</h2>
-                        <p class="mb-2 text-sm text-ink-muted">برای افزودن زیرشاخه‌ها یک فایل csv آپلود کنید که حداقل دو ستون داشته باشد:
-                            <b>part_number</b> <i>یا</i> <b>manufacturer_part_number</b> و <b>quantity</b>; ستون‌های 'part_number' یا
-                            'manufacturer_part_number' باید کدهایی باشند که قبلاً در این سیستم تعریف شده‌اند.</p>
-                        <p class="mb-4 text-sm text-ink-muted">ستون‌های اضافه: 'reference' یا 'designator' برای افزودن فیلد رفرنس به زیرشاخه ;
-                           'do_not_load' اگر نمی‌خواهید متریال به در درخت لود شود.</p>
+                        <h2 class="mb-2 text-base font-semibold text-ink">{% trans "Add all subparts" %}</h2>
+                        <p class="mb-2 text-sm text-ink-muted">{% blocktrans %}To add subparts, upload a CSV file with at least two columns: <b>part_number</b> <i>or</i> <b>manufacturer_part_number</b> and <b>quantity</b>; the 'part_number' or 'manufacturer_part_number' columns must be codes already defined in this system.{% endblocktrans %}</p>
+                        <p class="mb-4 text-sm text-ink-muted">{% trans "Optional columns: 'reference' or 'designator' to add a reference field to the subpart; 'do_not_load' if you do not want the material loaded in the tree." %}</p>
                         <form action="{% url 'bom:part-upload-bom' part_id=part.id %}" method="post" enctype="multipart/form-data" class="flex flex-wrap items-end gap-3">
                             {% csrf_token %}
                             <div class="min-w-0 flex-1">
-                                <label class="bom-label" for="{{ upload_subparts_csv_form.file.id_for_label }}">انتخاب فایل</label>
+                                <label class="bom-label" for="{{ upload_subparts_csv_form.file.id_for_label }}">{% trans "Select file" %}</label>
                                 {{ upload_subparts_csv_form.file }}
                                 {{ upload_subparts_csv_form.file.errors }}
                             </div>
-                            <button class="bom-btn-primary" type="submit">آپلود</button>
+                            <button class="bom-btn-primary" type="submit">{% trans "Upload" %}</button>
                         </form>
                     </div>
                     {% endif %}
                 </div>
                 {% endif %}
                 <div id="used" class="col s12">
-                    <h4 class="printer-show">موارد استفاده</h4>
+                    <h4 class="printer-show">{% trans "Where used" %}</h4>
                     <br>
                     <div class="bom-table-wrap responsive-table-wrapper">
                         <ul class="collapsible" data-collapsible="expandable" style="overflow: scroll;">
                             <li class="active">
-                                <div class="collapsible-header"><i class="material-icons">my_location</i>موارد استفاده این ورژن</div>
+                                <div class="collapsible-header"><i class="material-icons">my_location</i>{% trans "Where this revision is used" %}</div>
                                 <div class="collapsible-body">
                                     <table class="bom-table">
                                         <thead>
                                         <tr>
-                                            <th>کد محصول</th>
-                                            <th>محصول</th>
-                                            <th>ورژن</th>
+                                            <th>{% trans "Product number" %}</th>
+                                            <th>{% trans "Product" %}</th>
+                                            <th>{% trans "Revision" %}</th>
                                             <th>{% trans "Manufacturer" %}</th>
-                                            <th>کد تولید کننده</th>
+                                            <th>{% trans "Manufacturer Part Number" %}</th>
                                         </tr>
                                         </thead>
 
@@ -279,7 +276,7 @@
                                             </tr>
                                         {% empty %}
                                             <tr>
-                                                <td colspan="99" style="text-align: center; height: 20vh;"><i>این متریال در هیج محصولی استفاده نمی‌شود. برای افزودن آن به یک محصول، به درخت محصول مورد نظر بروید و زیرشاخه را اضافه کنید.</i></td>
+                                                <td colspan="99" style="text-align: center; height: 20vh;"><i>{% trans "This material is not used in any product. To add it to a product, go to that product's bill of materials and add the subpart." %}</i></td>
                                             </tr>
                                         {% endfor %}
                                         </tbody>
@@ -287,16 +284,16 @@
                                 </div>
                             </li>
                             <li>
-                                <div class="collapsible-header"><i class="material-icons">location_searching</i>همه موارد استفاده متریال</div>
+                                <div class="collapsible-header"><i class="material-icons">location_searching</i>{% trans "All material usage" %}</div>
                                 <div class="collapsible-body">
                                     <table class="bom-table">
                                         <thead>
                                         <tr>
-                                            <th>کد محصول</th>
-                                            <th>محصول</th>
-                                            <th>ورژن</th>
+                                            <th>{% trans "Product number" %}</th>
+                                            <th>{% trans "Product" %}</th>
+                                            <th>{% trans "Revision" %}</th>
                                             <th>{% trans "Manufacturer" %}</th>
-                                            <th>کد تولید کننده</th>
+                                            <th>{% trans "Manufacturer Part Number" %}</th>
                                         </tr>
                                         </thead>
 
@@ -313,9 +310,9 @@
                                             </tr>
                                         {% empty %}
                                             <tr>
-                                                <td colspan="99" style="text-align: center; height: 20vh;"><i>این متریال در هیج محصولی استفاده نمی‌شود.
+                                                <td colspan="99" style="text-align: center; height: 20vh;"><i>{% trans "This material is not used in any product." %}
                                                     {% if profile.role == 'A' %}
-                                                    برای افزودن آن به یک محصول، به درخت محصول مورد نظر بروید و زیرشاخه را اضافه کنید.
+                                                    {% trans "To add it to a product, go to that product's bill of materials and add the subpart." %}
                                                     {% endif %}
                                                 </i></td>
                                             </tr>
@@ -328,13 +325,13 @@
                     </div>
                 </div>
                 <div id="sourcing" class="col s12">
-                    <h4 class="printer-show">تولید و تأمین</h4>
+                    <h4 class="printer-show">{% trans "Manufacturing and sourcing" %}</h4>
                     {% include 'bom/components/seller-part-list.html' with seller_parts=part.seller_parts part_revision=part_revision profile=profile %}
                     {% if profile.role == 'A' %}
                         <div class="row" style="padding-top: 16px;">
                             <div class="col s12 center-align">
                                 <a class="bom-btn-secondary"
-                                   href="{% url 'bom:part-add-sellerpart' part_id=part.id %}">افزودن کد تأمین کننده</a>
+                                   href="{% url 'bom:part-add-sellerpart' part_id=part.id %}">{% trans "Add seller part number" %}</a>
                             </div>
                         </div>
                     {% endif %}
@@ -392,13 +389,13 @@
                 </div>
                 {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
                 <div id="overview" class="col s12">
-                    <h4 class="printer-show">نمای کلی</h4>
+                    <h4 class="printer-show">{% trans "Overview" %}</h4>
                     <br />
                     <div id="overview-tree">
                         {% include 'bom/components/bom-indented-overview.html' with order_by=order_by bom_items=indented_bom.parts part=part part_revision=part_revision profile=profile childs_unit_cost=childs_unit_cost total_bom_weight=total_bom_weight product_weight=product_weight material=part_revision.material %}
                     </div>
                     <div class="row">
-                        <div class="col s4 l2 text-right">قیمت واحد (کیلو گرم): <span>{{ childs_unit_cost|default_if_none:'-' }}</span></div>
+                        <div class="col s4 l2 text-right">{% trans "Unit cost (kg)" %}: <span>{{ childs_unit_cost|default_if_none:'-' }}</span></div>
                     </div>
                 </div>
                 {% endif %}

@@ -24,15 +24,15 @@
                 {% endif %}
                 <div class="col s12 {% if organization.number_scheme == 'S' %}m6{% else %}m10{% endif %}">
                     <label class="bom-label" for="autocomplete-input">
-                        {% if part_class %}جستجوی متریال در کلاس انتخاب شده
-                        {% elif part_assembly %}جستجوی متریال در ترکیب انتخاب شده:
-                        {% else %}جستجوی متریال:
+                        {% if part_class %}{% trans "Search materials in selected class" %}
+                        {% elif part_assembly %}{% trans "Search materials in selected assembly:" %}
+                        {% else %}{% trans "Search materials:" %}
                         {% endif %}
                     </label>
                     <input type="search" id="autocomplete-input" autocomplete="off" class="bom-input autocomplete" name="q" value="{% if query %}{{ query }}{% endif %}">
                 </div>
                 <div class="col s12 m2 flex flex-wrap items-end gap-1 self-end">
-                    <button type="submit" class="bom-btn-primary" name="action">جستجو</button>
+                    <button type="submit" class="bom-btn-primary" name="action">{% trans "Search" %}</button>
                     <a class="bom-btn-icon" title="Help with search" href="{% url 'bom:search-help' %}"><i class="material-icons">help</i></a>
                     {% if part_class or query %}
                         <button type="button" class="bom-btn-icon" onclick="clearSearchExpression()"><i class="material-icons">clear</i></button>
@@ -47,15 +47,15 @@
                     {% if profile.role == 'A' %}
                         <div class="action-checkbox-hide hidden flex flex-wrap items-center gap-2">
                             <select name="part-action" class="bom-select w-auto min-w-40">
-                                <option value="" disabled selected>انتخاب عملیات</option>
+                                <option value="" disabled selected>{% trans "Select action" %}</option>
                                 <option name="submit-part-delete">{% trans "Delete" %}</option>
                             </select>
-                            <button class="bom-btn-primary" type="submit" name="actions">تأیید</button>
-                            <a class="bom-btn-ghost" href="#" onclick="disableActionCheckboxColumn()">انصراف</a>
+                            <button class="bom-btn-primary" type="submit" name="actions">{% trans "Confirm" %}</button>
+                            <a class="bom-btn-ghost" href="#" onclick="disableActionCheckboxColumn()">{% trans "Cancel" %}</a>
                         </div>
                         <a class="bom-btn-secondary action-checkbox-show" href="#" onclick="enableActionCheckboxColumn()"><i class="material-icons text-base">settings</i>{% trans "Manage" %}</a>
-                        <a class="bom-btn-primary" href="{% url 'bom:create-part' %}"><i class="material-icons text-base">add</i>متریال جدید</a>
-                        <a class="bom-btn-secondary" href="{% url 'bom:upload-parts' %}"><i class="material-icons text-base">cloud_upload</i>آپلود متریال</a>
+                        <a class="bom-btn-primary" href="{% url 'bom:create-part' %}"><i class="material-icons text-base">add</i>{% trans "New Material" %}</a>
+                        <a class="bom-btn-secondary" href="{% url 'bom:upload-parts' %}"><i class="material-icons text-base">cloud_upload</i>{% trans "Upload materials" %}</a>
                     {% endif %}
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -82,16 +82,16 @@
                             {% if profile.role == 'A' %}
                                 <th class="action-checkbox-column hidden"><label><input type="checkbox" id="action-select-all"></label></th>
                             {% endif %}
-                            <th>کد متریال</th>
+                            <th>{% trans "Part Number" %}</th>
                             {% if organization.number_scheme == 'S' %}
                                 <th>Category</th>
                             {% endif %}
-                            <th>متریال</th>
-                            <th>ورژن</th>
+                            <th>{% trans "Material" %}</th>
+                            <th>{% trans "Revision" %}</th>
                             <th>{% trans "Seller Part Number" %}</th>
                             <th>{% trans "Seller" %}</th>
                             <th class="bom-num">{% trans "Unit Cost" %}</th>
-                            <th class="printer-hide">گزینه‌ها</th>
+                            <th class="printer-hide">{% trans "Options" %}</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -113,33 +113,33 @@
                                 <td class="bom-num">{{ part_rev.bom_unit_cost }}</td>
                                 <td class="printer-hide">
                                     {% if part_rev.configuration == 'W' %}
-                                        <a class="bom-btn-icon" title="ویرایش این ورژن"
+                                        <a class="bom-btn-icon" title="{% trans "Edit this revision" %}"
                                             href="{% url 'bom:part-revision-edit' part_id=part.id part_revision_id=part_rev.id %}">
                                             <i class="material-icons text-base">edit</i></a>
                                         {% if seller.id %}
                                         <a class="bom-btn-icon" href="{% url 'bom:sellerpart-edit' sellerpart_id=seller.id %}" title="{% trans "Cost and Seller" %}">
                                             <i class="material-icons text-base">attach_money</i></a>
                                         {% else %}
-                                        <a class="bom-btn-icon" href="{% url 'bom:part-info' part_id=part.id %}?tab_anchor=sourcing" title="تأمین کننده">
+                                        <a class="bom-btn-icon" href="{% url 'bom:part-info' part_id=part.id %}?tab_anchor=sourcing" title="{% trans "Seller" %}">
                                             <i class="material-icons text-base">local_airport</i></a>
                                         {% endif %}
-                                        <a class="bom-btn-icon" title="ویرایش درخت محصول (BOM)" href="{% url 'bom:part-info-history' part_id=part.id part_revision_id=part_rev.id %}?tab_anchor=bom">
+                                        <a class="bom-btn-icon" title="{% trans "Edit bill of materials (BOM)" %}" href="{% url 'bom:part-info-history' part_id=part.id part_revision_id=part_rev.id %}?tab_anchor=bom">
                                             <i class="material-icons text-base">format_list_numbered</i></a>
-                                        <a class="bom-btn-icon" href="{% url 'bom:part-info' part_id=part.id %}?tab_anchor=used" title="موارد استفاده">
+                                        <a class="bom-btn-icon" href="{% url 'bom:part-info' part_id=part.id %}?tab_anchor=used" title="{% trans "Where used" %}">
                                             <i class="material-icons text-base">my_location</i></a>
                                     {% endif %}
                                     <a class="dropdown-trigger bom-btn-icon" href="#" data-target="part-menu-{{ part_rev.id }}"><i class="material-icons text-base">more_horiz</i></a>
                                     <ul id="part-menu-{{ part_rev.id }}" class="dropdown-content">
-                                        <li><a href="{% url 'bom:part-revision-export-bom' part_revision_id=part_rev.id %}">دانلود CSV (indented)</a></li>
+                                        <li><a href="{% url 'bom:part-revision-export-bom' part_revision_id=part_rev.id %}">{% trans "Download CSV (indented)" %}</a></li>
                                         <li class="divider"></li>
-                                        <li><a href="{% url 'bom:part-revision-export-bom-flat' part_revision_id=part_rev.id %}">دانلود CSV (flat)</a></li>
+                                        <li><a href="{% url 'bom:part-revision-export-bom-flat' part_revision_id=part_rev.id %}">{% trans "Download CSV (flat)" %}</a></li>
                                     </ul>
                                 </td>
                             </tr>
                             {% endwith %}
                         {% empty %}
                             <tr>
-                                <td colspan="99" class="bom-empty">هیچ متریالی پیدا نشد. از نوار عملیات «متریال جدید» را انتخاب کنید.</td>
+                                <td colspan="99" class="bom-empty">{% trans "No materials found. Choose New Material from the action bar." %}</td>
                             </tr>
                         {% endfor %}
                         </tbody>

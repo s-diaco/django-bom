@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block bom-menu %}
-    <a class="bom-nav-link" href="{% url 'bom:home' %}">انصراف</a>
+    <a class="bom-nav-link" href="{% url 'bom:home' %}">{% trans "Cancel" %}</a>
 {% endblock %}
 
 {% block content %}
@@ -24,7 +24,7 @@
             {% endif %}
             <form name="form" action="{% url 'bom:create-part' %}" method="post" class="bom-panel-pad">
                 {% csrf_token %}
-                <h1 class="mb-4 text-lg font-semibold text-ink">متریال جدید</h1>
+                <h1 class="mb-4 text-lg font-semibold text-ink">{% trans "New Material" %}</h1>
                 {{ part_form|bom_form:'m4 s12' }}
                 {% include 'bom/part-revision-display.html' with part_revision_form=part_revision_form %}
                 <div class="hidden">
@@ -59,7 +59,7 @@
                     {% include 'bom/components/sellerpart-fx-hint.html' %}
                 </div>
                 <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
-                    <a href="javascript:history.back()" class="bom-btn-ghost">انصراف</a>
+                    <a href="javascript:history.back()" class="bom-btn-ghost">{% trans "Cancel" %}</a>
                     <button class="bom-btn-primary" type="submit" name="action">{% trans "Save" %}</button>
                 </div>
                 <label class="hidden" id="organizationName">{% trans organization.name %}</label>
