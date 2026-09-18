@@ -1,6 +1,7 @@
 {# THIS FILE  WILL NOT BE USED IF THE BASE TEMPLATE IS OVERRIDDEN #}
+{% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_CODE|slice:':2' == 'fa' %}rtl{% else %}ltr{% endif %}">
 {% load static %}
 {% load bom_dates %}
 <head>

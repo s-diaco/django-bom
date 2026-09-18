@@ -49,7 +49,10 @@ class TestUiSmoke(TransactionTestCase):
         response = self.client.get(reverse("login"))
         self.assertEqual(response.status_code, 200)
         html = response.content.decode("utf-8")
-        self.assertIn('lang="fa"', html)
+        self.assertTrue(
+            'lang="fa"' in html or 'lang="fa-ir"' in html,
+            "expected Persian lang attribute",
+        )
         self.assertIn('dir="rtl"', html)
         self.assertIn("bom/css/app.css", html)
         self.assertNotIn("materialize.min.css", html)
