@@ -27,7 +27,7 @@ msgid "Active"
 msgstr "فعال"
 
 #: bom/constants.py:128
-msgid "With loss (LOI) (ferrite)"
+msgid "With loss (LOI) (Frit)"
 msgstr "با لحاظ کردن پرت (فریت)"
 
 #: bom/constants.py:129

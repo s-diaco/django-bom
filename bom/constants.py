@@ -125,7 +125,7 @@ PACKAGE_TYPES = (
 
 MATERIAL_TYPES = (
     # NO_CHOICE,
-    ("with_loi", _("With loss (LOI) (ferrite)")),
+    ("with_loi", _("With loss (LOI) (Frit)")),
     ("no_loi", _("Without loss (LOI) (compound, ink, …)")),
     ("no_bom", _("Raw materials")),
     # ("Other", "Other"),
