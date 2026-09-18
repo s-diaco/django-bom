@@ -34,6 +34,7 @@ bom_patterns = [
         name="manufacturer-delete",
     ),
     path("sellers/", views.sellers, name="sellers"),
+    path("exchange-rates/", views.exchange_rates, name="exchange-rates"),
     path("seller/<int:seller_id>/", views.seller_info, name="seller-info"),
     path("seller/<int:seller_id>/edit/", views.seller_edit, name="seller-edit"),
     path("seller/<int:seller_id>/delete/", views.seller_delete, name="seller-delete"),

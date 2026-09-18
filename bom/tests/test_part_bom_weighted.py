@@ -61,6 +61,7 @@ class MockSellerPart:
         self.unit_cost = unit_cost
         self.shipping = shipping if shipping is not None else Money(0, unit_cost.currency)
         self.customs_duty_percent = customs_duty_percent
+        self.manufacturer_part = None
 
     @property
     def landed_unit_cost(self):
@@ -68,6 +69,7 @@ class MockSellerPart:
 
         duty = Decimal(self.customs_duty_percent or 0) / Decimal("100")
         return self.unit_cost * (Decimal("1") + duty) + self.shipping
+
 
 
 @pytest.mark.skip(reason="Skipping test for now")

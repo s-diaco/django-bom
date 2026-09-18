@@ -24,6 +24,7 @@ from .constants import (
     DEFAULT_SELLER_NAME,
     DISTANCE_UNITS,
     FREQUENCY_UNITS,
+    IMPORT_CURRENCY_CODES,
     INTERFACE_TYPES,
     MATERIAL_TYPES,
     MEMORY_UNITS,
@@ -411,6 +412,8 @@ class SellerForm(forms.ModelForm):
 
 
 class SellerPartForm(forms.ModelForm):
+    currency = forms.ChoiceField(required=True, label=_("Currency"))
+
     class Meta:
         model = SellerPart
         exclude = [
@@ -426,6 +429,7 @@ class SellerPartForm(forms.ModelForm):
 
     field_order = [
         "seller",
+        "currency",
         "unit_cost",
         "shipping",
         "customs_duty_percent",
@@ -434,15 +438,22 @@ class SellerPartForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
         self.manufacturer_part = kwargs.pop("manufacturer_part", None)
-        currency_unit_txt = self.organization.currency if self.organization else ""
+        org_currency = self.organization.currency if self.organization else "USD"
+        currency_codes = list(dict.fromkeys([org_currency, *IMPORT_CURRENCY_CODES]))
+        self.base_fields["currency"] = forms.ChoiceField(
+            choices=[(code, code) for code in currency_codes],
+            required=True,
+            label=_("Currency"),
+            initial=org_currency,
+        )
         self.base_fields["unit_cost"] = forms.DecimalField(
             required=True,
-            label=_("Price | {unit}").format(unit=currency_unit_txt),
+            label=_("Price"),
             initial=0,
         )
         self.base_fields["shipping"] = forms.DecimalField(
             required=False,
-            label=_("Shipping | {unit}").format(unit=currency_unit_txt),
+            label=_("Shipping"),
             initial=0,
             min_value=0,
         )
@@ -461,6 +472,7 @@ class SellerPartForm(forms.ModelForm):
                 instance.shipping.amount if instance.shipping is not None else 0
             )
             initial["customs_duty_percent"] = instance.customs_duty_percent
+            initial["currency"] = str(instance.unit_cost.currency)
             initial["nre_cost"] = instance.nre_cost.amount
             initial["seller_part_number"] = instance.seller_part_number
             kwargs["initial"] = initial
@@ -487,24 +499,40 @@ class SellerPartForm(forms.ModelForm):
         unit_cost = cleaned_data.get("unit_cost")
         shipping = cleaned_data.get("shipping")
         customs_duty_percent = cleaned_data.get("customs_duty_percent")
+        currency = cleaned_data.get("currency") or (
+            self.organization.currency if self.organization else "USD"
+        )
         nre_cost = cleaned_data.get("nre_cost")
         seller_part_number = cleaned_data.get("seller_part_number")
         if unit_cost is None:
             raise forms.ValidationError("Invalid unit cost.", code="invalid")
-        self.instance.unit_cost = Money(unit_cost, self.organization.currency)
+        self.instance.unit_cost = Money(unit_cost, currency)
 
         if shipping is None:
             shipping = Decimal(0)
-        self.instance.shipping = Money(shipping, self.organization.currency)
+        self.instance.shipping = Money(shipping, currency)
 
         if customs_duty_percent is None:
             customs_duty_percent = Decimal(0)
         self.instance.customs_duty_percent = customs_duty_percent
 
+        org_currency = self.organization.currency if self.organization else currency
+        if str(currency) != str(org_currency):
+            from bom.exchange import get_org_per_unit_rate
+
+            if get_org_per_unit_rate(currency, org_currency) is None:
+                raise forms.ValidationError(
+                    _(
+                        "No exchange rate for {currency}. "
+                        "Set it under Settings → Organization."
+                    ).format(currency=currency),
+                    code="invalid",
+                )
+
         if nre_cost is None:
             # raise forms.ValidationError("Invalid NRE cost.", code="invalid")
             nre_cost = Decimal(0)
-        self.instance.nre_cost = Money(nre_cost, self.organization.currency)
+        self.instance.nre_cost = Money(nre_cost, org_currency)
 
         if seller_part_number is None:
             self.cleaned_data["seller_part_number"] = ""
@@ -529,6 +557,69 @@ class SellerPartForm(forms.ModelForm):
                 defaults={"name": DEFAULT_SELLER_NAME},
             )
             self.cleaned_data["seller"] = obj
+
+
+class OrganizationExchangeRatesForm(forms.Form):
+    """Edit manual FX rates: organization currency per 1 unit of foreign currency."""
+
+    def __init__(self, *args, organization=None, **kwargs):
+        self.organization = organization
+        super().__init__(*args, **kwargs)
+        org_currency = organization.currency if organization else "USD"
+        for code in IMPORT_CURRENCY_CODES:
+            if code == org_currency:
+                continue
+            from bom.exchange import get_org_per_unit_rate
+
+            existing = get_org_per_unit_rate(code, org_currency)
+            self.fields[f"rate_{code}"] = forms.DecimalField(
+                required=False,
+                label=_("{org} per 1 {code}").format(org=org_currency, code=code),
+                initial=existing,
+                min_value=Decimal("0.000001"),
+            )
+
+    def save(self):
+        from bom.exchange import set_org_per_unit_rate
+
+        org_currency = self.organization.currency
+        for name, value in self.cleaned_data.items():
+            if not name.startswith("rate_"):
+                continue
+            code = name[len("rate_") :]
+            set_org_per_unit_rate(code, org_currency, value)
+
+
+class SingleExchangeRateForm(forms.Form):
+    """Update one foreign currency rate (org currency per 1 foreign unit)."""
+
+    currency = forms.ChoiceField(label=_("Currency"))
+    rate = forms.DecimalField(
+        label=_("Rate"),
+        min_value=Decimal("0.000001"),
+        required=True,
+    )
+
+    def __init__(self, *args, organization=None, **kwargs):
+        self.organization = organization
+        super().__init__(*args, **kwargs)
+        org_currency = organization.currency if organization else "USD"
+        choices = [
+            (code, code) for code in IMPORT_CURRENCY_CODES if code != org_currency
+        ]
+        self.fields["currency"].choices = choices
+        self.fields["rate"].label = _("{org} per 1 foreign unit").format(
+            org=org_currency
+        )
+
+    def save(self):
+        from bom.exchange import set_org_per_unit_rate
+
+        set_org_per_unit_rate(
+            self.cleaned_data["currency"],
+            self.organization.currency,
+            self.cleaned_data["rate"],
+        )
 
 
 class CustomerForm(forms.ModelForm):

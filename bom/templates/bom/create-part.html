@@ -48,10 +48,15 @@
                     {{ seller_form.name|bom_form:'m4 s12' }}
                     {{ seller_part_form.unit_cost.errors }}
                     {{ seller_part_form.unit_cost|bom_form:'m4 s12' }}
+                    {{ seller_part_form.currency.errors }}
+                    {{ seller_part_form.currency|bom_form:'m4 s12' }}
                     {{ seller_part_form.shipping.errors }}
                     {{ seller_part_form.shipping|bom_form:'m4 s12' }}
                     {{ seller_part_form.customs_duty_percent.errors }}
                     {{ seller_part_form.customs_duty_percent|bom_form:'m4 s12' }}
+                </div>
+                <div class="row">
+                    {% include 'bom/components/sellerpart-fx-hint.html' %}
                 </div>
                 <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
                     <a href="javascript:history.back()" class="bom-btn-ghost">انصراف</a>
@@ -86,6 +91,7 @@
                     }
                 </script>
             </form>
+            {% include 'bom/components/sellerpart-fx-modal.html' %}
         {% else %}
             {% include 'bom/nothing-to-see.html' with required_privilege='Admin' %}
         {% endif %}

@@ -129,12 +129,26 @@ class Organization(models.Model):
         return self.owner.email
 
     def save(self, *args, **kwargs):
+        old_currency = None
+        if self.pk:
+            old_currency = (
+                Organization.objects.filter(pk=self.pk)
+                .values_list("currency", flat=True)
+                .first()
+            )
         super(Organization, self).save()
-        SellerPart.objects.filter(seller__organization=self).update(
-            unit_cost_currency=self.currency,
-            nre_cost_currency=self.currency,
-            shipping_currency=self.currency,
-        )
+        # Only retarget seller parts that were still in the previous org currency.
+        # Foreign-currency quotes must keep their own currency.
+        if old_currency and old_currency != self.currency:
+            SellerPart.objects.filter(
+                seller__organization=self, unit_cost_currency=old_currency
+            ).update(unit_cost_currency=self.currency)
+            SellerPart.objects.filter(
+                seller__organization=self, nre_cost_currency=old_currency
+            ).update(nre_cost_currency=self.currency)
+            SellerPart.objects.filter(
+                seller__organization=self, shipping_currency=old_currency
+            ).update(shipping_currency=self.currency)
 
 
 class UserMeta(models.Model):
@@ -1300,7 +1314,11 @@ class SellerPart(models.Model, AsDictModel):
 
     @property
     def landed_unit_cost(self):
-        """Unit cost plus shipping and customs duty (% of unit cost)."""
+        """Landed unit cost in organization currency.
+
+        Quote currency: unit_cost * (1 + duty%) + shipping, converted via the
+        manual org FX table when the quote currency differs.
+        """
         if self.unit_cost is None:
             return None
         duty = Decimal(self.customs_duty_percent or 0) / Decimal("100")
@@ -1309,7 +1327,20 @@ class SellerPart(models.Model, AsDictModel):
             if self.shipping is not None
             else Money(0, self.unit_cost.currency)
         )
-        return self.unit_cost * (Decimal("1") + duty) + shipping
+        landed = self.unit_cost * (Decimal("1") + duty) + shipping
+
+        org_currency = None
+        try:
+            org_currency = self.manufacturer_part.part.organization.currency
+        except AttributeError:
+            pass
+
+        if org_currency is None or str(landed.currency) == str(org_currency):
+            return landed
+
+        from bom.exchange import convert_to_org_currency
+
+        return convert_to_org_currency(landed, org_currency)
 
     def as_dict(self):
         d = super().as_dict()
@@ -1317,6 +1348,7 @@ class SellerPart(models.Model, AsDictModel):
         d["nre_cost"] = self.nre_cost.amount
         d["shipping"] = self.shipping.amount if self.shipping is not None else 0
         d["customs_duty_percent"] = self.customs_duty_percent
+        d["currency"] = str(self.unit_cost.currency) if self.unit_cost else None
         landed = self.landed_unit_cost
         d["landed_unit_cost"] = landed.amount if landed is not None else None
         return d

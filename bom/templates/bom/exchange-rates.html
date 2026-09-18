@@ -1,0 +1,35 @@
+{% extends 'bom/bom-base.html' %}
+
+{% load bom_forms %}
+{% load static %}
+
+{% block head-title %}{{ title }}{% endblock %}
+
+{% block main %}
+{% endblock %}
+
+{% block content %}
+<div class="container-app">
+    {% if profile.role == 'A' %}
+        <div class="bom-panel-pad max-w-3xl">
+            <h2 class="mb-2 text-xl font-semibold text-ink">{% trans "Exchange Rates" %}</h2>
+            <p class="mb-4 text-sm text-ink-muted">
+                {% blocktrans with currency=organization.currency %}
+                Enter how many {{ currency }} equal 1 unit of each foreign currency.
+                Used when imported materials are priced in a foreign currency.
+                {% endblocktrans %}
+            </p>
+            <form name="exchange-rates" action="{% url 'bom:exchange-rates' %}" method="post">
+                {% csrf_token %}
+                {% include 'bom/components/exchange-rates-fields.html' with exchange_rates_form=exchange_rates_form %}
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
+                    <a href="javascript:history.back()" class="bom-btn-ghost">انصراف</a>
+                    <button class="bom-btn-primary" type="submit" name="submit-exchange-rates">{% trans "Save" %}</button>
+                </div>
+            </form>
+        </div>
+    {% else %}
+        {% include 'bom/nothing-to-see.html' with required_privilege='Admin' %}
+    {% endif %}
+</div>
+{% endblock %}

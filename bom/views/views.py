@@ -50,8 +50,10 @@ from bom.forms import (
     ManufacturerForm,
     ManufacturerPartForm,
     OrganizationCreateForm,
+    OrganizationExchangeRatesForm,
     OrganizationFormEditSettings,
     OrganizationNumberLenForm,
+    SingleExchangeRateForm,
     PartClassCSVForm,
     PartClassForm,
     PartClassSelectionForm,
@@ -889,6 +891,17 @@ def bom_settings(request, tab_anchor=None):
             else:
                 messages.error(request, organization_form.errors)
 
+        elif "submit-exchange-rates" in request.POST:
+            tab_anchor = ORGANIZATION_TAB
+            exchange_rates_form = OrganizationExchangeRatesForm(
+                request.POST, organization=organization
+            )
+            if exchange_rates_form.is_valid():
+                exchange_rates_form.save()
+                messages.success(request, _("Exchange rates saved."))
+            else:
+                messages.error(request, exchange_rates_form.errors)
+
         elif "refresh-edit-organization" in request.POST:
             tab_anchor = ORGANIZATION_TAB
             organization_form = OrganizationFormEditSettings(
@@ -1030,6 +1043,7 @@ def bom_settings(request, tab_anchor=None):
     user_meta_form = UserMetaForm()
 
     organization_form = OrganizationFormEditSettings(instance=organization, user=user)
+    exchange_rates_form = OrganizationExchangeRatesForm(organization=organization)
     organization_number_len_form = OrganizationNumberLenForm(instance=organization)
     part_class_form = PartClassForm(organization=organization)
     part_class_form_action = reverse("bom:settings", kwargs={"tab_anchor": INDABOM_TAB})
@@ -1121,6 +1135,47 @@ def manufacturer_delete(request, manufacturer_id):
     manufacturer = get_object_or_404(Manufacturer, pk=manufacturer_id)
     manufacturer.delete()
     return HttpResponseRedirect(reverse("bom:manufacturers"))
+
+
+@login_required(login_url=BOM_LOGIN_URL)
+def exchange_rates(request):
+    profile = request.user.bom_profile()
+    organization = profile.organization
+    if organization is None:
+        return HttpResponseRedirect(reverse("bom:home"))
+
+    name = "exchange-rates"
+    title = _("Exchange Rates")
+    next_url = request.POST.get("next") or request.GET.get("next") or reverse(
+        "bom:exchange-rates"
+    )
+
+    if request.method == "POST":
+        if profile.role != "A":
+            messages.error(request, _("Admin privilege required."))
+            return HttpResponseRedirect(reverse("bom:exchange-rates"))
+
+        if "submit-single-exchange-rate" in request.POST:
+            single_form = SingleExchangeRateForm(
+                request.POST, organization=organization
+            )
+            if single_form.is_valid():
+                single_form.save()
+                messages.success(request, _("Exchange rate saved."))
+                return HttpResponseRedirect(next_url)
+            messages.error(request, single_form.errors)
+        else:
+            exchange_rates_form = OrganizationExchangeRatesForm(
+                request.POST, organization=organization
+            )
+            if exchange_rates_form.is_valid():
+                exchange_rates_form.save()
+                messages.success(request, _("Exchange rates saved."))
+                return HttpResponseRedirect(reverse("bom:exchange-rates"))
+            messages.error(request, exchange_rates_form.errors)
+
+    exchange_rates_form = OrganizationExchangeRatesForm(organization=organization)
+    return TemplateResponse(request, "bom/exchange-rates.html", locals())
 
 
 @login_required(login_url=BOM_LOGIN_URL)
@@ -2192,6 +2247,15 @@ def create_part(request):
 
     title = "ایجاد متریال جدید"
 
+    from bom.exchange import get_all_org_per_unit_rates
+
+    fx_rates = get_all_org_per_unit_rates(organization.currency)
+    exchange_rates_json = dumps(
+        {k: (str(v) if v is not None else None) for k, v in fx_rates.items()}
+    )
+    single_exchange_rate_form = SingleExchangeRateForm(organization=organization)
+    fx_next_url = reverse("bom:create-part")
+
     PartForm = part_form_from_organization(organization)
 
     if (
@@ -2636,6 +2700,15 @@ def add_sellerpart(request, manufacturer_part_id):
         seller_part_form = SellerPartForm(organization=organization)
         seller_form = SellerForm(organization=organization)
 
+    from bom.exchange import get_all_org_per_unit_rates
+
+    fx_rates = get_all_org_per_unit_rates(organization.currency)
+    exchange_rates_json = dumps(
+        {k: (str(v) if v is not None else None) for k, v in fx_rates.items()}
+    )
+    single_exchange_rate_form = SingleExchangeRateForm(organization=organization)
+    fx_next_url = request.build_absolute_uri()
+
     return TemplateResponse(request, "bom/add-sellerpart.html", locals())
 
 
@@ -2853,6 +2926,15 @@ def sellerpart_edit(request, sellerpart_id):
             instance=seller_part,
             organization=organization,
         )
+
+    from bom.exchange import get_all_org_per_unit_rates
+
+    fx_rates = get_all_org_per_unit_rates(organization.currency)
+    exchange_rates_json = dumps(
+        {k: (str(v) if v is not None else None) for k, v in fx_rates.items()}
+    )
+    single_exchange_rate_form = SingleExchangeRateForm(organization=organization)
+    fx_next_url = request.build_absolute_uri()
 
     return TemplateResponse(request, "bom/sellerpart-edit.html", locals())
 

@@ -1,0 +1,65 @@
+{% load bom_forms %}
+
+{# Modal + script for seller-part FX updates. Keep outside the seller form (no nested forms). #}
+<div id="modal-update-fx" class="modal">
+    <form name="single-fx" action="{% url 'bom:exchange-rates' %}" method="post">
+        <div class="modal-content">
+            <h2 class="mb-2 text-lg font-semibold">{% trans "Update exchange rate" %}</h2>
+            <p class="mb-3 text-sm text-ink-muted">
+                {% blocktrans with currency=organization.currency %}
+                How many {{ currency }} equal 1 unit of the selected currency.
+                {% endblocktrans %}
+            </p>
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ fx_next_url }}">
+            <input type="hidden" name="submit-single-exchange-rate" value="1">
+            <div class="row">
+                {{ single_exchange_rate_form.currency|bom_form:'s12 m4' }}
+                {{ single_exchange_rate_form.rate|bom_form:'s12 m4' }}
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close bom-btn-ghost">انصراف</a>
+            <button class="bom-btn-primary" type="submit">{% trans "Save" %}</button>
+        </div>
+    </form>
+</div>
+
+<script type="application/json" id="fx-rates-data">{{ exchange_rates_json|safe }}</script>
+<script>
+(function () {
+    const currencySelect = document.getElementById("id_currency");
+    const panel = document.getElementById("fx-rate-panel");
+    const rateValue = document.getElementById("fx-rate-value");
+    const rateCurrency = document.getElementById("fx-rate-currency");
+    const modalCurrency = document.querySelector("#modal-update-fx [name='currency']");
+    const modalRate = document.querySelector("#modal-update-fx [name='rate']");
+    const orgCurrency = "{{ organization.currency }}";
+    let rates = {};
+    try {
+        rates = JSON.parse(document.getElementById("fx-rates-data").textContent || "{}");
+    } catch (e) {
+        rates = {};
+    }
+
+    function refreshFxHint() {
+        if (!currencySelect || !panel) return;
+        const code = currencySelect.value;
+        if (!code || code === orgCurrency) {
+            panel.classList.add("hidden");
+            return;
+        }
+        panel.classList.remove("hidden");
+        rateCurrency.textContent = code;
+        const rate = rates[code];
+        rateValue.textContent = rate == null || rate === "" ? "{% trans "not set" %}" : rate;
+        if (modalCurrency) modalCurrency.value = code;
+        if (modalRate && rate != null && rate !== "") modalRate.value = rate;
+    }
+
+    if (currencySelect) {
+        currencySelect.addEventListener("change", refreshFxHint);
+        refreshFxHint();
+    }
+})();
+</script>

@@ -135,6 +135,7 @@ class TestForms(TestCase):
             "seller_part_number": "123-45678",
             "minimum_order_quantity": 1000,
             "minimum_pack_quantity": 100,
+            "currency": self.organization.currency,
             "unit_cost": 12332,
             "lead_time_days": 14,
             "nre_cost": 1000,
