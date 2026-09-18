@@ -13,6 +13,7 @@ from django.forms import ValidationError
 from django.utils import timezone
 from django.utils.functional import cached_property
 from djmoney.models.fields import CURRENCY_CHOICES, CurrencyField, MoneyField
+from djmoney.money import Money
 
 from bom.part_bom_weighted import PartBomWeighted, PartBomWeightedItem
 
@@ -128,10 +129,26 @@ class Organization(models.Model):
         return self.owner.email
 
     def save(self, *args, **kwargs):
+        old_currency = None
+        if self.pk:
+            old_currency = (
+                Organization.objects.filter(pk=self.pk)
+                .values_list("currency", flat=True)
+                .first()
+            )
         super(Organization, self).save()
-        SellerPart.objects.filter(seller__organization=self).update(
-            unit_cost_currency=self.currency, nre_cost_currency=self.currency
-        )
+        # Only retarget seller parts that were still in the previous org currency.
+        # Foreign-currency quotes must keep their own currency.
+        if old_currency and old_currency != self.currency:
+            SellerPart.objects.filter(
+                seller__organization=self, unit_cost_currency=old_currency
+            ).update(unit_cost_currency=self.currency)
+            SellerPart.objects.filter(
+                seller__organization=self, nre_cost_currency=old_currency
+            ).update(nre_cost_currency=self.currency)
+            SellerPart.objects.filter(
+                seller__organization=self, shipping_currency=old_currency
+            ).update(shipping_currency=self.currency)
 
 
 class UserMeta(models.Model):
@@ -951,7 +968,7 @@ class PartRevision(models.Model):
         if (
             self.material == "no_bom" or self.material is None
         ) and self.part.optimal_seller():
-            return self.part.optimal_seller().unit_cost
+            return self.part.optimal_seller().landed_unit_cost
         else:
             return self.indented().bom_unit_cost
 
@@ -964,7 +981,7 @@ class PartRevision(models.Model):
         if self.material == "no_bom" or self.material is None:
             seller = self.part.optimal_seller(quantity=quantity)
             if seller:
-                return seller.unit_cost
+                return seller.landed_unit_cost
             return None
         return self.indented(top_level_quantity=quantity).bom_unit_cost
 
@@ -1278,15 +1295,62 @@ class SellerPart(models.Model, AsDictModel):
     unit_cost = MoneyField(
         max_digits=19, decimal_places=UNIT_COST_DECIMAL_PLACES, default_currency="USD"
     )
+    shipping = MoneyField(
+        max_digits=19,
+        decimal_places=UNIT_COST_DECIMAL_PLACES,
+        default_currency="USD",
+        default=0,
+    )
+    customs_duty_percent = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
     lead_time_days = models.PositiveIntegerField(null=True, blank=True)
     nre_cost = MoneyField(max_digits=19, decimal_places=4, default_currency="USD")
     link = models.URLField(null=True, blank=True)
     ncnr = models.BooleanField(default=False)
 
+    @property
+    def landed_unit_cost(self):
+        """Landed unit cost in organization currency.
+
+        Quote currency: unit_cost * (1 + duty%) + shipping, converted via the
+        manual org FX table when the quote currency differs.
+        """
+        if self.unit_cost is None:
+            return None
+        duty = Decimal(self.customs_duty_percent or 0) / Decimal("100")
+        # Coerce shipping into unit_cost currency (0058 defaulted shipping to USD).
+        shipping_amount = (
+            self.shipping.amount if self.shipping is not None else Decimal(0)
+        )
+        shipping = Money(shipping_amount, self.unit_cost.currency)
+        landed = self.unit_cost * (Decimal("1") + duty) + shipping
+
+        org_currency = None
+        try:
+            org_currency = self.manufacturer_part.part.organization.currency
+        except AttributeError:
+            pass
+
+        if org_currency is None or str(landed.currency) == str(org_currency):
+            return landed
+
+        from bom.exchange import convert_to_org_currency
+
+        return convert_to_org_currency(landed, org_currency)
+
     def as_dict(self):
         d = super().as_dict()
         d["unit_cost"] = self.unit_cost.amount
         d["nre_cost"] = self.nre_cost.amount
+        d["shipping"] = self.shipping.amount if self.shipping is not None else 0
+        d["customs_duty_percent"] = self.customs_duty_percent
+        d["currency"] = str(self.unit_cost.currency) if self.unit_cost else None
+        landed = self.landed_unit_cost
+        d["landed_unit_cost"] = landed.amount if landed is not None else None
         return d
 
     def as_dict_for_export(self):
@@ -1300,6 +1364,8 @@ class SellerPart(models.Model, AsDictModel):
             "seller": self.seller.name,
             "seller_part_number": self.seller_part_number,
             "unit_cost": self.unit_cost,
+            "shipping": self.shipping,
+            "customs_duty_percent": self.customs_duty_percent,
             "minimum_order_quantity": self.minimum_order_quantity,
             "nre_cost": self.nre_cost,
         }
@@ -1316,13 +1382,13 @@ class SellerPart(models.Model, AsDictModel):
                     if sellerpart.minimum_order_quantity < quantity
                     else sellerpart.minimum_order_quantity
                 )
-                new_total_cost = new_quantity * sellerpart.unit_cost
+                new_total_cost = new_quantity * sellerpart.landed_unit_cost
                 old_quantity = (
                     quantity
                     if seller.minimum_order_quantity < quantity
                     else seller.minimum_order_quantity
                 )
-                old_total_cost = old_quantity * seller.unit_cost
+                old_total_cost = old_quantity * seller.landed_unit_cost
                 if new_total_cost < old_total_cost:
                     seller = sellerpart
         return seller

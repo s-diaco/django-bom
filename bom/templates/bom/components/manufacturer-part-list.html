@@ -34,7 +34,7 @@
                 <td id="sourcing-mp-{{ manufacturer_part.id }}-pn">{{ manufacturer_part.optimal_seller.seller_part_number }}</td>
                 <td id="sourcing-mp-{{ manufacturer_part.id }}-moq">{{ manufacturer_part.optimal_seller.minimum_order_quantity }}</td>
                 <td id="sourcing-mp-{{ manufacturer_part.id }}-mpq">{{ manufacturer_part.optimal_seller.minimum_pack_quantity }}</td>
-                <td id="sourcing-mp-{{ manufacturer_part.id }}-cost">{{ manufacturer_part.optimal_seller.unit_cost }}</td>
+                <td id="sourcing-mp-{{ manufacturer_part.id }}-cost">{{ manufacturer_part.optimal_seller.landed_unit_cost }}</td>
                 <td id="sourcing-mp-{{ manufacturer_part.id }}-lt">{{ manufacturer_part.optimal_seller.lead_time_days }}</td>
                 <td id="sourcing-mp-{{ manufacturer_part.id }}-nre">{{ manufacturer_part.optimal_seller.nre_cost }}</td>
                 <td id="sourcing-mp-{{ manufacturer_part.id }}-ncnr">{{ manufacturer_part.optimal_seller.ncnr }}</td>
@@ -70,7 +70,7 @@
                     <td>{{ seller_part.seller_part_number }}</td>
                     <td>{{ seller_part.minimum_order_quantity }}</td>
                     <td>{{ seller_part.minimum_pack_quantity }}</td>
-                    <td>{{ seller_part.unit_cost }}</td>
+                    <td>{{ seller_part.landed_unit_cost }}</td>
                     <td>{{ seller_part.lead_time_days }}</td>
                     <td>{{ seller_part.nre_cost }}</td>
                     <td>{{ seller_part.ncnr }}</td>
@@ -170,7 +170,7 @@
                     const pn = sellerPart['seller_part_number'];
                     const moq = sellerPart['minimum_order_quantity'];
                     const mpq = sellerPart['minimum_pack_quantity'];
-                    const price = parseFloat(sellerPart['unit_cost']).toFixed(4);
+                    const price = parseFloat(sellerPart['landed_unit_cost'] ?? sellerPart['unit_cost']).toFixed(4);
                     const leadTime = `${sellerPart['lead_time_days']}`;
                     const nre = parseFloat(sellerPart['nre_cost']).toFixed(4);
                     const ncnr = "True";
@@ -191,7 +191,7 @@
             $(`${mpBaseId}-pn`).text(optimalSellerPart['seller_part_number']);
             $(`${mpBaseId}-moq`).text(optimalSellerPart['minimum_order_quantity']);
             $(`${mpBaseId}-mpq`).text(optimalSellerPart['minimum_pack_quantity']);
-            $(`${mpBaseId}-cost`).text(optimalSellerPart['unit_cost']);
+            $(`${mpBaseId}-cost`).text(optimalSellerPart['landed_unit_cost'] ?? optimalSellerPart['unit_cost']);
             $(`${mpBaseId}-lt`).text(optimalSellerPart['lead_time_days']);
             $(`${mpBaseId}-nre`).text(optimalSellerPart['nre_cost']);
             $(`${mpBaseId}-ncnr`).text(optimalSellerPart['ncnr']);

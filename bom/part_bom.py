@@ -66,16 +66,18 @@ class PartBom(AsDictModel):
                     bom_part.total_extended_quantity
                 )
                 bom_part.order_cost = (
-                    bom_part.total_extended_quantity * bom_part.seller_part.unit_cost
+                    bom_part.total_extended_quantity
+                    * bom_part.seller_part.landed_unit_cost
                 )
             except AttributeError:
                 pass
             self.unit_cost = (
                 (
                     self.unit_cost
-                    + bom_part.seller_part.unit_cost * bom_part.extended_quantity
+                    + bom_part.seller_part.landed_unit_cost
+                    * bom_part.extended_quantity
                 )
-                if bom_part.seller_part.unit_cost is not None
+                if bom_part.seller_part.landed_unit_cost is not None
                 else self.unit_cost
             )
             self.out_of_pocket_cost = (
@@ -166,14 +168,14 @@ class PartBomItem(AsDictModel):
 
     def extended_cost(self):
         try:
-            return self.extended_quantity * self.seller_part.unit_cost
+            return self.extended_quantity * self.seller_part.landed_unit_cost
         except (AttributeError, TypeError) as err:
             logger.log(logging.INFO, "[part_bom.py] " + str(err))
             return Money(0, self._currency)
 
     def out_of_pocket_cost(self):
         try:
-            return self.order_quantity * self.seller_part.unit_cost
+            return self.order_quantity * self.seller_part.landed_unit_cost
         except (AttributeError, TypeError) as err:
             logger.log(logging.INFO, "[part_bom.py] " + str(err))
             return Money(0, self._currency)
@@ -215,7 +217,9 @@ class PartBomItem(AsDictModel):
                 else ""
             ),
             "part_cost": (
-                self.seller_part.unit_cost if self.seller_part is not None else ""
+                self.seller_part.landed_unit_cost
+                if self.seller_part is not None
+                else ""
             ),
             "part_moq": (
                 self.seller_part.minimum_order_quantity

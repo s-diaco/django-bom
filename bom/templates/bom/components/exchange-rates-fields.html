@@ -1,0 +1,10 @@
+{% load bom_forms %}
+
+{% if exchange_rates_form.non_field_errors %}
+    {{ exchange_rates_form.non_field_errors }}
+{% endif %}
+<div class="row">
+    {% for field in exchange_rates_form %}
+        {{ field|bom_form:'s12 m4' }}
+    {% endfor %}
+</div>

@@ -178,7 +178,7 @@ LOGOUT_REDIRECT_URL = "/"
 
 # django-money settings
 CURRENCY_DECIMAL_PLACES = 0
-EXCHANGE_BACKEND = "djmoney.contrib.exchange.backends.FixerBackend"
+EXCHANGE_BACKEND = "bom.exchange.ManualExchangeBackend"
 
 # django-bom configuration
 BOM_CONFIG_DEFAULT = {
