@@ -68,12 +68,28 @@ from .utils import (
     currency_label,
     implied_profit_percent,
     listify_string,
+    normalize_grouped_number,
     stringify_list,
 )
 from .validators import alphanumeric
 
 
 logger = logging.getLogger(__name__)
+
+_PRICE_INPUT_ATTRS = {
+    "class": "bom-price-input",
+    "inputmode": "decimal",
+    "autocomplete": "off",
+}
+
+
+class GroupedDecimalField(forms.DecimalField):
+    """DecimalField that accepts thousands-separated price strings."""
+
+    widget = forms.TextInput(attrs=_PRICE_INPUT_ATTRS)
+
+    def to_python(self, value):
+        return super().to_python(normalize_grouped_number(value))
 
 
 class UserModelChoiceField(forms.ModelChoiceField):
@@ -452,12 +468,12 @@ class SellerPartForm(forms.ModelForm):
             label=_("Currency"),
             initial=org_currency,
         )
-        self.base_fields["unit_cost"] = forms.DecimalField(
+        self.base_fields["unit_cost"] = GroupedDecimalField(
             required=True,
             label=_("Price"),
             initial=0,
         )
-        self.base_fields["shipping"] = forms.DecimalField(
+        self.base_fields["shipping"] = GroupedDecimalField(
             required=False,
             label=_("Shipping"),
             initial=0,
@@ -800,8 +816,8 @@ class CustomerPriceLoadForm(forms.Form):
 class CustomerPriceConfirmForm(forms.Form):
     UNIT_QUANTITY = 1
     profit_percent = forms.DecimalField(required=False, min_value=0)
-    price = forms.DecimalField(required=True, min_value=0)
-    reference_price = forms.DecimalField(required=False, min_value=0)
+    price = GroupedDecimalField(required=True, min_value=0)
+    reference_price = GroupedDecimalField(required=False, min_value=0)
     note = forms.CharField(required=False, widget=forms.Textarea)
 
     def __init__(self, *args, **kwargs):

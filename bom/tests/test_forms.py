@@ -7,6 +7,7 @@ from django.utils import translation
 
 from bom.forms import (
     AddSubpartForm,
+    GroupedDecimalField,
     PartFormSemiIntelligent,
     PartInfoForm,
     SellerPartForm,
@@ -18,7 +19,8 @@ from bom.helpers import (
     create_some_fake_parts,
 )
 from bom.models import Part, Seller
-from bom.utils import currency_label
+from bom.utils import currency_label, normalize_grouped_number
+from decimal import Decimal
 
 TEST_FILES_DIR = "bom/test_files"
 
@@ -173,3 +175,33 @@ class TestForms(TestCase):
         labels = dict(form.fields["currency"].choices)
         self.assertEqual(labels.get("USD"), "دلار")
         self.assertEqual(labels.get("IRR"), "ریال")
+
+    def test_normalize_grouped_number(self):
+        self.assertEqual(normalize_grouped_number("1,234,567"), "1234567")
+        self.assertEqual(normalize_grouped_number("1٬234٬567"), "1234567")
+        self.assertEqual(normalize_grouped_number("12 345"), "12345")
+        self.assertEqual(normalize_grouped_number(Decimal("10")), Decimal("10"))
+
+    def test_seller_part_form_accepts_grouped_unit_cost(self):
+        create_some_fake_parts(organization=self.organization)
+        seller = Seller.objects.filter(organization=self.organization)[0]
+        form = SellerPartForm(
+            {
+                "seller": seller.id,
+                "seller_part_number": "GRP-1",
+                "currency": self.organization.currency,
+                "unit_cost": "1,234,567",
+                "shipping": "10,000",
+                "customs_duty_percent": "0",
+            },
+            organization=self.organization,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["unit_cost"], Decimal("1234567"))
+        self.assertEqual(form.cleaned_data["shipping"], Decimal("10000"))
+        self.assertIn("bom-price-input", form.fields["unit_cost"].widget.attrs.get("class", ""))
+
+    def test_grouped_decimal_field_to_python(self):
+        field = GroupedDecimalField()
+        self.assertEqual(field.clean("1,234,567"), Decimal("1234567"))
+        self.assertEqual(field.clean("9٬876"), Decimal("9876"))

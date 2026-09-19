@@ -19,6 +19,19 @@ def currency_label(code):
     return code
 
 
+def normalize_grouped_number(value):
+    """Strip thousands separators / localized digits from a typed amount string."""
+    if value is None or isinstance(value, (int, float, Decimal)):
+        return value
+    text = str(value).strip()
+    if not text:
+        return text
+    text = convert_arabic_to_english(text)
+    for sep in (",", "٬", " ", "\u00a0"):
+        text = text.replace(sep, "")
+    return text
+
+
 def increment_char(c):
     """
     Increment an uppercase character, returning 'A' if 'Z' is given
