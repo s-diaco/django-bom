@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block bom-menu %}
-    <a class="bom-nav-link" href="{% url 'bom:part-info' part_id=manufacturer_part.part.id %}?tab_anchor=sourcing">انصراف</a>
+    <a class="bom-nav-link" href="{% url 'bom:part-info' part_id=manufacturer_part.part.id %}?tab_anchor=sourcing">{% trans "Cancel" %}</a>
 {% endblock %}
 
 {% block content %}
@@ -64,7 +64,7 @@
                 </section>
 
                 <div class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border-subtle pt-4">
-                    <a href="{% url 'bom:part-info' part_id=manufacturer_part.part.id %}?tab_anchor=sourcing" class="bom-btn-ghost">انصراف</a>
+                    <a href="{% url 'bom:part-info' part_id=manufacturer_part.part.id %}?tab_anchor=sourcing" class="bom-btn-ghost">{% trans "Cancel" %}</a>
                     <button class="bom-btn-primary" type="submit" name="action">{% trans "Save" %}</button>
                 </div>
             </form>

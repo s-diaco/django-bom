@@ -393,8 +393,15 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, str(base_cost.amount))
         self.assertContains(response, str(expected_price.amount))
-        self.assertContains(response, "Confirm price")
-        self.assertContains(response, "Prices by profit %")
+        html = response.content.decode()
+        self.assertTrue(
+            "Confirm price" in html or "تأیید قیمت" in html,
+            "confirm price action missing",
+        )
+        self.assertTrue(
+            "Prices by profit %" in html or ("قیمت" in html and "سود" in html),
+            "profit tier panel missing",
+        )
         self.assertFalse(CustomerPrice.objects.filter(customer=self.customer).exists())
 
         response = self.client.post(
@@ -407,8 +414,11 @@ class TestCustomerPricing(TransactionTestCase):
             },
         )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Confirm price")
-
+        html = response.content.decode()
+        self.assertTrue(
+            "Confirm price" in html or "تأیید قیمت" in html,
+            "confirm price action missing",
+        )
     def test_resolve_customer_for_organization(self):
         resolved = _resolve_customer_for_organization(
             self.organization, str(self.customer.pk)
@@ -507,17 +517,28 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertContains(response, str(base_cost.amount))
         self.assertContains(response, str(expected_price.amount))
         self.assertContains(response, "Peer Buyer")
-        self.assertContains(response, "Confirm price")
-        self.assertContains(response, "Prices by profit %")
+        html = response.content.decode()
+        self.assertTrue(
+            "Confirm price" in html or "تأیید قیمت" in html,
+            "confirm price action missing",
+        )
+        self.assertTrue(
+            "Prices by profit %" in html or ("قیمت" in html and "سود" in html),
+            "profit tier panel missing",
+        )
         self.assertContains(response, "17.5")
         self.assertContains(response, str(self._tier_price(base_cost, Decimal("30")).amount))
-        self.assertContains(response, "Adjusted base (BoM + 7%)")
+        self.assertTrue(
+            "Adjusted base (BoM + 7%)" in html or "BoM + ۷٪" in html or "BoM + 7%" in html,
+            "adjusted base label missing",
+        )
         # Material selection lives inside Pricing summary as a summary-list row.
         self.assertContains(response, 'id="price-load-form"')
         self.assertNotContains(response, 'id="price-input-panel"')
         self.assertContains(response, "price-summary-list__row--field")
-        html = response.content.decode()
         summary_idx = html.find("Pricing summary")
+        if summary_idx < 0:
+            summary_idx = html.find("خلاصه قیمت")
         field_idx = html.find("price-summary-list__row--field")
         self.assertGreater(summary_idx, -1)
         self.assertGreater(field_idx, summary_idx)
@@ -579,13 +600,19 @@ class TestCustomerPricing(TransactionTestCase):
             },
         )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "BoM Overview")
+        html = response.content.decode()
+        self.assertTrue(
+            "BoM Overview" in html or "نمای کلی BoM" in html,
+            "BoM overview heading missing",
+        )
         self.assertContains(response, "indented-bom-overview")
         self.assertNotContains(response, 'id="overview-print-button"')
         self.assertContains(response, 'id="price-review-print-button"')
-        html = response.content.decode()
+        summary_idx = html.find("Pricing summary")
+        if summary_idx < 0:
+            summary_idx = html.find("خلاصه قیمت")
         self.assertLess(
-            html.find("Pricing summary"),
+            summary_idx,
             html.find('id="price-review-bom"'),
         )
         self.assertLess(

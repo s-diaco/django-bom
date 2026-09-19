@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block bom-menu %}
-    <a class="bom-nav-link" href="{% url 'bom:part-info' part_id=part.id %}">انصراف</a>
+    <a class="bom-nav-link" href="{% url 'bom:part-info' part_id=part.id %}">{% trans "Cancel" %}</a>
 {% endblock %}
 
 {% block content %}
@@ -19,7 +19,7 @@
             <form name="form" action="{% url 'bom:sellerpart-edit' sellerpart_id=seller_part.id %}" method="post" class="col s12">
                 {% csrf_token %}
                 <h2>{% trans "Seller" %}</h2>
-                <p>در صورت محصول بودن "{{ organization }}" را به عنوان تأمین کننده انتخاب کنید.</p>
+                <p>{% blocktrans %}If this is a finished product, select "{{ organization }}" as the seller.{% endblocktrans %}</p>
                 <div class="row">
                     {{ seller_form.non_field_errors }}
                     {{ seller_part_form.non_field_errors }}
@@ -35,7 +35,7 @@
                 </div>
                 <div class="row">
                     <div class="col l3 m5 s6">
-                        <a href="javascript:history.back()" class="bom-btn-ghost">انصراف</a>
+                        <a href="javascript:history.back()" class="bom-btn-ghost">{% trans "Cancel" %}</a>
                     </div>
                     <div class="col l4 m5 s6 left-align">
                         <button class="bom-btn-primary" type="submit" name="action">{% trans "Save" %}</button>

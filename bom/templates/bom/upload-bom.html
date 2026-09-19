@@ -9,39 +9,38 @@
 {% endblock %}
 
 {% block bom-menu %}
-    <a class="bom-nav-link" href="{% url 'bom:home' %}">انصراف</a>
+    <a class="bom-nav-link" href="{% url 'bom:home' %}">{% trans "Cancel" %}</a>
 {% endblock %}
 
 {% block content %}
     <div class="container-app">
         {% if profile.role == 'A' %}
             <div class="bom-panel-pad">
-                <h1 class="mb-2 text-lg font-semibold text-ink">آپلود درخت محصول (BOM)</h1>
-                <p class="mb-2 text-sm text-ink-muted">برای دیدن <a href="{% static 'bom/doc/test_bom_5_intelligent.csv' %}">یک فایل نمونه برای آپلود درخت محصول</a> کلیک کنید. زمانی که متریال یا ورژن مورد نظر از قبل تعریف شده باشد، به روز رسانی می‌شود و
-                 اگر تعریف <b>نشده</b> باشد از نو ایجاد خواهد شد.</p>
-                <p class="mb-4 text-sm text-ink-muted">برای مشاهده ملزومات فایل CSV مستندات مربوطه را <a href="{% url 'bom:help' %}#uploading-parts" target="_blank">اینجا<i class="material-icons text-base">open_in_new</i></a> ببینید.</p>
+                <h1 class="mb-2 text-lg font-semibold text-ink">{% trans "Upload bill of materials (BOM)" %}</h1>
+                <p class="mb-2 text-sm text-ink-muted">{% trans "Click" %} <a href="{% static 'bom/doc/test_bom_5_intelligent.csv' %}">{% trans "a sample file for uploading a bill of materials" %}</a> {% trans "to view it. When the material or revision already exists it will be updated; if it is" %} <b>{% trans "not" %}</b> {% trans "defined it will be created." %}</p>
+                <p class="mb-4 text-sm text-ink-muted">{% trans "See CSV file requirements in the documentation" %} <a href="{% url 'bom:help' %}#uploading-parts" target="_blank">{% trans "here" %}<i class="material-icons text-base">open_in_new</i></a>.</p>
 
                 <form action="{% url 'bom:upload-bom' %}" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="mb-4 flex flex-wrap items-end gap-3">
                         <div>
-                            <label class="bom-label" for="{{ bom_csv_form.file.id_for_label }}">انتخاب فایل</label>
+                            <label class="bom-label" for="{{ bom_csv_form.file.id_for_label }}">{% trans "Select file" %}</label>
                             {{ bom_csv_form.file }}
                             {{ bom_csv_form.file.errors }}
                         </div>
-                        <button class="bom-btn-primary" type="submit">آپلود</button>
+                        <button class="bom-btn-primary" type="submit">{% trans "Upload" %}</button>
                     </div>
                     <div class="row items-end gap-y-3">
                         {{ upload_bom_form.parent_part_number|bom_form:'m4 s12' }}
                         <div class="col m8 s12 text-sm text-ink-muted">
-                            <p class="bom-help">[اختیاری] با انتخاب کد متریال این درخت محصول را به متریال مورد نظر وصل کنید.</p>
+                            <p class="bom-help">[{% trans "Optional" %}] {% trans "Select a part number to attach this bill of materials to that material." %}</p>
                             {% if parent_part %}
-                                <p class="mt-1"><a href="{% url 'bom:part-info' part_id=parent_part.id %}">رفتن به {{ parent_part_number }}</a></p>
+                                <p class="mt-1"><a href="{% url 'bom:part-info' part_id=parent_part.id %}">{% blocktrans with pn=parent_part_number %}Go to {{ pn }}{% endblocktrans %}</a></p>
                             {% endif %}
                         </div>
                     </div>
                     <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
-                        <a href="{% url 'bom:home' %}" class="bom-btn-ghost">انصراف</a>
+                        <a href="{% url 'bom:home' %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
                     </div>
                 </form>
             </div>

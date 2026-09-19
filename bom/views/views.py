@@ -164,7 +164,7 @@ def home(request):
     elif request.method == "POST":
         if "actions" in request.POST and "part-action" in request.POST:
             selected_task = request.POST.get("part-action")
-            if selected_task in ["حذف", "Delete"]:
+            if selected_task in [_("Delete"), "Delete", "حذف"]:
                 action = "Delete"
                 if action == "Delete":
                     part_ids = [
@@ -425,14 +425,14 @@ def home(request):
         df["bom_unit_cost"] = pd.to_numeric(df["bom_unit_cost"], errors="coerce")
         df = df.rename(
             columns={
-                "part_number": "کد متریال",
-                "revision": "ورژن",
-                "description": "متریال",
-                "tolerance": "پرت",
-                "material": "نوع متریال",
-                "bom_unit_cost": "قیمت",
-                "seller": "تأمین کننده",
-                "seller_part_number": "کد تأمین کننده",
+                "part_number": _("Part number"),
+                "revision": _("Revision"),
+                "description": _("Material"),
+                "tolerance": _("Scrap"),
+                "material": _("Material type"),
+                "bom_unit_cost": _("Price"),
+                "seller": _("Seller"),
+                "seller_part_number": _("Seller Part Number"),
             }
         )
 
@@ -495,7 +495,7 @@ def report(request):
     elif request.method == "POST":
         if "actions" in request.POST and "part-action" in request.POST:
             selected_task = request.POST.get("part-action")
-            if selected_task in ["حذف", "Delete"]:
+            if selected_task in [_("Delete"), "Delete", "حذف"]:
                 action = "Delete"
                 if action == "Delete":
                     part_ids = [
@@ -851,7 +851,10 @@ def bom_settings(request, tab_anchor=None):
                     added_user_profile = user_add_form.save()
                     messages.info(
                         request,
-                        f"{added_user_profile.user.first_name} {added_user_profile.user.last_name} به شرکت شما اضافه شد.",
+                        _("{first} {last} was added to your organization.").format(
+                            first=added_user_profile.user.first_name,
+                            last=added_user_profile.user.last_name,
+                        ),
                     )
                 else:
                     messages.error(request, user_add_form.errors)
@@ -1061,10 +1064,10 @@ def manufacturers(request):
         return HttpResponseRedirect(reverse("bom:organization-create"))
 
     query = request.GET.get("q", "")
-    title = "تولید کنندگان"
+    title = _("Manufacturers")
 
     if query:
-        title += " - نتایج جستجو"
+        title += _(" - search results")
 
     manufacturers = (
         Manufacturer.objects.filter(organization=organization, name__icontains=query)
@@ -1184,10 +1187,10 @@ def sellers(request):
     organization = profile.organization
     name = "sellers"
     query = request.GET.get("q", "")
-    title = "تأمین کنندگان"
+    title = _("Sellers")
 
     if query:
-        title += " - نتایج جستجو"
+        title += _(" - search results")
 
     sellers = (
         Seller.objects.filter(organization=organization, name__icontains=query)
@@ -1716,21 +1719,21 @@ def customer_export_prices(request, customer_id):
     for row in customer.latest_prices():
         rows.append(
             {
-                "کد متریال": row.part.full_part_number(),
-                "متریال": (
+                _("Part number"): row.part.full_part_number(),
+                _("Material"): (
                     row.part_revision.description if row.part_revision else ""
                 ),
-                "ورژن": (
+                _("Revision"): (
                     row.part_revision.revision if row.part_revision else ""
                 ),
-                "هزینه پایه": (
+                _("Base cost"): (
                     row.base_cost.amount if row.base_cost is not None else None
                 ),
-                "درصد سود": row.profit_percent,
-                "قیمت": row.price.amount if row.price is not None else None,
-                "دستی": _("Yes") if row.is_manual_price else _("No"),
-                "یادداشت": row.note,
-                "تاریخ": row.created_at,
+                _("Profit %"): row.profit_percent,
+                _("Price"): row.price.amount if row.price is not None else None,
+                _("Manual"): _("Yes") if row.is_manual_price else _("No"),
+                _("Note"): row.note,
+                _("Date"): row.created_at,
             }
         )
 
@@ -2057,7 +2060,7 @@ def upload_bom(request):
     user = request.user
     profile = user.bom_profile()
     organization = profile.organization
-    title = "آپلود درخت محصول (BOM)"
+    title = _("Upload product tree (BOM)")
 
     if (
         request.method == "POST"
@@ -2139,7 +2142,7 @@ def upload_parts(request):
     user = request.user
     profile = user.bom_profile()
     organization = profile.organization
-    title = "آپلود فایل متریال"
+    title = _("Upload parts file")
 
     if request.method == "POST" and request.FILES["file"] is not None:
         form = PartCSVForm(request.POST, request.FILES, organization=organization)
@@ -2245,7 +2248,7 @@ def create_part(request):
     profile = user.bom_profile()
     organization = profile.organization
 
-    title = "ایجاد متریال جدید"
+    title = _("Create new part")
 
     from bom.exchange import get_all_org_per_unit_rates
 
@@ -2318,13 +2321,17 @@ def create_part(request):
                 else:
                     messages.error(
                         request,
-                        "یک تولید کننده جدید بسازید یا از لیست تولید کنندگان انتخاب کنید.",
+                        _(
+                            "Create a new manufacturer or select one from the manufacturers list."
+                        ),
                     )
                     return TemplateResponse(request, "bom/create-part.html", locals())
             elif new_manufacturer_name != "":
                 messages.warning(
                     request,
-                    "کد تولید کننده اختصاص داده نشده است. هیچ تولید کننده‌ای انتخاب یا ایجاد نشد.",
+                    _(
+                        "No manufacturer part number was assigned. No manufacturer was selected or created."
+                    ),
                 )
             new_part = part_form.save(commit=False)
             new_part.organization = organization
@@ -2345,7 +2352,9 @@ def create_part(request):
                 except IntegrityError:
                     messages.error(
                         request,
-                        "خطا! متریال با کد {0}-{1} قبلاً‌ایجاد شده است.".format(
+                        _(
+                            "Error! Part with number {0}-{1} has already been created."
+                        ).format(
                             new_part.number_class.code,
                             new_part.number_item,
                         ),
@@ -2392,7 +2401,9 @@ def create_part(request):
                 elif new_seller_name != "":
                     messages.warning(
                         request,
-                        "کد تأمین کننده اختصاص داده نشده است. هیچ تأمین کننده‌ای انتخاب یا ایجاد نشد.",
+                        _(
+                            "No seller part number was assigned. No seller was selected or created."
+                        ),
                     )
                 if seller is not None:
                     if manufacturer_part is None:
@@ -2530,10 +2541,12 @@ def add_subpart(request, part_id, part_revision_id):
                     assembly=part_revision.assembly, subpart=new_part
                 )
 
-            info_msg = "زیرشاخه "
+            info_msg = _("Subpart")
             if reference:
                 info_msg += " " + reference
-            info_msg += " {} به متریال {} اضافه شد.".format(subpart_part, part_revision)
+            info_msg += _(" {} was added to part {}.").format(
+                subpart_part, part_revision
+            )
             messages.info(request, info_msg)
 
         else:
@@ -2982,9 +2995,9 @@ def part_revision_release(request, part_id, part_revision_id):
         "bom:part-revision-release",
         kwargs={"part_id": part.id, "part_revision_id": part_revision.id},
     )
-    title = "غیرفعال کردن {} ورژن {} {} از <b>فعال</b> به <b>غیر فعال</b>?".format(
-        part.full_part_number(), part_revision.revision, part_revision.synopsis()
-    )
+    title = _(
+        "Deactivate {} revision {} {} from <b>active</b> to <b>inactive</b>?"
+    ).format(part.full_part_number(), part_revision.revision, part_revision.synopsis())
 
     subparts = part_revision.assembly.subparts.filter(part_revision__configuration="W")
     release_warning = subparts.count() > 0
@@ -3026,7 +3039,7 @@ def part_revision_new(request, part_id):
     organization = profile.organization
 
     part = get_object_or_404(Part, pk=part_id)
-    title = "ورژن جدید برای {}".format(part.full_part_number())
+    title = _("New revision for {}").format(part.full_part_number())
     action = reverse("bom:part-revision-new", kwargs={"part_id": part_id})
 
     latest_revision = part.latest()

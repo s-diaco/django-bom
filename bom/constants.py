@@ -1,3 +1,5 @@
+from django.utils.translation import gettext_lazy as _
+
 NO_CHOICE = ("", "-----")
 
 SUBSCRIPTION_TYPE_FREE = "F"
@@ -24,8 +26,8 @@ CALENDAR_TYPES = (
 CONFIGURATION_TYPE_RELEASED = "R"
 CONFIGURATION_TYPE_WORKING = "W"
 CONFIGURATION_TYPES = (
-    (CONFIGURATION_TYPE_RELEASED, "غیر فعال"),
-    (CONFIGURATION_TYPE_WORKING, "فعال"),
+    (CONFIGURATION_TYPE_RELEASED, _("Inactive")),
+    (CONFIGURATION_TYPE_WORKING, _("Active")),
 )
 
 NUMBER_SCHEME_INTELLIGENT = "I"
@@ -123,10 +125,10 @@ PACKAGE_TYPES = (
 
 MATERIAL_TYPES = (
     # NO_CHOICE,
-    ("with_loi", "با لحاظ کردن پرت (فریت)"),
-    ("no_loi", "بدون احتساب پرت (کامپوند، جوهر یا …)"),
-    ("no_bom", "مواد اولیه"),
-    # ("Other", "سایر"),
+    ("with_loi", _("With loss (LOI) (Frit)")),
+    ("no_loi", _("Without loss (LOI) (compound, ink, …)")),
+    ("no_bom", _("Raw materials")),
+    # ("Other", "Other"),
 )
 
 DISTANCE_UNITS = (

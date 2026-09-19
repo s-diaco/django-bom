@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block bom-menu %}
-    <a class="bom-nav-link" href="{% url 'bom:part-info' part_id=part.id %}">انصراف</a>
+    <a class="bom-nav-link" href="{% url 'bom:part-info' part_id=part.id %}">{% trans "Cancel" %}</a>
 {% endblock %}
 
 {% if profile.role == 'A' %}
@@ -20,8 +20,8 @@
                 {{ part_form.non_field_errors }}
                 <div class="row">
                     <div class="col s12">
-                        <i>مشخصات متریال را ویرایش کنید یا برای ویرایش درخت محصول این متریال <a href="{% url 'bom:part-info-history' part_id=part.id part_revision_id=part_revision.id %}?tab_anchor=bom">اینجا</a>
-                            کلیک کنید.</i>
+                        <i>{% trans "Edit the material specifications, or" %} <a href="{% url 'bom:part-info-history' part_id=part.id part_revision_id=part_revision.id %}?tab_anchor=bom">{% trans "click here" %}</a>
+                            {% trans "to edit this material's bill of materials." %}</i>
                     </div>
                 </div>
 
@@ -29,7 +29,7 @@
 
                 <div class="row">
                     <div class="col s6">
-                        <a href="javascript:history.back()" class="bom-btn-ghost">انصراف</a>
+                        <a href="javascript:history.back()" class="bom-btn-ghost">{% trans "Cancel" %}</a>
                     </div>
                     <div class="col s6 left-align">
                         <button class="bom-btn-primary" type="submit" name="action">{% trans "Save" %}</button>

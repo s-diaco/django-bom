@@ -14,12 +14,12 @@
             <th>{% trans "Part" %}</th>
             <th>{% trans "Seller" %}</th>
             <th>{% trans "Seller Part Number" %}</th>
-            <th class="bom-num">قیمت</th>
-            <th class="bom-num">ارز</th>
-            <th class="bom-num">حمل</th>
-            <th class="bom-num">عوارض %</th>
-            <th class="bom-num">قیمت تمام‌شده</th>
-            <th colspan="2">گزینه‌ها</th>
+            <th class="bom-num">{% trans "Price" %}</th>
+            <th class="bom-num">{% trans "Currency" %}</th>
+            <th class="bom-num">{% trans "Shipping" %}</th>
+            <th class="bom-num">{% trans "Customs Duty (%)" %}</th>
+            <th class="bom-num">{% trans "Landed Cost" %}</th>
+            <th colspan="2">{% trans "Options" %}</th>
         </tr>
         </thead>
         <tbody>
@@ -54,6 +54,6 @@
 </script>
 {% else %}
 <div class="center-align" style="padding: 10vh 0;">
-    <i>هیچ تأمین کننده‌ای مشخص نشده است.</i>
+    <i>{% trans "No seller has been specified." %}</i>
 </div>
 {% endif %}

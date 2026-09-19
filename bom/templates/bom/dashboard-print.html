@@ -7,12 +7,12 @@
         <table class="bom-table part-list">
             <thead>
             <tr>
-                <th>کد متریال</th>
+                <th>{% trans "Part Number" %}</th>
                 {% if organization.number_scheme == 'S' %}
-                    <th>Category</th>
+                    <th>{% trans "Category" %}</th>
                 {% endif %}
-                <th>متریال</th>
-                <th>ورژن</th>
+                <th>{% trans "Material" %}</th>
+                <th>{% trans "Revision" %}</th>
                 <th>{% trans "Seller Part Number" %}</th>
                 <th>{% trans "Seller" %}</th>
                 <th class="bom-num">{% trans "Unit Cost" %}</th>
@@ -35,7 +35,7 @@
                 {% endwith %}
             {% empty %}
                 <tr>
-                    <td colspan="99" class="bom-empty">هیچ متریالی پیدا نشد.</td>
+                    <td colspan="99" class="bom-empty">{% trans "No materials found." %}</td>
                 </tr>
             {% endfor %}
             </tbody>
