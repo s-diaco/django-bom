@@ -216,7 +216,7 @@
             </div>
 
             <div class="price-review-panel" id="price-review-bom">
-                {% if preview.part_revision.material == 'with_loi' or preview.part_revision.material == 'no_loi' %}
+                {% if preview.part_revision.is_product %}
                     {% if preview.indented_bom %}
                         <h5 class="mb-2 printer-show">{% trans "BoM Overview" %}</h5>
                         <h5 class="mb-2 printer-hide">{% trans "BoM Overview" %}</h5>

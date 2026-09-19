@@ -14,7 +14,7 @@ from django.core.validators import (
 )
 from django.db import IntegrityError
 from django.db.models import OuterRef, Subquery
-from django.forms.models import model_to_dict
+from django.forms.models import modelformset_factory, model_to_dict
 from django.utils.translation import gettext_lazy as _
 
 from djmoney.money import Money
@@ -55,6 +55,7 @@ from .models import (
     Part,
     PartClass,
     PartRevision,
+    ProductType,
     Seller,
     SellerPart,
     Subpart,
@@ -328,6 +329,76 @@ class OrganizationFormEditSettings(OrganizationForm):
         }
 
 
+class ProductTypeForm(forms.ModelForm):
+    class Meta:
+        model = ProductType
+        fields = ["code", "name", "has_bom", "apply_loi", "overhead"]
+
+    def __init__(self, *args, **kwargs):
+        self.organization = kwargs.pop("organization", None)
+        super().__init__(*args, **kwargs)
+        self.fields["overhead"] = GroupedDecimalField(
+            required=False,
+            label=_("Overhead"),
+            initial=0,
+            min_value=0,
+        )
+        self.fields["code"].required = False
+        self.fields["name"].required = False
+        self.fields["code"].label = _("Code")
+        self.fields["name"].label = _("Name")
+        self.fields["has_bom"].label = _("Has BoM")
+        self.fields["apply_loi"].label = _("Apply LOI")
+        if self.instance.pk:
+            self.fields["code"].disabled = True
+            if self.instance.overhead is not None:
+                self.fields["overhead"].initial = self.instance.overhead.amount
+
+    def clean_code(self):
+        if self.instance.pk:
+            return self.instance.code
+        code = (self.cleaned_data.get("code") or "").strip().lower()
+        return code
+
+    def clean(self):
+        cleaned_data = super().clean()
+        code = cleaned_data.get("code")
+        name = cleaned_data.get("name")
+        if not code and not name:
+            return cleaned_data
+        if not code:
+            self.add_error("code", _("Code is required."))
+        if not name:
+            self.add_error("name", _("Name is required."))
+        if code and self.organization:
+            dupes = ProductType.objects.filter(
+                organization=self.organization, code=code
+            )
+            if self.instance.pk:
+                dupes = dupes.exclude(pk=self.instance.pk)
+            if dupes.exists():
+                self.add_error("code", _("A type with this code already exists."))
+        currency = (
+            self.organization.currency
+            if self.organization
+            else (self.instance.overhead.currency if self.instance.overhead else "USD")
+        )
+        amount = cleaned_data.get("overhead")
+        if amount is None:
+            amount = Decimal(0)
+        self.instance.overhead = Money(amount, currency)
+        return cleaned_data
+
+
+def product_type_formset_factory():
+    return modelformset_factory(
+        ProductType,
+        form=ProductTypeForm,
+        extra=1,
+        can_delete=True,
+    )
+
+
 class OrganizationNumberLenForm(forms.ModelForm):
     class Meta:
         model = Organization
@@ -506,13 +577,6 @@ class SellerPartForm(forms.ModelForm):
         self.fields["seller"].required = False
         self.fields["seller_part_number"].label = _("Seller Part Number")
         self.fields["seller"].label = _("Seller")
-        # TODO: what if material is None?
-        if instance and instance.manufacturer_part.part.latest().material in [
-            "no_loi",
-            "with_loi",
-        ]:
-            self.fields["unit_cost"].label = _("Overload Cost")
-
     def clean(self):
         cleaned_data = super(SellerPartForm, self).clean()
         seller = cleaned_data.get("seller")
@@ -945,10 +1009,11 @@ class CustomerPriceBulkForm(forms.Form):
         super().__init__(*args, **kwargs)
         parts_qs = Part.objects.filter(organization=self.organization)
         if product_only:
+            self.organization.ensure_default_product_types()
             product_part_ids = (
                 PartRevision.objects.filter(
                     part__organization=self.organization,
-                    material__in=["with_loi", "no_loi"],
+                    material__in=self.organization.product_type_codes(has_bom=True),
                 )
                 .values_list("part_id", flat=True)
                 .distinct()
@@ -1609,7 +1674,10 @@ class PartCSVForm(forms.Form):
                 part_dict = model_to_dict(part)
                 part_dict.update({"number_class": str(part.number_class)})
                 pf = PartForm(data=part_dict, organization=self.organization)
-                prf = PartRevisionForm(data=model_to_dict(part_revision))
+                prf = PartRevisionForm(
+                    data=model_to_dict(part_revision),
+                    organization=self.organization,
+                )
 
                 if pf.is_valid() and prf.is_valid():
                     part = pf.save(commit=False)
@@ -1931,6 +1999,7 @@ class PartRevisionForm(forms.ModelForm):
         widgets = {"material": forms.RadioSelect()}
 
     def __init__(self, *args, **kwargs):
+        self.organization = kwargs.pop("organization", None)
         super(PartRevisionForm, self).__init__(*args, **kwargs)
 
         self.fields["revision"].initial = 1
@@ -1947,9 +2016,18 @@ class PartRevisionForm(forms.ModelForm):
         self.fields["revision"].label = _("Revision")
         self.fields["tolerance"].label = _("Scrap percent (LOI)")
         self.fields["tolerance"].initial = 0
-        # TODO: read choices from PartRevision model
-        self.fields["material"].choices = MATERIAL_TYPES
-        self.fields["material"].initial = "no_bom"
+        org = self.organization
+        if org is None and self.instance and getattr(self.instance, "part_id", None):
+            org = self.instance.part.organization
+        if org is not None:
+            org.ensure_default_product_types()
+            types = list(org.product_types.all())
+            self.fields["material"].choices = [(pt.code, pt.name) for pt in types]
+            raw = next((pt.code for pt in types if not pt.has_bom), "no_bom")
+            self.fields["material"].initial = raw
+        else:
+            self.fields["material"].choices = MATERIAL_TYPES
+            self.fields["material"].initial = "no_bom"
         self.fields["description"] = forms.CharField(
             # TODO: Delete if not working
             error_messages={"required": _("Description cannot be empty!")},
@@ -2020,6 +2098,8 @@ class PartRevisionNewForm(PartRevisionForm):
         self.part = kwargs.pop("part", None)
         self.revision = kwargs.pop("revision", None)
         self.assembly = kwargs.pop("assembly", None)
+        if self.part is not None and "organization" not in kwargs:
+            kwargs["organization"] = self.part.organization
         super(PartRevisionNewForm, self).__init__(*args, **kwargs)
         for value in self.fields.values():
             value.widget.attrs["placeholder"] = value.help_text
@@ -2577,7 +2657,9 @@ class BOMCSVForm(forms.Form):
                 if not part_dict["revision"]:
                     part_dict["revision"] = 1
                 part_revision_form = PartRevisionForm(
-                    part_dict, instance=existing_part_revision
+                    part_dict,
+                    instance=existing_part_revision,
+                    organization=self.organization,
                 )
                 if not part_revision_form.is_valid():
                     add_nonfield_error_from_existing(

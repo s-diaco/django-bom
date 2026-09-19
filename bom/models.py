@@ -23,6 +23,7 @@ from .constants import (
     CALENDAR_TYPES,
     CONFIGURATION_TYPES,
     CURRENT_UNITS,
+    DEFAULT_PRODUCT_TYPES,
     DISTANCE_UNITS,
     FREQUENCY_UNITS,
     INTERFACE_TYPES,
@@ -131,6 +132,7 @@ class Organization(models.Model):
 
     def save(self, *args, **kwargs):
         old_currency = None
+        is_create = self.pk is None
         if self.pk:
             old_currency = (
                 Organization.objects.filter(pk=self.pk)
@@ -153,6 +155,75 @@ class Organization(models.Model):
             org_sellerparts.filter(shipping_currency=old_currency).update(
                 shipping_currency=self.currency
             )
+            self.product_types.filter(overhead_currency=old_currency).update(
+                overhead_currency=self.currency
+            )
+        if is_create:
+            self.ensure_default_product_types()
+
+    def ensure_default_product_types(self):
+        if not self.pk or self.product_types.exists():
+            return
+        currency = self.currency or "USD"
+        ProductType.objects.bulk_create(
+            [
+                ProductType(
+                    organization=self,
+                    code=code,
+                    name=name,
+                    has_bom=has_bom,
+                    apply_loi=apply_loi,
+                    overhead=Money(0, currency),
+                    sort_order=index,
+                )
+                for index, (code, name, has_bom, apply_loi) in enumerate(
+                    DEFAULT_PRODUCT_TYPES
+                )
+            ]
+        )
+        self.invalidate_product_type_cache()
+
+    def invalidate_product_type_cache(self):
+        self.__dict__.pop("_product_types_by_code", None)
+
+    def product_types_by_code(self):
+        cached = self.__dict__.get("_product_types_by_code")
+        if cached is None:
+            self.ensure_default_product_types()
+            cached = {pt.code: pt for pt in self.product_types.all()}
+            self._product_types_by_code = cached
+        return cached
+
+    def product_type_codes(self, *, has_bom):
+        return [
+            code
+            for code, pt in self.product_types_by_code().items()
+            if pt.has_bom is has_bom
+        ]
+
+
+class ProductType(models.Model):
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="product_types"
+    )
+    code = models.SlugField(max_length=32)
+    name = models.CharField(max_length=255)
+    has_bom = models.BooleanField(default=True)
+    apply_loi = models.BooleanField(default=False)
+    overhead = MoneyField(
+        max_digits=19,
+        decimal_places=UNIT_COST_DECIMAL_PLACES,
+        default=0,
+        default_currency="USD",
+    )
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = [("organization", "code")]
+        ordering = ["sort_order", "code"]
+
+    def __str__(self):
+        return self.name
 
 
 class UserMeta(models.Model):
@@ -964,14 +1035,50 @@ class PartRevision(models.Model):
         self.displayable_synopsis = self.generate_synopsis(False)
         super(PartRevision, self).save(*args, **kwargs)
 
+    @property
+    def product_type(self):
+        cached = self.__dict__.get("_product_type", _UNSET)
+        if cached is not _UNSET:
+            return cached
+        try:
+            org = self.part.organization
+        except AttributeError:
+            return None
+        pt = org.product_types_by_code().get(self.material)
+        self._product_type = pt
+        return pt
+
+    @property
+    def is_product(self):
+        pt = self.product_type
+        if pt is None:
+            return self.material not in (None, "", "no_bom")
+        return pt.has_bom
+
+    @property
+    def applies_loi(self):
+        pt = self.product_type
+        if pt is None:
+            return self.material == "with_loi"
+        return pt.apply_loi
+
+    @property
+    def type_overhead(self):
+        pt = self.product_type
+        currency = "USD"
+        try:
+            currency = self.part.organization.currency
+        except AttributeError:
+            pass
+        if pt is None or not pt.has_bom or pt.overhead is None:
+            return Money(0, currency)
+        return pt.overhead
+
     @cached_property
     def bom_unit_cost(self):
-        if (
-            self.material == "no_bom" or self.material is None
-        ) and self.part.optimal_seller():
+        if not self.is_product and self.part.optimal_seller():
             return self.part.optimal_seller().landed_unit_cost
-        else:
-            return self.indented().bom_unit_cost
+        return self.indented().bom_unit_cost
 
     def bom_unit_cost_at_quantity(self, quantity):
         """BoM unit cost computed at an explicit top-level quantity.
@@ -979,7 +1086,7 @@ class PartRevision(models.Model):
         Unlike the cached ``bom_unit_cost`` property, this always recomputes so
         seller selection (via MOQ) reflects ``quantity``.
         """
-        if self.material == "no_bom" or self.material is None:
+        if not self.is_product:
             seller = self.part.optimal_seller(quantity=quantity)
             if seller:
                 return seller.landed_unit_cost
@@ -1014,6 +1121,8 @@ class PartRevision(models.Model):
         )
 
     def indented(self, top_level_quantity=100, is_weighted_bom=True):
+        type_map = self.part.organization.product_types_by_code()
+
         def indented_given_bom(
             bom,
             part_revision,
@@ -1026,6 +1135,12 @@ class PartRevision(models.Model):
             reference="",
             do_not_load=False,
         ):
+            if part_revision is not None:
+                part_revision._product_type = type_map.get(part_revision.material)
+                try:
+                    part_revision.part.organization._product_types_by_code = type_map
+                except AttributeError:
+                    pass
             bom_item_id = (parent_id or "") + (
                 str(part_revision.id) + "-dnl" if do_not_load else str(part_revision.id)
             )

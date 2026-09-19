@@ -140,6 +140,13 @@ MATERIAL_TYPES = (
     # ("Other", "Other"),
 )
 
+# Seeded per organization. New types are rows, not new constants.
+DEFAULT_PRODUCT_TYPES = (
+    ("with_loi", "With loss (LOI) (Frit)", True, True),
+    ("no_loi", "Without loss (LOI) (compound, ink, …)", True, False),
+    ("no_bom", "Raw materials", False, False),
+)
+
 DISTANCE_UNITS = (
     NO_CHOICE,
     ("mil", "mil"),

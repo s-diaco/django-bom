@@ -1733,7 +1733,7 @@ class TestBOM(TransactionTestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue("/part/" in response.url)
 
-    def test_add_sellerpart_locks_seller_for_product(self):
+    def test_add_sellerpart_allows_custom_seller_for_product(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
         rev = p1.latest()
         rev.material = "no_loi"
@@ -1746,12 +1746,7 @@ class TestBOM(TransactionTestCase):
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, self.organization.name)
-        self.assertContains(response, 'readonly')
-        self.assertNotContains(
-            response,
-            "در صورت محصول بودن",
-        )
+        self.assertNotContains(response, 'readonly')
 
         response = self.client.post(
             url,
@@ -1766,7 +1761,7 @@ class TestBOM(TransactionTestCase):
         )
         self.assertEqual(response.status_code, 302)
         seller_part = p1.primary_manufacturer_part.sellerpart_set.latest("id")
-        self.assertEqual(seller_part.seller.name, self.organization.name)
+        self.assertEqual(seller_part.seller.name, "Tampered Seller")
 
     def test_add_sellerpart_allows_custom_seller_for_raw_material(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
