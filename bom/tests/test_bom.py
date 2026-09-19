@@ -1733,6 +1733,70 @@ class TestBOM(TransactionTestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue("/part/" in response.url)
 
+    def test_add_sellerpart_locks_seller_for_product(self):
+        (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+        rev = p1.latest()
+        rev.material = "no_loi"
+        rev.save()
+        mp_id = p1.primary_manufacturer_part.id
+        url = reverse(
+            "bom:manufacturer-part-add-sellerpart",
+            kwargs={"manufacturer_part_id": mp_id},
+        )
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.organization.name)
+        self.assertContains(response, 'readonly')
+        self.assertNotContains(
+            response,
+            "در صورت محصول بودن",
+        )
+
+        response = self.client.post(
+            url,
+            {
+                "name": "Tampered Seller",
+                "seller_part_number": "ORG-LOCK-1",
+                "currency": self.organization.currency,
+                "unit_cost": "10",
+                "shipping": "0",
+                "customs_duty_percent": "0",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        seller_part = p1.primary_manufacturer_part.sellerpart_set.latest("id")
+        self.assertEqual(seller_part.seller.name, self.organization.name)
+
+    def test_add_sellerpart_allows_custom_seller_for_raw_material(self):
+        (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+        rev = p1.latest()
+        rev.material = "no_bom"
+        rev.save()
+        url = reverse(
+            "bom:manufacturer-part-add-sellerpart",
+            kwargs={"manufacturer_part_id": p1.primary_manufacturer_part.id},
+        )
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'readonly')
+
+        response = self.client.post(
+            url,
+            {
+                "name": "Custom Raw Seller",
+                "seller_part_number": "RAW-1",
+                "currency": self.organization.currency,
+                "unit_cost": "5",
+                "shipping": "0",
+                "customs_duty_percent": "0",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        seller_part = p1.primary_manufacturer_part.sellerpart_set.latest("id")
+        self.assertEqual(seller_part.seller.name, "Custom Raw Seller")
+
     def test_sellerpart_edit(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
 
