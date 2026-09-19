@@ -8,9 +8,11 @@ from django.utils import translation
 from bom.forms import (
     AddSubpartForm,
     GroupedDecimalField,
+    OrganizationExchangeRatesForm,
     PartFormSemiIntelligent,
     PartInfoForm,
     SellerPartForm,
+    SingleExchangeRateForm,
 )
 from bom.helpers import (
     create_a_fake_organization,
@@ -205,3 +207,30 @@ class TestForms(TestCase):
         field = GroupedDecimalField()
         self.assertEqual(field.clean("1,234,567"), Decimal("1234567"))
         self.assertEqual(field.clean("9٬876"), Decimal("9876"))
+
+    def test_exchange_rate_forms_accept_grouped_rates(self):
+        self.organization.currency = "IRR"
+        self.organization.save()
+
+        org_form = OrganizationExchangeRatesForm(
+            {"rate_USD": "42,000", "rate_EUR": "45,000"},
+            organization=self.organization,
+        )
+        self.assertTrue(org_form.is_valid(), org_form.errors)
+        self.assertEqual(org_form.cleaned_data["rate_USD"], Decimal("42000"))
+        self.assertEqual(org_form.cleaned_data["rate_EUR"], Decimal("45000"))
+        self.assertIn(
+            "bom-price-input",
+            org_form.fields["rate_USD"].widget.attrs.get("class", ""),
+        )
+
+        single = SingleExchangeRateForm(
+            {"currency": "USD", "rate": "42,000"},
+            organization=self.organization,
+        )
+        self.assertTrue(single.is_valid(), single.errors)
+        self.assertEqual(single.cleaned_data["rate"], Decimal("42000"))
+        self.assertIn(
+            "bom-price-input",
+            single.fields["rate"].widget.attrs.get("class", ""),
+        )
