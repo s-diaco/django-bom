@@ -15,9 +15,9 @@
 {% block content %}
     <div class="container-app">
     {% if profile.role == 'A' %}
-        <div class="bom-panel-pad max-w-3xl">
+        <div class="bom-panel-pad mx-auto max-w-2xl">
             <header class="mb-5 border-b border-border-subtle pb-4">
-                <h1 class="mb-1 text-xl font-semibold text-ink">{% trans "Seller" %}</h1>
+                <h1 class="mb-1 text-xl font-semibold text-ink">افزودن کد تأمین کننده</h1>
                 <p class="mb-0 text-sm text-ink-muted">
                     <a class="font-medium" dir="ltr" href="{% url 'bom:part-info' part_id=manufacturer_part.part.id %}">{{ manufacturer_part.part.full_part_number }}</a>
                     {% if manufacturer_part.part.description %}
@@ -44,7 +44,6 @@
                 {{ seller_part_form.non_field_errors }}
 
                 <section class="mb-5">
-                    <h2 class="mb-1 text-base font-semibold text-ink">{% trans "Seller" %}</h2>
                     <p class="mb-3 text-sm text-ink-muted">در صورت محصول بودن "{{ organization }}" را به عنوان تأمین کننده انتخاب کنید.</p>
                     <div class="row gap-y-3">
                         {{ seller_part_form.seller_part_number|bom_form:'m6 s12' }}
