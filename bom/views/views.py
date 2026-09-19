@@ -2669,12 +2669,24 @@ def add_sellerpart(request, manufacturer_part_id):
     title = _("Seller")
     title += f" | <span dir='ltr'>{part.full_part_number()}</span>"
 
+    part_revision = part.latest()
+    seller_locked = bool(
+        part_revision and part_revision.material in ("with_loi", "no_loi")
+    )
+
     if request.method == "POST":
-        seller_form = SellerForm(request.POST)
+        seller_form = SellerForm(
+            request.POST,
+            organization=organization,
+            readonly_name=seller_locked,
+        )
         if seller_form.is_valid():
-            new_seller_name = seller_form.cleaned_data.get("name", "")
-            if not new_seller_name:
-                new_seller_name = constants.DEFAULT_SELLER_NAME
+            if seller_locked:
+                new_seller_name = organization.name
+            else:
+                new_seller_name = seller_form.cleaned_data.get("name", "")
+                if not new_seller_name:
+                    new_seller_name = constants.DEFAULT_SELLER_NAME
             new_seller, created = Seller.objects.get_or_create(
                 name__iexact=new_seller_name,
                 organization=organization,
@@ -2698,7 +2710,12 @@ def add_sellerpart(request, manufacturer_part_id):
             )
     else:
         seller_part_form = SellerPartForm(organization=organization)
-        seller_form = SellerForm(organization=organization)
+        seller_initial = {"name": organization.name} if seller_locked else None
+        seller_form = SellerForm(
+            organization=organization,
+            initial=seller_initial,
+            readonly_name=seller_locked,
+        )
 
     from bom.exchange import get_all_org_per_unit_rates
 

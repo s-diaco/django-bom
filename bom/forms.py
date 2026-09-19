@@ -392,22 +392,27 @@ class SellerForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
+        readonly_name = kwargs.pop("readonly_name", False)
         instance = kwargs.get("instance")
         if instance:
             initial = kwargs.get("initial", {})
             initial["name"] = instance.name
             kwargs["initial"] = initial
         super().__init__(*args, **kwargs)
-        self.fields["name"] = forms.CharField(
-            required=False,
-            label=_("Seller"),
-            widget=AutocompleteTextInput(
+        if readonly_name:
+            widget = forms.TextInput(attrs={"readonly": True})
+        else:
+            widget = AutocompleteTextInput(
                 queryset=Seller.objects.filter(organization=self.organization).order_by(
                     "name"
                 ),
                 autocomplete_min_length=0,
                 autocomplete_limit=8,
-            ),
+            )
+        self.fields["name"] = forms.CharField(
+            required=False,
+            label=_("Seller"),
+            widget=widget,
         )
 
 
