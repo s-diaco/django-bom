@@ -96,6 +96,7 @@ from bom.list_queries import (
 )
 from bom.utils import (
     bom_overview_context,
+    currency_label,
     customer_price_preview_from_form,
     customer_price_preview_context,
     get_session_part_quantity,
@@ -1401,7 +1402,7 @@ def _customer_price_create_context(
     show_preview = False
     preview = None
     post_action = request.POST.get("action") if request.method == "POST" else None
-    currency_unit_txt = organization.currency
+    currency_unit_txt = currency_label(organization.currency)
 
     if post_action == "confirm" and confirm_form is not None:
         return "confirm", {

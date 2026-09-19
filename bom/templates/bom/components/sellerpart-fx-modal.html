@@ -1,4 +1,5 @@
 {% load bom_forms %}
+{% load bom_i18n %}
 
 {# Modal + script for seller-part FX updates. Keep outside the seller form (no nested forms). #}
 <div id="modal-update-fx" class="modal">
@@ -6,7 +7,7 @@
         <div class="modal-content">
             <h2 class="mb-2 text-lg font-semibold">{% trans "Update exchange rate" %}</h2>
             <p class="mb-3 text-sm text-ink-muted">
-                {% blocktrans with currency=organization.currency %}
+                {% blocktrans with currency=organization.currency|currency_label %}
                 How many {{ currency }} equal 1 unit of the selected currency.
                 {% endblocktrans %}
             </p>

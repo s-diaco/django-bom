@@ -1,6 +1,7 @@
 {% extends 'bom/bom-base.html' %}
 
 {% load bom_forms %}
+{% load bom_i18n %}
 {% load static %}
 
 {% block head-title %}{{ title }}{% endblock %}
@@ -14,7 +15,7 @@
         <div class="bom-panel-pad max-w-3xl">
             <h2 class="mb-2 text-xl font-semibold text-ink">{% trans "Exchange Rates" %}</h2>
             <p class="mb-4 text-sm text-ink-muted">
-                {% blocktrans with currency=organization.currency %}
+                {% blocktrans with currency=organization.currency|currency_label %}
                 Enter how many {{ currency }} equal 1 unit of each foreign currency.
                 Used when imported materials are priced in a foreign currency.
                 {% endblocktrans %}

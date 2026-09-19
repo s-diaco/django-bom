@@ -1,11 +1,12 @@
 {% load bom_forms %}
+{% load bom_i18n %}
 
 {# Rate hint shown when quote currency differs from org currency. #}
 <div id="fx-rate-panel" class="col s12 mb-3 hidden">
     <p class="text-sm text-ink">
         {% trans "Current rate" %}:
         <strong id="fx-rate-value">—</strong>
-        <span class="text-ink-muted">({{ organization.currency }} / <span id="fx-rate-currency"></span>)</span>
+        <span class="text-ink-muted">({{ organization.currency|currency_label }} / <span id="fx-rate-currency"></span>)</span>
         —
         <a href="{% url 'bom:exchange-rates' %}">{% trans "All rates" %}</a>
         |
