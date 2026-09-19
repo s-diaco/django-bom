@@ -209,7 +209,9 @@ class PartBomItem(AsDictModel):
             "part_ext_qty": self.extended_quantity,
             "part_order_qty": self.order_quantity,
             "part_seller": (
-                self.seller_part.seller.name if self.seller_part is not None else ""
+                self.seller_part.seller.name
+                if self.seller_part is not None and self.seller_part.seller is not None
+                else ""
             ),
             "part_seller_part_number": (
                 self.seller_part.seller_part_number

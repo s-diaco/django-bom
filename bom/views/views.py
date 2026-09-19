@@ -2311,14 +2311,8 @@ def create_part(request):
                 elif old_manufacturer_code and old_manufacturer_code != "":
                     manufacturer = old_manufacturer_code
                 elif mpn == part_form.cleaned_data["number_item"]:
-                    (
-                        manufacturer,
-                        manufacturer_created,
-                    ) = Manufacturer.objects.get_or_create(
-                        name__iexact=constants.DEFAULT_SELLER_NAME,
-                        organization=organization,
-                        defaults={"name": constants.DEFAULT_SELLER_NAME},
-                    )
+                    # Unknown manufacturer: ManufacturerPart with manufacturer=None.
+                    manufacturer = None
                 else:
                     messages.error(
                         request,
@@ -2366,7 +2360,7 @@ def create_part(request):
                 return TemplateResponse(request, "bom/create-part.html", locals())
 
             manufacturer_part = None
-            if manufacturer is not None:
+            if mpn:
                 (
                     manufacturer_part,
                     manufacturer_created,
@@ -2391,22 +2385,6 @@ def create_part(request):
                             organization=organization,
                             defaults={"name": new_seller_name},
                         )
-                    else:
-                        seller, seller_created = Seller.objects.get_or_create(
-                            name__iexact=constants.DEFAULT_SELLER_NAME,
-                            organization=organization,
-                            defaults={"name": constants.DEFAULT_SELLER_NAME},
-                        )
-                        # messages.error(request, "یک تأمین کننده جدید بسازید یا از لیست تأمین کنندگان انتخاب کنید.")
-                        # return TemplateResponse(request, "bom/create-part.html", locals())
-                elif new_seller_name != "":
-                    messages.warning(
-                        request,
-                        _(
-                            "No seller part number was assigned. No seller was selected or created."
-                        ),
-                    )
-                if seller is not None:
                     if manufacturer_part is None:
                         manufacturer_part = new_part.manufacturer_part_for_new_seller()
                     (
@@ -2418,6 +2396,13 @@ def create_part(request):
                         seller=seller,
                         unit_cost=seller_part_form.instance.unit_cost,
                         nre_cost=seller_part_form.instance.unit_cost,
+                    )
+                elif new_seller_name != "":
+                    messages.warning(
+                        request,
+                        _(
+                            "No seller part number was assigned. No seller was selected or created."
+                        ),
                     )
             return HttpResponseRedirect(
                 reverse("bom:part-info", kwargs={"part_id": str(new_part.id)})
@@ -2698,14 +2683,15 @@ def add_sellerpart(request, manufacturer_part_id):
             if seller_locked:
                 new_seller_name = organization.name
             else:
-                new_seller_name = seller_form.cleaned_data.get("name", "")
-                if not new_seller_name:
-                    new_seller_name = constants.DEFAULT_SELLER_NAME
-            new_seller, created = Seller.objects.get_or_create(
-                name__iexact=new_seller_name,
-                organization=organization,
-                defaults={"name": new_seller_name},
-            )
+                new_seller_name = seller_form.cleaned_data.get("name", "") or ""
+            if new_seller_name:
+                new_seller, created = Seller.objects.get_or_create(
+                    name__iexact=new_seller_name,
+                    organization=organization,
+                    defaults={"name": new_seller_name},
+                )
+            else:
+                new_seller = None
             seller_part_form = SellerPartForm(
                 request.POST,
                 organization=organization,
@@ -2915,23 +2901,23 @@ def sellerpart_edit(request, sellerpart_id):
         seller_form = SellerForm(request.POST)
         seller_part_form = SellerPartForm(request.POST, organization=organization)
         if seller_part_form.is_valid() and seller_form.is_valid():
-            new_seller_name = seller_form.cleaned_data.get("name", "")
-            if not new_seller_name:
-                new_seller_name = constants.DEFAULT_SELLER_NAME
-            if new_seller_name != "" and new_seller_name is not None:
+            new_seller_name = seller_form.cleaned_data.get("name", "") or ""
+            if new_seller_name:
                 new_seller, created = Seller.objects.get_or_create(
                     name__iexact=new_seller_name,
                     organization=organization,
                     defaults={"name": new_seller_name},
                 )
-                seller_part = seller_part_form.save(commit=False)
-                seller_part.seller = new_seller
-                seller_part.manufacturer_part = manufacturer_part
-                seller_part.id = sellerpart_id
-                seller_part.save()
-                # TODO: don't clear every cached price
-                for part_revision in PartRevision.objects.all():
-                    part_revision.clear_bom_unit_cost_cache()
+            else:
+                new_seller = None
+            seller_part = seller_part_form.save(commit=False)
+            seller_part.seller = new_seller
+            seller_part.manufacturer_part = manufacturer_part
+            seller_part.id = sellerpart_id
+            seller_part.save()
+            # TODO: don't clear every cached price
+            for part_revision in PartRevision.objects.all():
+                part_revision.clear_bom_unit_cost_cache()
             return HttpResponseRedirect(
                 reverse(
                     "bom:part-info",

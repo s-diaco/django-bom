@@ -123,7 +123,7 @@
 
                                 <td class="text-normal td-med">{% if seller %}{{ seller.seller_part_number }}{% endif %}</td>
 
-                                <td class="text-normal td-med">{% if seller %}{{ seller.seller }}{% endif %}</td>
+                                <td class="text-normal td-med">{% if seller and seller.seller %}{{ seller.seller }}{% endif %}</td>
 
                                 <td class="text-normal td-med bom-num">{% if part_rev.material == "no_bom" or part_rev.material == None %}
                                     {{ seller.landed_unit_cost }}

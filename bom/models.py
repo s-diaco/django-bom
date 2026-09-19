@@ -23,7 +23,6 @@ from .constants import (
     CALENDAR_TYPES,
     CONFIGURATION_TYPES,
     CURRENT_UNITS,
-    DEFAULT_MANUFACTURER_NAME,
     DISTANCE_UNITS,
     FREQUENCY_UNITS,
     INTERFACE_TYPES,
@@ -116,7 +115,9 @@ class Organization(models.Model):
         return "%s" % self.name
 
     def seller_parts(self):
-        return SellerPart.objects.filter(seller__organization=self)
+        return SellerPart.objects.filter(
+            manufacturer_part__part__organization=self
+        )
 
     def part_list_csv_headers(self):
         if self.number_scheme == NUMBER_SCHEME_INTELLIGENT:
@@ -140,15 +141,18 @@ class Organization(models.Model):
         # Only retarget seller parts that were still in the previous org currency.
         # Foreign-currency quotes must keep their own currency.
         if old_currency and old_currency != self.currency:
-            SellerPart.objects.filter(
-                seller__organization=self, unit_cost_currency=old_currency
-            ).update(unit_cost_currency=self.currency)
-            SellerPart.objects.filter(
-                seller__organization=self, nre_cost_currency=old_currency
-            ).update(nre_cost_currency=self.currency)
-            SellerPart.objects.filter(
-                seller__organization=self, shipping_currency=old_currency
-            ).update(shipping_currency=self.currency)
+            org_sellerparts = SellerPart.objects.filter(
+                manufacturer_part__part__organization=self
+            )
+            org_sellerparts.filter(unit_cost_currency=old_currency).update(
+                unit_cost_currency=self.currency
+            )
+            org_sellerparts.filter(nre_cost_currency=old_currency).update(
+                nre_cost_currency=self.currency
+            )
+            org_sellerparts.filter(shipping_currency=old_currency).update(
+                shipping_currency=self.currency
+            )
 
 
 class UserMeta(models.Model):
@@ -510,14 +514,11 @@ class Part(models.Model):
         return q
 
     def ensure_default_manufacturer_part(self):
-        mfg, _created = Manufacturer.objects.get_or_create(
-            name__iexact=DEFAULT_MANUFACTURER_NAME,
-            organization=self.organization,
-            defaults={"name": DEFAULT_MANUFACTURER_NAME},
-        )
+        # Unknown manufacturer: keep a ManufacturerPart (needed to hang SellerPart
+        # prices) with manufacturer=None instead of a sentinel Manufacturer row.
         manufacturer_part, _created = ManufacturerPart.objects.get_or_create(
             part=self,
-            manufacturer=mfg,
+            manufacturer=None,
             manufacturer_part_number=self.number_item or "",
         )
         if self.primary_manufacturer_part_id is None:
@@ -1243,7 +1244,11 @@ class ManufacturerPart(models.Model, AsDictModel):
     part = models.ForeignKey(Part, on_delete=models.CASCADE, db_index=True)
     manufacturer_part_number = models.CharField(max_length=128, default="", blank=True)
     manufacturer = models.ForeignKey(
-        Manufacturer, default=None, blank=True, null=True, on_delete=models.CASCADE
+        Manufacturer,
+        default=None,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
     )
     mouser_disable = models.BooleanField(default=False)
     link = models.URLField(null=True, blank=True)
@@ -1283,7 +1288,10 @@ class Seller(models.Model, AsDictModel):
 
 
 class SellerPart(models.Model, AsDictModel):
-    seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
+    # Null seller = price known, vendor unknown (no sentinel Seller row).
+    seller = models.ForeignKey(
+        Seller, null=True, blank=True, on_delete=models.SET_NULL
+    )
     seller_part_number = models.CharField(
         max_length=64, default="", blank=True, null=True
     )
@@ -1361,7 +1369,7 @@ class SellerPart(models.Model, AsDictModel):
                 else ""
             ),
             "manufacturer_part_number": self.manufacturer_part.manufacturer_part_number,
-            "seller": self.seller.name,
+            "seller": self.seller.name if self.seller is not None else "",
             "seller_part_number": self.seller_part_number,
             "unit_cost": self.unit_cost,
             "shipping": self.shipping,
@@ -1406,9 +1414,9 @@ class SellerPart(models.Model, AsDictModel):
         return order_qty
 
     def __str__(self):
-        return "%s" % (
-            self.manufacturer_part.part.full_part_number() + " " + self.seller.name
-        )
+        part_number = self.manufacturer_part.part.full_part_number()
+        seller_name = self.seller.name if self.seller is not None else ""
+        return "%s" % (part_number + (" " + seller_name if seller_name else ""))
 
 
 class Customer(models.Model, AsDictModel):
