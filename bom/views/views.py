@@ -895,17 +895,6 @@ def bom_settings(request, tab_anchor=None):
             else:
                 messages.error(request, organization_form.errors)
 
-        elif "submit-exchange-rates" in request.POST:
-            tab_anchor = ORGANIZATION_TAB
-            exchange_rates_form = OrganizationExchangeRatesForm(
-                request.POST, organization=organization
-            )
-            if exchange_rates_form.is_valid():
-                exchange_rates_form.save()
-                messages.success(request, _("Exchange rates saved."))
-            else:
-                messages.error(request, exchange_rates_form.errors)
-
         elif "refresh-edit-organization" in request.POST:
             tab_anchor = ORGANIZATION_TAB
             organization_form = OrganizationFormEditSettings(
@@ -1047,7 +1036,6 @@ def bom_settings(request, tab_anchor=None):
     user_meta_form = UserMetaForm()
 
     organization_form = OrganizationFormEditSettings(instance=organization, user=user)
-    exchange_rates_form = OrganizationExchangeRatesForm(organization=organization)
     organization_number_len_form = OrganizationNumberLenForm(instance=organization)
     part_class_form = PartClassForm(organization=organization)
     part_class_form_action = reverse("bom:settings", kwargs={"tab_anchor": INDABOM_TAB})
