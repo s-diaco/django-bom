@@ -352,7 +352,124 @@
     },
   };
 
+  function stripPriceGrouping(value) {
+    return String(value || "")
+      .replace(/[٬,\s\u00a0]/g, "")
+      .replace(/[۰-۹]/g, function (d) {
+        return String("۰۱۲۳۴۵۶۷۸۹".indexOf(d));
+      })
+      .replace(/[٠-٩]/g, function (d) {
+        return String("٠١٢٣٤٥٦٧٨٩".indexOf(d));
+      });
+  }
+
+  function formatPriceGrouped(value) {
+    var raw = stripPriceGrouping(value);
+    if (!raw) {
+      return "";
+    }
+    var negative = raw.charAt(0) === "-";
+    if (negative) {
+      raw = raw.slice(1);
+    }
+    var parts = raw.split(".");
+    var intPart = parts[0].replace(/\D/g, "");
+    var decPart = parts.length > 1 ? parts[1].replace(/\D/g, "") : null;
+    if (!intPart && decPart == null) {
+      return negative ? "-" : "";
+    }
+    if (!intPart) {
+      intPart = "0";
+    }
+    intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    var formatted = decPart != null ? intPart + "." + decPart : intPart;
+    return negative ? "-" + formatted : formatted;
+  }
+
+  function digitsBeforeCaret(value, caret) {
+    var count = 0;
+    var i;
+    for (i = 0; i < caret && i < value.length; i++) {
+      if (/\d/.test(value.charAt(i))) {
+        count += 1;
+      }
+    }
+    return count;
+  }
+
+  function caretFromDigitCount(value, digitCount) {
+    if (digitCount <= 0) {
+      return 0;
+    }
+    var seen = 0;
+    var i;
+    for (i = 0; i < value.length; i++) {
+      if (/\d/.test(value.charAt(i))) {
+        seen += 1;
+        if (seen >= digitCount) {
+          return i + 1;
+        }
+      }
+    }
+    return value.length;
+  }
+
+  function applyPriceGrouping(input) {
+    if (!input) {
+      return;
+    }
+    var start = input.selectionStart;
+    var digitCount =
+      typeof start === "number" ? digitsBeforeCaret(input.value, start) : null;
+    var formatted = formatPriceGrouped(input.value);
+    if (formatted === input.value) {
+      return;
+    }
+    input.value = formatted;
+    if (digitCount != null && typeof input.setSelectionRange === "function") {
+      var next = caretFromDigitCount(formatted, digitCount);
+      input.setSelectionRange(next, next);
+    }
+  }
+
+  function bindPriceInputs(root) {
+    var scope = root || document;
+    var inputs = scope.querySelectorAll(".bom-price-input");
+    Array.prototype.forEach.call(inputs, function (input) {
+      if (input.getAttribute("data-bom-price-bound") === "1") {
+        return;
+      }
+      input.setAttribute("data-bom-price-bound", "1");
+      applyPriceGrouping(input);
+      input.addEventListener("input", function () {
+        applyPriceGrouping(input);
+      });
+      input.addEventListener("blur", function () {
+        applyPriceGrouping(input);
+      });
+      var form = input.form;
+      if (form && form.getAttribute("data-bom-price-submit-bound") !== "1") {
+        form.setAttribute("data-bom-price-submit-bound", "1");
+        form.addEventListener("submit", function () {
+          Array.prototype.forEach.call(
+            form.querySelectorAll(".bom-price-input"),
+            function (el) {
+              el.value = stripPriceGrouping(el.value);
+            }
+          );
+        });
+      }
+    });
+  }
+
+  window.bomPriceInput = {
+    format: formatPriceGrouped,
+    strip: stripPriceGrouping,
+    bind: bindPriceInputs,
+  };
+
   $(document).ready(function () {
+    bindPriceInputs(document);
     $(".dropdown-trigger").dropdown();
     $(".modal").modal();
     $(".modal-trigger").on("click", function (e) {

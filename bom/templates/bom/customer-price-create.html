@@ -193,7 +193,7 @@
                             </div>
                             <div class="col s12 m4">
                                 <label class="bom-label" for="confirm-price">{% trans "Price" %} | {{ currency_unit_txt }}</label>
-                                <input type="number" name="price" id="confirm-price" class="bom-input" min="0" step="any" required>
+                                <input type="text" name="price" id="confirm-price" class="bom-input bom-price-input" inputmode="decimal" autocomplete="off" min="0" required>
                             </div>
                         </div>
                         <div class="row mb-4">
@@ -271,6 +271,12 @@
 
             var baseCost = parseFloat(confirmForm.getAttribute('data-base-cost') || '0');
             var selectedProfitPercent = '';
+            var stripPrice = (window.bomPriceInput && window.bomPriceInput.strip)
+                ? window.bomPriceInput.strip
+                : function (value) { return String(value || '').replace(/[٬,\s\u00a0]/g, ''); };
+            var formatPrice = (window.bomPriceInput && window.bomPriceInput.format)
+                ? window.bomPriceInput.format
+                : function (value) { return stripPrice(value); };
 
             function roundHalfUp(value, decimals) {
                 var factor = Math.pow(10, decimals);
@@ -281,7 +287,7 @@
                 if (left === '' || right === '') {
                     return false;
                 }
-                return roundHalfUp(parseFloat(left), 2) === roundHalfUp(parseFloat(right), 2);
+                return roundHalfUp(parseFloat(stripPrice(left)), 2) === roundHalfUp(parseFloat(stripPrice(right)), 2);
             }
 
             function impliedProfitPercent(price) {
@@ -299,7 +305,7 @@
                     return;
                 }
 
-                var price = parseFloat(priceValue);
+                var price = parseFloat(stripPrice(priceValue));
                 if (!Number.isFinite(price)) {
                     profitDisplay.value = '—';
                     confirmButton.disabled = true;
@@ -337,7 +343,7 @@
                 selectedProfitPercent = row.getAttribute('data-profit-percent') || '';
                 profitInput.value = selectedProfitPercent;
                 referenceInput.value = row.getAttribute('data-price') || '';
-                priceInput.value = row.getAttribute('data-price') || '';
+                priceInput.value = formatPrice(row.getAttribute('data-price') || '');
                 updateProfitFromPrice();
             }
 
