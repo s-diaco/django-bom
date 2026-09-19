@@ -271,7 +271,7 @@
                                                 </td>
                                                 <td>{{ used_part.description }}</td>
                                                 <td>{{ used_part.revision }}</td>
-                                                <td>{{ used_part.part.primary_manufacturer_part.manufacturer.name }}</td>
+                                                <td>{% if used_part.part.primary_manufacturer_part.manufacturer %}{{ used_part.part.primary_manufacturer_part.manufacturer.name }}{% endif %}</td>
                                                 <td>{{ used_part.part.primary_manufacturer_part.manufacturer_part_number }}</td>
                                             </tr>
                                         {% empty %}
@@ -305,7 +305,7 @@
                                                 </td>
                                                 <td>{{ used_part.description }}</td>
                                                 <td>{{ used_part.revision }}</td>
-                                                <td>{{ used_part.part.primary_manufacturer_part.manufacturer.name }}</td>
+                                                <td>{% if used_part.part.primary_manufacturer_part.manufacturer %}{{ used_part.part.primary_manufacturer_part.manufacturer.name }}{% endif %}</td>
                                                 <td>{{ used_part.part.primary_manufacturer_part.manufacturer_part_number }}</td>
                                             </tr>
                                         {% empty %}

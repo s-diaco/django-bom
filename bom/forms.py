@@ -21,7 +21,6 @@ from djmoney.money import Money
 
 from .constants import (
     CURRENT_UNITS,
-    DEFAULT_SELLER_NAME,
     DISTANCE_UNITS,
     FREQUENCY_UNITS,
     IMPORT_CURRENCY_CODES,
@@ -571,14 +570,8 @@ class SellerPartForm(forms.ModelForm):
             )
             self.cleaned_data["seller"] = obj
         elif not seller:
-            # raise forms.ValidationError("Must specify a seller.", code="invalid")
-
-            obj, created = Seller.objects.get_or_create(
-                name__iexact=DEFAULT_SELLER_NAME,
-                organization=self.organization,
-                defaults={"name": DEFAULT_SELLER_NAME},
-            )
-            self.cleaned_data["seller"] = obj
+            # Unknown seller: keep price on SellerPart with seller=None.
+            self.cleaned_data["seller"] = None
 
 
 class OrganizationExchangeRatesForm(forms.Form):
@@ -1692,38 +1685,26 @@ class PartCSVForm(forms.Form):
                     elif unit_cost and nre_cost:
                         nre_cost = Money(nre_cost, self.organization.currency)
                         unit_cost = Money(unit_cost, self.organization.currency)
-                        default_seller_name = "انتخاب نشده (پیش فرض)"
-                        seller, created = Seller.objects.get_or_create(
-                            name__iexact=default_seller_name,
-                            organization=self.organization,
-                            defaults={"name": default_seller_name},
-                        )
                         (
                             seller_part,
                             seller_created,
                         ) = SellerPart.objects.get_or_create(
                             manufacturer_part=manufacturer_part,
                             seller_part_number=seller_part_number,
-                            seller=seller,
+                            seller=None,
                             unit_cost=unit_cost,
                             nre_cost=nre_cost,
                         )
                     elif unit_cost:
                         nre_cost = Money(0, self.organization.currency)
                         unit_cost = Money(unit_cost, self.organization.currency)
-                        default_seller_name = "انتخاب نشده (پیش فرض)"
-                        seller, created = Seller.objects.get_or_create(
-                            name__iexact=default_seller_name,
-                            organization=self.organization,
-                            defaults={"name": default_seller_name},
-                        )
                         (
                             seller_part,
                             seller_created,
                         ) = SellerPart.objects.get_or_create(
                             manufacturer_part=manufacturer_part,
                             seller_part_number=seller_part_number,
-                            seller=seller,
+                            seller=None,
                             unit_cost=unit_cost,
                             nre_cost=nre_cost,
                         )

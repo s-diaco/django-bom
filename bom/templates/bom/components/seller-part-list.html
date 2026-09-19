@@ -27,7 +27,7 @@
             {% for seller_part in seller_parts %}
                 <tr data-tt-id="0" data-tt-parent-id="{{ seller_part.id }}" {% if forloop.last %}id="sourcing-{{ seller_part.id }}-last"{% endif %}>
                     <td><a href="{% url 'bom:part-info' part_id=seller_part.manufacturer_part.part_id %}">{{ seller_part.manufacturer_part.part }}</a></td>
-                    <td>{{ seller_part.seller.name }}</td>
+                    <td>{% if seller_part.seller %}{{ seller_part.seller.name }}{% endif %}</td>
                     <td>{{ seller_part.seller_part_number }}</td>
                     <td class="bom-num">{{ seller_part.unit_cost }}</td>
                     <td class="bom-num">{{ seller_part.unit_cost.currency|currency_label }}</td>

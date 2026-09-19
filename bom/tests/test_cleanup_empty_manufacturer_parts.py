@@ -94,17 +94,14 @@ class CleanupEmptyManufacturerPartsTests(TestCase):
         self.assertIsNone(part.primary_manufacturer_part_id)
         self.assertFalse(ManufacturerPart.objects.filter(pk=empty_only.id).exists())
 
-    def test_keeps_placeholder_manufacturer(self):
-        placeholder = Manufacturer.objects.create(
-            name=constants.DEFAULT_MANUFACTURER_NAME, organization=self.organization
-        )
+    def test_keeps_unknown_manufacturer_with_mpn(self):
+        # manufacturer=None + non-blank MPN is a priced hang-point, not empty junk.
         mp = ManufacturerPart.objects.create(
             part=self.p2,
-            manufacturer=placeholder,
+            manufacturer=None,
             manufacturer_part_number=self.p2.number_item,
         )
         call_command("cleanup_empty_manufacturer_parts", execute=True, stdout=StringIO())
-        self.assertTrue(Manufacturer.objects.filter(pk=placeholder.id).exists())
         self.assertTrue(ManufacturerPart.objects.filter(pk=mp.id).exists())
 
     def test_organization_id_limits_scope(self):
@@ -221,9 +218,11 @@ class DefaultManufacturerPartOnSellerTests(TestCase):
         ).latest("id")
         mp = part.primary_manufacturer_part
         self.assertIsNotNone(mp)
-        self.assertEqual(mp.manufacturer.name, constants.DEFAULT_MANUFACTURER_NAME)
+        self.assertIsNone(mp.manufacturer_id)
         self.assertEqual(mp.manufacturer_part_number, part.number_item)
-        self.assertTrue(SellerPart.objects.filter(manufacturer_part=mp).exists())
+        sp = SellerPart.objects.get(manufacturer_part=mp)
+        self.assertIsNone(sp.seller_id)
+        self.assertEqual(sp.unit_cost.amount, 10)
 
     def test_add_seller_on_part_without_mp_creates_default(self):
         self.p4.primary_manufacturer_part = None
@@ -235,10 +234,7 @@ class DefaultManufacturerPartOnSellerTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.p4.refresh_from_db()
         self.assertIsNotNone(self.p4.primary_manufacturer_part_id)
-        self.assertEqual(
-            self.p4.primary_manufacturer_part.manufacturer.name,
-            constants.DEFAULT_MANUFACTURER_NAME,
-        )
+        self.assertIsNone(self.p4.primary_manufacturer_part.manufacturer_id)
         self.assertIn(
             reverse(
                 "bom:manufacturer-part-add-sellerpart",
