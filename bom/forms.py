@@ -594,7 +594,7 @@ class OrganizationExchangeRatesForm(forms.Form):
             from bom.exchange import get_org_per_unit_rate
 
             existing = get_org_per_unit_rate(code, org_currency)
-            self.fields[f"rate_{code}"] = forms.DecimalField(
+            self.fields[f"rate_{code}"] = GroupedDecimalField(
                 required=False,
                 label=_("{org} per 1 {code}").format(
                     org=currency_label(org_currency),
@@ -619,7 +619,7 @@ class SingleExchangeRateForm(forms.Form):
     """Update one foreign currency rate (org currency per 1 foreign unit)."""
 
     currency = forms.ChoiceField(label=_("Currency"))
-    rate = forms.DecimalField(
+    rate = GroupedDecimalField(
         label=_("Rate"),
         min_value=Decimal("0.000001"),
         required=True,
