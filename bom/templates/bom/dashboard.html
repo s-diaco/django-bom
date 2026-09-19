@@ -109,7 +109,7 @@
                                 <td>{{ part_rev.description }}</td>
                                 <td>{{ part_rev.revision }}</td>
                                 <td>{% if seller %}{{ seller.seller_part_number }}{% endif %}</td>
-                                <td>{% if seller %}{{ seller.seller }}{% endif %}</td>
+                                <td>{% if seller and not seller.seller.is_default %}{{ seller.seller }}{% endif %}</td>
                                 <td class="bom-num">{{ part_rev.bom_unit_cost }}</td>
                                 <td class="printer-hide">
                                     {% if part_rev.configuration == 'W' %}

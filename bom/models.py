@@ -24,6 +24,7 @@ from .constants import (
     CONFIGURATION_TYPES,
     CURRENT_UNITS,
     DEFAULT_MANUFACTURER_NAME,
+    DEFAULT_SELLER_NAME,
     DISTANCE_UNITS,
     FREQUENCY_UNITS,
     INTERFACE_TYPES,
@@ -1277,6 +1278,10 @@ class ManufacturerPart(models.Model, AsDictModel):
 class Seller(models.Model, AsDictModel):
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
     name = models.CharField(max_length=128, default=None)
+
+    @property
+    def is_default(self):
+        return bool(self.name) and self.name.lower() == DEFAULT_SELLER_NAME.lower()
 
     def __str__(self):
         return "%s" % (self.name)
