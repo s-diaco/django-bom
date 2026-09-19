@@ -18,6 +18,7 @@ from bom.helpers import (
     create_some_fake_parts,
 )
 from bom.models import Part, Seller
+from bom.utils import currency_label
 
 TEST_FILES_DIR = "bom/test_files"
 
@@ -154,3 +155,21 @@ class TestForms(TestCase):
         filled_form = SellerPartForm(instance=sp, organization=self.organization)
         self.assertFalse("$10.0" in filled_form.as_ul())
         self.assertFalse("$22.0" in filled_form.as_ul())
+
+    def test_currency_label_translated(self):
+        translation.activate("en-US")
+        self.assertEqual(currency_label("USD"), "USD")
+        self.assertEqual(currency_label("IRR"), "IRR")
+
+        form = SellerPartForm(organization=self.organization)
+        self.assertIn(("USD", "USD"), form.fields["currency"].choices)
+
+        translation.activate("fa-IR")
+        self.assertEqual(currency_label("USD"), "دلار")
+        self.assertEqual(currency_label("IRR"), "ریال")
+        self.assertEqual(currency_label("XYZ"), "XYZ")
+
+        form = SellerPartForm(organization=self.organization)
+        labels = dict(form.fields["currency"].choices)
+        self.assertEqual(labels.get("USD"), "دلار")
+        self.assertEqual(labels.get("IRR"), "ریال")

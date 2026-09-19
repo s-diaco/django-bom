@@ -2,9 +2,21 @@ import re
 import tomllib
 from decimal import ROUND_HALF_UP, Decimal
 
+from django.utils.encoding import force_str
+from django.utils.translation import gettext as _
 from djmoney.money import Money
 
-from bom.constants import UNIT_COST_DECIMAL_PLACES
+from bom.constants import IMPORT_CURRENCY_CODES, UNIT_COST_DECIMAL_PLACES
+
+_IMPORT_CURRENCY_CODE_SET = frozenset(IMPORT_CURRENCY_CODES)
+
+
+def currency_label(code):
+    """Return a translated display name for a known ISO currency code."""
+    code = str(code) if code is not None else ""
+    if code in _IMPORT_CURRENCY_CODE_SET:
+        return force_str(_(code))
+    return code
 
 
 def increment_char(c):

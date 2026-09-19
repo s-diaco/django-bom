@@ -38,6 +38,34 @@ msgstr "بدون احتساب پرت (کامپوند، جوهر یا …)"
 msgid "Raw materials"
 msgstr "مواد اولیه"
 
+#: bom/constants.py:47
+msgid "IRR"
+msgstr "ریال"
+
+#: bom/constants.py:48
+msgid "USD"
+msgstr "دلار"
+
+#: bom/constants.py:49
+msgid "EUR"
+msgstr "یورو"
+
+#: bom/constants.py:50
+msgid "CNY"
+msgstr "یوان"
+
+#: bom/constants.py:51
+msgid "AED"
+msgstr "درهم"
+
+#: bom/constants.py:52
+msgid "TRY"
+msgstr "لیر"
+
+#: bom/constants.py:53
+msgid "GBP"
+msgstr "پوند"
+
 #: bom/forms.py:98
 msgid ""
 "Required. 150 characters or fewer. Letters (Persian, English), digits and "

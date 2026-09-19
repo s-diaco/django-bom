@@ -65,6 +65,7 @@ from .models import (
 from .utils import (
     apply_profit,
     convert_arabic_to_english,
+    currency_label,
     implied_profit_percent,
     listify_string,
     stringify_list,
@@ -446,7 +447,7 @@ class SellerPartForm(forms.ModelForm):
         org_currency = self.organization.currency if self.organization else "USD"
         currency_codes = list(dict.fromkeys([org_currency, *IMPORT_CURRENCY_CODES]))
         self.base_fields["currency"] = forms.ChoiceField(
-            choices=[(code, code) for code in currency_codes],
+            choices=[(code, currency_label(code)) for code in currency_codes],
             required=True,
             label=_("Currency"),
             initial=org_currency,
@@ -530,7 +531,7 @@ class SellerPartForm(forms.ModelForm):
                     _(
                         "No exchange rate for {currency}. "
                         "Set it under Settings → Organization."
-                    ).format(currency=currency),
+                    ).format(currency=currency_label(currency)),
                     code="invalid",
                 )
 
@@ -579,7 +580,10 @@ class OrganizationExchangeRatesForm(forms.Form):
             existing = get_org_per_unit_rate(code, org_currency)
             self.fields[f"rate_{code}"] = forms.DecimalField(
                 required=False,
-                label=_("{org} per 1 {code}").format(org=org_currency, code=code),
+                label=_("{org} per 1 {code}").format(
+                    org=currency_label(org_currency),
+                    code=currency_label(code),
+                ),
                 initial=existing,
                 min_value=Decimal("0.000001"),
             )
@@ -610,11 +614,13 @@ class SingleExchangeRateForm(forms.Form):
         super().__init__(*args, **kwargs)
         org_currency = organization.currency if organization else "USD"
         choices = [
-            (code, code) for code in IMPORT_CURRENCY_CODES if code != org_currency
+            (code, currency_label(code))
+            for code in IMPORT_CURRENCY_CODES
+            if code != org_currency
         ]
         self.fields["currency"].choices = choices
         self.fields["rate"].label = _("{org} per 1 foreign unit").format(
-            org=org_currency
+            org=currency_label(org_currency)
         )
 
     def save(self):

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -18,7 +19,7 @@ def _compile_fa_messages():
     if not shutil.which("msgfmt"):
         return
     subprocess.run(
-        ["python", "manage.py", "compilemessages", "-l", "fa_IR"],
+        [sys.executable, "manage.py", "compilemessages", "-l", "fa_IR"],
         cwd=repo_root,
         check=False,
         capture_output=True,
