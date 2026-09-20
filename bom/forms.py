@@ -15,7 +15,7 @@ from django.core.validators import (
 from django.db import IntegrityError
 from django.db.models import OuterRef, Subquery
 from django.forms.models import modelformset_factory, model_to_dict
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext, gettext_lazy as _
 
 from djmoney.money import Money
 
@@ -2022,7 +2022,9 @@ class PartRevisionForm(forms.ModelForm):
         if org is not None:
             org.ensure_default_product_types()
             types = list(org.product_types.all())
-            self.fields["material"].choices = [(pt.code, pt.name) for pt in types]
+            self.fields["material"].choices = [
+                (pt.code, gettext(pt.name)) for pt in types
+            ]
             raw = next((pt.code for pt in types if not pt.has_bom), "no_bom")
             self.fields["material"].initial = raw
         else:

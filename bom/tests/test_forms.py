@@ -11,6 +11,7 @@ from bom.forms import (
     OrganizationExchangeRatesForm,
     PartFormSemiIntelligent,
     PartInfoForm,
+    PartRevisionForm,
     SellerPartForm,
     SingleExchangeRateForm,
 )
@@ -177,6 +178,38 @@ class TestForms(TestCase):
         labels = dict(form.fields["currency"].choices)
         self.assertEqual(labels.get("USD"), "دلار")
         self.assertEqual(labels.get("IRR"), "ریال")
+
+    def test_product_type_labels_translated(self):
+        translation.activate("en-US")
+        form = PartRevisionForm(organization=self.organization)
+        labels = dict(form.fields["material"].choices)
+        self.assertEqual(labels.get("with_loi"), "With loss (LOI) (Frit)")
+        self.assertEqual(
+            labels.get("no_loi"), "Without loss (LOI) (compound, ink, …)"
+        )
+        self.assertEqual(labels.get("no_bom"), "Raw materials")
+
+        translation.activate("fa-IR")
+        form = PartRevisionForm(organization=self.organization)
+        labels = dict(form.fields["material"].choices)
+        self.assertEqual(labels.get("with_loi"), "با لحاظ کردن پرت (فریت)")
+        self.assertEqual(
+            labels.get("no_loi"), "بدون احتساب پرت (کامپوند، جوهر یا …)"
+        )
+        self.assertEqual(labels.get("no_bom"), "مواد اولیه")
+
+        from bom.models import ProductType
+
+        ProductType.objects.create(
+            organization=self.organization,
+            code="ceramic",
+            name="Ceramic paste",
+            has_bom=True,
+            sort_order=99,
+        )
+        form = PartRevisionForm(organization=self.organization)
+        labels = dict(form.fields["material"].choices)
+        self.assertEqual(labels.get("ceramic"), "Ceramic paste")
 
     def test_normalize_grouped_number(self):
         self.assertEqual(normalize_grouped_number("1,234,567"), "1234567")
