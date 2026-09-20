@@ -358,7 +358,9 @@ class ProductTypeForm(forms.ModelForm):
         if self.instance.pk:
             self.fields["code"].disabled = True
             if self.instance.overhead is not None:
-                self.fields["overhead"].initial = self.instance.overhead.amount
+                amount = self.instance.overhead.amount
+                self.initial["overhead"] = amount
+                self.fields["overhead"].initial = amount
 
     def clean_code(self):
         if self.instance.pk:
