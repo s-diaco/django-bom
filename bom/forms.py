@@ -14,7 +14,7 @@ from django.core.validators import (
 )
 from django.db import IntegrityError
 from django.db.models import OuterRef, Subquery
-from django.forms.models import modelformset_factory, model_to_dict
+from django.forms.models import BaseModelFormSet, modelformset_factory, model_to_dict
 from django.utils.translation import gettext, gettext_lazy as _
 
 from djmoney.money import Money
@@ -343,12 +343,18 @@ class ProductTypeForm(forms.ModelForm):
             initial=0,
             min_value=0,
         )
+        self.fields["overhead"].widget.attrs["class"] = "bom-input bom-price-input"
         self.fields["code"].required = False
         self.fields["name"].required = False
         self.fields["code"].label = _("Code")
         self.fields["name"].label = _("Name")
         self.fields["has_bom"].label = _("Has BoM")
         self.fields["apply_loi"].label = _("Apply LOI")
+        self.fields["code"].widget.attrs["class"] = "bom-input"
+        self.fields["name"].widget.attrs["class"] = "bom-input"
+        checkbox_class = "rounded border-border text-primary focus:ring-primary"
+        self.fields["has_bom"].widget.attrs["class"] = checkbox_class
+        self.fields["apply_loi"].widget.attrs["class"] = checkbox_class
         if self.instance.pk:
             self.fields["code"].disabled = True
             if self.instance.overhead is not None:
@@ -390,10 +396,20 @@ class ProductTypeForm(forms.ModelForm):
         return cleaned_data
 
 
+class BaseProductTypeFormSet(BaseModelFormSet):
+    def add_fields(self, form, index):
+        super().add_fields(form, index)
+        if "DELETE" in form.fields:
+            form.fields["DELETE"].widget.attrs["class"] = (
+                "rounded border-border text-primary focus:ring-primary"
+            )
+
+
 def product_type_formset_factory():
     return modelformset_factory(
         ProductType,
         form=ProductTypeForm,
+        formset=BaseProductTypeFormSet,
         extra=1,
         can_delete=True,
     )
