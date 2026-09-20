@@ -1746,3 +1746,31 @@ msgstr "کلاس متریال"
 
 msgid "Select a part class."
 msgstr "یک کلاس متریال انتخاب کنید."
+
+#: bom/templates/bom/settings.html
+msgid "Product types"
+msgstr "انواع محصول"
+
+#: bom/templates/bom/settings.html
+msgid "Overhead is added once per product of this type, and also rolls up from child products."
+msgstr "سربار یک‌بار برای هر محصول از این نوع اضافه می‌شود و از محصولات فرزند هم جمع می‌شود."
+
+#: bom/templates/bom/settings.html bom/forms.py
+msgid "Name"
+msgstr "نام"
+
+#: bom/templates/bom/settings.html bom/forms.py
+msgid "Has BoM"
+msgstr "دارای BoM"
+
+#: bom/templates/bom/settings.html bom/forms.py
+msgid "Apply LOI"
+msgstr "اعمال پرت (LOI)"
+
+#: bom/templates/bom/settings.html bom/forms.py
+msgid "Overhead"
+msgstr "سربار"
+
+#: bom/templates/bom/settings.html
+msgid "Save product types"
+msgstr "ذخیره انواع محصول"
