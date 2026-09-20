@@ -344,6 +344,7 @@ class ProductTypeForm(forms.ModelForm):
             min_value=0,
         )
         self.fields["overhead"].widget.attrs["class"] = "bom-input bom-price-input"
+        self.fields["overhead"].widget.attrs["dir"] = "ltr"
         self.fields["code"].required = False
         self.fields["name"].required = False
         self.fields["code"].label = _("Code")
@@ -351,6 +352,7 @@ class ProductTypeForm(forms.ModelForm):
         self.fields["has_bom"].label = _("Has BoM")
         self.fields["apply_loi"].label = _("Apply LOI")
         self.fields["code"].widget.attrs["class"] = "bom-input"
+        self.fields["code"].widget.attrs["dir"] = "ltr"
         self.fields["name"].widget.attrs["class"] = "bom-input"
         checkbox_class = "rounded border-border text-primary focus:ring-primary"
         self.fields["has_bom"].widget.attrs["class"] = checkbox_class
