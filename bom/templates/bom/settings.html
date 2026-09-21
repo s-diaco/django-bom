@@ -204,6 +204,47 @@
                 </div>
                 <div class="row">
                     <div class="col s12">
+                        <h3>{% trans "Product types" %}</h3>
+                        <p class="bom-help mb-3">{% trans "Overhead is added once per product of this type, and also rolls up from child products." %}</p>
+                        <form name="product-types" action="{% url 'bom:settings' tab_anchor=ORGANIZATION_TAB %}" method="post" class="col s12">
+                            {% csrf_token %}
+                            {{ product_type_formset.management_form }}
+                            <div class="bom-table-wrap">
+                                <table class="bom-table">
+                                    <thead>
+                                    <tr>
+                                        <th class="text-normal">{% trans "Code" %}</th>
+                                        <th class="text-normal">{% trans "Name" %}</th>
+                                        <th class="text-normal text-center">{% trans "Has BoM" %}</th>
+                                        <th class="text-normal text-center">{% trans "Apply LOI" %}</th>
+                                        <th class="text-normal">{% trans "Overhead" %}</th>
+                                        <th class="text-normal text-center">{% trans "Delete" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for form in product_type_formset %}
+                                        <tr>
+                                            <td>{{ form.id }}{{ form.code }}</td>
+                                            <td>{{ form.name }}</td>
+                                            <td class="text-center"><label>{{ form.has_bom }}</label></td>
+                                            <td class="text-center"><label>{{ form.apply_loi }}</label></td>
+                                            <td>{{ form.overhead }}</td>
+                                            <td class="text-center"><label>{{ form.DELETE }}</label></td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="row pt-4">
+                                <div class="col s12 right-align">
+                                    <button class="bom-btn-primary" type="submit" name="submit-product-types">{% trans "Save product types" %}</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col s12">
                         <h3>{% trans "Users" %}</h3>
                         {% if users_in_organization.count > 0 %}
                             <form name="seller" action="{% url 'bom:settings' tab_anchor=ORGANIZATION_TAB %}" method="post" class="col s12" enctype="multipart/form-data">

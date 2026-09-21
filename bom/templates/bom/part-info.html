@@ -88,13 +88,13 @@
                 <div class="col s12 printer-hide">
                     <ul id="tabs" class="tabs tabs-fixed-width bom-tabs" role="tablist">
                         <li class="tab"><a id="specs-tab" href="#specs">{% trans "Specifications" %}</a></li>
-                        {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
+                        {% if part_revision.is_product %}
                         <li class="tab"><a id="bom-tab" href="#bom">{% trans "Bill of Materials" %}</a></li>
                         {% endif %}
                         <li class="tab"><a id="used-tab" href="#used">{% trans "Where used" %}</a></li>
                         <li class="tab"><a id="sourcing-tab" href="#sourcing">{% trans "Seller" %}</a></li>
                         <li class="tab"><a id="customers-tab" href="#customers">{% trans "Customers" %}</a></li>
-                        {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
+                        {% if part_revision.is_product %}
                         <li class="tab"><a id="overview-tab" href="#overview">{% trans "Overview" %}</a></li>
                         {% endif %}
                     </ul>
@@ -124,10 +124,10 @@
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Material" %}:</div>
                                 <div class="col s8 l10">{{ part_revision.description }}</div>
                             </div>
-                            {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
+                            {% if part_revision.is_product %}
                             <div class="row">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Cost calculation model" %}:</div>
-                                <div class="col s8 l10">{% if part_revision.material == 'with_loi' %}{% trans "Cost including loss (LOI)" %}{% else %}{% trans "Cost excluding loss (LOI)" %}{% endif %}</div>
+                                <div class="col s8 l10">{% if part_revision.applies_loi %}{% trans "Cost including loss (LOI)" %}{% else %}{% trans "Cost excluding loss (LOI)" %}{% endif %}</div>
                             </div>
                             {% else %}
                             <div class="row">
@@ -156,10 +156,14 @@
                             <h5><h5 class="title">{% trans "Seller" %}</h5></h5>
                         </li>
                         <li class="collection-item">
-                            {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
+                            {% if part_revision.is_product %}
                                 <div class="row{% if indented_bom.missing_item_costs > 0 %} red-text{% endif %}">
                                     <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Price" %}:</div>
-                                    <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ childs_unit_cost|default_if_none:'-' }}</span></div>
+                                    <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ indented_bom.unit_cost|default_if_none:'-' }}</span></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Overhead" %}:</div>
+                                    <div class="col s8 l10">{{ part_revision.type_overhead }}</div>
                                 </div>
                                 <div class="row{% if indented_bom.missing_item_costs > 0 %} red-text{% endif %}">
                                     <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Materials without price" %}:</div>
@@ -184,7 +188,7 @@
                         </li>
                     </ul>
                 </div>
-                {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
+                {% if part_revision.is_product %}
                 <div id="bom" class="col s12">
                     <h4 class="printer-show">{% trans "Bill of Materials" %}</h4>
                     {% if add_subpart_form %}{{ add_subpart_form.media }}{% endif %}
@@ -202,7 +206,7 @@
                         </div>
                         {% include 'bom/components/bom-flat.html' with order_by=order_by bom_items=flat_bom.parts part=part part_revision=part_revision profile=profile manage=can_manage_bom %}
                     </div>
-                    <p class="mt-3 text-sm text-ink">{% trans "Unit cost (kg)" %}: {{ childs_unit_cost|default_if_none:'-' }}</p>
+                    <p class="mt-3 text-sm text-ink">{% trans "Unit cost (kg)" %}: {{ indented_bom.unit_cost|default_if_none:'-' }}</p>
                     {% if can_manage_bom %}
                     {% if part_revision.assembly.subparts.exists %}
                     <div class="mt-4 printer-hide">
@@ -387,7 +391,7 @@
                         </div>
                     {% endif %}
                 </div>
-                {% if part_revision.material == 'with_loi' or part_revision.material == 'no_loi' %}
+                {% if part_revision.is_product %}
                 <div id="overview" class="col s12">
                     <h4 class="printer-show">{% trans "Overview" %}</h4>
                     <br />
@@ -395,7 +399,7 @@
                         {% include 'bom/components/bom-indented-overview.html' with order_by=order_by bom_items=indented_bom.parts part=part part_revision=part_revision profile=profile childs_unit_cost=childs_unit_cost total_bom_weight=total_bom_weight product_weight=product_weight material=part_revision.material %}
                     </div>
                     <div class="row">
-                        <div class="col s4 l2 text-right">{% trans "Unit cost (kg)" %}: <span>{{ childs_unit_cost|default_if_none:'-' }}</span></div>
+                        <div class="col s4 l2 text-right">{% trans "Unit cost (kg)" %}: <span>{{ indented_bom.unit_cost|default_if_none:'-' }}</span></div>
                     </div>
                 </div>
                 {% endif %}

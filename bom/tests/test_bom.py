@@ -863,9 +863,9 @@ class TestBOM(TransactionTestCase):
             ("bom_exports/1155F190.csv", 1010, 1856590, 1851),
             ("bom_exports/2183S119.csv", 1015, 732879, 736),
             ("bom_exports/3024K205.csv", 1000, 1675335, 1886),
-            ("bom_exports/CGM4554.csv", 100, 355149, 3551),
-            ("bom_exports/CGM5357.csv", 100, 553192, 5531),
-            ("bom_exports/CNE5393.csv", 100, 150175, 1501),
+            ("bom_exports/CGM4554.csv", 100, 345149, 3451),
+            ("bom_exports/CGM5357.csv", 100, 551692, 5516),
+            ("bom_exports/CNE5393.csv", 100, 147675, 1476),
             ("bom_exports/CNE5393_fake.csv", 100, 159478, 1594),
             ("bom_exports/CPM5163.csv", 100, 592968, 5929),
             ("bom_exports/1155S100.csv", 565, 944305, 1692),
@@ -1733,7 +1733,7 @@ class TestBOM(TransactionTestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue("/part/" in response.url)
 
-    def test_add_sellerpart_locks_seller_for_product(self):
+    def test_add_sellerpart_allows_custom_seller_for_product(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
         rev = p1.latest()
         rev.material = "no_loi"
@@ -1746,12 +1746,7 @@ class TestBOM(TransactionTestCase):
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, self.organization.name)
-        self.assertContains(response, 'readonly')
-        self.assertNotContains(
-            response,
-            "در صورت محصول بودن",
-        )
+        self.assertNotContains(response, 'readonly')
 
         response = self.client.post(
             url,
@@ -1766,7 +1761,7 @@ class TestBOM(TransactionTestCase):
         )
         self.assertEqual(response.status_code, 302)
         seller_part = p1.primary_manufacturer_part.sellerpart_set.latest("id")
-        self.assertEqual(seller_part.seller.name, self.organization.name)
+        self.assertEqual(seller_part.seller.name, "Tampered Seller")
 
     def test_add_sellerpart_allows_custom_seller_for_raw_material(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)

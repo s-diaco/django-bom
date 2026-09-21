@@ -26,9 +26,8 @@ class PartBomWeighted(PartBom):
         :type part: PartBomWeightedItem
         """
         if not part.indent_level:
-            # If the part is the root, calculate its unit cost directly
-            if part.seller_part and part.seller_part.landed_unit_cost is not None:
-                self.unit_cost = part.seller_part.landed_unit_cost
+            self.unit_cost = part.unit_cost
+            self.bom_unit_cost = part.unit_cost
             return
 
         def calculate_parent_values(parent_part, subpart_list):
@@ -38,7 +37,7 @@ class PartBomWeighted(PartBom):
             """
             parent_part.childs_quantity = sum(child.quantity for child in subpart_list)
 
-            if parent_part.part_revision.material in ["with_loi"]:
+            if parent_part.part_revision.applies_loi:
                 parent_part.childs_product_quantity = sum(
                     child.sintered_quantity for child in subpart_list
                 )
@@ -47,23 +46,10 @@ class PartBomWeighted(PartBom):
                     child.quantity for child in subpart_list
                 )
 
+            # Child unit_cost already includes that child's type overhead when
+            # the child is itself a product.
             parent_part.childs_cost = sum(
-                (
-                    child.childs_cost / child.childs_product_quantity * child.quantity
-                    if child.childs_product_quantity
-                    else 0
-                )
-                for child in subpart_list
-            )
-
-            parent_part.childs_cost += sum(
-                (
-                    child.seller_part.landed_unit_cost * child.quantity
-                    if child.seller_part
-                    and child.seller_part.landed_unit_cost is not None
-                    else 0
-                )
-                for child in subpart_list
+                (child.unit_cost or 0) * child.quantity for child in subpart_list
             )
 
         def update_parent(child_part):
@@ -93,17 +79,8 @@ class PartBomWeighted(PartBom):
                     self.part_revision.part.number_item
                     == parent_part.part_revision.part.number_item
                 ):
-                    self.unit_cost = parent_part.childs_unit_cost + (
-                        parent_part.seller_part.landed_unit_cost
-                        if parent_part.seller_part
-                        and parent_part.seller_part.landed_unit_cost
-                        else 0
-                    )
-                    if parent_part.childs_quantity:
-                        self.bom_unit_cost = (
-                            parent_part.childs_cost
-                            / parent_part.childs_product_quantity
-                        )
+                    self.unit_cost = parent_part.unit_cost
+                    self.bom_unit_cost = parent_part.unit_cost
 
         # Start updating from the given part
         update_parent(part)
@@ -126,7 +103,7 @@ class PartBomWeighted(PartBom):
                 )
             except AttributeError:
                 pass
-        else:
+        elif not bom_part.part_revision.is_product:
             self.missing_item_costs += 1
 
 
@@ -167,8 +144,9 @@ class PartBomWeightedItem(PartIndentedBomItem):
         :return: unit cost of the part
         :rtype: Money
         """
-        return (
-            self.seller_part.landed_unit_cost + self.childs_unit_cost
-            if self.seller_part and self.seller_part.landed_unit_cost is not None
-            else self.childs_unit_cost
-        )
+        childs = self.childs_unit_cost or Money(0, self._currency)
+        if self.part_revision.is_product:
+            return childs + self.part_revision.type_overhead
+        if self.seller_part and self.seller_part.landed_unit_cost is not None:
+            return self.seller_part.landed_unit_cost + childs
+        return childs

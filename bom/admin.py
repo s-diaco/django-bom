@@ -12,6 +12,7 @@ from .models import (
     Part,
     PartClass,
     PartRevision,
+    ProductType,
     Seller,
     SellerPart,
     Subpart,
@@ -125,6 +126,18 @@ class ManufacturerPartAdminInline(admin.TabularInline):
     )
 
 
+class ProductTypeAdmin(admin.ModelAdmin):
+    list_display = (
+        "organization",
+        "code",
+        "name",
+        "has_bom",
+        "apply_loi",
+        "overhead",
+    )
+    list_filter = ("has_bom", "apply_loi", "organization")
+
+
 class PartClassAdmin(admin.ModelAdmin):
     list_display = (
         "code",
@@ -218,6 +231,7 @@ admin.site.register(SellerPart, SellerPartAdmin)
 admin.site.register(Customer, CustomerAdmin)
 admin.site.register(CustomerPrice, CustomerPriceAdmin)
 admin.site.register(ManufacturerPart, ManufacturerPartAdmin)
+admin.site.register(ProductType, ProductTypeAdmin)
 admin.site.register(PartClass, PartClassAdmin)
 admin.site.register(Part, PartAdmin)
 admin.site.register(PartRevision, PartRevisionAdmin)

@@ -53,6 +53,7 @@ from bom.forms import (
     OrganizationExchangeRatesForm,
     OrganizationFormEditSettings,
     OrganizationNumberLenForm,
+    product_type_formset_factory,
     SingleExchangeRateForm,
     PartClassCSVForm,
     PartClassForm,
@@ -82,6 +83,7 @@ from bom.models import (
     Part,
     PartClass,
     PartRevision,
+    ProductType,
     SellerPart,
     Subpart,
     User,
@@ -223,10 +225,13 @@ def home(request):
         "part__number_variation",
     )
     if request.GET.get("product") == "1":
-        product_material_type = ["with_loi", "no_loi"]
-        part_revs = part_revs.filter(material__in=product_material_type)
+        part_revs = part_revs.filter(
+            material__in=organization.product_type_codes(has_bom=True)
+        )
     elif request.GET.get("product") == "0":
-        part_revs = part_revs.filter(material="no_bom")
+        part_revs = part_revs.filter(
+            material__in=organization.product_type_codes(has_bom=False)
+        )
     autocomplete_dict = {}
     enable_autocomplete = settings.BOM_CONFIG.get("admin_dashboard", {}).get(
         "enable_autocomplete", False
@@ -901,6 +906,56 @@ def bom_settings(request, tab_anchor=None):
                 instance=organization, user=user
             )
 
+        elif "submit-product-types" in request.POST:
+            tab_anchor = ORGANIZATION_TAB
+            organization.ensure_default_product_types()
+            ProductTypeFormSet = product_type_formset_factory()
+            product_type_formset = ProductTypeFormSet(
+                request.POST,
+                queryset=organization.product_types.all(),
+                form_kwargs={"organization": organization},
+            )
+            if product_type_formset.is_valid():
+                in_use_blocked = False
+                for form in product_type_formset.deleted_forms:
+                    instance = form.instance
+                    if instance.pk and PartRevision.objects.filter(
+                        part__organization=organization, material=instance.code
+                    ).exists():
+                        messages.error(
+                            request,
+                            _(
+                                "Cannot delete type {name}: parts still use it."
+                            ).format(name=instance.name),
+                        )
+                        in_use_blocked = True
+                if not in_use_blocked:
+                    next_order = (
+                        organization.product_types.aggregate(Max("sort_order")).get(
+                            "sort_order__max"
+                        )
+                        or 0
+                    )
+                    instances = product_type_formset.save(commit=False)
+                    for obj in product_type_formset.deleted_objects:
+                        obj.delete()
+                    for obj in instances:
+                        if not obj.code or not obj.name:
+                            continue
+                        obj.organization = organization
+                        if not obj.sort_order:
+                            next_order += 1
+                            obj.sort_order = next_order
+                        obj.save()
+                    organization.invalidate_product_type_cache()
+                    messages.info(request, _("Product types saved."))
+                    product_type_formset = ProductTypeFormSet(
+                        queryset=organization.product_types.all(),
+                        form_kwargs={"organization": organization},
+                    )
+            else:
+                messages.error(request, product_type_formset.errors)
+
         elif "submit-number-item-len" in request.POST:
             tab_anchor = INDABOM_TAB
             organization_number_len_form = OrganizationNumberLenForm(
@@ -1036,6 +1091,13 @@ def bom_settings(request, tab_anchor=None):
     user_meta_form = UserMetaForm()
 
     organization_form = OrganizationFormEditSettings(instance=organization, user=user)
+    organization.ensure_default_product_types()
+    ProductTypeFormSet = product_type_formset_factory()
+    if "product_type_formset" not in locals():
+        product_type_formset = ProductTypeFormSet(
+            queryset=organization.product_types.all(),
+            form_kwargs={"organization": organization},
+        )
     organization_number_len_form = OrganizationNumberLenForm(instance=organization)
     part_class_form = PartClassForm(organization=organization)
     part_class_form_action = reverse("bom:settings", kwargs={"tab_anchor": INDABOM_TAB})
@@ -1861,7 +1923,7 @@ def part_info(request, part_id, part_revision_id=None):
     can_manage_bom = (
         profile.role == "A"
         and part_revision is not None
-        and part_revision.material in ("with_loi", "no_loi")
+        and part_revision.is_product
         and part_revision.configuration == constants.CONFIGURATION_TYPE_WORKING
     )
     add_subpart_form = None
@@ -2271,7 +2333,9 @@ def create_part(request):
         manufacturer_part_form = ManufacturerPartForm(
             request.POST, organization=organization
         )
-        part_revision_form = PartRevisionForm(request.POST)
+        part_revision_form = PartRevisionForm(
+            request.POST, organization=organization
+        )
 
         # Checking if part form is valid checks for number uniqueness
         if (
@@ -2399,7 +2463,8 @@ def create_part(request):
         # Initialize organization in the form's model and in the form itself:
         part_form = PartForm(initial={"organization": organization})
         part_revision_form = PartRevisionForm(
-            initial={"revision": 1, "organization": organization}
+            initial={"revision": 1},
+            organization=organization,
         )
         manufacturer_form = ManufacturerForm(
             organization=organization, prefix="manufacturer_"
@@ -2657,9 +2722,7 @@ def add_sellerpart(request, manufacturer_part_id):
     title += f" | <span dir='ltr'>{part.full_part_number()}</span>"
 
     part_revision = part.latest()
-    seller_locked = bool(
-        part_revision and part_revision.material in ("with_loi", "no_loi")
-    )
+    seller_locked = False
 
     if request.method == "POST":
         seller_form = SellerForm(
@@ -3107,7 +3170,9 @@ def part_revision_edit(request, part_id, part_revision_id):
     )
 
     if request.method == "POST":
-        form = PartRevisionForm(request.POST, instance=part_revision)
+        form = PartRevisionForm(
+            request.POST, instance=part_revision, organization=organization
+        )
         if form.is_valid():
             form.save()
             part_revision.clear_bom_unit_cost_cache()
@@ -3115,7 +3180,7 @@ def part_revision_edit(request, part_id, part_revision_id):
                 reverse("bom:part-info", kwargs={"part_id": part_id})
             )
     else:
-        form = PartRevisionForm(instance=part_revision)
+        form = PartRevisionForm(instance=part_revision, organization=organization)
 
     return TemplateResponse(request, "bom/part-revision-edit.html", locals())
 

@@ -64,8 +64,6 @@
                     <button class="bom-btn-primary" type="submit" name="action">{% trans "Save" %}</button>
                 </div>
                 <label class="hidden" id="organizationName">{% trans organization.name %}</label>
-                <label class="hidden" id="labelNoBom">{% trans "Price" %}</label>
-                <label class="hidden" id="labelWithBom">{% trans "Overload Cost" %}</label>
                 <label class="hidden" id="currencyText">{{ organization.currency|currency_label }}</label>
                 <script src="{% static 'bom/js/radio.js' %}"></script>
                 <script>
