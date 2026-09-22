@@ -276,3 +276,11 @@ class TestBomTabsUrlHash(SimpleTestCase):
         self.assertIn('params.delete("tab_anchor")', js)
         self.assertIn("hashchange.bomTabs", js)
         self.assertIn("panelIdFromHash", js)
+
+    def test_tabs_js_prefers_hash_over_active_on_init(self):
+        js = open("bom/static/bom/js/bom-ui.js").read()
+        hash_branch = "if (hashId) {\n        show(hashId, false);"
+        active_branch = "else if (initial) {\n        show(initial.slice(1), false);"
+        self.assertIn(hash_branch, js)
+        self.assertIn(active_branch, js)
+        self.assertLess(js.index(hash_branch), js.index(active_branch))

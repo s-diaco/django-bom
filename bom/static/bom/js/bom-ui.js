@@ -331,10 +331,10 @@
         });
       var initial = $tabs.find("a.active").attr("href");
       var hashId = panelIdFromHash();
-      if (initial) {
-        show(initial.slice(1), false);
-      } else if (hashId) {
+      if (hashId) {
         show(hashId, false);
+      } else if (initial) {
+        show(initial.slice(1), false);
       } else if (panels[0]) {
         show(panels[0].attr("id"), false);
       }
