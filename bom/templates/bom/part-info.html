@@ -165,10 +165,12 @@
                                     <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Overhead" %}:</div>
                                     <div class="col s8 l10">{{ part_revision.type_overhead }}</div>
                                 </div>
-                                <div class="row{% if indented_bom.missing_item_costs > 0 %} red-text{% endif %}">
+                                {% if indented_bom.missing_item_costs > 0 %}
+                                <div class="row red-text">
                                     <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Materials without price" %}:</div>
-                                    <div class="col s8 l10"><span id="mouser-missing-item-costs"></span><span><span class="right">{{ indented_bom.missing_item_costs }}{% if indented_bom.missing_item_costs > 0 %} </span><i class="material-icons red-text">error</i>{% else %} <i class="material-icons green-text">check_circle</i>{% endif %}</span></div>
+                                    <div class="col s8 l10"><span id="mouser-missing-item-costs"></span><span><span class="right">{{ indented_bom.missing_item_costs }} </span><i class="material-icons red-text">error</i></span></div>
                                 </div>
+                                {% endif %}
                                 <div class="row">
                                     <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "BoM weight" %}:</div>
                                     <div class="col s8 l10"><span id="bom_weight"></span><span>{{ total_bom_weight|default_if_none:'-' }}</span></div>
