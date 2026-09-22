@@ -51,9 +51,9 @@
                             <ul class="collection">
                                 {% for upr in used_part_revisions %}
                                     <li class="collection-item">
-                                        <label class="flex w-full items-center gap-3 text-sm text-ink">
+                                        <label class="flex w-full flex-wrap items-center gap-3 text-sm text-ink">
                                             <input type="checkbox" name="roll" value="{{ upr.id }}"/>
-                                            <span class="min-w-0 flex-1">
+                                            <span class="min-w-0">
                                                 <span dir="ltr" class="font-medium">{{ upr.part.full_part_number }}</span>
                                                 {% blocktrans with rev=upr.revision %}Rev {{ rev }}{% endblocktrans %}
                                                 {% if upr.description %}<span class="text-ink-muted">{{ upr.description }}</span>{% endif %}
