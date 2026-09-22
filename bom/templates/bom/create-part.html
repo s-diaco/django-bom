@@ -23,73 +23,96 @@
                             href="{% url 'bom:settings' tab_anchor='indabom' %}">Settings</a> page, and create them in the LithiumBoM tab.
                 </div>
             {% endif %}
-            <form name="form" action="{% url 'bom:create-part' %}" method="post" class="bom-panel-pad">
-                {% csrf_token %}
-                <h1 class="mb-4 text-lg font-semibold text-ink">{% trans "New Material" %}</h1>
-                {{ part_form|bom_form:'m4 s12' }}
-                {% include 'bom/part-revision-display.html' with part_revision_form=part_revision_form %}
-                <div class="hidden">
-                    <h2 class="mb-3 mt-4 text-base font-semibold text-ink">{% trans "Manufacturer" %}</h2>
-                    <div class="row gap-y-3">
-                        {{ manufacturer_form.non_field_errors }}
-                        {{ manufacturer_part_form.non_field_errors }}
-                        {{ manufacturer_part_form.manufacturer_part_number.errors }}
-                        {{ manufacturer_part_form.manufacturer_part_number|bom_form:'l2 m3 s12' }}
-                        {{ manufacturer_form.name.errors }}
-                        {{ manufacturer_form.name|bom_form:'l3 m4 s12' }}
+            <div class="bom-panel-pad">
+                <header class="mb-5 border-b border-border-subtle pb-4">
+                    <h1 class="mb-0 text-xl font-semibold text-ink">{% trans "New Material" %}</h1>
+                </header>
+
+                <form name="form" action="{% url 'bom:create-part' %}" method="post">
+                    {% csrf_token %}
+
+                    <section class="mb-5">
+                        <h2 class="mb-3 text-base font-semibold text-ink">{% trans "Part" %}</h2>
+                        <div class="row gap-y-3">
+                            {{ part_form|bom_form:'m4 s12' }}
+                        </div>
+                    </section>
+
+                    <section class="mb-5 border-t border-border-subtle pt-4">
+                        <h2 class="mb-3 text-base font-semibold text-ink">{% trans "Part Revision" %}</h2>
+                        {% include 'bom/part-revision-display.html' with part_revision_form=part_revision_form %}
+                    </section>
+
+                    <div class="hidden">
+                        <h2 class="mb-3 mt-4 text-base font-semibold text-ink">{% trans "Manufacturer" %}</h2>
+                        <div class="row gap-y-3">
+                            {{ manufacturer_form.non_field_errors }}
+                            {{ manufacturer_part_form.non_field_errors }}
+                            {{ manufacturer_part_form.manufacturer_part_number.errors }}
+                            {{ manufacturer_part_form.manufacturer_part_number|bom_form:'l2 m3 s12' }}
+                            {{ manufacturer_form.name.errors }}
+                            {{ manufacturer_form.name|bom_form:'l3 m4 s12' }}
+                        </div>
                     </div>
-                </div>
-                <h2 class="mb-3 mt-4 text-base font-semibold text-ink">{% trans "Seller" %}</h2>
-                    <div class="row gap-y-3">
-                    {{ seller_form.non_field_errors }}
-                    {{ seller_part_form.non_field_errors }}
-                    {{ seller_part_form.seller_part_number.errors }}
-                    {{ seller_part_form.seller_part_number|bom_form:'m4 s12' }}
-                    {{ seller_form.name.errors }}
-                    {{ seller_form.name|bom_form:'m4 s12' }}
-                    {{ seller_part_form.unit_cost.errors }}
-                    {{ seller_part_form.unit_cost|bom_form:'m4 s12' }}
-                    {{ seller_part_form.currency.errors }}
-                    {{ seller_part_form.currency|bom_form:'m4 s12' }}
-                    {{ seller_part_form.shipping.errors }}
-                    {{ seller_part_form.shipping|bom_form:'m4 s12' }}
-                    {{ seller_part_form.customs_duty_percent.errors }}
-                    {{ seller_part_form.customs_duty_percent|bom_form:'m4 s12' }}
-                </div>
-                <div class="row">
-                    {% include 'bom/components/sellerpart-fx-hint.html' %}
-                </div>
-                <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
-                    <a href="javascript:history.back()" class="bom-btn-ghost">{% trans "Cancel" %}</a>
-                    <button class="bom-btn-primary" type="submit" name="action">{% trans "Save" %}</button>
-                </div>
-                <label class="hidden" id="organizationName">{% trans organization.name %}</label>
-                <label class="hidden" id="currencyText">{{ organization.currency|currency_label }}</label>
-                <script src="{% static 'bom/js/radio.js' %}"></script>
-                <script>
-                    function updateTargetInput() {
-                        const sourceInputValue = document.getElementById('id_number_item').value;
-                        initManuDestVal = document.getElementById('id_manufacturer_part_number').value;
-                        if (initManuDestVal == "") {
-                            document.getElementById("id_manufacturer_part_number").focus();
-                            document.getElementById('id_manufacturer_part_number').value = sourceInputValue;
-                            document.getElementById("id_number_item").focus();
+
+                    <section class="mb-4 border-t border-border-subtle pt-4">
+                        <h2 class="mb-3 text-base font-semibold text-ink">{% trans "Seller Part" %}</h2>
+                        <div class="row gap-y-3">
+                            {{ seller_form.non_field_errors }}
+                            {{ seller_part_form.non_field_errors }}
+                            {{ seller_part_form.seller_part_number.errors }}
+                            {{ seller_part_form.seller_part_number|bom_form:'m6 s12' }}
+                            {{ seller_form.name.errors }}
+                            {{ seller_form.name|bom_form:'m6 s12' }}
+                        </div>
+                        <h3 class="mb-3 mt-4 text-sm font-semibold text-ink">{% trans "Price" %}</h3>
+                        <div class="row gap-y-3">
+                            {{ seller_part_form.currency.errors }}
+                            {{ seller_part_form.currency|bom_form:'m3 s6' }}
+                            {{ seller_part_form.unit_cost.errors }}
+                            {{ seller_part_form.unit_cost|bom_form:'m3 s6' }}
+                            {{ seller_part_form.shipping.errors }}
+                            {{ seller_part_form.shipping|bom_form:'m3 s6' }}
+                            {{ seller_part_form.customs_duty_percent.errors }}
+                            {{ seller_part_form.customs_duty_percent|bom_form:'m3 s6' }}
+                        </div>
+                        <div class="row mt-2">
+                            {% include 'bom/components/sellerpart-fx-hint.html' %}
+                        </div>
+                    </section>
+
+                    <div class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border-subtle pt-4">
+                        <a href="javascript:history.back()" class="bom-btn-ghost">{% trans "Cancel" %}</a>
+                        <button class="bom-btn-primary" type="submit" name="action">{% trans "Save" %}</button>
+                    </div>
+                    <label class="hidden" id="organizationName">{% trans organization.name %}</label>
+                    <label class="hidden" id="currencyText">{{ organization.currency|currency_label }}</label>
+                    <script src="{% static 'bom/js/radio.js' %}"></script>
+                    <script>
+                        function updateTargetInput() {
+                            const sourceInputValue = document.getElementById('id_number_item').value;
+                            initManuDestVal = document.getElementById('id_manufacturer_part_number').value;
+                            if (initManuDestVal == "") {
+                                document.getElementById("id_manufacturer_part_number").focus();
+                                document.getElementById('id_manufacturer_part_number').value = sourceInputValue;
+                                document.getElementById("id_number_item").focus();
+                            }
+                            else {
+                                document.getElementById('id_manufacturer_part_number').value = sourceInputValue;
+                            }
+                            initSellerDestVal = document.getElementById('id_seller_part_number').value;
+                            if (initSellerDestVal == "") {
+                                document.getElementById("id_seller_part_number").focus();
+                                document.getElementById('id_seller_part_number').value = sourceInputValue;
+                                document.getElementById("id_number_item").focus();
+                            }
+                            else {
+                                document.getElementById('id_seller_part_number').value = sourceInputValue;
+                            }
                         }
-                        else {
-                            document.getElementById('id_manufacturer_part_number').value = sourceInputValue;
-                        }
-                        initSellerDestVal = document.getElementById('id_seller_part_number').value;
-                        if (initSellerDestVal == "") {
-                            document.getElementById("id_seller_part_number").focus();
-                            document.getElementById('id_seller_part_number').value = sourceInputValue;
-                            document.getElementById("id_number_item").focus();
-                        }
-                        else {
-                            document.getElementById('id_seller_part_number').value = sourceInputValue;
-                        }
-                    }
-                </script>
-            </form>
+                    </script>
+                </form>
+            </div>
             {% include 'bom/components/sellerpart-fx-modal.html' %}
         {% else %}
             {% include 'bom/nothing-to-see.html' with required_privilege='Admin' %}
