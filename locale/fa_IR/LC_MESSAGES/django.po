@@ -38,6 +38,18 @@ msgstr "بدون احتساب پرت (کامپوند، جوهر یا …)"
 msgid "Raw materials"
 msgstr "مواد اولیه"
 
+msgid "Compound"
+msgstr "کامپوند"
+
+msgid "Frit"
+msgstr "فریت"
+
+msgid "Ink"
+msgstr "جوهر"
+
+msgid "Powder"
+msgstr "پودر"
+
 #: bom/constants.py:47
 msgid "IRR"
 msgstr "ریال"

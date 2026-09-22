@@ -4,6 +4,7 @@ from django.db import connection
 from django.test import Client, TestCase, override_settings
 from django.test.utils import CaptureQueriesContext
 from django.utils import translation
+from django.utils.translation import gettext
 
 from bom.forms import (
     AddSubpartForm,
@@ -197,6 +198,10 @@ class TestForms(TestCase):
             labels.get("no_loi"), "بدون احتساب پرت (کامپوند، جوهر یا …)"
         )
         self.assertEqual(labels.get("no_bom"), "مواد اولیه")
+        self.assertEqual(gettext("Compound"), "کامپوند")
+        self.assertEqual(gettext("Frit"), "فریت")
+        self.assertEqual(gettext("Ink"), "جوهر")
+        self.assertEqual(gettext("Powder"), "پودر")
 
         from bom.models import ProductType
 
