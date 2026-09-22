@@ -19,7 +19,7 @@ from bom.helpers import (
     create_some_fake_parts,
     create_user_and_organization,
 )
-from bom.models import ManufacturerPart, Part, PartClass, Seller, Subpart
+from bom.models import Manufacturer, ManufacturerPart, Part, PartClass, Seller, Subpart
 from bom.utils import convert_arabic_to_english
 
 TEST_FILES_DIR = "bom/test_files"
