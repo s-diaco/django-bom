@@ -1187,6 +1187,9 @@ def manufacturer_edit(request, manufacturer_id):
 @organization_admin
 def manufacturer_delete(request, manufacturer_id):
     manufacturer = get_object_or_404(Manufacturer, pk=manufacturer_id)
+    Part.objects.filter(primary_manufacturer_part__manufacturer=manufacturer).update(
+        primary_manufacturer_part=None
+    )
     manufacturer.delete()
     return HttpResponseRedirect(reverse("bom:manufacturers"))
 
@@ -2929,6 +2932,9 @@ def manufacturer_part_edit(request, manufacturer_part_id):
 def manufacturer_part_delete(request, manufacturer_part_id):
     manufacturer_part = get_object_or_404(ManufacturerPart, pk=manufacturer_part_id)
     part = manufacturer_part.part
+    Part.objects.filter(primary_manufacturer_part=manufacturer_part).update(
+        primary_manufacturer_part=None
+    )
     manufacturer_part.delete()
     return HttpResponseRedirect(
         reverse("bom:part-info", kwargs={"part_id": part.id}) + "?tab_anchor=sourcing"
