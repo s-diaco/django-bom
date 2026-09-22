@@ -1885,18 +1885,19 @@ class TestBOM(TransactionTestCase):
         )
         self.assertEqual(response.status_code, 302)
 
-    @skip("TODO: Fix this test. Doesn't work with protected recursion")
     def test_manufacturer_delete(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+        manufacturer_id = p1.primary_manufacturer_part.manufacturer.id
         response = self.client.post(
             reverse(
                 "bom:manufacturer-delete",
-                kwargs={
-                    "manufacturer_id": p1.primary_manufacturer_part.manufacturer.id
-                },
+                kwargs={"manufacturer_id": manufacturer_id},
             )
         )
         self.assertEqual(response.status_code, 302)
+        self.assertFalse(
+            Manufacturer.objects.filter(id=manufacturer_id).exists()
+        )
 
     def test_sellers(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
@@ -1998,17 +1999,20 @@ class TestBOM(TransactionTestCase):
         )
         self.assertEqual(response.status_code, 200)  # 200 means it failed validation
 
-    @skip("TODO: Fix this test. Doesn't work with protected recursion")
     def test_manufacturer_part_delete(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+        manufacturer_part_id = p1.primary_manufacturer_part.id
         response = self.client.post(
             reverse(
                 "bom:manufacturer-part-delete",
-                kwargs={"manufacturer_part_id": p1.primary_manufacturer_part.id},
+                kwargs={"manufacturer_part_id": manufacturer_part_id},
             )
         )
 
         self.assertEqual(response.status_code, 302)
+        self.assertFalse(
+            ManufacturerPart.objects.filter(id=manufacturer_part_id).exists()
+        )
 
     def test_part_revision_release(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
