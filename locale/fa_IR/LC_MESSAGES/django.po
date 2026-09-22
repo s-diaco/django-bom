@@ -349,6 +349,16 @@ msgstr "برای کد {0} در سطر {1} کلاسی یافت نشد. این م�
 msgid "Part number {0} on row {1} already exists. Part was not uploaded."
 msgstr "کد {0} در سطر {1} قبلاً تعریف شده است. متریال آپلود نشد."
 
+#: bom/forms.py:1882
+#, python-brace-format
+msgid "Part number {0} already in use."
+msgstr "کد متریال {0} قبلاً استفاده شده است."
+
+#: bom/forms.py:1999
+#, python-brace-format
+msgid "Part number {0}-{1}-{2} already in use."
+msgstr "کد متریال {0}-{1}-{2} قبلاً استفاده شده است."
+
 #: bom/forms.py:1800
 msgid "Auto generated if blank."
 msgstr "در صورت خالی بودن اتوماتیک ایجاد می‌شود."

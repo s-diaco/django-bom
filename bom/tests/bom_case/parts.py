@@ -178,7 +178,7 @@ class PartsTestsMixin:
             response = self.client.post(reverse("bom:create-part"), data)
             self.assertEqual(response.status_code, 200)
             self.assertTrue("error" in str(response.content))
-            self.assertTrue("already in use" in str(response.content))
+            self._assert_part_number_already_in_use(response)
             return
 
         new_part_mpn = "STM32F401-NEW-PART"
@@ -207,7 +207,7 @@ class PartsTestsMixin:
             # Same variation again must fail
             self.assertEqual(response.status_code, 200)
             self.assertTrue("error" in str(response.content))
-            self.assertTrue("already in use" in str(response.content))
+            self._assert_part_number_already_in_use(response)
         else:
             # Without variations, the second identical create must fail
             response = self.client.post(reverse("bom:create-part"), new_part_form_data)
@@ -216,7 +216,7 @@ class PartsTestsMixin:
             response = self.client.post(reverse("bom:create-part"), new_part_form_data)
             self.assertEqual(response.status_code, 200)
             self.assertTrue("error" in str(response.content))
-            self.assertTrue("already in use" in str(response.content))
+            self._assert_part_number_already_in_use(response)
 
     def test_create_part_no_manufacturer_part(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)

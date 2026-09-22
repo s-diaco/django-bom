@@ -24,6 +24,13 @@ class TestBOMBase(TransactionTestCase):
         self.client.login(username="kasper", password="ghostpassword")
         translation.activate("en-US")
 
+    def _assert_part_number_already_in_use(self, response):
+        """Duplicate-PN errors are gettext'd; Client follows LANGUAGE_CODE (fa-IR)."""
+        content = response.content.decode()
+        with translation.override(settings.LANGUAGE_CODE):
+            marker = translation.gettext("Part number {0} already in use.").partition("{0}")[2]
+        self.assertIn(marker, content)
+
     def _csv_upload(self, path, strip_variation=None):
         """Open a CSV for upload; strip -VV from part_number columns when needed."""
         if strip_variation is None:
