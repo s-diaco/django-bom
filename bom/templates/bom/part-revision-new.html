@@ -45,22 +45,23 @@
                     {% if used_part_revisions.count > 0 %}
                         <section class="mb-5 border-t border-border-subtle pt-4">
                             <h2 class="mb-2 text-base font-semibold text-ink">{% trans "Roll into parent assemblies" %}</h2>
-                            <p class="mb-3 text-sm text-ink-muted">
-                                {% blocktrans count counter=used_part_revisions.count %}This part is used by {{ counter }} working parent assembly. Select any parent assemblies you want to roll this revision into:{% plural %}This part is used by {{ counter }} working parent assemblies. Select any parent assemblies you want to roll this revision into:{% endblocktrans %}
+                            <p class="mb-3 text-sm text-ink-muted" dir="auto">
+                                {% blocktrans count counter=used_part_revisions.count %}This part is used by {{ counter }} working parent assembly. Select any parent assemblies you want to roll this revision into.{% plural %}This part is used by {{ counter }} working parent assemblies. Select any parent assemblies you want to roll this revision into.{% endblocktrans %}
                             </p>
                             <ul class="collection">
                                 {% for upr in used_part_revisions %}
                                     <li class="collection-item">
-                                        <label class="flex flex-wrap items-center gap-2 text-sm text-ink">
+                                        <label class="flex w-full items-center gap-3 text-sm text-ink">
                                             <input type="checkbox" name="roll" value="{{ upr.id }}"/>
-                                            <span>
-                                                <span dir="ltr">{{ upr.part.full_part_number }}</span>
+                                            <span class="min-w-0 flex-1">
+                                                <span dir="ltr" class="font-medium">{{ upr.part.full_part_number }}</span>
                                                 {% blocktrans with rev=upr.revision %}Rev {{ rev }}{% endblocktrans %}
-                                                {% if upr.description %}{{ upr.description }}{% endif %}
+                                                {% if upr.description %}<span class="text-ink-muted">{{ upr.description }}</span>{% endif %}
                                             </span>
-                                            <a class="ms-auto shrink-0"
+                                            <a class="shrink-0"
                                                href="{% url 'bom:part-info-history' part_id=upr.part.id part_revision_id=upr.id %}"
-                                               target="_blank">{% trans "View" %}</a>
+                                               target="_blank"
+                                               onclick="event.stopPropagation()">{% trans "View" %}</a>
                                         </label>
                                     </li>
                                 {% endfor %}
