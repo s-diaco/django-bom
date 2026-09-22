@@ -37,6 +37,15 @@ class TestBOM(TransactionTestCase):
         self.client.login(username="kasper", password="ghostpassword")
         translation.activate("en-US")
 
+    def _assert_part_number_already_in_use(self, response):
+        """Duplicate-PN errors are gettext'd; Client follows LANGUAGE_CODE (fa-IR)."""
+        content = response.content.decode()
+        with translation.override(settings.LANGUAGE_CODE):
+            marker = translation.gettext("Part number {0} already in use.").partition(
+                "{0}"
+            )[2]
+        self.assertIn(marker, content)
+
     def _csv_upload(self, path, strip_variation=None):
         """Open a CSV for upload; strip -VV from part_number columns when needed."""
         if strip_variation is None:
@@ -1260,7 +1269,7 @@ class TestBOM(TransactionTestCase):
             response = self.client.post(reverse("bom:create-part"), data)
             self.assertEqual(response.status_code, 200)
             self.assertTrue("error" in str(response.content))
-            self.assertTrue("already in use" in str(response.content))
+            self._assert_part_number_already_in_use(response)
             return
 
         new_part_mpn = "STM32F401-NEW-PART"
@@ -1289,7 +1298,7 @@ class TestBOM(TransactionTestCase):
             # Same variation again must fail
             self.assertEqual(response.status_code, 200)
             self.assertTrue("error" in str(response.content))
-            self.assertTrue("already in use" in str(response.content))
+            self._assert_part_number_already_in_use(response)
         else:
             # Without variations, the second identical create must fail
             response = self.client.post(reverse("bom:create-part"), new_part_form_data)
@@ -1298,7 +1307,7 @@ class TestBOM(TransactionTestCase):
             response = self.client.post(reverse("bom:create-part"), new_part_form_data)
             self.assertEqual(response.status_code, 200)
             self.assertTrue("error" in str(response.content))
-            self.assertTrue("already in use" in str(response.content))
+            self._assert_part_number_already_in_use(response)
 
     def test_create_part_no_manufacturer_part(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)

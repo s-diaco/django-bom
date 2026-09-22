@@ -1879,7 +1879,7 @@ class PartFormIntelligent(forms.ModelForm):
 
         if part.count() > 0:
             validation_error = forms.ValidationError(
-                ("Part number {0} already in use.".format(number_item)),
+                _("Part number {0} already in use.").format(number_item),
                 code="invalid",
             )
             self.add_error(None, validation_error)
@@ -1996,10 +1996,8 @@ class PartFormSemiIntelligent(forms.ModelForm):
 
         if part.count() > 0:
             validation_error = forms.ValidationError(
-                (
-                    "Part number {0}-{1}-{2} already in use.".format(
-                        number_class.code, number_item, number_variation
-                    )
+                _("Part number {0}-{1}-{2} already in use.").format(
+                    number_class.code, number_item, number_variation
                 ),
                 code="invalid",
             )
