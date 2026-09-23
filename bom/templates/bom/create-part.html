@@ -35,10 +35,11 @@
                     {% csrf_token %}
 
                     <section class="mb-5">
-                        <div class="row gap-y-3">
+                        <div class="row gap-y-3 items-end">
                             {{ part_form|bom_form:'m4 s12' }}
+                            {{ part_revision_form.revision|bom_form:'m2 s12' }}
                         </div>
-                        {% include 'bom/part-revision-display.html' with part_revision_form=part_revision_form %}
+                        {% include 'bom/part-revision-display.html' with part_revision_form=part_revision_form hide_revision=True %}
                     </section>
 
                     <div class="hidden">
