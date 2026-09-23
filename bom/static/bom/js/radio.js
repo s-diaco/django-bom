@@ -40,14 +40,14 @@ if (costLabel && costInput) {
     const raw = isRawMaterial(selectedMaterial());
 
     if (loiRow) {
-      loiRow.classList.toggle("hidden", !raw);
+      loiRow.style.display = raw ? "" : "none";
       if (!raw && toleranceInput) {
         toleranceInput.value = "0";
       }
     }
 
     if (sellerIdentity) {
-      sellerIdentity.classList.toggle("hidden", !raw);
+      sellerIdentity.style.display = raw ? "" : "none";
       if (!raw) {
         if (sellerNameInput) {
           sellerNameInput.value = orgName;
