@@ -18,13 +18,15 @@ if (costLabel && costInput) {
     .split(",")
     .map((c) => c.trim())
     .filter(Boolean);
-  const orgName = form.dataset.organizationName || "";
   const loiRow = document.getElementById("create-part-loi-row");
-  const sellerIdentity = document.getElementById("create-part-seller-identity");
+  const sellerSection = document.getElementById("create-part-seller-section");
   const toleranceInput = document.getElementById("id_tolerance");
-  const sellerNameInput = document.getElementById("id_name");
-  const sellerPartNumberInput = document.getElementById("id_seller_part_number");
   const codeInput = document.getElementById("id_number_item");
+  const manufacturerPartNumberInput = document.getElementById(
+    "id_manufacturer_part_number"
+  );
+  const manufacturerNameInput = document.getElementById("id_mfg-name");
+  const orgName = form.dataset.organizationName || "";
   const materialRadios = form.querySelectorAll('input[name="material"]');
 
   function selectedMaterial() {
@@ -34,6 +36,18 @@ if (costLabel && costInput) {
 
   function isRawMaterial(code) {
     return rawCodes.indexOf(code) !== -1;
+  }
+
+  function syncManufacturerDefaults() {
+    if (isRawMaterial(selectedMaterial())) {
+      return;
+    }
+    if (manufacturerPartNumberInput && codeInput) {
+      manufacturerPartNumberInput.value = codeInput.value;
+    }
+    if (manufacturerNameInput) {
+      manufacturerNameInput.value = orgName;
+    }
   }
 
   function applyToggles() {
@@ -46,17 +60,12 @@ if (costLabel && costInput) {
       }
     }
 
-    if (sellerIdentity) {
-      sellerIdentity.style.display = raw ? "" : "none";
-      if (!raw) {
-        if (sellerNameInput) {
-          sellerNameInput.value = orgName;
-        }
-        if (sellerPartNumberInput && codeInput) {
-          sellerPartNumberInput.value = codeInput.value;
-        }
-      }
+    // Non-raw: no seller/price — cost is calculated from BoM.
+    if (sellerSection) {
+      sellerSection.style.display = raw ? "" : "none";
     }
+
+    syncManufacturerDefaults();
   }
 
   materialRadios.forEach((radio) => {
@@ -64,11 +73,7 @@ if (costLabel && costInput) {
   });
 
   if (codeInput) {
-    codeInput.addEventListener("input", () => {
-      if (!isRawMaterial(selectedMaterial()) && sellerPartNumberInput) {
-        sellerPartNumberInput.value = codeInput.value;
-      }
-    });
+    codeInput.addEventListener("input", syncManufacturerDefaults);
   }
 
   applyToggles();

@@ -448,8 +448,8 @@ class PartsTestsMixin:
         subparts = Subpart.objects.filter(id__in=subpart_ids)
         self.assertEqual(0, len(subparts))
 
-    def test_create_part_non_raw_defaults_seller_from_org_and_code(self):
-        from bom.models import Seller, SellerPart
+    def test_create_part_non_raw_skips_seller_uses_org_manufacturer(self):
+        from bom.models import Manufacturer, ManufacturerPart, SellerPart
 
         (p1, _p2, _p3, _p4) = create_some_fake_parts(organization=self.organization)
         self.organization.ensure_default_product_types()
@@ -473,9 +473,7 @@ class PartsTestsMixin:
             "value": "",
             "material": product_code,
             "tolerance": "12",
-            "unit_cost": "5",
-            "currency": self.organization.currency,
-            # Intentionally omit seller / seller_part_number — server fills defaults.
+            # No seller fields — products should not create a SellerPart.
         }
         if self.organization.number_variation_len > 0:
             data["number_variation"] = "01"
@@ -491,14 +489,18 @@ class PartsTestsMixin:
         self.assertEqual(created_part.number_item, number_item)
         self.assertEqual(created_part.latest().material, product_code)
 
-        seller = Seller.objects.get(
+        self.assertFalse(
+            SellerPart.objects.filter(manufacturer_part__part=created_part).exists()
+        )
+        manufacturer = Manufacturer.objects.get(
             organization=self.organization, name=self.organization.name
         )
-        seller_part = SellerPart.objects.get(
-            manufacturer_part__part=created_part,
-            seller_part_number=number_item,
+        manufacturer_part = ManufacturerPart.objects.get(
+            part=created_part,
+            manufacturer_part_number=number_item,
+            manufacturer=manufacturer,
         )
-        self.assertEqual(seller_part.seller_id, seller.id)
+        self.assertEqual(created_part.primary_manufacturer_part_id, manufacturer_part.id)
 
     def test_create_part_page_marks_raw_material_toggles(self):
         create_some_fake_parts(organization=self.organization)
@@ -508,7 +510,7 @@ class PartsTestsMixin:
         html = response.content.decode()
         self.assertIn("data-create-part-toggles", html)
         self.assertIn('id="create-part-loi-row"', html)
-        self.assertIn('id="create-part-seller-identity"', html)
+        self.assertIn('id="create-part-seller-section"', html)
         for code in self.organization.product_type_codes(has_bom=False):
             self.assertIn(code, html)
         self.assertNotIn("Part Revision", html)
