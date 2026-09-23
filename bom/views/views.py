@@ -2475,7 +2475,7 @@ def create_part(request):
             organization=organization,
         )
         manufacturer_form = ManufacturerForm(
-            organization=organization, prefix="manufacturer_"
+            organization=organization, prefix="mfg"
         )
         manufacturer_part_form = ManufacturerPartForm(organization=organization)
         seller_part_form = SellerPartForm(organization=organization)
