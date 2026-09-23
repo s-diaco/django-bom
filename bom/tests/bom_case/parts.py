@@ -447,3 +447,67 @@ class PartsTestsMixin:
 
         subparts = Subpart.objects.filter(id__in=subpart_ids)
         self.assertEqual(0, len(subparts))
+
+    def test_create_part_non_raw_defaults_seller_from_org_and_code(self):
+        from bom.models import Seller, SellerPart
+
+        (p1, _p2, _p3, _p4) = create_some_fake_parts(organization=self.organization)
+        self.organization.ensure_default_product_types()
+        raw_codes = self.organization.product_type_codes(has_bom=False)
+        product_code = next(
+            code
+            for code in self.organization.product_type_codes(has_bom=True)
+            if code not in raw_codes
+        )
+
+        number_item = "8877"
+        data = {
+            "manufacturer_part_number": "",
+            "manufacturer": "",
+            "number_class": str(p1.number_class),
+            "number_item": number_item,
+            "configuration": "W",
+            "description": "Non-raw product part",
+            "revision": "A",
+            "attribute": "",
+            "value": "",
+            "material": product_code,
+            "tolerance": "12",
+            "unit_cost": "5",
+            "currency": self.organization.currency,
+            # Intentionally omit seller / seller_part_number — server fills defaults.
+        }
+        if self.organization.number_variation_len > 0:
+            data["number_variation"] = "01"
+        if self.organization.number_scheme == constants.NUMBER_SCHEME_INTELLIGENT:
+            data.pop("number_class", None)
+            data.pop("number_variation", None)
+
+        response = self.client.post(reverse("bom:create-part"), data)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue("/part/" in response.url)
+
+        created_part = Part.objects.get(id=response.url.strip("/").split("/")[-1])
+        self.assertEqual(created_part.number_item, number_item)
+        self.assertEqual(created_part.latest().material, product_code)
+
+        seller = Seller.objects.get(
+            organization=self.organization, name=self.organization.name
+        )
+        seller_part = SellerPart.objects.get(
+            manufacturer_part__part=created_part,
+            seller_part_number=number_item,
+        )
+        self.assertEqual(seller_part.seller_id, seller.id)
+
+    def test_create_part_page_marks_raw_material_toggles(self):
+        self.organization.ensure_default_product_types()
+        response = self.client.get(reverse("bom:create-part"))
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode()
+        self.assertIn("data-create-part-toggles", html)
+        self.assertIn('id="create-part-loi-row"', html)
+        self.assertIn('id="create-part-seller-identity"', html)
+        for code in self.organization.product_type_codes(has_bom=False):
+            self.assertIn(code, html)
+        self.assertNotIn("Part Revision", html)

@@ -28,18 +28,16 @@
                     <h1 class="mb-0 text-xl font-semibold text-ink">{% trans "New Material" %}</h1>
                 </header>
 
-                <form name="form" action="{% url 'bom:create-part' %}" method="post">
+                <form name="form" action="{% url 'bom:create-part' %}" method="post"
+                      data-create-part-toggles
+                      data-raw-material-codes="{{ raw_material_codes|join:',' }}"
+                      data-organization-name="{{ organization.name }}">
                     {% csrf_token %}
 
                     <section class="mb-5">
-                        <h2 class="mb-3 text-base font-semibold text-ink">{% trans "Part" %}</h2>
                         <div class="row gap-y-3">
                             {{ part_form|bom_form:'m4 s12' }}
                         </div>
-                    </section>
-
-                    <section class="mb-5 border-t border-border-subtle pt-4">
-                        <h2 class="mb-3 text-base font-semibold text-ink">{% trans "Part Revision" %}</h2>
                         {% include 'bom/part-revision-display.html' with part_revision_form=part_revision_form %}
                     </section>
 
@@ -57,7 +55,7 @@
 
                     <section class="mb-4 border-t border-border-subtle pt-4">
                         <h2 class="mb-3 text-base font-semibold text-ink">{% trans "Seller Part" %}</h2>
-                        <div class="row gap-y-3">
+                        <div class="row gap-y-3" id="create-part-seller-identity">
                             {{ seller_form.non_field_errors }}
                             {{ seller_part_form.non_field_errors }}
                             {{ seller_part_form.seller_part_number.errors }}
@@ -100,15 +98,7 @@
                             else {
                                 document.getElementById('id_manufacturer_part_number').value = sourceInputValue;
                             }
-                            initSellerDestVal = document.getElementById('id_seller_part_number').value;
-                            if (initSellerDestVal == "") {
-                                document.getElementById("id_seller_part_number").focus();
-                                document.getElementById('id_seller_part_number').value = sourceInputValue;
-                                document.getElementById("id_number_item").focus();
-                            }
-                            else {
-                                document.getElementById('id_seller_part_number').value = sourceInputValue;
-                            }
+                            document.getElementById('id_seller_part_number').value = sourceInputValue;
                         }
                     </script>
                 </form>

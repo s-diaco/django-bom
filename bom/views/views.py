@@ -2314,6 +2314,7 @@ def create_part(request):
     fx_next_url = reverse("bom:create-part")
 
     PartForm = part_form_from_organization(organization)
+    raw_material_codes = list(organization.product_type_codes(has_bom=False))
 
     if (
         organization.number_scheme == constants.NUMBER_SCHEME_SEMI_INTELLIGENT
@@ -2431,6 +2432,10 @@ def create_part(request):
             if seller_part_form.is_valid():
                 spn = seller_part_form.cleaned_data["seller_part_number"]
                 new_seller_name = seller_form.cleaned_data["name"]
+                material = part_revision_form.cleaned_data.get("material")
+                if material not in raw_material_codes:
+                    spn = new_part.number_item
+                    new_seller_name = organization.name
 
                 seller = None
                 if spn:
