@@ -36,8 +36,14 @@
 
                     <section class="mb-5">
                         <div class="row gap-y-3 items-end">
-                            {{ part_form|bom_form:'m4 s12' }}
+                            {% for error in part_form.non_field_errors %}
+                                <div class="col-span-12"><p class="bom-error">{{ error }}</p></div>
+                            {% endfor %}
+                            {% for field in part_form.visible_fields %}
+                                {{ field|bom_form:'m4 s12' }}
+                            {% endfor %}
                             {{ part_revision_form.revision|bom_form:'m2 s12' }}
+                            {% for field in part_form.hidden_fields %}{{ field }}{% endfor %}
                         </div>
                         {% include 'bom/part-revision-display.html' with part_revision_form=part_revision_form hide_revision=True %}
                     </section>
