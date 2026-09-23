@@ -501,6 +501,7 @@ class PartsTestsMixin:
         self.assertEqual(seller_part.seller_id, seller.id)
 
     def test_create_part_page_marks_raw_material_toggles(self):
+        create_some_fake_parts(organization=self.organization)
         self.organization.ensure_default_product_types()
         response = self.client.get(reverse("bom:create-part"))
         self.assertEqual(response.status_code, 200)
