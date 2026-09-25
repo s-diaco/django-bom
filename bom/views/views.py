@@ -2417,9 +2417,11 @@ def create_part(request):
 
             manufacturer_part = None
             material = part_revision_form.cleaned_data.get("material")
-            is_raw_material = material in raw_material_codes
+            # Only explicit product types (has_bom) skip seller and force org MPN.
+            # Missing/blank material keeps the legacy raw-material create path.
+            is_product = material in organization.product_type_codes(has_bom=True)
 
-            if not is_raw_material:
+            if is_product:
                 # Products: no seller/price row — cost comes from BoM. Attach an
                 # org-owned manufacturer part so the part has a primary MPN = Code.
                 manufacturer, _created_mfr = Manufacturer.objects.get_or_create(
