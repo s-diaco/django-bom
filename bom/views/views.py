@@ -2314,6 +2314,7 @@ def create_part(request):
     fx_next_url = reverse("bom:create-part")
 
     PartForm = part_form_from_organization(organization)
+    raw_material_codes = list(organization.product_type_codes(has_bom=False))
 
     if (
         organization.number_scheme == constants.NUMBER_SCHEME_SEMI_INTELLIGENT
@@ -2415,50 +2416,73 @@ def create_part(request):
                 return TemplateResponse(request, "bom/create-part.html", locals())
 
             manufacturer_part = None
-            if mpn:
-                (
-                    manufacturer_part,
-                    manufacturer_created,
-                ) = ManufacturerPart.objects.get_or_create(
+            material = part_revision_form.cleaned_data.get("material")
+            # Only explicit product types (has_bom) skip seller and force org MPN.
+            # Missing/blank material keeps the legacy raw-material create path.
+            is_product = material in organization.product_type_codes(has_bom=True)
+
+            if is_product:
+                # Products: no seller/price row — cost comes from BoM. Attach an
+                # org-owned manufacturer part so the part has a primary MPN = Code.
+                manufacturer, _created_mfr = Manufacturer.objects.get_or_create(
+                    name__iexact=organization.name,
+                    organization=organization,
+                    defaults={"name": organization.name},
+                )
+                manufacturer_part, _created_mp = ManufacturerPart.objects.get_or_create(
                     part=new_part,
-                    manufacturer_part_number="" if mpn == "" else mpn,
+                    manufacturer_part_number=new_part.number_item or "",
                     manufacturer=manufacturer,
                 )
-
                 new_part.primary_manufacturer_part = manufacturer_part
                 new_part.save()
-
-            if seller_part_form.is_valid():
-                spn = seller_part_form.cleaned_data["seller_part_number"]
-                new_seller_name = seller_form.cleaned_data["name"]
-
-                seller = None
-                if spn:
-                    if new_seller_name and new_seller_name != "":
-                        seller, seller_created = Seller.objects.get_or_create(
-                            name__iexact=new_seller_name,
-                            organization=organization,
-                            defaults={"name": new_seller_name},
-                        )
-                    if manufacturer_part is None:
-                        manufacturer_part = new_part.manufacturer_part_for_new_seller()
+            else:
+                if mpn:
                     (
-                        seller_part,
-                        seller_created,
-                    ) = SellerPart.objects.get_or_create(
-                        manufacturer_part=manufacturer_part,
-                        seller_part_number=spn,
-                        seller=seller,
-                        unit_cost=seller_part_form.instance.unit_cost,
-                        nre_cost=seller_part_form.instance.unit_cost,
+                        manufacturer_part,
+                        manufacturer_created,
+                    ) = ManufacturerPart.objects.get_or_create(
+                        part=new_part,
+                        manufacturer_part_number="" if mpn == "" else mpn,
+                        manufacturer=manufacturer,
                     )
-                elif new_seller_name != "":
-                    messages.warning(
-                        request,
-                        _(
-                            "No seller part number was assigned. No seller was selected or created."
-                        ),
-                    )
+
+                    new_part.primary_manufacturer_part = manufacturer_part
+                    new_part.save()
+
+                if seller_part_form.is_valid():
+                    spn = seller_part_form.cleaned_data["seller_part_number"]
+                    new_seller_name = seller_form.cleaned_data["name"]
+
+                    seller = None
+                    if spn:
+                        if new_seller_name and new_seller_name != "":
+                            seller, seller_created = Seller.objects.get_or_create(
+                                name__iexact=new_seller_name,
+                                organization=organization,
+                                defaults={"name": new_seller_name},
+                            )
+                        if manufacturer_part is None:
+                            manufacturer_part = (
+                                new_part.manufacturer_part_for_new_seller()
+                            )
+                        (
+                            seller_part,
+                            seller_created,
+                        ) = SellerPart.objects.get_or_create(
+                            manufacturer_part=manufacturer_part,
+                            seller_part_number=spn,
+                            seller=seller,
+                            unit_cost=seller_part_form.instance.unit_cost,
+                            nre_cost=seller_part_form.instance.unit_cost,
+                        )
+                    elif new_seller_name != "":
+                        messages.warning(
+                            request,
+                            _(
+                                "No seller part number was assigned. No seller was selected or created."
+                            ),
+                        )
             return HttpResponseRedirect(
                 reverse("bom:part-info", kwargs={"part_id": str(new_part.id)})
             )
@@ -2470,7 +2494,7 @@ def create_part(request):
             organization=organization,
         )
         manufacturer_form = ManufacturerForm(
-            organization=organization, prefix="manufacturer_"
+            organization=organization, prefix="mfg"
         )
         manufacturer_part_form = ManufacturerPartForm(organization=organization)
         seller_part_form = SellerPartForm(organization=organization)

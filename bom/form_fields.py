@@ -34,23 +34,25 @@ class AutocompleteTextInput(forms.TextInput):
 
         autocomplete_json = dumps(autocomplete_dict).replace("'", "\\'")
         autocomplete_json_to_fill = dumps(autocomplete_dict_to_fill).replace("'", "\\'")
+        # Django form prefixes use hyphens (prefix-field); those are invalid in JS ids.
+        js_name = name.replace("-", "_")
 
         # To escape brackets in a Python 3.6 f-string we use double brackets
         inline_code = mark_safe(
             f"""<script>
-            const {name}_data = JSON.parse('{autocomplete_json}');
-            const {name}_data_to_fill = JSON.parse('{autocomplete_json_to_fill}');
-            const {name}_input = document.getElementById("id_{name}");
-            const {name}_form = {name}_input.form;
+            const {js_name}_data = JSON.parse('{autocomplete_json}');
+            const {js_name}_data_to_fill = JSON.parse('{autocomplete_json_to_fill}');
+            const {js_name}_input = document.getElementById("id_{name}");
+            const {js_name}_form = {js_name}_input.form;
             $(document).ready(function () {{
                 $('#id_{name}').autocomplete({{
-                    data: {name}_data,
+                    data: {js_name}_data,
                     limit: {self.autocomplete_limit or 'undefined'}, // The max amount of results that can be shown at once. Default: Infinity.
                     minLength: {self.autocomplete_min_length}, // The minimum length of the input for the autocomplete to start. Default: 1.
                     onAutocomplete: function (val) {{
-                        console.log({name}_data_to_fill);
-                        $("#id_{name}").val({name}_data_to_fill[val]);
-                        {f'{name}_form.submit()' if self.autocomplete_submit else ''}
+                        console.log({js_name}_data_to_fill);
+                        $("#id_{name}").val({js_name}_data_to_fill[val]);
+                        {f'{js_name}_form.submit()' if self.autocomplete_submit else ''}
                     }},
                 }});
             }});
