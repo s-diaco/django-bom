@@ -2211,7 +2211,7 @@ class AddSubpartForm(forms.Form):
         latest_synopsis = (
             PartRevision.objects.filter(part_id=OuterRef("pk"))
             .order_by("-id")
-            .values("displayable_synopsis")[:1]
+            .values("description")[:1]
         )
         self.fields["subpart_part_number"] = forms.CharField(
             required=True,

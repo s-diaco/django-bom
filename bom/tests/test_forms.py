@@ -124,11 +124,17 @@ class TestForms(TestCase):
 
     def test_add_subpart_form_render_query_budget(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+        p2_rev = p2.latest()
+        p2_rev.material = "with_loi"
+        p2_rev.description = "Known subpart description"
+        p2_rev.save()
         with CaptureQueriesContext(connection) as ctx:
             form = AddSubpartForm(organization=self.organization, part_id=p1.id)
             html = str(form["subpart_part_number"])
         self.assertLessEqual(len(ctx), 5)
         self.assertIn(p2.full_part_number(), html)
+        self.assertIn(p2_rev.description, html)
+        self.assertNotIn("with_loi", html)
 
     def test_add_sellerpart_form(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
