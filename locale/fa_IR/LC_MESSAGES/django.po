@@ -390,7 +390,7 @@ msgstr "ورژن"
 msgid "Scrap percent (LOI)"
 msgstr "درصد پرت (LOI)"
 
-#: bom/forms.py:2036
+#: bom/forms.py:2036 bom/views/views.py:438
 msgid "Material Type"
 msgstr "نوع متریال"
 
@@ -1602,10 +1602,6 @@ msgstr "کد متریال"
 #: bom/views/views.py:431
 msgid "Scrap"
 msgstr "پرت"
-
-#: bom/views/views.py:432
-msgid "Material type"
-msgstr "نوع متریال"
 
 #: bom/views/views.py:790
 msgid "Settings"
