@@ -2033,6 +2033,7 @@ class PartRevisionForm(forms.ModelForm):
         self.fields["attribute"].label = ""
         self.fields["revision"].label = _("Revision")
         self.fields["tolerance"].label = _("Scrap percent (LOI)")
+        self.fields["material"].label = _("Material Type")
         self.fields["tolerance"].initial = 0
         org = self.organization
         if org is None and self.instance and getattr(self.instance, "part_id", None):

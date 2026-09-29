@@ -390,6 +390,10 @@ msgstr "ورژن"
 msgid "Scrap percent (LOI)"
 msgstr "درصد پرت (LOI)"
 
+#: bom/forms.py:2036
+msgid "Material Type"
+msgstr "نوع متریال"
+
 #: bom/forms.py:1946
 msgid "Description cannot be empty!"
 msgstr "شرح نمی‌تواند خالی باشد!"
@@ -1268,10 +1272,6 @@ msgstr "قیمت‌های مشتری"
 #: bom/templates/bom/part-info.html:375
 msgid "No customer prices for this part yet."
 msgstr "هنوز قیمت مشتری برای این قطعه ثبت نشده است."
-
-#: bom/templates/bom/part-revision-display.html:24
-msgid "Cost Calculations"
-msgstr "مدل محاسبه قیمت"
 
 #: bom/templates/bom/part-revision-edit.html:23
 msgid "Edit the material specifications, or"
