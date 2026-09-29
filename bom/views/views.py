@@ -435,7 +435,7 @@ def home(request):
                 "revision": _("Revision"),
                 "description": _("Material"),
                 "tolerance": _("Scrap"),
-                "material": _("Material type"),
+                "material": _("Material Type"),
                 "bom_unit_cost": _("Price"),
                 "seller": _("Seller"),
                 "seller_part_number": _("Seller Part Number"),
