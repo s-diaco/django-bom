@@ -5,7 +5,6 @@ services:
     build:
       context: .
       args:
-        REQUIREMENTS_FILE: requirements-dev.lock
         APT_MIRROR: ${APT_MIRROR:-}
         UV_IMAGE: ${UV_IMAGE:-ghcr.io/astral-sh/uv:bookworm-slim}
         DEBIAN_IMAGE: ${DOCKER_REGISTRY_MIRROR:-}debian:bookworm-slim
