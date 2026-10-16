@@ -785,6 +785,58 @@ def bom_signup(request):
     return TemplateResponse(request, "bom/bom-signup.html", locals())
 
 
+def _handle_product_types_submit(request, organization):
+    """Validate and save ProductType formset from POST. Returns the formset used."""
+    organization.ensure_default_product_types()
+    ProductTypeFormSet = product_type_formset_factory()
+    product_type_formset = ProductTypeFormSet(
+        request.POST,
+        queryset=organization.product_types.all(),
+        form_kwargs={"organization": organization},
+    )
+    if product_type_formset.is_valid():
+        in_use_blocked = False
+        for form in product_type_formset.deleted_forms:
+            instance = form.instance
+            if instance.pk and PartRevision.objects.filter(
+                part__organization=organization, material=instance.code
+            ).exists():
+                messages.error(
+                    request,
+                    _("Cannot delete type {name}: parts still use it.").format(
+                        name=instance.name
+                    ),
+                )
+                in_use_blocked = True
+        if not in_use_blocked:
+            next_order = (
+                organization.product_types.aggregate(Max("sort_order")).get(
+                    "sort_order__max"
+                )
+                or 0
+            )
+            instances = product_type_formset.save(commit=False)
+            for obj in product_type_formset.deleted_objects:
+                obj.delete()
+            for obj in instances:
+                if not obj.code or not obj.name:
+                    continue
+                obj.organization = organization
+                if not obj.sort_order:
+                    next_order += 1
+                    obj.sort_order = next_order
+                obj.save()
+            organization.invalidate_product_type_cache()
+            messages.info(request, _("Product types saved."))
+            product_type_formset = ProductTypeFormSet(
+                queryset=organization.product_types.all(),
+                form_kwargs={"organization": organization},
+            )
+    else:
+        messages.error(request, product_type_formset.errors)
+    return product_type_formset
+
+
 @login_required
 def bom_settings(request, tab_anchor=None):
     user = request.user
@@ -908,53 +960,7 @@ def bom_settings(request, tab_anchor=None):
 
         elif "submit-product-types" in request.POST:
             tab_anchor = ORGANIZATION_TAB
-            organization.ensure_default_product_types()
-            ProductTypeFormSet = product_type_formset_factory()
-            product_type_formset = ProductTypeFormSet(
-                request.POST,
-                queryset=organization.product_types.all(),
-                form_kwargs={"organization": organization},
-            )
-            if product_type_formset.is_valid():
-                in_use_blocked = False
-                for form in product_type_formset.deleted_forms:
-                    instance = form.instance
-                    if instance.pk and PartRevision.objects.filter(
-                        part__organization=organization, material=instance.code
-                    ).exists():
-                        messages.error(
-                            request,
-                            _(
-                                "Cannot delete type {name}: parts still use it."
-                            ).format(name=instance.name),
-                        )
-                        in_use_blocked = True
-                if not in_use_blocked:
-                    next_order = (
-                        organization.product_types.aggregate(Max("sort_order")).get(
-                            "sort_order__max"
-                        )
-                        or 0
-                    )
-                    instances = product_type_formset.save(commit=False)
-                    for obj in product_type_formset.deleted_objects:
-                        obj.delete()
-                    for obj in instances:
-                        if not obj.code or not obj.name:
-                            continue
-                        obj.organization = organization
-                        if not obj.sort_order:
-                            next_order += 1
-                            obj.sort_order = next_order
-                        obj.save()
-                    organization.invalidate_product_type_cache()
-                    messages.info(request, _("Product types saved."))
-                    product_type_formset = ProductTypeFormSet(
-                        queryset=organization.product_types.all(),
-                        form_kwargs={"organization": organization},
-                    )
-            else:
-                messages.error(request, product_type_formset.errors)
+            product_type_formset = _handle_product_types_submit(request, organization)
 
         elif "submit-number-item-len" in request.POST:
             tab_anchor = INDABOM_TAB
@@ -1233,6 +1239,36 @@ def exchange_rates(request):
 
     exchange_rates_form = OrganizationExchangeRatesForm(organization=organization)
     return TemplateResponse(request, "bom/exchange-rates.html", locals())
+
+
+@login_required(login_url=BOM_LOGIN_URL)
+def overhead_prices(request):
+    user = request.user
+    profile = user.bom_profile()
+    organization = profile.organization
+    if organization is None:
+        return HttpResponseRedirect(reverse("bom:home"))
+
+    name = "overhead-prices"
+    title = _("Overhead prices")
+    owner = organization.owner
+
+    organization.ensure_default_product_types()
+
+    if request.method == "POST":
+        if owner != user:
+            messages.error(request, _("Owner privilege required."))
+            return HttpResponseRedirect(reverse("bom:overhead-prices"))
+        if "submit-product-types" in request.POST:
+            product_type_formset = _handle_product_types_submit(request, organization)
+            return TemplateResponse(request, "bom/overhead-prices.html", locals())
+
+    ProductTypeFormSet = product_type_formset_factory()
+    product_type_formset = ProductTypeFormSet(
+        queryset=organization.product_types.all(),
+        form_kwargs={"organization": organization},
+    )
+    return TemplateResponse(request, "bom/overhead-prices.html", locals())
 
 
 @login_required(login_url=BOM_LOGIN_URL)

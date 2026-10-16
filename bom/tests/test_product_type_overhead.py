@@ -1,6 +1,8 @@
 from decimal import Decimal
 
-from django.test import TestCase
+from django.contrib.auth import get_user_model
+from django.test import Client, TestCase
+from django.urls import reverse
 from djmoney.money import Money
 
 from bom.helpers import (
@@ -110,3 +112,68 @@ class ProductTypeOverheadTest(TestCase):
         _raw, raw_rev = self._make_part("RAWX", "no_bom", seller_cost=44)
         self.assertFalse(raw_rev.is_product)
         self.assertEqual(raw_rev.bom_unit_cost_at_quantity(1), Money(44, self.currency))
+
+
+class OverheadPricesViewTest(TestCase):
+    def setUp(self):
+        self.user, self.organization = create_user_and_organization()
+        self.organization.ensure_default_product_types()
+        self.client = Client()
+        self.client.login(username="kasper", password="ghostpassword")
+        self.url = reverse("bom:overhead-prices")
+
+    def test_owner_can_get_overhead_prices(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        self.assertTrue(
+            "Overhead prices" in html or "قیمت سربار" in html,
+            "page title missing",
+        )
+        self.assertIn('name="submit-product-types"', html)
+        self.assertIn("bom-nav-link-active", html)
+
+    def test_owner_can_update_overhead(self):
+        pts = list(self.organization.product_types.order_by("sort_order", "id"))
+        post = {
+            "form-TOTAL_FORMS": str(len(pts) + 1),
+            "form-INITIAL_FORMS": str(len(pts)),
+            "form-MIN_NUM_FORMS": "0",
+            "form-MAX_NUM_FORMS": "1000",
+            "submit-product-types": "1",
+        }
+        for i, pt in enumerate(pts):
+            post[f"form-{i}-id"] = str(pt.id)
+            post[f"form-{i}-code"] = pt.code
+            post[f"form-{i}-name"] = pt.name
+            if pt.has_bom:
+                post[f"form-{i}-has_bom"] = "on"
+            if pt.apply_loi:
+                post[f"form-{i}-apply_loi"] = "on"
+            post[f"form-{i}-overhead"] = "42" if pt.code == "no_loi" else str(
+                pt.overhead.amount if pt.overhead else 0
+            )
+        # empty extra form
+        extra = len(pts)
+        post[f"form-{extra}-code"] = ""
+        post[f"form-{extra}-name"] = ""
+        post[f"form-{extra}-overhead"] = ""
+
+        response = self.client.post(self.url, post)
+        self.assertEqual(response.status_code, 200)
+        pt = self.organization.product_types.get(code="no_loi")
+        self.assertEqual(pt.overhead, Money(42, self.organization.currency))
+
+    def test_non_owner_cannot_post(self):
+        User = get_user_model()
+        other = User.objects.create_user("other", "other@example.com", "otherpass")
+        profile = other.bom_profile(organization=self.organization)
+        profile.role = "A"
+        profile.save()
+        client = Client()
+        client.login(username="other", password="otherpass")
+        response = client.post(
+            self.url, {"submit-product-types": "1"}, follow=False
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, self.url)

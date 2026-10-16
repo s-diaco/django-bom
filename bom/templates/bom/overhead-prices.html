@@ -1,0 +1,24 @@
+{% extends 'bom/bom-base.html' %}
+
+{% load i18n %}
+{% load static %}
+
+{% block head-title %}{{ title }}{% endblock %}
+
+{% block main %}
+{% endblock %}
+
+{% block content %}
+<div class="container-app">
+    {% if owner == user %}
+        <div class="bom-panel-pad">
+            <h2 class="mb-2 text-xl font-semibold text-ink">{% trans "Overhead prices" %}</h2>
+            <p class="bom-help mb-3">{% trans "Overhead is added once per product of this type, and also rolls up from child products." %}</p>
+            {% url 'bom:overhead-prices' as product_types_form_action %}
+            {% include 'bom/components/product-types-form.html' %}
+        </div>
+    {% else %}
+        {% include 'bom/nothing-to-see.html' with required_privilege='Owner' %}
+    {% endif %}
+</div>
+{% endblock %}

@@ -557,14 +557,19 @@ msgid "Exchange Rates"
 msgstr "نرخ ارز"
 
 #: bom/templates/bom/bom-base-menu.html:7
+#: bom/templates/bom/overhead-prices.html:15 bom/views/views.py
+msgid "Overhead prices"
+msgstr "قیمت سربار"
+
+#: bom/templates/bom/bom-base-menu.html:8
 msgid "customers"
 msgstr "مشتریان"
 
-#: bom/templates/bom/bom-base-menu.html:8
+#: bom/templates/bom/bom-base-menu.html:9
 msgid "settings"
 msgstr "تنظیمات"
 
-#: bom/templates/bom/bom-base-menu.html:10
+#: bom/templates/bom/bom-base-menu.html:11
 msgid "help"
 msgstr "راهنما"
 
