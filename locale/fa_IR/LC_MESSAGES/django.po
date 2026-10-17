@@ -557,14 +557,31 @@ msgid "Exchange Rates"
 msgstr "نرخ ارز"
 
 #: bom/templates/bom/bom-base-menu.html:7
+#: bom/templates/bom/overhead-prices.html:15 bom/views/views.py
+msgid "Overhead prices"
+msgstr "هزینه سربار"
+
+#: bom/templates/bom/overhead-prices.html
+msgid "Product type"
+msgstr "نوع محصول"
+
+#: bom/templates/bom/overhead-prices.html bom/forms.py
+msgid "Overhead price"
+msgstr "هزینه سربار"
+
+#: bom/views/views.py
+msgid "Overhead prices saved."
+msgstr "هزینه سربار ذخیره شد."
+
+#: bom/templates/bom/bom-base-menu.html:8
 msgid "customers"
 msgstr "مشتریان"
 
-#: bom/templates/bom/bom-base-menu.html:8
+#: bom/templates/bom/bom-base-menu.html:9
 msgid "settings"
 msgstr "تنظیمات"
 
-#: bom/templates/bom/bom-base-menu.html:10
+#: bom/templates/bom/bom-base-menu.html:11
 msgid "help"
 msgstr "راهنما"
 
@@ -1771,7 +1788,7 @@ msgstr "انواع محصول"
 
 #: bom/templates/bom/settings.html
 msgid "Overhead is added once per product of this type, and also rolls up from child products."
-msgstr "سربار یک‌بار برای هر محصول از این نوع اضافه می‌شود و از محصولات فرزند هم جمع می‌شود."
+msgstr "هزینه سربار یک بار برای هر محصول از این نوع اضافه می‌شود و برای محصولات زیرمجموعه هم در نظر گرفته می‌شود."
 
 #: bom/templates/bom/settings.html bom/forms.py
 msgid "Name"

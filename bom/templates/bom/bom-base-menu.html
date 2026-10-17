@@ -2,14 +2,15 @@
     <div class="bom-nav-primary">
         <a class="bom-nav-link {% if name == 'raw material' %}bom-nav-link-active{% endif %}" title="{% trans "Raw Material" %}" href="{% url 'bom:home' %}?product=0">{% trans "Raw Material" %}</a>
         <a class="bom-nav-link {% if name == 'products' %}bom-nav-link-active{% endif %}" title="{% trans "Products" %}" href="{% url 'bom:home' %}?product=1">{% trans "Products" %}</a>
-        <a class="bom-nav-link {% if name == 'reports' %}bom-nav-link-active{% endif %}" title="{% trans "Reports" %}" href="{% url 'bom:report' %}">{% trans "Reports" %}</a>
         <a class="bom-nav-link {% if name == 'customers' %}bom-nav-link-active{% endif %}" title="{% trans "customers" %}" href="{% url 'bom:customers' %}">{% trans "customers" %}</a>
         <div class="relative" x-data="{ open: false }">
-            <button type="button" class="bom-nav-link {% if name == 'sellers' or name == 'exchange-rates' %}bom-nav-link-active{% endif %}" @click="open = !open" aria-haspopup="true" :aria-expanded="open.toString()">
+            <button type="button" class="bom-nav-link {% if name == 'reports' or name == 'sellers' or name == 'overhead-prices' or name == 'exchange-rates' %}bom-nav-link-active{% endif %}" @click="open = !open" aria-haspopup="true" :aria-expanded="open.toString()">
                 {% trans "More" %}<i class="material-icons text-base">arrow_drop_down</i>
             </button>
             <div x-show="open" x-cloak @click.outside="open = false" class="bom-dropdown">
+                <a class="{% if name == 'reports' %}bom-nav-link-active{% endif %}" href="{% url 'bom:report' %}">{% trans "Reports" %}</a>
                 <a class="{% if name == 'sellers' %}bom-nav-link-active{% endif %}" href="{% url 'bom:sellers' %}">{% trans "sellers" %}</a>
+                <a class="{% if name == 'overhead-prices' %}bom-nav-link-active{% endif %}" href="{% url 'bom:overhead-prices' %}">{% trans "Overhead prices" %}</a>
                 <a class="{% if name == 'exchange-rates' %}bom-nav-link-active{% endif %}" href="{% url 'bom:exchange-rates' %}">{% trans "Exchange Rates" %}</a>
             </div>
         </div>

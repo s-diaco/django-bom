@@ -418,6 +418,52 @@ def product_type_formset_factory():
     )
 
 
+class ProductTypeOverheadForm(forms.ModelForm):
+    class Meta:
+        model = ProductType
+        fields = ["overhead"]
+
+    def __init__(self, *args, **kwargs):
+        self.organization = kwargs.pop("organization", None)
+        super().__init__(*args, **kwargs)
+        self.fields["overhead"] = GroupedDecimalField(
+            required=False,
+            label=_("Overhead price"),
+            initial=0,
+            min_value=0,
+        )
+        self.fields["overhead"].widget.attrs["class"] = "bom-input bom-price-input"
+        self.fields["overhead"].widget.attrs["dir"] = "ltr"
+        if self.instance.pk and self.instance.overhead is not None:
+            amount = self.instance.overhead.amount
+            self.initial["overhead"] = amount
+            self.fields["overhead"].initial = amount
+
+    def clean(self):
+        cleaned_data = super().clean()
+        currency = (
+            self.organization.currency
+            if self.organization
+            else (
+                self.instance.overhead.currency if self.instance.overhead else "USD"
+            )
+        )
+        amount = cleaned_data.get("overhead")
+        if amount is None:
+            amount = Decimal(0)
+        self.instance.overhead = Money(amount, currency)
+        return cleaned_data
+
+
+def overhead_price_formset_factory():
+    return modelformset_factory(
+        ProductType,
+        form=ProductTypeOverheadForm,
+        extra=0,
+        can_delete=False,
+    )
+
+
 class OrganizationNumberLenForm(forms.ModelForm):
     class Meta:
         model = Organization
