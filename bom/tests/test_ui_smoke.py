@@ -126,7 +126,7 @@ class TestUiSmoke(TransactionTestCase):
             "products nav link missing",
         )
         self.assertTrue(
-            "Overhead prices" in html or "قیمت سربار" in html,
+            "Overhead prices" in html or "هزینه سربار" in html,
             "overhead prices nav link missing",
         )
         self.assertIn('id="bom-nav-toggle"', html)

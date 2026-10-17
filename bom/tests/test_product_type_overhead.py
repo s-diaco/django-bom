@@ -127,7 +127,7 @@ class OverheadPricesViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         html = response.content.decode("utf-8")
         self.assertTrue(
-            "Overhead prices" in html or "قیمت سربار" in html,
+            "Overhead prices" in html or "هزینه سربار" in html,
             "page title missing",
         )
         self.assertTrue(
@@ -135,7 +135,7 @@ class OverheadPricesViewTest(TestCase):
             "product type column missing",
         )
         self.assertTrue(
-            "Overhead price" in html or "قیمت سربار" in html,
+            "Overhead price" in html or "هزینه سربار" in html,
             "overhead price column missing",
         )
         self.assertIn('name="submit-overhead-prices"', html)
