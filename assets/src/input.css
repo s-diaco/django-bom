@@ -190,23 +190,23 @@
   }
 
   .bom-btn {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .bom-btn-primary {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors bg-primary text-white hover:bg-primary-hover hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors bg-primary text-white hover:bg-primary-hover hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .bom-btn-secondary {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-surface px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-surface-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-border bg-surface px-3 text-sm font-medium text-ink transition-colors hover:bg-surface-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .bom-btn-danger {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-md bg-danger px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-red-800 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-danger px-3 text-sm font-medium text-white transition-colors hover:bg-red-800 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .bom-btn-ghost {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .bom-btn-icon {
@@ -214,7 +214,7 @@
   }
 
   .bom-input {
-    @apply block w-full rounded-md border-border bg-surface text-ink shadow-sm focus:border-primary focus:ring-primary text-sm;
+    @apply block h-9 w-full rounded-md border-border bg-surface text-ink shadow-sm focus:border-primary focus:ring-primary text-sm;
   }
 
   .bom-login-page {
@@ -304,7 +304,7 @@
   }
 
   .bom-select {
-    @apply block w-full rounded-md border-border bg-surface text-ink shadow-sm focus:border-primary focus:ring-primary text-sm;
+    @apply block h-9 w-full rounded-md border-border bg-surface text-ink shadow-sm focus:border-primary focus:ring-primary text-sm;
   }
 
   .bom-label {
