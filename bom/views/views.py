@@ -197,9 +197,13 @@ def home(request):
         part_class = None
 
     if request.GET.get("product") == "1":
+        name = "products"
         title += " - " + _("Products")
     elif request.GET.get("product") == "0":
+        name = "raw material"
         title += " - " + _("Raw Material")
+    else:
+        name = None
     if part_class or query:
         title += _("Search Results - ")
     else:
@@ -486,6 +490,7 @@ def report(request):
     if not organization:
         return HttpResponseRedirect(reverse("bom:organization-create"))
 
+    name = "reports"
     query = request.GET.get("q", "")
     start_date = request.GET.get("start_date", None)
     end_date = request.GET.get("end_date", None)
