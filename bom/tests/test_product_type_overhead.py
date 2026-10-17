@@ -130,37 +130,41 @@ class OverheadPricesViewTest(TestCase):
             "Overhead prices" in html or "قیمت سربار" in html,
             "page title missing",
         )
-        self.assertIn('name="submit-product-types"', html)
+        self.assertTrue(
+            "Product type" in html or "نوع محصول" in html,
+            "product type column missing",
+        )
+        self.assertTrue(
+            "Overhead price" in html or "قیمت سربار" in html,
+            "overhead price column missing",
+        )
+        self.assertIn('name="submit-overhead-prices"', html)
+        self.assertNotIn('name="submit-product-types"', html)
+        self.assertNotIn("Has BoM", html)
+        self.assertNotIn("دارای BoM", html)
+        self.assertNotIn("Apply LOI", html)
+        self.assertNotIn('name="form-0-code"', html)
+        self.assertNotIn('name="form-0-DELETE"', html)
         self.assertIn("bom-nav-link-active", html)
 
     def test_owner_can_update_overhead(self):
         pts = list(self.organization.product_types.order_by("sort_order", "id"))
         post = {
-            "form-TOTAL_FORMS": str(len(pts) + 1),
+            "form-TOTAL_FORMS": str(len(pts)),
             "form-INITIAL_FORMS": str(len(pts)),
             "form-MIN_NUM_FORMS": "0",
             "form-MAX_NUM_FORMS": "1000",
-            "submit-product-types": "1",
+            "submit-overhead-prices": "1",
         }
         for i, pt in enumerate(pts):
             post[f"form-{i}-id"] = str(pt.id)
-            post[f"form-{i}-code"] = pt.code
-            post[f"form-{i}-name"] = pt.name
-            if pt.has_bom:
-                post[f"form-{i}-has_bom"] = "on"
-            if pt.apply_loi:
-                post[f"form-{i}-apply_loi"] = "on"
             post[f"form-{i}-overhead"] = "42" if pt.code == "no_loi" else str(
                 pt.overhead.amount if pt.overhead else 0
             )
-        # empty extra form
-        extra = len(pts)
-        post[f"form-{extra}-code"] = ""
-        post[f"form-{extra}-name"] = ""
-        post[f"form-{extra}-overhead"] = ""
 
         response = self.client.post(self.url, post)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, self.url)
         pt = self.organization.product_types.get(code="no_loi")
         self.assertEqual(pt.overhead, Money(42, self.organization.currency))
 
@@ -173,7 +177,7 @@ class OverheadPricesViewTest(TestCase):
         client = Client()
         client.login(username="other", password="otherpass")
         response = client.post(
-            self.url, {"submit-product-types": "1"}, follow=False
+            self.url, {"submit-overhead-prices": "1"}, follow=False
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, self.url)

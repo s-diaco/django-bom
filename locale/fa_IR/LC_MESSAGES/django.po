@@ -561,6 +561,18 @@ msgstr "نرخ ارز"
 msgid "Overhead prices"
 msgstr "قیمت سربار"
 
+#: bom/templates/bom/overhead-prices.html
+msgid "Product type"
+msgstr "نوع محصول"
+
+#: bom/templates/bom/overhead-prices.html bom/forms.py
+msgid "Overhead price"
+msgstr "قیمت سربار"
+
+#: bom/views/views.py
+msgid "Overhead prices saved."
+msgstr "قیمت سربار ذخیره شد."
+
 #: bom/templates/bom/bom-base-menu.html:8
 msgid "customers"
 msgstr "مشتریان"

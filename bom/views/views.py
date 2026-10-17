@@ -54,6 +54,7 @@ from bom.forms import (
     OrganizationFormEditSettings,
     OrganizationNumberLenForm,
     product_type_formset_factory,
+    overhead_price_formset_factory,
     SingleExchangeRateForm,
     PartClassCSVForm,
     PartClassForm,
@@ -1254,18 +1255,29 @@ def overhead_prices(request):
     owner = organization.owner
 
     organization.ensure_default_product_types()
+    OverheadPriceFormSet = overhead_price_formset_factory()
+    queryset = organization.product_types.all()
 
     if request.method == "POST":
         if owner != user:
             messages.error(request, _("Owner privilege required."))
             return HttpResponseRedirect(reverse("bom:overhead-prices"))
-        if "submit-product-types" in request.POST:
-            product_type_formset = _handle_product_types_submit(request, organization)
+        if "submit-overhead-prices" in request.POST:
+            overhead_price_formset = OverheadPriceFormSet(
+                request.POST,
+                queryset=queryset,
+                form_kwargs={"organization": organization},
+            )
+            if overhead_price_formset.is_valid():
+                overhead_price_formset.save()
+                organization.invalidate_product_type_cache()
+                messages.info(request, _("Overhead prices saved."))
+                return HttpResponseRedirect(reverse("bom:overhead-prices"))
+            messages.error(request, overhead_price_formset.errors)
             return TemplateResponse(request, "bom/overhead-prices.html", locals())
 
-    ProductTypeFormSet = product_type_formset_factory()
-    product_type_formset = ProductTypeFormSet(
-        queryset=organization.product_types.all(),
+    overhead_price_formset = OverheadPriceFormSet(
+        queryset=queryset,
         form_kwargs={"organization": organization},
     )
     return TemplateResponse(request, "bom/overhead-prices.html", locals())
