@@ -100,6 +100,49 @@ class TestUiSmoke(TransactionTestCase):
         html = response.content.decode("utf-8")
         self.assertTrue("error" in html.lower() or "bom-error" in html)
 
+    def test_home_and_report_nav_active_states(self):
+        user, organization = create_user_and_organization()
+        profile = user.bom_profile(organization=organization)
+        profile.role = "A"
+        profile.save()
+        self.client.login(username="kasper", password="ghostpassword")
+
+        raw = self.client.get(reverse("bom:home"), {"product": "0"})
+        self.assertEqual(raw.status_code, 200)
+        raw_html = raw.content.decode("utf-8")
+        self.assertRegex(
+            raw_html,
+            r'class="bom-nav-link\s+bom-nav-link-active"[^>]*>\s*(Raw Material|مواد اولیه)',
+            "Raw Material should be active when product=0",
+        )
+        self.assertNotRegex(
+            raw_html,
+            r'class="bom-nav-link\s+bom-nav-link-active"[^>]*>\s*(Products|محصولات)',
+            "Products should not be active when product=0",
+        )
+
+        products = self.client.get(reverse("bom:home"), {"product": "1"})
+        self.assertEqual(products.status_code, 200)
+        products_html = products.content.decode("utf-8")
+        self.assertRegex(
+            products_html,
+            r'class="bom-nav-link\s+bom-nav-link-active"[^>]*>\s*(Products|محصولات)',
+            "Products should be active when product=1",
+        )
+
+        report = self.client.get(reverse("bom:report"))
+        self.assertEqual(report.status_code, 200)
+        report_html = report.content.decode("utf-8")
+        self.assertRegex(
+            report_html,
+            r'class="bom-nav-link\s+bom-nav-link-active"[^>]*>\s*More',
+            "More should be active on Reports",
+        )
+
+        src = open("assets/src/input.css").read()
+        self.assertIn("bg-primary-light", src)
+        self.assertNotIn("inset 0 -2px 0", src)
+
     def test_authenticated_navigation_and_dashboard(self):
         user, organization = create_user_and_organization()
         profile = user.bom_profile(organization=organization)
@@ -116,7 +159,10 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn("bom-action-bar", html)
         self.assertIn("bom-nav-menu", html)
         self.assertIn("bom-nav-link", html)
-        self.assertIn("متریال جدید", html)
+        self.assertTrue(
+            "New Material" in html or "متریال جدید" in html,
+            "new material action missing",
+        )
         self.assertTrue(
             "Raw Material" in html or "مواد اولیه" in html,
             "raw material nav link missing",
