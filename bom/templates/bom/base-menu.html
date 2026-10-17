@@ -1,16 +1,27 @@
-{% if user.is_superuser and user.is_authenticated %}
-    <a class="bom-nav-link" title="Admin" href="/admin/" target="_blank">{% trans "Admin" %}</a>
-{% endif %}
 {% if user.is_authenticated %}
-    <form method="post" action="{% url 'logout' %}" class="inline">
-        {% csrf_token %}
-        <button type="submit" class="bom-nav-link" title="{% trans "logout" %}">
-            <i class="material-icons text-base">logout</i>
-            {{ user.username }}
+    <div class="bom-nav-account relative" x-data="{ open: false }">
+        <button type="button" class="bom-nav-link bom-nav-account-trigger" @click="open = !open" aria-haspopup="true" :aria-expanded="open.toString()" title="{{ user.username }}">
+            <i class="material-icons text-base">account_circle</i>
+            <span class="bom-nav-account-name">{{ user.username }}</span>
+            <i class="material-icons text-base bom-nav-account-caret">arrow_drop_down</i>
         </button>
-    </form>
-{% endif %}
-{% if not user.is_authenticated %}
-    <a class="bom-nav-link" title="login" href="{% url 'login' %}">{% trans "Log in" %}</a>
-    <a class="bom-nav-link" title="register" href="{% url 'signup' %}">{% trans "Register" %}</a>
+        <div x-show="open" x-cloak @click.outside="open = false" class="bom-dropdown bom-dropdown-end">
+            {% if user.is_superuser %}
+                <a href="/admin/" target="_blank" rel="noopener noreferrer">
+                    <i class="material-icons text-base">admin_panel_settings</i>{% trans "Admin" %}
+                </a>
+            {% endif %}
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit">
+                    <i class="material-icons text-base">logout</i>{% trans "logout" %}
+                </button>
+            </form>
+        </div>
+    </div>
+{% else %}
+    <div class="bom-nav-account">
+        <a class="bom-nav-link" title="login" href="{% url 'login' %}">{% trans "Log in" %}</a>
+        <a class="bom-nav-link" title="register" href="{% url 'signup' %}">{% trans "Register" %}</a>
+    </div>
 {% endif %}
