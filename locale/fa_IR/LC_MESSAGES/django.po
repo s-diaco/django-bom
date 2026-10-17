@@ -196,7 +196,7 @@ msgstr "کد تأمین کننده"
 
 #: bom/forms.py:493 bom/templates/bom/create-part.html:67
 msgid "Overload Cost"
-msgstr "قیمت سربار"
+msgstr "هزینه سربار"
 
 #: bom/forms.py:526
 #, python-brace-format
@@ -559,7 +559,7 @@ msgstr "نرخ ارز"
 #: bom/templates/bom/bom-base-menu.html:7
 #: bom/templates/bom/overhead-prices.html:15 bom/views/views.py
 msgid "Overhead prices"
-msgstr "قیمت سربار"
+msgstr "هزینه سربار"
 
 #: bom/templates/bom/overhead-prices.html
 msgid "Product type"
@@ -567,11 +567,11 @@ msgstr "نوع محصول"
 
 #: bom/templates/bom/overhead-prices.html bom/forms.py
 msgid "Overhead price"
-msgstr "قیمت سربار"
+msgstr "هزینه سربار"
 
 #: bom/views/views.py
 msgid "Overhead prices saved."
-msgstr "قیمت سربار ذخیره شد."
+msgstr "هزینه سربار ذخیره شد."
 
 #: bom/templates/bom/bom-base-menu.html:8
 msgid "customers"
