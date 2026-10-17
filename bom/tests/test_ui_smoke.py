@@ -125,6 +125,10 @@ class TestUiSmoke(TransactionTestCase):
             "Products" in html or "محصولات" in html,
             "products nav link missing",
         )
+        self.assertTrue(
+            "Overhead prices" in html or "هزینه سربار" in html,
+            "overhead prices nav link missing",
+        )
         self.assertIn('id="bom-nav-toggle"', html)
 
         css = open("bom/static/bom/css/app.css").read()

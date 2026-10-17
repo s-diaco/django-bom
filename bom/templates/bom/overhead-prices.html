@@ -1,0 +1,47 @@
+{% extends 'bom/bom-base.html' %}
+
+{% load i18n %}
+{% load static %}
+
+{% block head-title %}{{ title }}{% endblock %}
+
+{% block main %}
+{% endblock %}
+
+{% block content %}
+<div class="container-app">
+    {% if owner == user %}
+        <div class="bom-panel-pad max-w-3xl">
+            <h2 class="mb-2 text-xl font-semibold text-ink">{% trans "Overhead prices" %}</h2>
+            <p class="bom-help mb-3">{% trans "Overhead is added once per product of this type, and also rolls up from child products." %}</p>
+            <form name="overhead-prices" action="{% url 'bom:overhead-prices' %}" method="post">
+                {% csrf_token %}
+                {{ overhead_price_formset.management_form }}
+                <div class="bom-table-wrap">
+                    <table class="bom-table">
+                        <thead>
+                        <tr>
+                            <th class="text-normal">{% trans "Product type" %}</th>
+                            <th class="text-normal">{% trans "Overhead price" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for form in overhead_price_formset %}
+                            <tr>
+                                <td>{{ form.id }}{{ form.instance.name }}</td>
+                                <td>{{ form.overhead }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-4 flex flex-wrap items-center justify-end gap-2">
+                    <button class="bom-btn-primary" type="submit" name="submit-overhead-prices">{% trans "Save" %}</button>
+                </div>
+            </form>
+        </div>
+    {% else %}
+        {% include 'bom/nothing-to-see.html' with required_privilege='Owner' %}
+    {% endif %}
+</div>
+{% endblock %}
