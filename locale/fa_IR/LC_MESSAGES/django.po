@@ -196,7 +196,7 @@ msgstr "کد تأمین کننده"
 
 #: bom/forms.py:493 bom/templates/bom/create-part.html:67
 msgid "Overload Cost"
-msgstr "هزینه سربار"
+msgstr "قیمت سربار"
 
 #: bom/forms.py:526
 #, python-brace-format
@@ -1788,7 +1788,7 @@ msgstr "انواع محصول"
 
 #: bom/templates/bom/settings.html
 msgid "Overhead is added once per product of this type, and also rolls up from child products."
-msgstr "سربار یک‌بار برای هر محصول از این نوع اضافه می‌شود و از محصولات فرزند هم جمع می‌شود."
+msgstr "هزینه سربار یک بار برای هر محصول از این نوع اضافه می‌شود و برای محصولات زیرمجموعه هم در نظر گرفته می‌شود."
 
 #: bom/templates/bom/settings.html bom/forms.py
 msgid "Name"
