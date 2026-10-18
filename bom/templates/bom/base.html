@@ -9,6 +9,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="Mike Kasparian, Diaco Soltanpour">
     <title>{% block head-title %} - BOM{% endblock %}</title>
+    {# Apply stored theme before CSS paint to avoid a light flash when dark is preferred. #}
+    <script>
+    (function () {
+      try {
+        var key = "bom-theme";
+        var theme = null;
+        try { theme = localStorage.getItem(key); } catch (e) {}
+        if (theme !== "light" && theme !== "dark") {
+          var match = document.cookie.match(/(?:^|; )bom-theme=([^;]*)/);
+          theme = match ? decodeURIComponent(match[1]) : "light";
+        }
+        if (theme !== "dark") theme = "light";
+        document.documentElement.classList.toggle("dark", theme === "dark");
+        document.documentElement.setAttribute("data-theme", theme);
+      } catch (e) {
+        document.documentElement.classList.remove("dark");
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    })();
+    </script>
     <link href="{% static 'bom/css/material-icons.css' %}" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'bom/css/app.css' %}">
     {% block head %}{% endblock head %}

@@ -468,7 +468,89 @@
     bind: bindPriceInputs,
   };
 
+  var THEME_KEY = "bom-theme";
+
+  function readStoredTheme() {
+    var theme = null;
+    try {
+      theme = localStorage.getItem(THEME_KEY);
+    } catch (e) {}
+    if (theme === "light" || theme === "dark") {
+      return theme;
+    }
+    var match = document.cookie.match(/(?:^|; )bom-theme=([^;]*)/);
+    if (match) {
+      theme = decodeURIComponent(match[1]);
+      if (theme === "light" || theme === "dark") {
+        return theme;
+      }
+    }
+    return "light";
+  }
+
+  function persistTheme(theme) {
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch (e) {}
+    var maxAge = 60 * 60 * 24 * 365;
+    document.cookie =
+      "bom-theme=" +
+      encodeURIComponent(theme) +
+      ";path=/;max-age=" +
+      maxAge +
+      ";SameSite=Lax";
+  }
+
+  function syncThemeToggles(theme) {
+    var nextLabelAttr = theme === "dark" ? "data-label-light" : "data-label-dark";
+    var toggles = document.querySelectorAll("[data-bom-theme-toggle]");
+    Array.prototype.forEach.call(toggles, function (btn) {
+      var label = btn.getAttribute(nextLabelAttr) || "";
+      if (label) {
+        btn.setAttribute("aria-label", label);
+        btn.setAttribute("title", label);
+      }
+    });
+  }
+
+  function applyTheme(theme) {
+    if (theme !== "dark") {
+      theme = "light";
+    }
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+    persistTheme(theme);
+    syncThemeToggles(theme);
+    return theme;
+  }
+
+  function bindThemeToggles(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    var toggles = scope.querySelectorAll("[data-bom-theme-toggle]");
+    Array.prototype.forEach.call(toggles, function (btn) {
+      if (btn.getAttribute("data-bom-theme-bound") === "1") {
+        return;
+      }
+      btn.setAttribute("data-bom-theme-bound", "1");
+      btn.addEventListener("click", function () {
+        var next = readStoredTheme() === "dark" ? "light" : "dark";
+        applyTheme(next);
+      });
+    });
+  }
+
+  window.bomTheme = {
+    get: readStoredTheme,
+    set: applyTheme,
+    bind: bindThemeToggles,
+  };
+
+  // Keep toggles in sync if the early <head> script already applied a theme.
+  syncThemeToggles(readStoredTheme());
+  bindThemeToggles(document);
+
   $(document).ready(function () {
+    bindThemeToggles(document);
     bindPriceInputs(document);
     $(".dropdown-trigger").dropdown();
     $(".modal").modal();

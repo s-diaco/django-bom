@@ -499,19 +499,31 @@ msgstr ""
 "در صورت محصول بودن \"%(organization)s\" را به عنوان تأمین کننده انتخاب"
 "کنید."
 
-#: bom/templates/bom/base-menu.html:2
+#: bom/templates/bom/base-menu.html:4
+msgid "Switch to dark theme"
+msgstr "تغییر به تم تیره"
+
+#: bom/templates/bom/base-menu.html:5
+msgid "Switch to light theme"
+msgstr "تغییر به تم روشن"
+
+#: bom/templates/bom/base-menu.html:10
+msgid "Theme"
+msgstr "تم"
+
+#: bom/templates/bom/base-menu.html:21
 msgid "Admin"
 msgstr "مدیر"
 
-#: bom/templates/bom/base-menu.html:7
+#: bom/templates/bom/base-menu.html:26
 msgid "logout"
 msgstr "خروج از حساب"
 
-#: bom/templates/bom/base-menu.html:14
+#: bom/templates/bom/base-menu.html:33
 msgid "Log in"
 msgstr "ورود"
 
-#: bom/templates/bom/base-menu.html:15 bom/templates/registration/login.html:52
+#: bom/templates/bom/base-menu.html:34 bom/templates/registration/login.html:52
 msgid "Register"
 msgstr "ایجاد حساب"
 

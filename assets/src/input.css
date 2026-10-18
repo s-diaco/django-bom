@@ -87,6 +87,71 @@
   --shadow-overlay: 0 12px 20px -4px rgb(19 26 22 / 0.12), 0 4px 8px -4px rgb(19 26 22 / 0.06);
 }
 
+/* Light is the default (tokens above). Dark remaps surfaces only — same Lithium green brand. */
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+
+  --color-primary-50: #143528;
+  --color-primary-100: #1a4030;
+  --color-primary-light: #143528;
+  --color-primary: var(--color-primary-400);
+  --color-primary-hover: var(--color-primary-300);
+  --color-accent: var(--color-primary-400);
+
+  --color-canvas: #101412;
+  --color-surface: #1a211c;
+  --color-surface-muted: #222a25;
+  --color-surface-sunken: #161c18;
+  --color-row-stripe: #161c18;
+  --color-border-subtle: #243029;
+  --color-border: #2e3832;
+  --color-border-strong: #3d4a42;
+  --color-ink: #e8eee9;
+  --color-ink-muted: #a3b0a8;
+  --color-ink-subtle: #7a8780;
+
+  --color-danger: #f97066;
+  --color-danger-fill: #f04438;
+  --color-danger-light: #3b1511;
+  --color-danger-border: #7a2e28;
+  --color-warning: #fdb022;
+  --color-warning-fill: #f79009;
+  --color-warning-light: #3b2a10;
+  --color-warning-border: #854a0e;
+  --color-success: #47cd89;
+  --color-success-fill: #17b26a;
+  --color-success-light: #0f2e1f;
+  --color-success-border: #085d3a;
+  --color-info: #53b1fd;
+  --color-info-fill: #2e90fa;
+  --color-info-light: #12263d;
+  --color-info-border: #1849a9;
+
+  --color-cat-green: #3f9f76;
+  --color-cat-blue: #53b1fd;
+  --color-cat-violet: #9b8afb;
+  --color-cat-teal: #2dd4bf;
+  --color-cat-amber: #fdb022;
+  --color-cat-rose: #fd6f8e;
+  --color-cat-slate: #98a2b3;
+
+  --shadow-panel: 0 1px 2px rgb(0 0 0 / 0.35), 0 1px 1px rgb(0 0 0 / 0.25);
+  --shadow-raised: 0 4px 8px -2px rgb(0 0 0 / 0.45), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-overlay: 0 12px 20px -4px rgb(0 0 0 / 0.55), 0 4px 8px -4px rgb(0 0 0 / 0.35);
+}
+
+html.dark [data-bom-theme-toggle] [data-icon-when-light] {
+  display: none;
+}
+
+html:not(.dark) [data-bom-theme-toggle] [data-icon-when-dark] {
+  display: none;
+}
+
 [x-cloak] {
   display: none !important;
 }
