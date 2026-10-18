@@ -143,6 +143,38 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn("bg-primary-light", src)
         self.assertNotIn("inset 0 -2px 0", src)
 
+    def test_theme_toggle_defaults_light_and_is_available(self):
+        user, organization = create_user_and_organization()
+        profile = user.bom_profile(organization=organization)
+        profile.role = "A"
+        profile.save()
+        self.client.login(username="kasper", password="ghostpassword")
+
+        home = self.client.get(reverse("bom:home"))
+        self.assertEqual(home.status_code, 200)
+        html = home.content.decode("utf-8")
+        self.assertIn('localStorage.getItem(key)', html)
+        self.assertIn("bom-theme", html)
+        self.assertIn("data-bom-theme-toggle", html)
+        self.assertIn("dark_mode", html)
+        self.assertIn("light_mode", html)
+        self.assertTrue(
+            "Switch to dark theme" in html or "تغییر به تم تیره" in html,
+            "theme toggle label missing",
+        )
+        self.assertNotIn('class="dark"', html)
+        self.assertNotRegex(html, r"<html[^>]*\bdark\b")
+
+        css = open("bom/static/bom/css/app.css").read()
+        self.assertIn("html.dark", css)
+        self.assertIn("--color-canvas:#101412", css.replace(" ", ""))
+        self.assertIn("bom-brand-mark", css)
+        self.assertIn("bom-brand-mark", html)
+        src = open("assets/src/input.css").read()
+        self.assertIn("html.dark", src)
+        self.assertIn("color-scheme: light", src)
+        self.assertIn("html.dark .bom-brand-mark", src)
+
     def test_authenticated_navigation_and_dashboard(self):
         user, organization = create_user_and_organization()
         profile = user.bom_profile(organization=organization)
