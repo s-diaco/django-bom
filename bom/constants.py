@@ -141,10 +141,13 @@ MATERIAL_TYPES = (
 )
 
 # Seeded per organization. New types are rows, not new constants.
+# Codes with_loi / no_loi / no_bom are stable; ink / powder are additional BOM types.
 DEFAULT_PRODUCT_TYPES = (
-    ("with_loi", "With loss (LOI) (Frit)", True, True),
-    ("no_loi", "Without loss (LOI) (compound, ink, …)", True, False),
-    ("no_bom", "Raw materials", False, False),
+    ("with_loi", "Frit", True, True),
+    ("no_loi", "Compound", True, False),
+    ("no_bom", "Raw Material", False, False),
+    ("ink", "Ink", True, False),
+    ("powder", "Powder", True, False),
 )
 
 DISTANCE_UNITS = (
