@@ -135,7 +135,7 @@ class TestUiSmoke(TransactionTestCase):
         report_html = report.content.decode("utf-8")
         self.assertRegex(
             report_html,
-            r'class="bom-nav-link\s+bom-nav-link-active"[^>]*>\s*More',
+            r'class="bom-nav-link\s+bom-nav-link-active"[^>]*>\s*(More|بیشتر)',
             "More should be active on Reports",
         )
 

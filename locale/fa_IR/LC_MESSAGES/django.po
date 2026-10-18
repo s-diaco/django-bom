@@ -589,6 +589,10 @@ msgstr "هزینه سربار ذخیره شد."
 msgid "customers"
 msgstr "مشتریان"
 
+#: bom/templates/bom/bom-base-menu.html:8
+msgid "More"
+msgstr "بیشتر"
+
 #: bom/templates/bom/bom-base-menu.html:9
 msgid "settings"
 msgstr "تنظیمات"
