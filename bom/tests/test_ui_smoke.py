@@ -168,9 +168,12 @@ class TestUiSmoke(TransactionTestCase):
         css = open("bom/static/bom/css/app.css").read()
         self.assertIn("html.dark", css)
         self.assertIn("--color-canvas:#101412", css.replace(" ", ""))
+        self.assertIn("bom-brand-mark", css)
+        self.assertIn("bom-brand-mark", html)
         src = open("assets/src/input.css").read()
         self.assertIn("html.dark", src)
         self.assertIn("color-scheme: light", src)
+        self.assertIn("html.dark .bom-brand-mark", src)
 
     def test_authenticated_navigation_and_dashboard(self):
         user, organization = create_user_and_organization()

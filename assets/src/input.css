@@ -152,6 +152,11 @@ html:not(.dark) [data-bom-theme-toggle] [data-icon-when-dark] {
   display: none;
 }
 
+/* lithium.png is charcoal on transparent — invert for dark surfaces (not print). */
+html.dark .bom-brand-mark {
+  filter: invert(1);
+}
+
 [x-cloak] {
   display: none !important;
 }
