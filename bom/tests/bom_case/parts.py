@@ -147,7 +147,7 @@ class PartsTestsMixin:
         self.assertEqual(response.status_code, 200)
 
         # Make sure only one part shows up
-        response = self.client.get(reverse("bom:home"))
+        response = self.client.get(reverse("bom:materials"))
         self.assertEqual(response.status_code, 200)
         decoded_content = response.content.decode("utf-8")
         main_content = decoded_content[

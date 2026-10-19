@@ -16,12 +16,12 @@ from bom.models import Part, Seller
 
 class HomeTestsMixin:
     def test_home(self):
-        response = self.client.post(reverse("bom:home"))
+        response = self.client.post(reverse("bom:materials"))
         self.assertEqual(response.status_code, 200)
 
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
 
-        response = self.client.post(reverse("bom:home"))
+        response = self.client.post(reverse("bom:materials"))
         self.assertEqual(response.status_code, 200)
 
         # Make sure only one part shows up
@@ -33,30 +33,30 @@ class HomeTestsMixin:
         self.assertEqual(len(occurances), 1)
 
         response = self.client.get(
-            reverse("bom:home"),
+            reverse("bom:materials"),
             {"q": p1.primary_manufacturer_part.manufacturer_part_number},
         )
         self.assertEqual(response.status_code, 200)
 
         # Test search
-        response = self.client.get(reverse("bom:home"), {"q": f'"{p1.full_part_number()}"'})
+        response = self.client.get(reverse("bom:materials"), {"q": f'"{p1.full_part_number()}"'})
         self.assertEqual(len(response.context["part_revs"]), 1)
 
     def test_home_partial_part_search(self):
         (p1, _p2, _p3, _p4) = create_some_fake_parts(organization=self.organization)
 
-        response = self.client.get(reverse("bom:home"), {"q": "333"})
+        response = self.client.get(reverse("bom:materials"), {"q": "333"})
         self.assertEqual(response.status_code, 200)
         part_numbers = [pr.part.full_part_number() for pr in response.context["part_revs"]]
         self.assertIn(p1.full_part_number(), part_numbers)
 
         if self.organization.number_scheme == constants.NUMBER_SCHEME_SEMI_INTELLIGENT:
-            response = self.client.get(reverse("bom:home"), {"q": "200-33"})
+            response = self.client.get(reverse("bom:materials"), {"q": "200-33"})
             self.assertEqual(response.status_code, 200)
             part_numbers = [pr.part.full_part_number() for pr in response.context["part_revs"]]
             self.assertIn(p1.full_part_number(), part_numbers)
 
-        response = self.client.get(reverse("bom:home"), {"q": f'"{p1.full_part_number()}"'})
+        response = self.client.get(reverse("bom:materials"), {"q": f'"{p1.full_part_number()}"'})
         self.assertEqual(len(response.context["part_revs"]), 1)
 
     def test_home_pagination_footer_bar(self):
@@ -74,7 +74,7 @@ class HomeTestsMixin:
         config["admin_dashboard"]["page_size"] = 1
 
         with override_settings(BOM_CONFIG=config):
-            response = self.client.get(reverse("bom:home"), {"page": 2})
+            response = self.client.get(reverse("bom:materials"), {"page": 2})
             self.assertEqual(response.status_code, 200)
             html = response.content.decode("utf-8")
             nav_start = html.find('<nav class="bom-pagination')
@@ -110,13 +110,13 @@ class HomeTestsMixin:
         config["admin_dashboard"]["page_size"] = 25
 
         with override_settings(BOM_CONFIG=config):
-            default = self.client.get(reverse("bom:home"))
+            default = self.client.get(reverse("bom:materials"))
             self.assertEqual(len(default.context["part_revs"]), 25)
 
-            larger = self.client.get(reverse("bom:home"), {"per_page": 50})
+            larger = self.client.get(reverse("bom:materials"), {"per_page": 50})
             self.assertEqual(len(larger.context["part_revs"]), 30)
 
-            invalid = self.client.get(reverse("bom:home"), {"per_page": 999})
+            invalid = self.client.get(reverse("bom:materials"), {"per_page": 999})
             self.assertEqual(len(invalid.context["part_revs"]), 25)
 
     def test_sellers_pagination_rtl_arrows(self):
@@ -163,7 +163,7 @@ class HomeTestsMixin:
         config["admin_dashboard"]["page_size"] = 1
 
         with override_settings(BOM_CONFIG=config):
-            paged = self.client.get(reverse("bom:home"))
+            paged = self.client.get(reverse("bom:materials"))
             self.assertEqual(paged.status_code, 200)
             self.assertEqual(len(paged.context["part_revs"]), 1)
             self.assertTrue(paged.context["part_revs"].has_other_pages())
@@ -176,7 +176,7 @@ class HomeTestsMixin:
             self.assertNotIn("window.print();", paged_html)
             self.assertIn("bom-pagination", paged_html)
 
-            printed = self.client.get(reverse("bom:home"), {"print": "1"})
+            printed = self.client.get(reverse("bom:materials"), {"print": "1"})
             self.assertEqual(printed.status_code, 200)
             self.assertGreater(len(printed.context["part_revs"]), 1)
             self.assertFalse(printed.context["part_revs"].has_other_pages())
@@ -201,7 +201,7 @@ class HomeTestsMixin:
             self.assertNotIn("dropdown-content", printed_html)
 
             config["admin_dashboard"]["print_auto_threshold"] = 2
-            large_print = self.client.get(reverse("bom:home"), {"print": "1"})
+            large_print = self.client.get(reverse("bom:materials"), {"print": "1"})
             self.assertEqual(large_print.status_code, 200)
             self.assertFalse(large_print.context["print_auto"])
             self.assertTrue(large_print.context["print_confirm_only"])
@@ -215,18 +215,18 @@ class HomeTestsMixin:
             self.assertNotIn(p1.full_part_number(), large_html)
             self.assertNotIn("<tbody>", large_html)
 
-            large_go = self.client.get(reverse("bom:home"), {"print": "1", "print_go": "1"})
+            large_go = self.client.get(reverse("bom:materials"), {"print": "1", "print_go": "1"})
             self.assertEqual(large_go.status_code, 200)
             self.assertTrue(large_go.context["print_auto"])
             self.assertIn(p1.full_part_number(), large_go.content.decode("utf-8"))
 
-            raw = self.client.get(reverse("bom:home"), {"print": "1", "print_go": "1", "product": "0"})
+            raw = self.client.get(reverse("bom:materials"), {"print": "1", "print_go": "1", "product": "0"})
             self.assertEqual(raw.status_code, 200)
             raw_numbers = [pr.part.full_part_number() for pr in raw.context["part_revs"]]
             self.assertEqual(raw_numbers, [p1.full_part_number()])
             self.assertEqual(raw.context["print_row_count"], 1)
 
-            products = self.client.get(reverse("bom:home"), {"print": "1", "print_go": "1", "product": "1"})
+            products = self.client.get(reverse("bom:materials"), {"print": "1", "print_go": "1", "product": "1"})
             self.assertEqual(products.status_code, 200)
             product_numbers = [pr.part.full_part_number() for pr in products.context["part_revs"]]
             self.assertIn(p2.full_part_number(), product_numbers)
@@ -234,7 +234,7 @@ class HomeTestsMixin:
             self.assertNotIn(p1.full_part_number(), product_numbers)
 
             search = self.client.get(
-                reverse("bom:home"),
+                reverse("bom:materials"),
                 {"print": "1", "print_go": "1", "q": f'"{p1.full_part_number()}"'},
             )
             self.assertEqual(len(search.context["part_revs"]), 1)

@@ -20,13 +20,13 @@
                 {% blocktrans with count=print_row_count %}This list has {{ count }} items. Browser print may take a while.{% endblocktrans %}
             </p>
             <div class="print-confirm-actions">
-                <a class="bom-btn-primary" href="{% url 'bom:home' %}?print=1&print_go=1{% if querystring_except_page %}&{{ querystring_except_page }}{% endif %}">
+                <a class="bom-btn-primary" href="{% url 'bom:materials' %}?print=1&print_go=1{% if querystring_except_page %}&{{ querystring_except_page }}{% endif %}">
                     {% trans "Print now" %}
                 </a>
-                <a class="bom-btn-secondary" href="{% url 'bom:home' %}?download=1&format=xlsx{% if querystring_except_page %}&{{ querystring_except_page }}{% endif %}">
+                <a class="bom-btn-secondary" href="{% url 'bom:materials' %}?download=1&format=xlsx{% if querystring_except_page %}&{{ querystring_except_page }}{% endif %}">
                     {% trans "Download as XLSX" %}
                 </a>
-                <a class="bom-btn-ghost" href="{% url 'bom:home' %}{% if querystring_except_page %}?{{ querystring_except_page }}{% endif %}">
+                <a class="bom-btn-ghost" href="{% url 'bom:materials' %}{% if querystring_except_page %}?{{ querystring_except_page }}{% endif %}">
                     {% trans "Back to list" %}
                 </a>
             </div>

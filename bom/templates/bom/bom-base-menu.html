@@ -1,7 +1,7 @@
 {% if user.is_authenticated and user.bom_profile.organization %}
     <div class="bom-nav-primary">
-        <a class="bom-nav-link {% if name == 'raw material' %}bom-nav-link-active{% endif %}" title="{% trans "Raw Material" %}" href="{% url 'bom:home' %}?product=0">{% trans "Raw Material" %}</a>
-        <a class="bom-nav-link {% if name == 'products' %}bom-nav-link-active{% endif %}" title="{% trans "Products" %}" href="{% url 'bom:home' %}?product=1">{% trans "Products" %}</a>
+        <a class="bom-nav-link {% if name == 'raw material' %}bom-nav-link-active{% endif %}" title="{% trans "Raw Material" %}" href="{% url 'bom:materials' %}?product=0">{% trans "Raw Material" %}</a>
+        <a class="bom-nav-link {% if name == 'products' %}bom-nav-link-active{% endif %}" title="{% trans "Products" %}" href="{% url 'bom:materials' %}?product=1">{% trans "Products" %}</a>
         <a class="bom-nav-link {% if name == 'customers' %}bom-nav-link-active{% endif %}" title="{% trans "customers" %}" href="{% url 'bom:customers' %}">{% trans "customers" %}</a>
         <div class="relative" x-data="{ open: false }">
             <button type="button" class="bom-nav-link {% if name == 'reports' or name == 'sellers' or name == 'overhead-prices' or name == 'exchange-rates' %}bom-nav-link-active{% endif %}" @click="open = !open" aria-haspopup="true" :aria-expanded="open.toString()">

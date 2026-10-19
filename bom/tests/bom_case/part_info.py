@@ -170,10 +170,10 @@ class PartInfoTestsMixin:
     def test_export_parts(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
 
-        response = self.client.get(reverse("bom:home"), {"download": ""}, follow=True)
+        response = self.client.get(reverse("bom:materials"), {"download": ""}, follow=True)
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get(reverse("bom:home"), {"download": f"{p1.id}"}, follow=True)
+        response = self.client.get(reverse("bom:materials"), {"download": f"{p1.id}"}, follow=True)
         self.assertEqual(response.status_code, 200)
 
     def test_export_part_list(self):

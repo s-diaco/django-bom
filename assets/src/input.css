@@ -842,6 +842,118 @@ ul.errorlist {
   @apply mx-auto w-[95%] max-w-[90rem] py-5;
 }
 
+/* Staff home hub — one composition, brand-first, no card grid. */
+.bom-hub {
+  position: relative;
+  display: flex;
+  min-height: calc(100vh - 8rem);
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 2.5rem 1.25rem 3.5rem;
+}
+
+.bom-hub-atmosphere {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 28%, color-mix(in srgb, var(--color-primary) 14%, transparent), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 90%, color-mix(in srgb, var(--color-primary-200) 35%, transparent), transparent 65%),
+    linear-gradient(180deg, var(--color-surface-muted) 0%, var(--color-canvas) 55%, var(--color-canvas) 100%);
+}
+
+html.dark .bom-hub-atmosphere {
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 28%, color-mix(in srgb, var(--color-primary) 18%, transparent), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 20% 85%, color-mix(in srgb, var(--color-primary-800) 50%, transparent), transparent 65%),
+    linear-gradient(180deg, var(--color-surface-sunken) 0%, var(--color-canvas) 60%, var(--color-canvas) 100%);
+}
+
+.bom-hub-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: min(40rem, 100%);
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.25rem;
+  animation: bom-hub-enter 0.55s ease-out both;
+}
+
+.bom-hub-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bom-hub-mark {
+  width: 4.5rem;
+  height: 4.5rem;
+  animation: bom-hub-mark-in 0.7s ease-out both;
+}
+
+.bom-hub-title {
+  margin: 0;
+  font-family: var(--font-display, var(--font-sans));
+  font-size: clamp(2.5rem, 6vw, 3.75rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--color-ink);
+}
+
+.bom-hub-lede {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: var(--color-ink-muted);
+  animation: bom-hub-enter 0.55s ease-out 0.08s both;
+}
+
+.bom-hub-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  animation: bom-hub-enter 0.55s ease-out 0.16s both;
+}
+
+@keyframes bom-hub-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bom-hub-mark-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bom-hub-inner,
+  .bom-hub-mark,
+  .bom-hub-lede,
+  .bom-hub-actions {
+    animation: none;
+  }
+}
+
 /* When paired with .bom-table-wrap, overflow comes from that rule (needed for sticky thead) */
 .responsive-table-wrapper:not(.bom-table-wrap) {
   overflow-x: auto;
