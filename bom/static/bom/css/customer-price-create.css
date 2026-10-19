@@ -83,12 +83,6 @@
         font-size: 7.5pt;
     }
 
-    /* Body/footer rows match sample overview PDF (~9pt); headers stay smaller. */
-    body.printing-price-review #price-review-bom #indented-bom-overview tbody td,
-    body.printing-price-review #price-review-bom #indented-bom-overview tfoot td {
-        font-size: 9pt;
-    }
-
     /* Keep part codes (e.g. 980-00) on one line in the Code column. */
     body.printing-price-review #price-review-bom #indented-bom-overview th:first-child,
     body.printing-price-review #price-review-bom #indented-bom-overview td:first-child {
