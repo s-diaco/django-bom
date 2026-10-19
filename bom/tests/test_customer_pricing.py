@@ -313,7 +313,7 @@ class TestCustomerPricing(TransactionTestCase):
         body = response.content.decode("utf-8")
         self.assertIn("کد متریال", body)
         self.assertIn("قیمت", body)
-        self.assertNotIn("تعداد", body)
+        self.assertNotIn("مقدار", body)
         self.assertIn(self.part.full_part_number(), body)
 
     def test_part_info_customers_tab_context(self):
