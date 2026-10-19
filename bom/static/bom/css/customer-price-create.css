@@ -63,9 +63,24 @@
     }
 
     body.printing-price-review table.part-list,
-    body.printing-price-review .bom-table,
-    body.printing-price-review #indented-bom-overview {
+    body.printing-price-review .bom-table {
         font-size: 8.5pt;
+    }
+
+    /* Match part overview print sizing for the BoM Overview page. */
+    body.printing-price-review #price-review-bom {
+        font-size: 8pt;
+        line-height: 1.25;
+    }
+
+    body.printing-price-review #price-review-bom h5.printer-show {
+        font-size: 9pt;
+    }
+
+    body.printing-price-review #price-review-bom table.part-list,
+    body.printing-price-review #price-review-bom .bom-table,
+    body.printing-price-review #price-review-bom #indented-bom-overview {
+        font-size: 7.5pt;
     }
 
     body.printing-price-review .price-review-panel {

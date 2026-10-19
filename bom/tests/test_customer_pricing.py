@@ -657,6 +657,11 @@ class TestCustomerPricing(TransactionTestCase):
             r"(?:body\.printing-price-review\s+)?#price-review-bom\s*\{[^}]*"
             r"page-break-before:\s*always",
         )
+        # BoM Overview print uses the same smaller type as part overview print.
+        self.assertRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s*\{[^}]*font-size:\s*7\.5pt",
+        )
     def test_get_with_part_id_shows_preview(self):
         response = self.client.get(
             reverse(
