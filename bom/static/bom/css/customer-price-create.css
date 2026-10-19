@@ -38,6 +38,7 @@
         max-width: none;
     }
 
+    body.printing-price-review #price-review-rest,
     body.printing-price-review #price-review-bom {
         break-before: page;
         page-break-before: always;

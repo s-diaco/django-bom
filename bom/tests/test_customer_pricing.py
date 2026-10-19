@@ -630,11 +630,32 @@ class TestCustomerPricing(TransactionTestCase):
             summary_idx = html.find("خلاصه قیمت")
         self.assertLess(
             summary_idx,
+            html.find('id="price-review-rest"'),
+        )
+        self.assertLess(
+            html.find('id="price-review-rest"'),
             html.find('id="price-review-bom"'),
         )
         self.assertLess(
             html.find('id="price-selection-panel"'),
             html.find('id="bom-indented"'),
+        )
+        # Print CSS: page break before peer prices (and BoM), matching #price-review-bom.
+        from pathlib import Path
+
+        css = (
+            Path(settings.BASE_DIR)
+            / "bom"
+            / "static"
+            / "bom"
+            / "css"
+            / "customer-price-create.css"
+        ).read_text()
+        self.assertRegex(
+            css,
+            r"#price-review-rest,\s*"
+            r"(?:body\.printing-price-review\s+)?#price-review-bom\s*\{[^}]*"
+            r"page-break-before:\s*always",
         )
     def test_get_with_part_id_shows_preview(self):
         response = self.client.get(
