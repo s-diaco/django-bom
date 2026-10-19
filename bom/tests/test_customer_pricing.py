@@ -625,6 +625,13 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertContains(response, "indented-bom-overview")
         self.assertNotContains(response, 'id="overview-print-button"')
         self.assertContains(response, 'id="price-review-print-button"')
+        # Currency once in cost column headers; row JS formats amount only.
+        from bom.utils import currency_label
+
+        curr = currency_label(self.organization.currency)
+        self.assertIn(f"({curr})", html)
+        self.assertNotIn("style: 'currency'", html)
+        self.assertNotIn('style: "currency"', html)
         summary_idx = html.find("Pricing summary")
         if summary_idx < 0:
             summary_idx = html.find("خلاصه قیمت")
