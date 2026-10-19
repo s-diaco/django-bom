@@ -666,10 +666,15 @@ class TestCustomerPricing(TransactionTestCase):
             r"(?:body\.printing-price-review\s+)?#price-review-bom\s*\{[^}]*"
             r"page-break-before:\s*always",
         )
-        # BoM Overview print uses the same smaller type as part overview print.
+        # BoM Overview print: 8pt cells, 6pt Description (column 3).
         self.assertRegex(
             css,
-            r"#price-review-bom\s+#indented-bom-overview\s*\{[^}]*font-size:\s*7\.5pt",
+            r"#price-review-bom\s+#indented-bom-overview\s*\{[^}]*font-size:\s*8pt",
+        )
+        self.assertRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s+td:nth-child\(3\)\s*\{[^}]*"
+            r"font-size:\s*6pt",
         )
         self.assertRegex(
             css,

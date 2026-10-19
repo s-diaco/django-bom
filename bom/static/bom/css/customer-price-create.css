@@ -80,7 +80,13 @@
     body.printing-price-review #price-review-bom table.part-list,
     body.printing-price-review #price-review-bom .bom-table,
     body.printing-price-review #price-review-bom #indented-bom-overview {
-        font-size: 7.5pt;
+        font-size: 8pt;
+    }
+
+    /* Description is column 3 (Revision is printer-hide but still counts). */
+    body.printing-price-review #price-review-bom #indented-bom-overview th:nth-child(3),
+    body.printing-price-review #price-review-bom #indented-bom-overview td:nth-child(3) {
+        font-size: 6pt;
     }
 
     /* Keep part codes (e.g. 980-00) on one line in the Code column. */
