@@ -1,3 +1,4 @@
+import re
 from decimal import Decimal
 
 from django.conf import settings
@@ -542,6 +543,22 @@ class TestCustomerPricing(TransactionTestCase):
         field_idx = html.find("price-summary-list__row--field")
         self.assertGreater(summary_idx, -1)
         self.assertGreater(field_idx, summary_idx)
+        # Print header: one Customer Price Review, no logo, no redundant Price Review h4.
+        self.assertTrue(
+            "Customer Price Review" in html or "بازبینی قیمت مشتری" in html,
+            "print header title missing",
+        )
+        # Match class token printer-doc only (not printer-doc-title / -meta / -text).
+        self.assertEqual(
+            len(re.findall(r'class="[^"]*(?<![\w-])printer-doc(?![\w-])[^"]*"', html)),
+            1,
+        )
+        self.assertNotIn("printer-logo", html)
+        self.assertNotRegex(
+            html,
+            r'<h4[^>]*class="[^"]*printer-show[^"]*"[^>]*>\s*(Price Review|بازبینی قیمت)\s*</h4>',
+        )
+        self.assertIsNotNone(response.context["print_generated_at"])
         self.assertFalse(CustomerPrice.objects.filter(customer=self.customer).exists())
 
     def test_customer_price_create_confirm_from_peer_price(self):

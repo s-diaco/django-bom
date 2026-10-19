@@ -63,6 +63,7 @@
     </div>
 </header>
 {% endblock %}
+{% block printer-doc %}
 <div class="printer-show printer-doc">
     <img class="printer-logo" width="56" height="56" alt="Lithium" src="{% static 'bom/img/lithium.png' %}">
     <div class="printer-doc-text">
@@ -72,6 +73,7 @@
         </p>
     </div>
 </div>
+{% endblock %}
 
 <main class="flex-1">
     {% block main %}{% endblock main %}

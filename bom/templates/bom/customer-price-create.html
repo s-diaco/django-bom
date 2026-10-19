@@ -11,6 +11,9 @@
     <link rel="stylesheet" type="text/css" href="{% static 'bom/css/customer-price-create.css' %}"/>
 {% endblock %}
 
+{# Suppress global base.html printer-doc so preview print has a single header. #}
+{% block printer-doc %}{% endblock %}
+
 {% block bom-menu %}
     {% if part_locked and part_info_url %}
         <a class="bom-nav-link" href="{{ part_info_url }}#customers">{% trans "Cancel" %}</a>
@@ -34,13 +37,11 @@
 
         {% if show_preview and preview %}
             <div class="printer-show printer-doc mb-4">
-                <img class="printer-logo" width="56" height="56" alt="Lithium" src="{% static 'bom/img/lithium.png' %}">
                 <div class="printer-doc-text">
                     <p class="printer-doc-title">{% trans "Customer Price Review" %}</p>
-                    <p class="printer-doc-meta">{{ preview.customer.name }} · {{ preview.part.full_part_number }}</p>
+                    <p class="printer-doc-meta">{{ preview.customer.name }} · {{ preview.part.full_part_number }} · {% user_datetime print_generated_at %}</p>
                 </div>
             </div>
-            <h4 class="printer-show">{% trans "Price Review" %}</h4>
         {% endif %}
 
         <div class="row mb-4 price-pair-row" id="price-summary-and-tiers">
