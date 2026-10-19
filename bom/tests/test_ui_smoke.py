@@ -97,6 +97,10 @@ class TestUiSmoke(TransactionTestCase):
             part_info_css,
             r"body\.printing-overview\s+\.printer-logo\s*\{[^}]*display:\s*none",
         )
+        self.assertRegex(
+            part_info_css,
+            r"#indented-bom-overview\s+td:first-child\s*\{[^}]*white-space:\s*nowrap",
+        )
 
     def test_login_form_error_display(self):
         response = self.client.post(reverse("login"), {"username": "x", "password": "bad"})

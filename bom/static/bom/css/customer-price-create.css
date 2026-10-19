@@ -83,6 +83,14 @@
         font-size: 7.5pt;
     }
 
+    /* Keep part codes (e.g. 980-00) on one line in the Code column. */
+    body.printing-price-review #price-review-bom #indented-bom-overview th:first-child,
+    body.printing-price-review #price-review-bom #indented-bom-overview td:first-child {
+        white-space: nowrap;
+        min-width: 5.5em;
+        width: 18%;
+    }
+
     body.printing-price-review .price-review-panel {
         display: block !important;
         overflow: visible !important;
