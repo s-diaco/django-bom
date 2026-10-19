@@ -124,7 +124,7 @@ class ListPagePerformanceTest(TestCase):
 
     def test_list_pages_query_budget(self):
         pages = {
-            "home": self._measure_page(reverse("bom:home")),
+            "home": self._measure_page(reverse("bom:materials")),
             "report": self._measure_page(reverse("bom:report")),
             "part_info": self._measure_page(
                 reverse("bom:part-info", kwargs={"part_id": self.assembly_part.id})

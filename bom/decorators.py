@@ -8,7 +8,7 @@ def organization_admin(function):
         if request.user.bom_profile().role != "A":
             messages.error(request, "You don't have permission to perform this action.")
             return HttpResponseRedirect(
-                request.META.get("HTTP_REFERER"), reverse("bom:home")
+                request.META.get("HTTP_REFERER"), reverse("bom:materials")
             )
         return function(request, *args, **kwargs)
 

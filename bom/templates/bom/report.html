@@ -55,7 +55,7 @@
                 </div>
             </div>
         </form>
-        <form id="actionForm" name="action-form" action="{% url 'bom:home' %}" method="post" enctype="multipart/form-data">
+        <form id="actionForm" name="action-form" action="{% url 'bom:report' %}" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="bom-action-bar actions-row">
                 <div class="flex flex-wrap items-center gap-2">
@@ -71,7 +71,7 @@
                         <a class="bom-btn-secondary action-checkbox-show" href="#" onclick="enableActionCheckboxColumn()"><i class="material-icons text-base">settings</i>{% trans "Manage" %}</a>
                     {% endif %}
                 </div>
-                <a class="bom-btn-icon" title="{% trans "Download results as CSV." %}" href="{% url 'bom:home' %}?download=1"><i class="material-icons">file_download</i></a>
+                <a class="bom-btn-icon" title="{% trans "Download results as CSV." %}" href="{% url 'bom:report' %}?download=1"><i class="material-icons">file_download</i></a>
             </div>
 
             <div class="part-list push-footer">

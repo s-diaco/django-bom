@@ -15,7 +15,7 @@
 
 {% block content %}
     <div class="container-app">
-        <form id="searchForm" name="search-form" action="{% url 'bom:home' %}" method="get" class="bom-panel-pad mb-4">
+        <form id="searchForm" name="search-form" action="{% url 'bom:materials' %}" method="get" class="bom-panel-pad mb-4">
             <div class="row items-end">
                 {% if organization.number_scheme == 'S' %}
                     <div class="col s12 m4">
@@ -40,7 +40,7 @@
                 </div>
             </div>
         </form>
-        <form id="actionForm" name="action-form" action="{% url 'bom:home' %}" method="post" enctype="multipart/form-data">
+        <form id="actionForm" name="action-form" action="{% url 'bom:materials' %}" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="bom-action-bar actions-row">
                 <div class="flex flex-wrap items-center gap-2">
@@ -59,7 +59,7 @@
                     {% endif %}
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
-                    <a class="bom-btn-secondary" href="{% url 'bom:home' %}?print=1{% if querystring_except_page %}&{{ querystring_except_page }}{% endif %}" title="{% trans "Print" %}">
+                    <a class="bom-btn-secondary" href="{% url 'bom:materials' %}?print=1{% if querystring_except_page %}&{{ querystring_except_page }}{% endif %}" title="{% trans "Print" %}">
                         <i class="material-icons text-base">print</i>{% trans "Print" %}
                     </a>
                     <div class="relative" x-data="{ open: false }">
@@ -67,8 +67,8 @@
                             <i class="material-icons text-base">file_download</i>{% trans "Download" %}
                         </button>
                         <div x-show="open" x-cloak @click.outside="open = false" class="bom-dropdown">
-                            <a href="{% url 'bom:home' %}?download=1&format=xlsx{% if querystring_except_page %}&{{ querystring_except_page }}{% endif %}">{% trans "Download as XLSX" %}</a>
-                            <a href="{% url 'bom:home' %}?download=1&format=csv{% if querystring_except_page %}&{{ querystring_except_page }}{% endif %}">{% trans "Download as CSV" %}</a>
+                            <a href="{% url 'bom:materials' %}?download=1&format=xlsx{% if querystring_except_page %}&{{ querystring_except_page }}{% endif %}">{% trans "Download as XLSX" %}</a>
+                            <a href="{% url 'bom:materials' %}?download=1&format=csv{% if querystring_except_page %}&{{ querystring_except_page }}{% endif %}">{% trans "Download as CSV" %}</a>
                         </div>
                     </div>
                 </div>

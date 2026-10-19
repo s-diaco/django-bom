@@ -146,6 +146,20 @@ def form_error_messages(form_errors) -> [str]:
 
 @login_required(login_url=BOM_LOGIN_URL)
 def home(request):
+    """Staff home hub — post-login landing and logo target."""
+    profile = request.user.bom_profile()
+    organization = profile.organization
+    if not organization:
+        return HttpResponseRedirect(reverse("bom:organization-create"))
+
+    name = "home"
+    title = ""
+    return TemplateResponse(request, "bom/home.html", locals())
+
+
+@login_required(login_url=BOM_LOGIN_URL)
+def materials(request):
+    """Materials list (raw materials / products) — primary work surface."""
     profile = request.user.bom_profile()
     organization = profile.organization
     if not organization:
@@ -1159,7 +1173,7 @@ def manufacturer_info(request, manufacturer_id):
 
     if manufacturer.organization != organization:
         messages.error(request, "Can't access a manufacturer that is not yours!")
-        return HttpResponseRedirect(reverse("bom:home"))
+        return HttpResponseRedirect(reverse("bom:materials"))
 
     manufacturer_parts = ManufacturerPart.objects.filter(
         manufacturer=manufacturer
@@ -1327,7 +1341,7 @@ def seller_info(request, seller_id):
 
     if seller.organization != organization:
         messages.error(request, "Can't access a seller that is not yours!")
-        return HttpResponseRedirect(reverse("bom:home"))
+        return HttpResponseRedirect(reverse("bom:materials"))
 
     seller_parts = SellerPart.objects.filter(seller=seller).order_by(
         "manufacturer_part__part__number_class",
@@ -1669,7 +1683,7 @@ def part_customer_price_create(request, part_id):
 
     if part.organization != organization:
         messages.error(request, _("Can't access a part that is not yours!"))
-        return HttpResponseRedirect(reverse("bom:home"))
+        return HttpResponseRedirect(reverse("bom:materials"))
 
     action = reverse(
         "bom:part-customer-price-create", kwargs={"part_id": part_id}
@@ -1925,7 +1939,7 @@ def part_info(request, part_id, part_revision_id=None):
 
     if part.organization != organization:
         messages.error(request, "Can't access a part that is not yours!")
-        return HttpResponseRedirect(reverse("bom:home"))
+        return HttpResponseRedirect(reverse("bom:materials"))
 
     qty = get_session_part_quantity(request, part_id, default=1000)
     part_info_form = PartInfoForm(initial={"quantity": qty})
@@ -2272,7 +2286,9 @@ def upload_parts(request):
             )
         return TemplateResponse(request, "bom/upload-parts.html", locals())
 
-    return HttpResponseRedirect(request.META.get("HTTP_REFERER", reverse("bom:home")))
+    return HttpResponseRedirect(
+        request.META.get("HTTP_REFERER", reverse("bom:materials"))
+    )
 
 
 @login_required(login_url=BOM_LOGIN_URL)
@@ -2610,7 +2626,7 @@ def part_delete(request, part_id):
     except ValidationError as e:
         # Handle the ValidationError and display the error message
         messages.error(request, f"Cannot delete part: {e.message}")
-    return HttpResponseRedirect(reverse("bom:home"))
+    return HttpResponseRedirect(reverse("bom:materials"))
 
 
 @login_required(login_url=BOM_LOGIN_URL)
@@ -3290,7 +3306,7 @@ def part_revision_delete(request, part_id, part_revision_id):
         try:
             part.delete()
             messages.info(request, "Deleted {}.".format(part.full_part_number()))
-            return HttpResponseRedirect(reverse("bom:home"))
+            return HttpResponseRedirect(reverse("bom:materials"))
         except ValidationError as e:
             # Undo the deletion of the part revision if part deletion fails
             part_revision.save()

@@ -107,7 +107,7 @@ class TestUiSmoke(TransactionTestCase):
         profile.save()
         self.client.login(username="kasper", password="ghostpassword")
 
-        raw = self.client.get(reverse("bom:home"), {"product": "0"})
+        raw = self.client.get(reverse("bom:materials"), {"product": "0"})
         self.assertEqual(raw.status_code, 200)
         raw_html = raw.content.decode("utf-8")
         self.assertRegex(
@@ -121,7 +121,7 @@ class TestUiSmoke(TransactionTestCase):
             "Products should not be active when product=0",
         )
 
-        products = self.client.get(reverse("bom:home"), {"product": "1"})
+        products = self.client.get(reverse("bom:materials"), {"product": "1"})
         self.assertEqual(products.status_code, 200)
         products_html = products.content.decode("utf-8")
         self.assertRegex(
@@ -175,6 +175,51 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn("color-scheme: light", src)
         self.assertIn("html.dark .bom-brand-mark", src)
 
+    def test_staff_home_hub_and_materials_urls(self):
+        user, organization = create_user_and_organization()
+        profile = user.bom_profile(organization=organization)
+        profile.role = "A"
+        profile.save()
+        self.client.login(username="kasper", password="ghostpassword")
+
+        self.assertEqual(reverse("bom:home"), "/")
+        self.assertEqual(reverse("bom:materials"), "/materials/")
+        self.assertEqual(settings.LOGIN_REDIRECT_URL, "/")
+
+        hub = self.client.get(reverse("bom:home"))
+        self.assertEqual(hub.status_code, 200)
+        hub_html = hub.content.decode("utf-8")
+        self.assertIn("bom-hub", hub_html)
+        self.assertIn("bom-hub-title", hub_html)
+        self.assertTrue(
+            "Lithium" in hub_html or "لیتیوم" in hub_html,
+            "hub brand missing",
+        )
+        self.assertTrue(
+            "Your workspace for materials" in hub_html
+            or "فضای کاری شما برای مواد" in hub_html,
+            "hub supporting line missing",
+        )
+        self.assertIn(reverse("bom:materials") + "?product=0", hub_html)
+        self.assertIn(reverse("bom:materials") + "?product=1", hub_html)
+        self.assertIn(reverse("bom:customers"), hub_html)
+        self.assertIn(reverse("bom:create-part"), hub_html)
+        self.assertIn(reverse("bom:report"), hub_html)
+        self.assertIn(reverse("bom:settings", kwargs={"tab_anchor": "user"}), hub_html)
+        self.assertNotIn("bom-action-bar", hub_html)
+        self.assertIn('href="/"', hub_html)
+        self.assertTrue(
+            'title="Lithium | Home"' in hub_html
+            or 'title="لیتیوم | خانه"' in hub_html,
+            "logo home title missing",
+        )
+
+        materials = self.client.get(reverse("bom:materials"))
+        self.assertEqual(materials.status_code, 200)
+        materials_html = materials.content.decode("utf-8")
+        self.assertIn("bom-action-bar", materials_html)
+        self.assertIn('action="/materials/"', materials_html)
+
     def test_authenticated_navigation_and_dashboard(self):
         user, organization = create_user_and_organization()
         profile = user.bom_profile(organization=organization)
@@ -183,9 +228,9 @@ class TestUiSmoke(TransactionTestCase):
         self.client.login(username="kasper", password="ghostpassword")
         _p1, _p2, assembly_part, _p4 = create_some_fake_parts(organization=organization)
 
-        home = self.client.get(reverse("bom:home"))
-        self.assertEqual(home.status_code, 200)
-        html = home.content.decode("utf-8")
+        materials = self.client.get(reverse("bom:materials"))
+        self.assertEqual(materials.status_code, 200)
+        html = materials.content.decode("utf-8")
         self.assertIn("bom/css/app.css", html)
         self.assertNotIn("materialize.min.css", html)
         self.assertIn("bom-action-bar", html)
@@ -208,6 +253,8 @@ class TestUiSmoke(TransactionTestCase):
             "overhead prices nav link missing",
         )
         self.assertIn('id="bom-nav-toggle"', html)
+        self.assertIn("/materials/?product=0", html)
+        self.assertIn("/materials/?product=1", html)
 
         css = open("bom/static/bom/css/app.css").read()
         src = open("assets/src/input.css").read()

@@ -533,8 +533,13 @@ msgid "Lithium"
 msgstr "لیتیوم"
 
 #: bom/templates/bom/base.html:25 bom/templates/bom/ui/navbar.html:4
+#: bom/templates/bom/home.html:5 bom/templates/bom/home.html:8
 msgid "Home"
 msgstr "خانه"
+
+#: bom/templates/bom/home.html:15
+msgid "Your workspace for materials, products, and customers."
+msgstr "فضای کاری شما برای مواد، محصولات و مشتریان."
 
 #: bom/templates/bom/base.html:35 bom/templates/bom/ui/navbar.html:14
 msgid "Menu"
