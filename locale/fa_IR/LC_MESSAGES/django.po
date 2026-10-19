@@ -644,7 +644,7 @@ msgstr "پرت"
 #: bom/templates/bom/components/bom-indented-overview.html:44
 #: bom/templates/bom/components/bom-indented.html:24
 msgid "Quantity"
-msgstr "تعداد"
+msgstr "مقدار"
 
 #: bom/templates/bom/components/bom-indented-overview.html:45
 #: bom/templates/bom/dashboard-print.html:18
