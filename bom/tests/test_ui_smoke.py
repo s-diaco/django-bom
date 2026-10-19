@@ -95,6 +95,10 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn("font-size: 7.5pt", part_info_css)
         self.assertRegex(
             part_info_css,
+            r"#indented-bom-overview\s+tbody\s+td[^}]*font-size:\s*9pt",
+        )
+        self.assertRegex(
+            part_info_css,
             r"body\.printing-overview\s+\.printer-logo\s*\{[^}]*display:\s*none",
         )
         self.assertRegex(
