@@ -538,8 +538,8 @@ msgid "Home"
 msgstr "خانه"
 
 #: bom/templates/bom/home.html:15
-msgid "Your workspace for materials, products, and customers."
-msgstr "فضای کاری شما برای مواد، محصولات و مشتریان."
+msgid "Your workspace for materials, products, and BoM Price calculations."
+msgstr "فضای کاری شما برای مواد، محصولات و محاسبات قیمت BoM."
 
 #: bom/templates/bom/base.html:35 bom/templates/bom/ui/navbar.html:14
 msgid "Menu"

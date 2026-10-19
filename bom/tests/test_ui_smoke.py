@@ -196,8 +196,8 @@ class TestUiSmoke(TransactionTestCase):
             "hub brand missing",
         )
         self.assertTrue(
-            "Your workspace for materials" in hub_html
-            or "فضای کاری شما برای مواد" in hub_html,
+            "BoM Price calculations" in hub_html
+            or "محاسبات قیمت BoM" in hub_html,
             "hub supporting line missing",
         )
         self.assertIn(reverse("bom:materials") + "?product=0", hub_html)
