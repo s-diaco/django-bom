@@ -27,7 +27,7 @@ Live product screenshots were not taken in this environment (no seeded productio
 
 ## Print surfaces
 
-- Global `@media print` in `style.css` (navbar/footer hide, part-list borders, IRNazanin)
+- Global `@media print` in `style.css` (navbar/footer hide, part-list borders, Parastoo)
 - `dashboard.css` hides search, actions, FAB
 - `part-info.css` part-detail print rules
 

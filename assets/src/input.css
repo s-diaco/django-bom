@@ -14,17 +14,27 @@
 }
 
 @font-face {
-  font-family: "IRNazanin";
-  src: url("../font/IRNazanin.ttf") format("truetype");
-  /* Cover bold/semibold print weights so matching does not fall back to Vazirmatn. */
-  font-weight: 100 900;
+  font-family: "Parastoo";
+  src: url("../font/Parastoo.woff2") format("woff2"),
+       url("../font/Parastoo.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Parastoo";
+  src: url("../font/Parastoo-Bold.woff2") format("woff2"),
+       url("../font/Parastoo-Bold.ttf") format("truetype");
+  /* Include 600 so font-semibold / table headers use Bold, not Vazirmatn. */
+  font-weight: 600 700;
   font-style: normal;
   font-display: swap;
 }
 
 @theme {
   --font-sans: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
-  --font-print: "IRNazanin", "Vazirmatn", serif;
+  --font-print: "Parastoo", "Vazirmatn", serif;
 
   /* Brand ramp, anchored on Lithium green at step 600 */
   --color-primary-50: #ecf7f1;
@@ -1077,7 +1087,7 @@ html.dark .bom-hub-atmosphere {
     line-height: 1.35;
   }
 
-  /* Keep IRNazanin on printed content even when components set font-semibold/bold. */
+  /* Keep Parastoo on printed content even when components set font-semibold/bold. */
   body,
   .printer-doc,
   table.part-list,

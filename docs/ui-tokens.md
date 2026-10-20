@@ -7,7 +7,7 @@ Dense operations UI. Lithium green is an action/status color, not page chrome.
 | Token | Family | Use |
 |-------|--------|-----|
 | `--font-sans` | **Vazirmatn** (self-hosted variable) | UI, Persian + Latin |
-| `--font-print` | **IRNazanin** | Print only |
+| `--font-print` | **Parastoo** (Regular + Bold), Vazirmatn fallback | Print only |
 
 Roboto is not used for the new UI.
 
@@ -94,4 +94,4 @@ Never encode status by hue alone — pair with a label or icon for print and col
 
 ## Print
 
-IRNazanin body, hide chrome, bordered tables, A5 page size (existing product behavior).
+Parastoo body, hide chrome, bordered tables, A5 page size (existing product behavior).

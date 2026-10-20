@@ -197,13 +197,17 @@ class TestUiSmoke(TransactionTestCase):
         css_compact = css.replace(" ", "")
         self.assertIn("color-scheme:light!important", css_compact)
         self.assertIn("--color-ink:#131a16", css_compact)
-        # IRNazanin must cover bold weights so print does not fall back to Vazirmatn.
+        # Parastoo is the print face (Regular + Bold covering semibold).
+        self.assertIn('--font-print: "Parastoo"', src)
         self.assertRegex(
             src,
-            r'@font-face\s*\{[^}]*font-family:\s*"IRNazanin"[^}]*font-weight:\s*100\s+900',
+            r'@font-face\s*\{[^}]*font-family:\s*"Parastoo"[^}]*'
+            r'Parastoo-Bold\.woff2[^}]*font-weight:\s*600\s+700',
         )
         self.assertIn("font-family: var(--font-print) !important", print_src)
         self.assertIn("font-family:var(--font-print)!important", css_compact)
+        self.assertIn("Parastoo.woff2", css)
+        self.assertIn("Parastoo-Bold.woff2", css)
 
     def test_staff_home_hub_and_materials_urls(self):
         user, organization = create_user_and_organization()
