@@ -16,7 +16,8 @@
 @font-face {
   font-family: "IRNazanin";
   src: url("../font/IRNazanin.ttf") format("truetype");
-  font-weight: 400;
+  /* Cover bold/semibold print weights so matching does not fall back to Vazirmatn. */
+  font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
@@ -1074,6 +1075,18 @@ html.dark .bom-hub-atmosphere {
     color: var(--color-ink) !important;
     font-size: 10.5pt;
     line-height: 1.35;
+  }
+
+  /* Keep IRNazanin on printed content even when components set font-semibold/bold. */
+  body,
+  .printer-doc,
+  table.part-list,
+  .bom-table,
+  table.part-list th,
+  table.part-list td,
+  .bom-table th,
+  .bom-table td {
+    font-family: var(--font-print) !important;
   }
 
   main {
