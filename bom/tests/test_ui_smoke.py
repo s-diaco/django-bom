@@ -188,6 +188,15 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn("html.dark", src)
         self.assertIn("color-scheme: light", src)
         self.assertIn("html.dark .bom-brand-mark", src)
+        # Print always forces light tokens even when html.dark is active.
+        print_src = src[src.find("@media print") :]
+        self.assertIn("color-scheme: light !important", print_src)
+        self.assertIn("--color-ink: #131a16", print_src)
+        self.assertIn("html.dark .bom-brand-mark", print_src)
+        self.assertIn("filter: none !important", print_src)
+        css_compact = css.replace(" ", "")
+        self.assertIn("color-scheme:light!important", css_compact)
+        self.assertIn("--color-ink:#131a16", css_compact)
 
     def test_staff_home_hub_and_materials_urls(self):
         user, organization = create_user_and_organization()
