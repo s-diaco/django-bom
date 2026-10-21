@@ -625,6 +625,7 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertContains(response, "indented-bom-overview")
         self.assertNotContains(response, 'id="overview-print-button"')
         self.assertContains(response, 'id="price-review-print-button"')
+        self.assertContains(response, "bomPrint")
         # Currency once in cost column headers; row JS formats amount only.
         from bom.utils import currency_label
 

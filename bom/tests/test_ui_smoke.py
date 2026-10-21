@@ -447,3 +447,11 @@ class TestBomTabsUrlHash(SimpleTestCase):
         self.assertIn(hash_branch, js)
         self.assertIn(active_branch, js)
         self.assertLess(js.index(hash_branch), js.index(active_branch))
+
+    def test_bom_print_prepares_parastoo_fonts(self):
+        js = open("bom/static/bom/js/bom-ui.js").read()
+        self.assertIn("window.bomPrint", js)
+        self.assertIn("preparePrintFonts", js)
+        self.assertIn('document.fonts.load(\'400 12pt "Parastoo"\')', js)
+        self.assertIn('document.fonts.load(\'700 12pt "Parastoo"\')', js)
+        self.assertIn("printWithPreparedFonts", js)

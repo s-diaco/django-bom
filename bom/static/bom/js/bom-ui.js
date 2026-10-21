@@ -545,6 +545,30 @@
     bind: bindThemeToggles,
   };
 
+  // Parastoo is print-only; wait until faces are ready before window.print().
+  function preparePrintFonts() {
+    if (!document.fonts || typeof document.fonts.load !== "function") {
+      return Promise.resolve();
+    }
+    return Promise.all([
+      document.fonts.load('400 12pt "Parastoo"'),
+      document.fonts.load('700 12pt "Parastoo"'),
+    ]).catch(function () {
+      // Still print with fallback if a face fails to load.
+    });
+  }
+
+  function printWithPreparedFonts() {
+    return preparePrintFonts().then(function () {
+      window.print();
+    });
+  }
+
+  window.bomPrint = {
+    prepareFonts: preparePrintFonts,
+    print: printWithPreparedFonts,
+  };
+
   // Keep toggles in sync if the early <head> script already applied a theme.
   syncThemeToggles(readStoredTheme());
   bindThemeToggles(document);

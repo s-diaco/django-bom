@@ -255,7 +255,10 @@
                     // Flush layout so sticky→static and page breaks apply before Chrome snapshots.
                     void document.body.offsetHeight;
                     requestAnimationFrame(function () {
-                        window.print();
+                        var printFn = (window.bomPrint && window.bomPrint.print)
+                            ? window.bomPrint.print
+                            : function () { window.print(); };
+                        printFn();
                     });
                 });
             }

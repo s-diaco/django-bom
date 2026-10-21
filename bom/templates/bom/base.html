@@ -31,6 +31,9 @@
     </script>
     <link href="{% static 'bom/css/material-icons.css' %}" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'bom/css/app.css' %}">
+    {# Warm print face early — Chrome print preview often paints Vazirmatn if Parastoo is still unloaded. #}
+    <link rel="preload" href="{% static 'bom/font/Parastoo.woff2' %}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{% static 'bom/font/Parastoo-Bold.woff2' %}" as="font" type="font/woff2" crossorigin>
     {% block head %}{% endblock head %}
     <link rel="shortcut icon" type="image/png" href="{% static 'bom/img/favicon.ico' %}"/>
 </head>

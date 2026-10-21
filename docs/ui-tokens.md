@@ -9,6 +9,8 @@ Dense operations UI. Lithium green is an action/status color, not page chrome.
 | `--font-sans` | **Vazirmatn** (self-hosted variable) | UI, Persian + Latin |
 | `--font-print` | **Parastoo** (Regular + Bold), Vazirmatn fallback | Print only |
 
+Parastoo woff2 files are preloaded in `base.html`, and Print buttons call `bomPrint.prepareFonts()` before `window.print()` so Chrome does not snapshot Vazirmatn while Parastoo is still loading.
+
 Roboto is not used for the new UI.
 
 ## Color

@@ -545,7 +545,12 @@
 
             printButton.addEventListener('click', function () {
                 document.body.classList.add('printing-overview');
-                window.print();
+                // Flush layout so overview-only rules apply before Chrome snapshots.
+                void document.body.offsetHeight;
+                var printFn = (window.bomPrint && window.bomPrint.print)
+                    ? window.bomPrint.print
+                    : function () { window.print(); };
+                printFn();
             });
 
             window.addEventListener('afterprint', clearOverviewPrintMode);
