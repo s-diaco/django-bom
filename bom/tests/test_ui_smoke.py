@@ -101,17 +101,17 @@ class TestUiSmoke(TransactionTestCase):
         )
         self.assertRegex(
             part_info_css,
-            r"#indented-bom-overview\s*\{[^}]*font-size:\s*8pt",
+            r"#indented-bom-overview\s*\{[^}]*font-size:\s*9pt",
         )
         self.assertRegex(
             part_info_css,
             r"#indented-bom-overview\s+th,\s*"
             r"body\.printing-overview\s+#indented-bom-overview\s+td\s*\{[^}]*"
-            r"font-size:\s*8pt",
+            r"font-size:\s*9pt",
         )
         self.assertNotRegex(
             part_info_css,
-            r"#indented-bom-overview\s+td:nth-child\(3\)\s*\{[^}]*font-size:\s*[67]pt",
+            r"#indented-bom-overview\s+td:nth-child\(3\)\s*\{[^}]*font-size:\s*[678]pt",
         )
         self.assertRegex(
             part_info_css,
