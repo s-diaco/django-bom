@@ -93,14 +93,13 @@
         padding: 2px 4px !important;
     }
 
-    /* Keep all headers the same size as the table (do not shrink Description th). */
-    body.printing-price-review #price-review-bom #indented-bom-overview th {
+    /* All headers and body cells share 8pt (including Description). */
+    body.printing-price-review #price-review-bom #indented-bom-overview th,
+    body.printing-price-review #price-review-bom #indented-bom-overview td {
         font-size: 8pt;
     }
 
-    /* Description body only: 1pt smaller than the rest of the row. */
     body.printing-price-review #price-review-bom #indented-bom-overview td:nth-child(3) {
-        font-size: 7pt;
         width: auto;
         white-space: normal;
     }
