@@ -1,7 +1,7 @@
 @media print {
     @page price-review {
         size: A5 portrait;
-        margin: 12mm;
+        margin: 8mm;
     }
 
     /* Sticky thead detaches across page breaks in Chromium print. */
@@ -83,18 +83,33 @@
         font-size: 8pt;
     }
 
+    body.printing-price-review #price-review-bom #indented-bom-overview {
+        table-layout: auto;
+        width: 100%;
+    }
+
+    body.printing-price-review #price-review-bom #indented-bom-overview th,
+    body.printing-price-review #price-review-bom #indented-bom-overview td {
+        padding: 2px 4px !important;
+    }
+
     /* Description is column 3 (Revision is printer-hide but still counts). */
     body.printing-price-review #price-review-bom #indented-bom-overview th:nth-child(3),
     body.printing-price-review #price-review-bom #indented-bom-overview td:nth-child(3) {
         font-size: 6pt;
+        width: auto;
+        white-space: normal;
     }
 
-    /* Codes stay on one line; do not lock column width — that squeezes
-       Description on A5 and spills the BoM print to a second page. */
+    /* Shrink-wrap Code + numeric cols so Description keeps width on A5. */
     body.printing-price-review #price-review-bom #indented-bom-overview th:first-child,
-    body.printing-price-review #price-review-bom #indented-bom-overview td:first-child {
+    body.printing-price-review #price-review-bom #indented-bom-overview td:first-child,
+    body.printing-price-review #price-review-bom #indented-bom-overview th.bom-num,
+    body.printing-price-review #price-review-bom #indented-bom-overview td.bom-num,
+    body.printing-price-review #price-review-bom #indented-bom-overview th:nth-child(5),
+    body.printing-price-review #price-review-bom #indented-bom-overview td:nth-child(5) {
         white-space: nowrap;
-        width: auto;
+        width: 1%;
         min-width: 0;
     }
 

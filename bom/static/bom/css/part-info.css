@@ -11,9 +11,11 @@
 }
 
 @media print {
+    /* 8mm matches typical Chrome “Default” margins when Ctrl+P forces A5;
+       12mm left too little width and spilled Description wraps onto page 2. */
     @page overview {
         size: A5 portrait;
-        margin: 12mm;
+        margin: 8mm;
     }
 
     body.printing-overview {
@@ -43,20 +45,32 @@
     body.printing-overview .bom-table,
     body.printing-overview #indented-bom-overview {
         font-size: 8pt;
+        table-layout: auto;
+        width: 100%;
+    }
+
+    body.printing-overview #indented-bom-overview th,
+    body.printing-overview #indented-bom-overview td {
+        padding: 2px 4px !important;
     }
 
     /* Description is column 3 (Revision is printer-hide but still counts). */
     body.printing-overview #indented-bom-overview th:nth-child(3),
     body.printing-overview #indented-bom-overview td:nth-child(3) {
         font-size: 6pt;
+        width: auto;
+        white-space: normal;
     }
 
-    /* Codes stay on one line; do not lock column width — that squeezes
-       Description on A5 and spills the overview print to a second page. */
+    /* Shrink-wrap Code + numeric cols so Description keeps width (Ctrl+P density). */
     body.printing-overview #indented-bom-overview th:first-child,
-    body.printing-overview #indented-bom-overview td:first-child {
+    body.printing-overview #indented-bom-overview td:first-child,
+    body.printing-overview #indented-bom-overview th.bom-num,
+    body.printing-overview #indented-bom-overview td.bom-num,
+    body.printing-overview #indented-bom-overview th:nth-child(5),
+    body.printing-overview #indented-bom-overview td:nth-child(5) {
         white-space: nowrap;
-        width: auto;
+        width: 1%;
         min-width: 0;
     }
 

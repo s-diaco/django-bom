@@ -89,6 +89,10 @@ class TestUiSmoke(TransactionTestCase):
         part_info_css = open("bom/static/bom/css/part-info.css").read()
         self.assertIn("@page overview", part_info_css)
         self.assertRegex(part_info_css, r"size:\s*A5")
+        self.assertRegex(
+            part_info_css,
+            r"@page\s+overview\s*\{[^}]*margin:\s*8mm",
+        )
         self.assertIn("body.printing-overview", part_info_css)
         self.assertIn("page: overview", part_info_css)
         self.assertRegex(
@@ -109,16 +113,20 @@ class TestUiSmoke(TransactionTestCase):
         )
         self.assertRegex(
             part_info_css,
-            r"#indented-bom-overview\s+td:first-child\s*\{[^}]*white-space:\s*nowrap",
+            r"#indented-bom-overview\s+td:first-child[^{]*\{[^}]*white-space:\s*nowrap",
         )
-        # Width lock was removed so A5 overview print matches Ctrl+P (one page).
+        # Shrink-wrap Code/numeric cols (not a fixed 18% Code column).
+        self.assertRegex(
+            part_info_css,
+            r"#indented-bom-overview\s+td:first-child[^{]*\{[^}]*width:\s*1%",
+        )
         self.assertNotRegex(
             part_info_css,
-            r"#indented-bom-overview\s+td:first-child\s*\{[^}]*width:\s*18%",
+            r"#indented-bom-overview\s+td:first-child[^{]*\{[^}]*width:\s*18%",
         )
         self.assertNotRegex(
             part_info_css,
-            r"#indented-bom-overview\s+td:first-child\s*\{[^}]*min-width:\s*5\.5em",
+            r"#indented-bom-overview\s+td:first-child[^{]*\{[^}]*min-width:\s*5\.5em",
         )
 
     def test_login_form_error_display(self):
