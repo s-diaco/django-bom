@@ -89,12 +89,13 @@
         font-size: 6pt;
     }
 
-    /* Keep part codes (e.g. 980-00) on one line in the Code column. */
+    /* Codes stay on one line; do not lock column width — that squeezes
+       Description on A5 and spills the BoM print to a second page. */
     body.printing-price-review #price-review-bom #indented-bom-overview th:first-child,
     body.printing-price-review #price-review-bom #indented-bom-overview td:first-child {
         white-space: nowrap;
-        min-width: 5.5em;
-        width: 18%;
+        width: auto;
+        min-width: 0;
     }
 
     body.printing-price-review .price-review-panel {

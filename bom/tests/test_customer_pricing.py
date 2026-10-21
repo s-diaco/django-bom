@@ -691,6 +691,16 @@ class TestCustomerPricing(TransactionTestCase):
             r"#price-review-bom\s+#indented-bom-overview\s+td:first-child\s*\{[^}]*"
             r"white-space:\s*nowrap",
         )
+        self.assertNotRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s+td:first-child\s*\{[^}]*"
+            r"width:\s*18%",
+        )
+        self.assertNotRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s+td:first-child\s*\{[^}]*"
+            r"min-width:\s*5\.5em",
+        )
     def test_get_with_part_id_shows_preview(self):
         response = self.client.get(
             reverse(

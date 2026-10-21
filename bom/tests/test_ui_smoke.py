@@ -111,6 +111,15 @@ class TestUiSmoke(TransactionTestCase):
             part_info_css,
             r"#indented-bom-overview\s+td:first-child\s*\{[^}]*white-space:\s*nowrap",
         )
+        # Width lock was removed so A5 overview print matches Ctrl+P (one page).
+        self.assertNotRegex(
+            part_info_css,
+            r"#indented-bom-overview\s+td:first-child\s*\{[^}]*width:\s*18%",
+        )
+        self.assertNotRegex(
+            part_info_css,
+            r"#indented-bom-overview\s+td:first-child\s*\{[^}]*min-width:\s*5\.5em",
+        )
 
     def test_login_form_error_display(self):
         response = self.client.post(reverse("login"), {"username": "x", "password": "bad"})
