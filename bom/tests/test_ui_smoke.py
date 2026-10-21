@@ -143,6 +143,13 @@ class TestUiSmoke(TransactionTestCase):
             part_info_css,
             r"#indented-bom-overview\s+td:first-child[^{]*\{[^}]*min-width:\s*5\.5em",
         )
+        # Unit-cost footer under overview table (not Materialize .text-right).
+        self.assertRegex(
+            part_info_css,
+            r"body\.printing-overview\s+\.overview-unit-cost\s*\{[^}]*"
+            r"font-weight:\s*bold",
+        )
+        self.assertNotIn(".text-right", part_info_css)
 
     def test_login_form_error_display(self):
         response = self.client.post(reverse("login"), {"username": "x", "password": "bad"})

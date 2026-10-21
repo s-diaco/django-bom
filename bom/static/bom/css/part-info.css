@@ -92,8 +92,8 @@
         overflow-x: visible !important;
     }
 
-    .text-right {
-        text-align: left;
+    body.printing-overview .overview-unit-cost {
+        text-align: start;
         font-weight: bold;
         margin-top: 12px;
     }
