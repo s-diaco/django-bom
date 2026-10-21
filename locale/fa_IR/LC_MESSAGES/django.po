@@ -650,7 +650,7 @@ msgstr "تعداد"
 #: bom/templates/bom/dashboard-print.html:18
 #: bom/templates/bom/dashboard.html:93 bom/templates/bom/report.html:100
 msgid "Unit Cost"
-msgstr "قیمت"
+msgstr "قیمت واحد"
 
 #: bom/templates/bom/components/bom-indented-overview.html:46
 msgid "Cost in BoM"
