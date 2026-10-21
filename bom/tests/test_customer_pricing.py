@@ -663,6 +663,15 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertNotRegex(css, r"@page\s+price-review\s*\{[^}]*landscape")
         self.assertRegex(
             css,
+            r"body\.printing-price-review\s*\{[^}]*line-height:\s*1\.8",
+        )
+        self.assertRegex(
+            css,
+            r"body\.printing-price-review\s+#price-review-bom\s*\{[^}]*"
+            r"line-height:\s*1\.8",
+        )
+        self.assertRegex(
+            css,
             r"#price-review-rest,\s*"
             r"(?:body\.printing-price-review\s+)?#price-review-bom\s*\{[^}]*"
             r"page-break-before:\s*always",

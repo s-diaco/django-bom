@@ -1084,10 +1084,10 @@ html.dark .bom-hub-atmosphere {
     background: #fff !important;
     color: var(--color-ink) !important;
     font-size: 10.5pt;
-    line-height: 1.35;
+    line-height: 1.8;
   }
 
-  /* Keep Parastoo on printed content even when components set font-semibold/bold. */
+  /* Keep Parastoo + print leading even when components set font-semibold/bold. */
   body,
   .printer-doc,
   table.part-list,
@@ -1097,6 +1097,7 @@ html.dark .bom-hub-atmosphere {
   .bom-table th,
   .bom-table td {
     font-family: var(--font-print) !important;
+    line-height: 1.8 !important;
   }
 
   main {
@@ -1144,7 +1145,7 @@ html.dark .bom-hub-atmosphere {
     margin: 0;
     font-size: 16pt;
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.8;
     color: var(--color-ink);
   }
 

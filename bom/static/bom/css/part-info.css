@@ -19,7 +19,7 @@
     body.printing-overview {
         page: overview;
         font-size: 8pt;
-        line-height: 1.25;
+        line-height: 1.8;
     }
 
     body.printing-overview .printer-logo {

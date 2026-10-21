@@ -96,4 +96,4 @@ Never encode status by hue alone — pair with a label or icon for print and col
 
 ## Print
 
-Parastoo body, hide chrome, bordered tables, A5 page size (existing product behavior).
+Parastoo body, `line-height: 1.8`, hide chrome, bordered tables, A5 page size (existing product behavior).

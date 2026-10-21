@@ -93,6 +93,10 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn("page: overview", part_info_css)
         self.assertRegex(
             part_info_css,
+            r"body\.printing-overview\s*\{[^}]*line-height:\s*1\.8",
+        )
+        self.assertRegex(
+            part_info_css,
             r"#indented-bom-overview\s*\{[^}]*font-size:\s*8pt",
         )
         self.assertRegex(
@@ -206,6 +210,8 @@ class TestUiSmoke(TransactionTestCase):
         )
         self.assertIn("font-family: var(--font-print) !important", print_src)
         self.assertIn("font-family:var(--font-print)!important", css_compact)
+        self.assertIn("line-height: 1.8", print_src)
+        self.assertIn("line-height:1.8!important", css_compact)
         self.assertIn("Parastoo.woff2", css)
         self.assertIn("Parastoo-Bold.woff2", css)
 
