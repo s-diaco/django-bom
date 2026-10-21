@@ -115,6 +115,15 @@ class TestUiSmoke(TransactionTestCase):
             part_info_css,
             r"#indented-bom-overview\s+td:first-child[^{]*\{[^}]*white-space:\s*nowrap",
         )
+        # Cost headers wrap; cost body cells stay nowrap.
+        self.assertRegex(
+            part_info_css,
+            r"#indented-bom-overview\s+th\.bom-num\s*\{[^}]*white-space:\s*normal",
+        )
+        self.assertRegex(
+            part_info_css,
+            r"#indented-bom-overview\s+td\.bom-num[^{]*\{[^}]*white-space:\s*nowrap",
+        )
         # Shrink-wrap Code/numeric cols (not a fixed 18% Code column).
         self.assertRegex(
             part_info_css,

@@ -694,6 +694,16 @@ class TestCustomerPricing(TransactionTestCase):
         )
         self.assertRegex(
             css,
+            r"#price-review-bom\s+#indented-bom-overview\s+th\.bom-num\s*\{[^}]*"
+            r"white-space:\s*normal",
+        )
+        self.assertRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s+td\.bom-num[^{]*\{[^}]*"
+            r"white-space:\s*nowrap",
+        )
+        self.assertRegex(
+            css,
             r"#price-review-bom\s+#indented-bom-overview\s+td:first-child[^{]*\{[^}]*"
             r"width:\s*1%",
         )

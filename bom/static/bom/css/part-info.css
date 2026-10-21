@@ -62,10 +62,17 @@
         white-space: normal;
     }
 
-    /* Shrink-wrap Code + numeric cols so Description keeps width (Ctrl+P density). */
+    /* Cost headers wrap (e.g. Unit Cost / (IRR)) so columns can shrink to
+       numeric cell width; body cells stay nowrap. */
+    body.printing-overview #indented-bom-overview th.bom-num {
+        white-space: normal;
+        width: 1%;
+        min-width: 0;
+    }
+
+    /* Shrink-wrap Code + Quantity + cost body cells so Description keeps width. */
     body.printing-overview #indented-bom-overview th:first-child,
     body.printing-overview #indented-bom-overview td:first-child,
-    body.printing-overview #indented-bom-overview th.bom-num,
     body.printing-overview #indented-bom-overview td.bom-num,
     body.printing-overview #indented-bom-overview th:nth-child(5),
     body.printing-overview #indented-bom-overview td:nth-child(5) {
