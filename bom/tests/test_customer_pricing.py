@@ -677,21 +677,21 @@ class TestCustomerPricing(TransactionTestCase):
             r"(?:body\.printing-price-review\s+)?#price-review-bom\s*\{[^}]*"
             r"page-break-before:\s*always",
         )
-        # BoM Overview print: 9pt for all headers and body cells (incl. Description).
+        # BoM Overview print: 8pt for all headers and body cells (incl. Description).
         self.assertRegex(
             css,
-            r"#price-review-bom\s+#indented-bom-overview\s*\{[^}]*font-size:\s*9pt",
+            r"#price-review-bom\s+#indented-bom-overview\s*\{[^}]*font-size:\s*8pt",
         )
         self.assertRegex(
             css,
             r"#price-review-bom\s+#indented-bom-overview\s+th,\s*"
             r"body\.printing-price-review\s+#price-review-bom\s+#indented-bom-overview\s+td\s*\{[^}]*"
-            r"font-size:\s*9pt",
+            r"font-size:\s*8pt",
         )
         self.assertNotRegex(
             css,
             r"#price-review-bom\s+#indented-bom-overview\s+td:nth-child\(3\)\s*\{[^}]*"
-            r"font-size:\s*[678]pt",
+            r"font-size:\s*[679]pt",
         )
         self.assertRegex(
             css,

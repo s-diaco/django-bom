@@ -20,7 +20,7 @@
 
     body.printing-overview {
         page: overview;
-        font-size: 9pt;
+        font-size: 8pt;
         line-height: 1.8;
     }
 
@@ -44,7 +44,7 @@
     body.printing-overview table.part-list,
     body.printing-overview .bom-table,
     body.printing-overview #indented-bom-overview {
-        font-size: 9pt;
+        font-size: 8pt;
         table-layout: auto;
         width: 100%;
     }
@@ -54,10 +54,10 @@
         padding: 2px 6px !important;
     }
 
-    /* All headers and body cells share 9pt (including Description). */
+    /* All headers and body cells share 8pt (including Description). */
     body.printing-overview #indented-bom-overview th,
     body.printing-overview #indented-bom-overview td {
-        font-size: 9pt;
+        font-size: 8pt;
     }
 
     body.printing-overview #indented-bom-overview td:nth-child(3) {
