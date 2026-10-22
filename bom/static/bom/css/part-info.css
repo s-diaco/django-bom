@@ -65,23 +65,19 @@
         white-space: normal;
     }
 
-    /* Cost headers wrap (e.g. Unit Cost / (IRR)) so columns can shrink to
-       numeric cell width; body cells stay nowrap. */
+    /* Cost headers wrap (e.g. Unit Cost / (IRR)). No width:1% — that dumped
+       leftover A5 width into Description. */
     body.printing-overview #indented-bom-overview th.bom-num {
         white-space: normal;
-        width: 1%;
-        min-width: 0;
     }
 
-    /* Shrink-wrap Code + Quantity + cost body cells so Description keeps width. */
+    /* Code / Quantity / numeric cells: nowrap, natural content width. */
     body.printing-overview #indented-bom-overview th:first-child,
     body.printing-overview #indented-bom-overview td:first-child,
     body.printing-overview #indented-bom-overview td.bom-num,
     body.printing-overview #indented-bom-overview th:nth-child(5),
     body.printing-overview #indented-bom-overview td:nth-child(5) {
         white-space: nowrap;
-        width: 1%;
-        min-width: 0;
     }
 
     .fixed-action-btn {

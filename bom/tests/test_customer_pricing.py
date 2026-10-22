@@ -708,7 +708,7 @@ class TestCustomerPricing(TransactionTestCase):
             r"#price-review-bom\s+#indented-bom-overview\s+td\.bom-num[^{]*\{[^}]*"
             r"white-space:\s*nowrap",
         )
-        self.assertRegex(
+        self.assertNotRegex(
             css,
             r"#price-review-bom\s+#indented-bom-overview\s+td:first-child[^{]*\{[^}]*"
             r"width:\s*1%",
@@ -721,7 +721,12 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertNotRegex(
             css,
             r"#price-review-bom\s+#indented-bom-overview\s+td:first-child[^{]*\{[^}]*"
-            r"min-width:\s*5\.5em",
+            r"min-width:\s*(?:0|5\.5em)",
+        )
+        self.assertNotRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s+th\.bom-num\s*\{[^}]*"
+            r"width:\s*1%",
         )
     def test_get_with_part_id_shows_preview(self):
         response = self.client.get(
