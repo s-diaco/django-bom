@@ -631,6 +631,9 @@ class TestCustomerPricing(TransactionTestCase):
 
         curr = currency_label(self.organization.currency)
         self.assertIn(f"({curr})", html)
+        # Cost headers: label, then currency on the next line.
+        self.assertRegex(html, rf"Unit Cost<br>\({curr}\)|قیمت واحد<br>\({curr}\)")
+        self.assertRegex(html, rf"Cost in BoM<br>\({curr}\)|قیمت در BoM<br>\({curr}\)")
         self.assertNotIn("style: 'currency'", html)
         self.assertNotIn('style: "currency"', html)
         summary_idx = html.find("Pricing summary")
@@ -723,10 +726,17 @@ class TestCustomerPricing(TransactionTestCase):
             r"#price-review-bom\s+#indented-bom-overview\s+td:first-child[^{]*\{[^}]*"
             r"min-width:\s*(?:0|5\.5em)",
         )
-        self.assertNotRegex(
+        # Cost columns only: shrink-wrap so headers don't force width.
+        self.assertRegex(
             css,
             r"#price-review-bom\s+#indented-bom-overview\s+th\.bom-num\s*\{[^}]*"
             r"width:\s*1%",
+        )
+        self.assertRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s+td:nth-child\(6\),\s*"
+            r"body\.printing-price-review\s+#price-review-bom\s+#indented-bom-overview\s+"
+            r"td:nth-child\(7\)\s*\{[^}]*width:\s*1%",
         )
     def test_get_with_part_id_shows_preview(self):
         response = self.client.get(

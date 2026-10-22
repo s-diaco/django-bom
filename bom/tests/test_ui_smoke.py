@@ -130,7 +130,7 @@ class TestUiSmoke(TransactionTestCase):
             part_info_css,
             r"#indented-bom-overview\s+td\.bom-num[^{]*\{[^}]*white-space:\s*nowrap",
         )
-        # Natural content width for Code/numeric cols (not shrink-wrap 1% / fixed 18%).
+        # Code/Quantity: natural width (not shrink-wrap 1% / fixed 18%).
         self.assertNotRegex(
             part_info_css,
             r"#indented-bom-overview\s+td:first-child[^{]*\{[^}]*width:\s*1%",
@@ -143,9 +143,16 @@ class TestUiSmoke(TransactionTestCase):
             part_info_css,
             r"#indented-bom-overview\s+td:first-child[^{]*\{[^}]*min-width:\s*(?:0|5\.5em)",
         )
-        self.assertNotRegex(
+        # Cost columns only: shrink-wrap so headers don't force width.
+        self.assertRegex(
             part_info_css,
             r"#indented-bom-overview\s+th\.bom-num\s*\{[^}]*width:\s*1%",
+        )
+        self.assertRegex(
+            part_info_css,
+            r"#indented-bom-overview\s+td:nth-child\(6\),\s*"
+            r"body\.printing-overview\s+#indented-bom-overview\s+td:nth-child\(7\)\s*\{[^}]*"
+            r"width:\s*1%",
         )
         # Unit-cost footer under overview table (not Materialize .text-right).
         self.assertRegex(
