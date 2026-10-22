@@ -51,7 +51,7 @@
 
     body.printing-overview #indented-bom-overview th,
     body.printing-overview #indented-bom-overview td {
-        padding: 2px 4px !important;
+        padding: 2px 6px !important;
     }
 
     /* All headers and body cells share 9pt (including Description). */
