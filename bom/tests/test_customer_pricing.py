@@ -726,8 +726,8 @@ class TestCustomerPricing(TransactionTestCase):
             r"#price-review-bom\s+#indented-bom-overview\s+td:first-child[^{]*\{[^}]*"
             r"min-width:\s*(?:0|5\.5em)",
         )
-        # Cost columns only: shrink-wrap so headers don't force width.
-        self.assertRegex(
+        # Cost cols: no width:1%; header <br> + nowrap body should be enough.
+        self.assertNotRegex(
             css,
             r"#price-review-bom\s+#indented-bom-overview\s+th\.bom-num\s*\{[^}]*"
             r"width:\s*1%",
@@ -736,7 +736,7 @@ class TestCustomerPricing(TransactionTestCase):
             css,
             r"#price-review-bom\s+#indented-bom-overview\s+td:nth-child\(6\),\s*"
             r"body\.printing-price-review\s+#price-review-bom\s+#indented-bom-overview\s+"
-            r"td:nth-child\(7\)\s*\{[^}]*width:\s*1%",
+            r"td:nth-child\(7\)\s*\{[^}]*white-space:\s*nowrap",
         )
     def test_get_with_part_id_shows_preview(self):
         response = self.client.get(

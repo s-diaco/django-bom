@@ -65,19 +65,15 @@
         white-space: normal;
     }
 
-    /* Cost cols only: shrink-wrap so long headers don't widen past numbers.
-       Template puts currency on its own line; headers may wrap further. */
+    /* Cost headers: currency is on its own line in the template; allow wrap.
+       No width:1% — try natural width after the <br> split. */
     body.printing-overview #indented-bom-overview th.bom-num {
         white-space: normal;
-        width: 1%;
-        min-width: 0;
     }
 
     body.printing-overview #indented-bom-overview td:nth-child(6),
     body.printing-overview #indented-bom-overview td:nth-child(7) {
         white-space: nowrap;
-        width: 1%;
-        min-width: 0;
     }
 
     /* Code / Quantity: nowrap, natural content width (no width:1%). */
