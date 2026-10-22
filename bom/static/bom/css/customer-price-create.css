@@ -88,11 +88,9 @@
         width: 100%;
     }
 
-    /* Non-Description cols get more horizontal air; Description stays tighter.
-       Avoid width: 1% shrink-wrap — that dumped all leftover A5 width into Description. */
     body.printing-price-review #price-review-bom #indented-bom-overview th,
     body.printing-price-review #price-review-bom #indented-bom-overview td {
-        padding: 2px 8px !important;
+        padding: 2px 6px !important;
     }
 
     /* All headers and body cells share 9pt (including Description). */
@@ -101,26 +99,27 @@
         font-size: 9pt;
     }
 
-    body.printing-price-review #price-review-bom #indented-bom-overview th:nth-child(3),
     body.printing-price-review #price-review-bom #indented-bom-overview td:nth-child(3) {
-        padding: 2px 4px !important;
         width: auto;
-        max-width: 50%;
         white-space: normal;
     }
 
-    /* Cost headers wrap (e.g. Unit Cost / (IRR)). */
+    /* Cost headers wrap so columns can shrink to numeric cell width. */
     body.printing-price-review #price-review-bom #indented-bom-overview th.bom-num {
         white-space: normal;
+        width: 1%;
+        min-width: 0;
     }
 
-    /* Code / Quantity / numeric cells: nowrap, natural content width. */
+    /* Shrink-wrap Code + Quantity + cost body cells so Description keeps width. */
     body.printing-price-review #price-review-bom #indented-bom-overview th:first-child,
     body.printing-price-review #price-review-bom #indented-bom-overview td:first-child,
     body.printing-price-review #price-review-bom #indented-bom-overview td.bom-num,
     body.printing-price-review #price-review-bom #indented-bom-overview th:nth-child(5),
     body.printing-price-review #price-review-bom #indented-bom-overview td:nth-child(5) {
         white-space: nowrap;
+        width: 1%;
+        min-width: 0;
     }
 
     body.printing-price-review .price-review-panel {
