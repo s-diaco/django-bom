@@ -1207,9 +1207,9 @@ msgstr "تعداد متریال بدون قیمت"
 msgid "BoM weight"
 msgstr "وزن BoM"
 
-#: bom/templates/bom/part-info.html:206 bom/templates/bom/part-info.html:399
-msgid "Unit cost (kg)"
-msgstr "قیمت واحد (کیلو گرم)"
+#: bom/templates/bom/part-info.html
+msgid "Unit cost (kg, incl. overhead)"
+msgstr "قیمت واحد (کیلوگرم، با سربار)"
 
 #: bom/templates/bom/part-info.html:212
 #, python-format
