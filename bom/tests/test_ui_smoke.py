@@ -460,7 +460,10 @@ class TestUiSmoke(TransactionTestCase):
         bom_html = bom.content.decode("utf-8")
         unfold_at = bom_html.find("unfold_more")
         table_at = bom_html.find('id="indented-bom"')
-        cost_at = bom_html.find("قیمت واحد (کیلو گرم):")
+        # Footer clarifies overhead; accept fa or en (test locale may vary).
+        cost_at = bom_html.find("قیمت واحد (کیلوگرم، با سربار):")
+        if cost_at < 0:
+            cost_at = bom_html.find("Unit cost (kg, incl. overhead):")
         delete_at = bom_html.find("حذف همه زیرشاخه‌ها")
         add_at = bom_html.find("افزودن زیرشاخه")
         self.assertNotEqual(unfold_at, -1)
