@@ -381,12 +381,16 @@ class TestCustomerPricing(TransactionTestCase):
         part_revision = self.part.latest()
         base_cost = part_revision.bom_unit_cost_at_quantity(1)
         expected_price = self._tier_price(base_cost, Decimal("20"))
-        preview_url = reverse(
+        preview_path = reverse(
             "bom:part-customer-price-create-for-customer",
             kwargs={
                 "part_id": self.part.id,
                 "customer_id": self.customer.id,
             },
+        )
+        preview_url = f"{preview_path}?from=part"
+        cancel_url = (
+            reverse("bom:part-info", kwargs={"part_id": self.part.id}) + "#customers"
         )
 
         response = self.client.post(
@@ -404,6 +408,7 @@ class TestCustomerPricing(TransactionTestCase):
         response = self.client.get(preview_url)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context["show_preview"])
+        self.assertEqual(response.context["cancel_url"], cancel_url)
         self.assertContains(response, str(base_cost.amount))
         self.assertContains(response, str(expected_price.amount))
         html = response.content.decode()
@@ -415,7 +420,8 @@ class TestCustomerPricing(TransactionTestCase):
             "Prices by profit %" in html or ("قیمت" in html and "سود" in html),
             "profit tier panel missing",
         )
-        self.assertIn(preview_url, html)
+        self.assertIn(preview_path, html)
+        self.assertIn('name="from" value="part"', html)
         self.assertFalse(CustomerPrice.objects.filter(customer=self.customer).exists())
 
         response = self.client.post(
@@ -520,6 +526,19 @@ class TestCustomerPricing(TransactionTestCase):
         part_revision = self.part.latest()
         base_cost = part_revision.bom_unit_cost_at_quantity(1)
         expected_price = self._tier_price(base_cost, Decimal("20"))
+        preview_url = (
+            reverse(
+                "bom:part-customer-price-create-for-customer",
+                kwargs={
+                    "part_id": self.part.id,
+                    "customer_id": self.customer.id,
+                },
+            )
+            + "?from=customer"
+        )
+        cancel_url = reverse(
+            "bom:customer-info", kwargs={"customer_id": self.customer.id}
+        )
 
         response = self.client.post(
             reverse(
@@ -530,7 +549,13 @@ class TestCustomerPricing(TransactionTestCase):
                 "part": self.part.full_part_number(),
             },
         )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, preview_url)
+
+        response = self.client.get(preview_url)
         self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["show_preview"])
+        self.assertEqual(response.context["cancel_url"], cancel_url)
         self.assertContains(response, str(base_cost.amount))
         self.assertContains(response, str(expected_price.amount))
         self.assertContains(response, "Peer Buyer")
@@ -549,6 +574,7 @@ class TestCustomerPricing(TransactionTestCase):
             "Adjusted base (BoM + 7%)" in html or "BoM + ۷٪" in html or "BoM + 7%" in html,
             "adjusted base label missing",
         )
+        self.assertIn('name="from" value="customer"', html)
         # Material selection lives inside Pricing summary as a summary-list row.
         self.assertContains(response, 'id="price-load-form"')
         self.assertNotContains(response, 'id="price-input-panel"')
@@ -623,6 +649,16 @@ class TestCustomerPricing(TransactionTestCase):
         part_revision.material = "with_loi"
         part_revision.save()
 
+        preview_url = (
+            reverse(
+                "bom:part-customer-price-create-for-customer",
+                kwargs={
+                    "part_id": self.part.id,
+                    "customer_id": self.customer.id,
+                },
+            )
+            + "?from=customer"
+        )
         response = self.client.post(
             reverse(
                 "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
@@ -632,6 +668,10 @@ class TestCustomerPricing(TransactionTestCase):
                 "part": self.part.full_part_number(),
             },
         )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, preview_url)
+
+        response = self.client.get(preview_url)
         self.assertEqual(response.status_code, 200)
         html = response.content.decode()
         self.assertTrue(
@@ -755,14 +795,32 @@ class TestCustomerPricing(TransactionTestCase):
             r"td:nth-child\(7\)\s*\{[^}]*white-space:\s*nowrap",
         )
     def test_get_with_part_id_shows_preview(self):
+        preview_url = (
+            reverse(
+                "bom:part-customer-price-create-for-customer",
+                kwargs={
+                    "part_id": self.part.id,
+                    "customer_id": self.customer.id,
+                },
+            )
+            + "?from=customer"
+        )
         response = self.client.get(
             reverse(
                 "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
             )
             + f"?part_id={self.part.id}"
         )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, preview_url)
+
+        response = self.client.get(preview_url)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context["show_preview"])
+        self.assertEqual(
+            response.context["cancel_url"],
+            reverse("bom:customer-info", kwargs={"customer_id": self.customer.id}),
+        )
         self.assertContains(response, self.part.full_part_number())
 
     def test_price_history_shows_jalali_created_at(self):

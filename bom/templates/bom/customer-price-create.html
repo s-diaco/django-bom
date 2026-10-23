@@ -15,10 +15,8 @@
 {% block printer-doc %}{% endblock %}
 
 {% block bom-menu %}
-    {% if part_locked and part_info_url %}
-        <a class="bom-nav-link" href="{{ part_info_url }}#customers">{% trans "Cancel" %}</a>
-    {% elif customer %}
-        <a class="bom-nav-link" href="{% url 'bom:customer-info' customer_id=customer.id %}">{% trans "Cancel" %}</a>
+    {% if cancel_url %}
+        <a class="bom-nav-link" href="{{ cancel_url }}">{% trans "Cancel" %}</a>
     {% else %}
         <a class="bom-nav-link" href="javascript:history.back()">{% trans "Cancel" %}</a>
     {% endif %}
@@ -54,6 +52,7 @@
                     <div class="price-pair-panel__body">
                         <form action="{{ action }}" method="post" id="price-load-form" class="price-summary-select">
                             {% csrf_token %}
+                            {% if entry_from %}<input type="hidden" name="from" value="{{ entry_from }}">{% endif %}
                             <dl class="price-summary-list">
                                 {% if part_locked %}
                                     <div class="price-summary-list__row price-summary-list__row--field printer-hide">
@@ -128,10 +127,8 @@
                                 {% endif %}
                             </dl>
                             <div class="price-summary-select__actions flex justify-between printer-hide">
-                                {% if part_locked and part_info_url %}
-                                    <a href="{{ part_info_url }}#customers" class="bom-btn-ghost">{% trans "Cancel" %}</a>
-                                {% elif customer %}
-                                    <a href="{% url 'bom:customer-info' customer_id=customer.id %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
+                                {% if cancel_url %}
+                                    <a href="{{ cancel_url }}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
                                 {% else %}
                                     <a href="javascript:history.back()" class="bom-btn-ghost">{% trans "Cancel" %}</a>
                                 {% endif %}
@@ -181,6 +178,7 @@
                     <h5 class="mb-2">{% trans "Selected price" %}</h5>
                     <form action="{{ action }}" method="post" id="price-confirm-form" data-base-cost="{{ preview.base_cost.amount }}">
                         {% csrf_token %}
+                        {% if entry_from %}<input type="hidden" name="from" value="{{ entry_from }}">{% endif %}
                         <input type="hidden" name="part" value="{{ preview.part.id }}">
                         {% if part_locked %}
                             <input type="hidden" name="customer" value="{{ preview.customer.id }}">
