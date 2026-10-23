@@ -25,6 +25,7 @@ from bom.helpers import (
 from bom.models import Part, Seller
 from bom.utils import currency_label, normalize_grouped_number
 from decimal import Decimal
+from djmoney.money import Money
 
 TEST_FILES_DIR = "bom/test_files"
 
@@ -185,6 +186,13 @@ class TestForms(TestCase):
         labels = dict(form.fields["currency"].choices)
         self.assertEqual(labels.get("USD"), "دلار")
         self.assertEqual(labels.get("IRR"), "ریال")
+
+    def test_money_amount_filter_omits_currency(self):
+        from bom.templatetags.bom_i18n import money_amount
+
+        self.assertEqual(money_amount(Money(98000, "IRR")), "98,000")
+        self.assertEqual(money_amount(Money(4310, "USD")), "4,310")
+        self.assertEqual(money_amount(None), "")
 
     def test_product_type_labels_translated(self):
         translation.activate("en-US")

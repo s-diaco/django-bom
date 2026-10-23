@@ -650,7 +650,7 @@ msgstr "مقدار"
 #: bom/templates/bom/dashboard-print.html:18
 #: bom/templates/bom/dashboard.html:93 bom/templates/bom/report.html:100
 msgid "Unit Cost"
-msgstr "قیمت"
+msgstr "قیمت واحد"
 
 #: bom/templates/bom/components/bom-indented-overview.html:46
 msgid "Cost in BoM"
@@ -1207,9 +1207,9 @@ msgstr "تعداد متریال بدون قیمت"
 msgid "BoM weight"
 msgstr "وزن BoM"
 
-#: bom/templates/bom/part-info.html:206 bom/templates/bom/part-info.html:399
-msgid "Unit cost (kg)"
-msgstr "قیمت واحد (کیلو گرم)"
+#: bom/templates/bom/part-info.html
+msgid "Unit cost (kg, incl. overhead)"
+msgstr "قیمت واحد (کیلوگرم، با سربار)"
 
 #: bom/templates/bom/part-info.html:212
 #, python-format

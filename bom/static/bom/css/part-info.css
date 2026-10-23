@@ -11,34 +11,78 @@
 }
 
 @media print {
+    /* 8mm matches typical Chrome “Default” margins when Ctrl+P forces A5;
+       12mm left too little width and spilled Description wraps onto page 2. */
     @page overview {
         size: A5 portrait;
-        margin: 12mm;
+        margin: 8mm;
     }
 
     body.printing-overview {
         page: overview;
-        font-size: 9pt;
-        line-height: 1.3;
+        font-size: 8pt;
+        line-height: 1.8;
+    }
+
+    body.printing-overview .printer-logo {
+        display: none !important;
     }
 
     body.printing-overview .printer-doc-title,
     body.printing-overview .printer-part-number {
-        font-size: 13pt;
+        font-size: 11pt;
     }
 
     body.printing-overview .printer-doc-meta {
-        font-size: 9pt;
+        font-size: 8pt;
     }
 
     body.printing-overview h4.printer-show {
-        font-size: 11pt;
+        font-size: 9pt;
     }
 
     body.printing-overview table.part-list,
     body.printing-overview .bom-table,
     body.printing-overview #indented-bom-overview {
-        font-size: 8.5pt;
+        font-size: 8pt;
+        table-layout: auto;
+        width: 100%;
+    }
+
+    body.printing-overview #indented-bom-overview th,
+    body.printing-overview #indented-bom-overview td {
+        padding: 2px 6px !important;
+    }
+
+    /* All headers and body cells share 8pt (including Description). */
+    body.printing-overview #indented-bom-overview th,
+    body.printing-overview #indented-bom-overview td {
+        font-size: 8pt;
+    }
+
+    body.printing-overview #indented-bom-overview td:nth-child(3) {
+        width: auto;
+        white-space: normal;
+    }
+
+    /* Cost headers: currency is on its own line in the template; allow wrap.
+       No width:1% — try natural width after the <br> split. */
+    body.printing-overview #indented-bom-overview th.bom-num {
+        white-space: normal;
+    }
+
+    body.printing-overview #indented-bom-overview td:nth-child(6),
+    body.printing-overview #indented-bom-overview td:nth-child(7) {
+        white-space: nowrap;
+    }
+
+    /* Code / Quantity: nowrap, natural content width (no width:1%). */
+    body.printing-overview #indented-bom-overview th:first-child,
+    body.printing-overview #indented-bom-overview td:first-child,
+    body.printing-overview #indented-bom-overview td.bom-num,
+    body.printing-overview #indented-bom-overview th:nth-child(5),
+    body.printing-overview #indented-bom-overview td:nth-child(5) {
+        white-space: nowrap;
     }
 
     .fixed-action-btn {
@@ -49,8 +93,8 @@
         overflow-x: visible !important;
     }
 
-    .text-right {
-        text-align: left;
+    body.printing-overview .overview-unit-cost {
+        text-align: start;
         font-weight: bold;
         margin-top: 12px;
     }

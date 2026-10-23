@@ -11,11 +11,12 @@
     <link rel="stylesheet" type="text/css" href="{% static 'bom/css/customer-price-create.css' %}"/>
 {% endblock %}
 
+{# Suppress global base.html printer-doc so preview print has a single header. #}
+{% block printer-doc %}{% endblock %}
+
 {% block bom-menu %}
-    {% if part_locked and part_info_url %}
-        <a class="bom-nav-link" href="{{ part_info_url }}#customers">{% trans "Cancel" %}</a>
-    {% elif customer %}
-        <a class="bom-nav-link" href="{% url 'bom:customer-info' customer_id=customer.id %}">{% trans "Cancel" %}</a>
+    {% if cancel_url %}
+        <a class="bom-nav-link" href="{{ cancel_url }}">{% trans "Cancel" %}</a>
     {% else %}
         <a class="bom-nav-link" href="javascript:history.back()">{% trans "Cancel" %}</a>
     {% endif %}
@@ -27,20 +28,19 @@
             <h3 class="light">{% trans "Add Customer Price" %}</h3>
             {% if customer %}
                 <p>{% trans "Customer" %}: <a href="{% url 'bom:customer-info' customer_id=customer.id %}">{{ customer.name }}</a></p>
-            {% elif part_locked and part %}
+            {% endif %}
+            {% if part_locked and part %}
                 <p>{% trans "Part" %}: <a href="{% url 'bom:part-info' part_id=part.id %}">{{ part.full_part_number }}</a></p>
             {% endif %}
         </div>
 
         {% if show_preview and preview %}
             <div class="printer-show printer-doc mb-4">
-                <img class="printer-logo" width="56" height="56" alt="Lithium" src="{% static 'bom/img/lithium.png' %}">
                 <div class="printer-doc-text">
                     <p class="printer-doc-title">{% trans "Customer Price Review" %}</p>
-                    <p class="printer-doc-meta">{{ preview.customer.name }} · {{ preview.part.full_part_number }}</p>
+                    <p class="printer-doc-meta">{{ preview.customer.name }} · {{ preview.part.full_part_number }} · {% user_datetime print_generated_at %}</p>
                 </div>
             </div>
-            <h4 class="printer-show">{% trans "Price Review" %}</h4>
         {% endif %}
 
         <div class="row mb-4 price-pair-row" id="price-summary-and-tiers">
@@ -52,6 +52,7 @@
                     <div class="price-pair-panel__body">
                         <form action="{{ action }}" method="post" id="price-load-form" class="price-summary-select">
                             {% csrf_token %}
+                            {% if entry_from %}<input type="hidden" name="from" value="{{ entry_from }}">{% endif %}
                             <dl class="price-summary-list">
                                 {% if part_locked %}
                                     <div class="price-summary-list__row price-summary-list__row--field printer-hide">
@@ -126,10 +127,8 @@
                                 {% endif %}
                             </dl>
                             <div class="price-summary-select__actions flex justify-between printer-hide">
-                                {% if part_locked and part_info_url %}
-                                    <a href="{{ part_info_url }}#customers" class="bom-btn-ghost">{% trans "Cancel" %}</a>
-                                {% elif customer %}
-                                    <a href="{% url 'bom:customer-info' customer_id=customer.id %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
+                                {% if cancel_url %}
+                                    <a href="{{ cancel_url }}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
                                 {% else %}
                                     <a href="javascript:history.back()" class="bom-btn-ghost">{% trans "Cancel" %}</a>
                                 {% endif %}
@@ -179,6 +178,7 @@
                     <h5 class="mb-2">{% trans "Selected price" %}</h5>
                     <form action="{{ action }}" method="post" id="price-confirm-form" data-base-cost="{{ preview.base_cost.amount }}">
                         {% csrf_token %}
+                        {% if entry_from %}<input type="hidden" name="from" value="{{ entry_from }}">{% endif %}
                         <input type="hidden" name="part" value="{{ preview.part.id }}">
                         {% if part_locked %}
                             <input type="hidden" name="customer" value="{{ preview.customer.id }}">
@@ -254,7 +254,10 @@
                     // Flush layout so sticky→static and page breaks apply before Chrome snapshots.
                     void document.body.offsetHeight;
                     requestAnimationFrame(function () {
-                        window.print();
+                        var printFn = (window.bomPrint && window.bomPrint.print)
+                            ? window.bomPrint.print
+                            : function () { window.print(); };
+                        printFn();
                     });
                 });
             }

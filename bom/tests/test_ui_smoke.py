@@ -89,10 +89,78 @@ class TestUiSmoke(TransactionTestCase):
         part_info_css = open("bom/static/bom/css/part-info.css").read()
         self.assertIn("@page overview", part_info_css)
         self.assertRegex(part_info_css, r"size:\s*A5")
+        self.assertRegex(
+            part_info_css,
+            r"@page\s+overview\s*\{[^}]*margin:\s*8mm",
+        )
         self.assertIn("body.printing-overview", part_info_css)
         self.assertIn("page: overview", part_info_css)
-        self.assertIn("font-size: 9pt", part_info_css)
-        self.assertIn("font-size: 8.5pt", part_info_css)
+        self.assertRegex(
+            part_info_css,
+            r"body\.printing-overview\s*\{[^}]*line-height:\s*1\.8",
+        )
+        self.assertRegex(
+            part_info_css,
+            r"#indented-bom-overview\s*\{[^}]*font-size:\s*8pt",
+        )
+        self.assertRegex(
+            part_info_css,
+            r"#indented-bom-overview\s+th,\s*"
+            r"body\.printing-overview\s+#indented-bom-overview\s+td\s*\{[^}]*"
+            r"font-size:\s*8pt",
+        )
+        self.assertNotRegex(
+            part_info_css,
+            r"#indented-bom-overview\s+td:nth-child\(3\)\s*\{[^}]*font-size:\s*[679]pt",
+        )
+        self.assertRegex(
+            part_info_css,
+            r"body\.printing-overview\s+\.printer-logo\s*\{[^}]*display:\s*none",
+        )
+        self.assertRegex(
+            part_info_css,
+            r"#indented-bom-overview\s+td:first-child[^{]*\{[^}]*white-space:\s*nowrap",
+        )
+        # Cost headers wrap; cost body cells stay nowrap.
+        self.assertRegex(
+            part_info_css,
+            r"#indented-bom-overview\s+th\.bom-num\s*\{[^}]*white-space:\s*normal",
+        )
+        self.assertRegex(
+            part_info_css,
+            r"#indented-bom-overview\s+td\.bom-num[^{]*\{[^}]*white-space:\s*nowrap",
+        )
+        # Code/Quantity: natural width (not shrink-wrap 1% / fixed 18%).
+        self.assertNotRegex(
+            part_info_css,
+            r"#indented-bom-overview\s+td:first-child[^{]*\{[^}]*width:\s*1%",
+        )
+        self.assertNotRegex(
+            part_info_css,
+            r"#indented-bom-overview\s+td:first-child[^{]*\{[^}]*width:\s*18%",
+        )
+        self.assertNotRegex(
+            part_info_css,
+            r"#indented-bom-overview\s+td:first-child[^{]*\{[^}]*min-width:\s*(?:0|5\.5em)",
+        )
+        # Cost cols: no width:1%; header <br> + nowrap body should be enough.
+        self.assertNotRegex(
+            part_info_css,
+            r"#indented-bom-overview\s+th\.bom-num\s*\{[^}]*width:\s*1%",
+        )
+        self.assertRegex(
+            part_info_css,
+            r"#indented-bom-overview\s+td:nth-child\(6\),\s*"
+            r"body\.printing-overview\s+#indented-bom-overview\s+td:nth-child\(7\)\s*\{[^}]*"
+            r"white-space:\s*nowrap",
+        )
+        # Unit-cost footer under overview table (not Materialize .text-right).
+        self.assertRegex(
+            part_info_css,
+            r"body\.printing-overview\s+\.overview-unit-cost\s*\{[^}]*"
+            r"font-weight:\s*bold",
+        )
+        self.assertNotIn(".text-right", part_info_css)
 
     def test_login_form_error_display(self):
         response = self.client.post(reverse("login"), {"username": "x", "password": "bad"})
@@ -174,6 +242,28 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn("html.dark", src)
         self.assertIn("color-scheme: light", src)
         self.assertIn("html.dark .bom-brand-mark", src)
+        # Print always forces light tokens even when html.dark is active.
+        print_src = src[src.find("@media print") :]
+        self.assertIn("color-scheme: light !important", print_src)
+        self.assertIn("--color-ink: #131a16", print_src)
+        self.assertIn("html.dark .bom-brand-mark", print_src)
+        self.assertIn("filter: none !important", print_src)
+        css_compact = css.replace(" ", "")
+        self.assertIn("color-scheme:light!important", css_compact)
+        self.assertIn("--color-ink:#131a16", css_compact)
+        # Parastoo is the print face (Regular + Bold covering semibold).
+        self.assertIn('--font-print: "Parastoo"', src)
+        self.assertRegex(
+            src,
+            r'@font-face\s*\{[^}]*font-family:\s*"Parastoo"[^}]*'
+            r'Parastoo-Bold\.woff2[^}]*font-weight:\s*600\s+700',
+        )
+        self.assertIn("font-family: var(--font-print) !important", print_src)
+        self.assertIn("font-family:var(--font-print)!important", css_compact)
+        self.assertIn("line-height: 1.8", print_src)
+        self.assertIn("line-height:1.8!important", css_compact)
+        self.assertIn("Parastoo.woff2", css)
+        self.assertIn("Parastoo-Bold.woff2", css)
 
     def test_staff_home_hub_and_materials_urls(self):
         user, organization = create_user_and_organization()
@@ -370,7 +460,10 @@ class TestUiSmoke(TransactionTestCase):
         bom_html = bom.content.decode("utf-8")
         unfold_at = bom_html.find("unfold_more")
         table_at = bom_html.find('id="indented-bom"')
-        cost_at = bom_html.find("قیمت واحد (کیلو گرم):")
+        # Footer clarifies overhead; accept fa or en (test locale may vary).
+        cost_at = bom_html.find("قیمت واحد (کیلوگرم، با سربار):")
+        if cost_at < 0:
+            cost_at = bom_html.find("Unit cost (kg, incl. overhead):")
         delete_at = bom_html.find("حذف همه زیرشاخه‌ها")
         add_at = bom_html.find("افزودن زیرشاخه")
         self.assertNotEqual(unfold_at, -1)
@@ -413,3 +506,11 @@ class TestBomTabsUrlHash(SimpleTestCase):
         self.assertIn(hash_branch, js)
         self.assertIn(active_branch, js)
         self.assertLess(js.index(hash_branch), js.index(active_branch))
+
+    def test_bom_print_prepares_parastoo_fonts(self):
+        js = open("bom/static/bom/js/bom-ui.js").read()
+        self.assertIn("window.bomPrint", js)
+        self.assertIn("preparePrintFonts", js)
+        self.assertIn('document.fonts.load(\'400 12pt "Parastoo"\')', js)
+        self.assertIn('document.fonts.load(\'700 12pt "Parastoo"\')', js)
+        self.assertIn("printWithPreparedFonts", js)
