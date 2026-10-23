@@ -381,6 +381,13 @@ class TestCustomerPricing(TransactionTestCase):
         part_revision = self.part.latest()
         base_cost = part_revision.bom_unit_cost_at_quantity(1)
         expected_price = self._tier_price(base_cost, Decimal("20"))
+        preview_url = reverse(
+            "bom:part-customer-price-create-for-customer",
+            kwargs={
+                "part_id": self.part.id,
+                "customer_id": self.customer.id,
+            },
+        )
 
         response = self.client.post(
             reverse(
@@ -391,7 +398,12 @@ class TestCustomerPricing(TransactionTestCase):
                 "customer": self.customer.name,
             },
         )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, preview_url)
+
+        response = self.client.get(preview_url)
         self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["show_preview"])
         self.assertContains(response, str(base_cost.amount))
         self.assertContains(response, str(expected_price.amount))
         html = response.content.decode()
@@ -403,6 +415,7 @@ class TestCustomerPricing(TransactionTestCase):
             "Prices by profit %" in html or ("قیمت" in html and "سود" in html),
             "profit tier panel missing",
         )
+        self.assertIn(preview_url, html)
         self.assertFalse(CustomerPrice.objects.filter(customer=self.customer).exists())
 
         response = self.client.post(
@@ -414,6 +427,9 @@ class TestCustomerPricing(TransactionTestCase):
                 "customer": str(self.customer.id),
             },
         )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, preview_url)
+        response = self.client.get(preview_url)
         self.assertEqual(response.status_code, 200)
         html = response.content.decode()
         self.assertTrue(

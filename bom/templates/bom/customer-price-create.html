@@ -30,7 +30,8 @@
             <h3 class="light">{% trans "Add Customer Price" %}</h3>
             {% if customer %}
                 <p>{% trans "Customer" %}: <a href="{% url 'bom:customer-info' customer_id=customer.id %}">{{ customer.name }}</a></p>
-            {% elif part_locked and part %}
+            {% endif %}
+            {% if part_locked and part %}
                 <p>{% trans "Part" %}: <a href="{% url 'bom:part-info' part_id=part.id %}">{{ part.full_part_number }}</a></p>
             {% endif %}
         </div>

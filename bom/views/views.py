@@ -1676,7 +1676,7 @@ def customer_price_create(request, customer_id):
 
 @login_required(login_url=BOM_LOGIN_URL)
 @organization_admin
-def part_customer_price_create(request, part_id):
+def part_customer_price_create(request, part_id, customer_id=None):
     profile = request.user.bom_profile()
     organization = profile.organization
     part = get_object_or_404(Part, pk=part_id)
@@ -1685,14 +1685,39 @@ def part_customer_price_create(request, part_id):
         messages.error(request, _("Can't access a part that is not yours!"))
         return HttpResponseRedirect(reverse("bom:materials"))
 
-    action = reverse(
-        "bom:part-customer-price-create", kwargs={"part_id": part_id}
-    )
+    customer = None
+    if customer_id is not None:
+        customer = get_object_or_404(Customer, pk=customer_id)
+        if customer.organization != organization:
+            messages.error(request, _("Can't access a customer that is not yours!"))
+            return HttpResponseRedirect(
+                reverse("bom:part-info", kwargs={"part_id": part_id}) + "#customers"
+            )
+
     part_info_url = reverse("bom:part-info", kwargs={"part_id": part_id})
+
+    def preview_url_for(selected_customer):
+        return reverse(
+            "bom:part-customer-price-create-for-customer",
+            kwargs={
+                "part_id": part_id,
+                "customer_id": selected_customer.id,
+            },
+        )
+
+    if customer is not None:
+        action = preview_url_for(customer)
+        load_initial = {"customer": customer.name}
+    else:
+        action = reverse(
+            "bom:part-customer-price-create", kwargs={"part_id": part_id}
+        )
+        load_initial = {}
 
     load_form = CustomerPriceLoadForm(
         organization=organization,
         part=part,
+        initial=load_initial,
     )
     confirm_form = None
 
@@ -1709,7 +1734,7 @@ def part_customer_price_create(request, part_id):
                 request,
                 organization,
                 profile,
-                customer=None,
+                customer=customer,
                 part=part,
                 part_locked=True,
                 action=action,
@@ -1726,10 +1751,15 @@ def part_customer_price_create(request, part_id):
                 part=part,
             )
             if load_form.is_valid():
+                # Keep preview visible after a failed confirm; prefer URL with both ids.
+                selected = load_form.cleaned_data["customer"]
+                target = preview_url_for(selected)
+                if request.path != target:
+                    return HttpResponseRedirect(target)
                 context["show_preview"] = True
                 context["preview"] = customer_price_preview_context(
                     part,
-                    load_form.cleaned_data["customer"],
+                    selected,
                     organization,
                 )
         else:
@@ -1738,11 +1768,16 @@ def part_customer_price_create(request, part_id):
                 organization=organization,
                 part=part,
             )
+            if load_form.is_valid():
+                # PRG: land on .../create/customer/<id>/ so the URL carries both ids.
+                return HttpResponseRedirect(
+                    preview_url_for(load_form.cleaned_data["customer"])
+                )
             result, context = _customer_price_create_context(
                 request,
                 organization,
                 profile,
-                customer=None,
+                customer=customer,
                 part=part,
                 part_locked=True,
                 action=action,
@@ -1753,12 +1788,17 @@ def part_customer_price_create(request, part_id):
             request,
             organization,
             profile,
-            customer=None,
+            customer=customer,
             part=part,
             part_locked=True,
             action=action,
             load_form=load_form,
         )
+        if customer is not None:
+            context["show_preview"] = True
+            context["preview"] = customer_price_preview_context(
+                part, customer, organization
+            )
 
     context["part_info_url"] = part_info_url
     return TemplateResponse(request, "bom/customer-price-create.html", context)

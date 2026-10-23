@@ -91,6 +91,11 @@ bom_patterns = [
         views.part_customer_price_create,
         name="part-customer-price-create",
     ),
+    path(
+        "part/<int:part_id>/customer-prices/create/customer/<int:customer_id>/",
+        views.part_customer_price_create,
+        name="part-customer-price-create-for-customer",
+    ),
     path("part/<int:part_id>/export/", views.part_export_bom, name="part-export-bom"),
     path(
         "part/<int:part_id>/export-sourcing/",
