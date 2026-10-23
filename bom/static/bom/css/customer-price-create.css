@@ -1,6 +1,6 @@
 @media print {
     @page price-review {
-        size: A5 portrait;
+        size: A5 landscape;
         margin: 8mm;
     }
 

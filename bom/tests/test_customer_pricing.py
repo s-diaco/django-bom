@@ -662,9 +662,9 @@ class TestCustomerPricing(TransactionTestCase):
             / "css"
             / "customer-price-create.css"
         ).read_text()
-        self.assertRegex(css, r"@page\s+price-review\s*\{[^}]*size:\s*A5\s+portrait")
+        self.assertRegex(css, r"@page\s+price-review\s*\{[^}]*size:\s*A5\s+landscape")
         self.assertRegex(css, r"@page\s+price-review\s*\{[^}]*margin:\s*8mm")
-        self.assertNotRegex(css, r"@page\s+price-review\s*\{[^}]*landscape")
+        self.assertNotRegex(css, r"@page\s+price-review\s*\{[^}]*portrait")
         self.assertRegex(
             css,
             r"body\.printing-price-review\s*\{[^}]*line-height:\s*1\.8",
