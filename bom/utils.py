@@ -383,6 +383,8 @@ def bom_overview_context(part_revision, quantity=1):
         "total_bom_weight": None,
         "product_weight": None,
         "childs_unit_cost": None,
+        "type_overhead": None,
+        "bom_unit_cost": None,
         "bom_error": None,
     }
     if part_revision is None:
@@ -397,6 +399,8 @@ def bom_overview_context(part_revision, quantity=1):
             "total_bom_weight": revision_part.childs_quantity,
             "product_weight": revision_part.childs_product_quantity,
             "childs_unit_cost": revision_part.childs_unit_cost,
+            "type_overhead": part_revision.type_overhead,
+            "bom_unit_cost": indented_bom.unit_cost,
             "bom_error": None,
         }
     except (RuntimeError, RecursionError):

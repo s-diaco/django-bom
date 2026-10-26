@@ -2071,6 +2071,8 @@ def part_info(request, part_id, part_revision_id=None):
     total_bom_weight = bom_ctx.get("total_bom_weight")
     product_weight = bom_ctx.get("product_weight")
     childs_unit_cost = bom_ctx.get("childs_unit_cost")
+    type_overhead = bom_ctx.get("type_overhead")
+    bom_unit_cost = bom_ctx.get("bom_unit_cost")
     if bom_ctx.get("bom_error") == "infinite_recursion":
         messages.error(
             request,

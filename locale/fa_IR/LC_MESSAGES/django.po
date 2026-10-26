@@ -664,7 +664,11 @@ msgstr "قیمت در BoM"
 msgid "Manage"
 msgstr "مدیریت"
 
-#: bom/templates/bom/components/bom-indented-overview.html:95
+#: bom/templates/bom/components/bom-indented-overview.html
+msgid "Total BoM"
+msgstr "جمع BoM"
+
+#: bom/templates/bom/components/bom-indented-overview.html
 msgid "Total"
 msgstr "جمع"
 

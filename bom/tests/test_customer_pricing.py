@@ -679,6 +679,30 @@ class TestCustomerPricing(TransactionTestCase):
             "BoM overview heading missing",
         )
         self.assertContains(response, "indented-bom-overview")
+        # Footer: Total BoM (materials) + Overhead + Total (matches unit cost).
+        self.assertTrue(
+            "Total BoM" in html or "جمع BoM" in html,
+            "Total BoM footer label missing",
+        )
+        self.assertTrue(
+            "Overhead" in html or "سربار" in html,
+            "Overhead footer label missing",
+        )
+        tfoot_at = html.find("<tfoot>")
+        self.assertGreater(tfoot_at, -1)
+        tfoot = html[tfoot_at : html.find("</tfoot>", tfoot_at)]
+        self.assertTrue(
+            "Total BoM" in tfoot or "جمع BoM" in tfoot,
+            "Total BoM missing from table footer",
+        )
+        self.assertTrue(
+            "Overhead" in tfoot or "سربار" in tfoot,
+            "Overhead missing from table footer",
+        )
+        self.assertTrue(
+            ">Total<" in tfoot or ">جمع<" in tfoot,
+            "Total missing from table footer",
+        )
         self.assertNotContains(response, 'id="overview-print-button"')
         self.assertContains(response, 'id="price-review-print-button"')
         self.assertContains(response, "bomPrint")
