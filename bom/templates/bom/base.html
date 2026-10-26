@@ -31,6 +31,9 @@
     </script>
     <link href="{% static 'bom/css/material-icons.css' %}" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'bom/css/app.css' %}">
+    {# Warm print face early — Chrome print preview often paints Vazirmatn if Parastoo is still unloaded. #}
+    <link rel="preload" href="{% static 'bom/font/Parastoo.woff2' %}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{% static 'bom/font/Parastoo-Bold.woff2' %}" as="font" type="font/woff2" crossorigin>
     {% block head %}{% endblock head %}
     <link rel="shortcut icon" type="image/png" href="{% static 'bom/img/favicon.ico' %}"/>
 </head>
@@ -63,6 +66,7 @@
     </div>
 </header>
 {% endblock %}
+{% block printer-doc %}
 <div class="printer-show printer-doc">
     <img class="printer-logo" width="56" height="56" alt="Lithium" src="{% static 'bom/img/lithium.png' %}">
     <div class="printer-doc-text">
@@ -72,6 +76,7 @@
         </p>
     </div>
 </div>
+{% endblock %}
 
 <main class="flex-1">
     {% block main %}{% endblock main %}

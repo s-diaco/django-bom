@@ -1,5 +1,6 @@
 {# To include this widget, make sure to pass: `parts`, `order_by`, `part`, `part_revision`, `profile` variables  - TODO Could remove part if we pass part revision #}
 {% load static %}
+{% load bom_i18n %}
 
 {% block head %}
 {% endblock %}
@@ -42,8 +43,8 @@
             <!-- <th class="text-normal"><i>Order Qty</i></th> -->
             <th class="text-normal printer-hide">{% trans "L.O.I" %}</th>
             <th class="text-normal">{% trans "Quantity" %}</th>
-            <th class="text-normal bom-num">{% trans "Unit Cost" %}</th>
-            <th class="text-normal bom-num">{% trans "Cost in BoM" %}</th>
+            <th class="text-normal bom-num">{% trans "Unit Cost" %}<br>({% firstof currency_unit_txt organization.currency|currency_label %})</th>
+            <th class="text-normal bom-num">{% trans "Cost in BoM" %}<br>({% firstof currency_unit_txt organization.currency|currency_label %})</th>
             <!-- <th class="text-normal"><i>Ext Cost</i></th> -->
             <!-- <th class="text-normal">NRE</th> -->
             <!-- <th class="text-normal">Childs Qty</th> -->
@@ -77,7 +78,7 @@
                     <td class="text-normal printer-hide" id="bom-indented-seller-name-{{ subpart.part_revision.id }}">{{ subpart.part_revision.tolerance | default:"-" }}</td>
                     <td class="text-normal" data-quantity="{{ subpart.quantity }}">{{ subpart.quantity | floatformat }}</td>
                     <td class="text-normal" id="bom-indented-unit-cost-{{ subpart.part_revision.id }}"{% if subpart.unit_cost %} data-unit-cost="{{ subpart.unit_cost.amount }}"{% endif %}>
-                        {{ subpart.unit_cost | default:"-" }}
+                        {% if subpart.unit_cost %}{{ subpart.unit_cost|money_amount }}{% else %}-{% endif %}
                     </td>
                     <td class="text-normal" id="bom-indented-total-cost-{{ subpart.part_revision.id }}">
                         <!-- This will be populated by JavaScript -->
@@ -92,13 +93,31 @@
         </tbody>
         <tfoot>
         <tr>
-            <td class="text-normal">{% trans "Total" %}</td>
+            <td class="text-normal">{% trans "Total BoM" %}</td>
             <td class="text-normal printer-hide"></td>
             <td class="text-normal"></td>
             <td class="text-normal printer-hide"></td>
             <td class="text-normal bom-num">{{ total_bom_weight|floatformat:0 }}</td>
             <td class="text-normal"></td>
-            <td class="text-normal bom-num">{{ childs_unit_cost }}</td>
+            <td class="text-normal bom-num">{{ childs_unit_cost|money_amount }}</td>
+        </tr>
+        <tr>
+            <td class="text-normal">{% trans "Overhead" %}</td>
+            <td class="text-normal printer-hide"></td>
+            <td class="text-normal"></td>
+            <td class="text-normal printer-hide"></td>
+            <td class="text-normal"></td>
+            <td class="text-normal"></td>
+            <td class="text-normal bom-num">{{ type_overhead|money_amount }}</td>
+        </tr>
+        <tr>
+            <td class="text-normal">{% trans "Total" %}</td>
+            <td class="text-normal printer-hide"></td>
+            <td class="text-normal"></td>
+            <td class="text-normal printer-hide"></td>
+            <td class="text-normal"></td>
+            <td class="text-normal"></td>
+            <td class="text-normal bom-num">{{ bom_unit_cost|money_amount }}</td>
         </tr>
         </tfoot>
     </table>
@@ -129,11 +148,11 @@
             // Calculate the total cost
             const totalCost = unitCost * quantity / productWeight;
 
-            // Format totalCost with a thousands separator
-            const formattedTotalCost = totalCost.toLocaleString('en-US',{
-                style: 'currency',
-                currency: 'IRR',
-            }).replace(/IRR/g, 'ریال').trim();
+            // Amount only — currency is shown once in the column header.
+            const formattedTotalCost = totalCost.toLocaleString('en-US', {
+                maximumFractionDigits: 0,
+                minimumFractionDigits: 0,
+            });
 
             // Update the total cost cell
             $(this).find('[id^="bom-indented-total-cost-"]').text(formattedTotalCost);

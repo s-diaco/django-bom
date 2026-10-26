@@ -53,10 +53,18 @@ class PartInfoTestsMixin:
         html = response.content.decode("utf-8")
         self.assertIn('id="overview-tab"', html)
         self.assertIn('id="overview-print-button"', html)
-        self.assertIn("دانلود CSV درخت محصول", html)
+        self.assertTrue(
+            "دانلود CSV درخت محصول" in html or "Download BOM CSV" in html,
+            "overview download CSV action missing",
+        )
         self.assertNotIn("مدیریت درخت محصول", html)
         self.assertIn("printing-overview", html)
         self.assertIn('id="indented-bom-overview"', html)
+        # Print button waits for Parastoo via bomPrint before window.print().
+        self.assertIn("bomPrint", html)
+        self.assertIn("Parastoo.woff2", html)
+        self.assertIn("Parastoo-Bold.woff2", html)
+        self.assertIn('rel="preload"', html)
         # Locale-safe BoM price calc: numeric attrs + JS reads (not Money display text)
         self.assertIn("data-quantity=", html)
         self.assertIn(".attr('data-unit-cost')", html)

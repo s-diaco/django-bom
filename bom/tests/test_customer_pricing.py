@@ -1,3 +1,4 @@
+import re
 from decimal import Decimal
 
 from django.conf import settings
@@ -380,6 +381,17 @@ class TestCustomerPricing(TransactionTestCase):
         part_revision = self.part.latest()
         base_cost = part_revision.bom_unit_cost_at_quantity(1)
         expected_price = self._tier_price(base_cost, Decimal("20"))
+        preview_path = reverse(
+            "bom:part-customer-price-create-for-customer",
+            kwargs={
+                "part_id": self.part.id,
+                "customer_id": self.customer.id,
+            },
+        )
+        preview_url = f"{preview_path}?from=part"
+        cancel_url = (
+            reverse("bom:part-info", kwargs={"part_id": self.part.id}) + "#customers"
+        )
 
         response = self.client.post(
             reverse(
@@ -390,7 +402,13 @@ class TestCustomerPricing(TransactionTestCase):
                 "customer": self.customer.name,
             },
         )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, preview_url)
+
+        response = self.client.get(preview_url)
         self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["show_preview"])
+        self.assertEqual(response.context["cancel_url"], cancel_url)
         self.assertContains(response, str(base_cost.amount))
         self.assertContains(response, str(expected_price.amount))
         html = response.content.decode()
@@ -402,6 +420,8 @@ class TestCustomerPricing(TransactionTestCase):
             "Prices by profit %" in html or ("قیمت" in html and "سود" in html),
             "profit tier panel missing",
         )
+        self.assertIn(preview_path, html)
+        self.assertIn('name="from" value="part"', html)
         self.assertFalse(CustomerPrice.objects.filter(customer=self.customer).exists())
 
         response = self.client.post(
@@ -413,6 +433,9 @@ class TestCustomerPricing(TransactionTestCase):
                 "customer": str(self.customer.id),
             },
         )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, preview_url)
+        response = self.client.get(preview_url)
         self.assertEqual(response.status_code, 200)
         html = response.content.decode()
         self.assertTrue(
@@ -503,6 +526,19 @@ class TestCustomerPricing(TransactionTestCase):
         part_revision = self.part.latest()
         base_cost = part_revision.bom_unit_cost_at_quantity(1)
         expected_price = self._tier_price(base_cost, Decimal("20"))
+        preview_url = (
+            reverse(
+                "bom:part-customer-price-create-for-customer",
+                kwargs={
+                    "part_id": self.part.id,
+                    "customer_id": self.customer.id,
+                },
+            )
+            + "?from=customer"
+        )
+        cancel_url = reverse(
+            "bom:customer-info", kwargs={"customer_id": self.customer.id}
+        )
 
         response = self.client.post(
             reverse(
@@ -513,7 +549,13 @@ class TestCustomerPricing(TransactionTestCase):
                 "part": self.part.full_part_number(),
             },
         )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, preview_url)
+
+        response = self.client.get(preview_url)
         self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["show_preview"])
+        self.assertEqual(response.context["cancel_url"], cancel_url)
         self.assertContains(response, str(base_cost.amount))
         self.assertContains(response, str(expected_price.amount))
         self.assertContains(response, "Peer Buyer")
@@ -532,6 +574,7 @@ class TestCustomerPricing(TransactionTestCase):
             "Adjusted base (BoM + 7%)" in html or "BoM + ۷٪" in html or "BoM + 7%" in html,
             "adjusted base label missing",
         )
+        self.assertIn('name="from" value="customer"', html)
         # Material selection lives inside Pricing summary as a summary-list row.
         self.assertContains(response, 'id="price-load-form"')
         self.assertNotContains(response, 'id="price-input-panel"')
@@ -542,6 +585,22 @@ class TestCustomerPricing(TransactionTestCase):
         field_idx = html.find("price-summary-list__row--field")
         self.assertGreater(summary_idx, -1)
         self.assertGreater(field_idx, summary_idx)
+        # Print header: one Customer Price Review, no logo, no redundant Price Review h4.
+        self.assertTrue(
+            "Customer Price Review" in html or "بازبینی قیمت مشتری" in html,
+            "print header title missing",
+        )
+        # Match class token printer-doc only (not printer-doc-title / -meta / -text).
+        self.assertEqual(
+            len(re.findall(r'class="[^"]*(?<![\w-])printer-doc(?![\w-])[^"]*"', html)),
+            1,
+        )
+        self.assertNotIn("printer-logo", html)
+        self.assertNotRegex(
+            html,
+            r'<h4[^>]*class="[^"]*printer-show[^"]*"[^>]*>\s*(Price Review|بازبینی قیمت)\s*</h4>',
+        )
+        self.assertIsNotNone(response.context["print_generated_at"])
         self.assertFalse(CustomerPrice.objects.filter(customer=self.customer).exists())
 
     def test_customer_price_create_confirm_from_peer_price(self):
@@ -590,6 +649,16 @@ class TestCustomerPricing(TransactionTestCase):
         part_revision.material = "with_loi"
         part_revision.save()
 
+        preview_url = (
+            reverse(
+                "bom:part-customer-price-create-for-customer",
+                kwargs={
+                    "part_id": self.part.id,
+                    "customer_id": self.customer.id,
+                },
+            )
+            + "?from=customer"
+        )
         response = self.client.post(
             reverse(
                 "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
@@ -599,6 +668,10 @@ class TestCustomerPricing(TransactionTestCase):
                 "part": self.part.full_part_number(),
             },
         )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, preview_url)
+
+        response = self.client.get(preview_url)
         self.assertEqual(response.status_code, 200)
         html = response.content.decode()
         self.assertTrue(
@@ -606,28 +679,172 @@ class TestCustomerPricing(TransactionTestCase):
             "BoM overview heading missing",
         )
         self.assertContains(response, "indented-bom-overview")
+        # Footer: Total BoM (materials) + Overhead + Total (matches unit cost).
+        self.assertTrue(
+            "Total BoM" in html or "جمع BoM" in html,
+            "Total BoM footer label missing",
+        )
+        self.assertTrue(
+            "Overhead" in html or "سربار" in html,
+            "Overhead footer label missing",
+        )
+        tfoot_at = html.find("<tfoot>")
+        self.assertGreater(tfoot_at, -1)
+        tfoot = html[tfoot_at : html.find("</tfoot>", tfoot_at)]
+        self.assertTrue(
+            "Total BoM" in tfoot or "جمع BoM" in tfoot,
+            "Total BoM missing from table footer",
+        )
+        self.assertTrue(
+            "Overhead" in tfoot or "سربار" in tfoot,
+            "Overhead missing from table footer",
+        )
+        self.assertTrue(
+            ">Total<" in tfoot or ">جمع<" in tfoot,
+            "Total missing from table footer",
+        )
         self.assertNotContains(response, 'id="overview-print-button"')
         self.assertContains(response, 'id="price-review-print-button"')
+        self.assertContains(response, "bomPrint")
+        # Currency once in cost column headers; row JS formats amount only.
+        from bom.utils import currency_label
+
+        curr = currency_label(self.organization.currency)
+        self.assertIn(f"({curr})", html)
+        # Cost headers: label, then currency on the next line.
+        self.assertRegex(html, rf"Unit Cost<br>\({curr}\)|قیمت واحد<br>\({curr}\)")
+        self.assertRegex(html, rf"Cost in BoM<br>\({curr}\)|قیمت در BoM<br>\({curr}\)")
+        self.assertNotIn("style: 'currency'", html)
+        self.assertNotIn('style: "currency"', html)
         summary_idx = html.find("Pricing summary")
         if summary_idx < 0:
             summary_idx = html.find("خلاصه قیمت")
         self.assertLess(
             summary_idx,
+            html.find('id="price-review-rest"'),
+        )
+        self.assertLess(
+            html.find('id="price-review-rest"'),
             html.find('id="price-review-bom"'),
         )
         self.assertLess(
             html.find('id="price-selection-panel"'),
             html.find('id="bom-indented"'),
         )
+        # Print CSS: page break before peer prices (and BoM), matching #price-review-bom.
+        from pathlib import Path
+
+        css = (
+            Path(settings.BASE_DIR)
+            / "bom"
+            / "static"
+            / "bom"
+            / "css"
+            / "customer-price-create.css"
+        ).read_text()
+        self.assertRegex(css, r"@page\s+price-review\s*\{[^}]*size:\s*A5\s+landscape")
+        self.assertRegex(css, r"@page\s+price-review\s*\{[^}]*margin:\s*8mm")
+        self.assertNotRegex(css, r"@page\s+price-review\s*\{[^}]*portrait")
+        self.assertRegex(
+            css,
+            r"body\.printing-price-review\s*\{[^}]*line-height:\s*1\.8",
+        )
+        self.assertRegex(
+            css,
+            r"body\.printing-price-review\s+#price-review-bom\s*\{[^}]*"
+            r"line-height:\s*1\.8",
+        )
+        self.assertRegex(
+            css,
+            r"#price-review-rest,\s*"
+            r"(?:body\.printing-price-review\s+)?#price-review-bom\s*\{[^}]*"
+            r"page-break-before:\s*always",
+        )
+        # BoM Overview print: 8pt for all headers and body cells (incl. Description).
+        self.assertRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s*\{[^}]*font-size:\s*8pt",
+        )
+        self.assertRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s+th,\s*"
+            r"body\.printing-price-review\s+#price-review-bom\s+#indented-bom-overview\s+td\s*\{[^}]*"
+            r"font-size:\s*8pt",
+        )
+        self.assertNotRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s+td:nth-child\(3\)\s*\{[^}]*"
+            r"font-size:\s*[679]pt",
+        )
+        self.assertRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s+td:first-child[^{]*\{[^}]*"
+            r"white-space:\s*nowrap",
+        )
+        self.assertRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s+th\.bom-num\s*\{[^}]*"
+            r"white-space:\s*normal",
+        )
+        self.assertRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s+td\.bom-num[^{]*\{[^}]*"
+            r"white-space:\s*nowrap",
+        )
+        self.assertNotRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s+td:first-child[^{]*\{[^}]*"
+            r"width:\s*1%",
+        )
+        self.assertNotRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s+td:first-child[^{]*\{[^}]*"
+            r"width:\s*18%",
+        )
+        self.assertNotRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s+td:first-child[^{]*\{[^}]*"
+            r"min-width:\s*(?:0|5\.5em)",
+        )
+        # Cost cols: no width:1%; header <br> + nowrap body should be enough.
+        self.assertNotRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s+th\.bom-num\s*\{[^}]*"
+            r"width:\s*1%",
+        )
+        self.assertRegex(
+            css,
+            r"#price-review-bom\s+#indented-bom-overview\s+td:nth-child\(6\),\s*"
+            r"body\.printing-price-review\s+#price-review-bom\s+#indented-bom-overview\s+"
+            r"td:nth-child\(7\)\s*\{[^}]*white-space:\s*nowrap",
+        )
     def test_get_with_part_id_shows_preview(self):
+        preview_url = (
+            reverse(
+                "bom:part-customer-price-create-for-customer",
+                kwargs={
+                    "part_id": self.part.id,
+                    "customer_id": self.customer.id,
+                },
+            )
+            + "?from=customer"
+        )
         response = self.client.get(
             reverse(
                 "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
             )
             + f"?part_id={self.part.id}"
         )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, preview_url)
+
+        response = self.client.get(preview_url)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context["show_preview"])
+        self.assertEqual(
+            response.context["cancel_url"],
+            reverse("bom:customer-info", kwargs={"customer_id": self.customer.id}),
+        )
         self.assertContains(response, self.part.full_part_number())
 
     def test_price_history_shows_jalali_created_at(self):
