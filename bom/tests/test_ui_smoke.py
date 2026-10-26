@@ -364,6 +364,12 @@ class TestUiSmoke(TransactionTestCase):
         )
         self.assertIn("hover:text-white", src)
         self.assertIn(".bom-btn-primary{", css)
+        # Button icons: text-base alone sets line-height 1.5 and optically
+        # misaligns Material Icons next to Vazirmatn labels; leading-none fixes it.
+        self.assertRegex(
+            css,
+            r":is\([^)]*bom-btn-primary[^)]*\)\s*\.material-icons\{[^}]*line-height:1",
+        )
         self.assertIn("color:var(--color-white)", css)
         self.assertIn("a{color:var(--color-primary)}", css)
 

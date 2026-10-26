@@ -294,6 +294,12 @@ html.dark .bom-brand-mark {
     @apply inline-flex size-9 items-center justify-center rounded-md text-primary hover:bg-primary-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary;
   }
 
+  /* Match pagination: Material Icons glyph metrics sit off-center next to
+     label text (worse with Vazirmatn) unless size/line-height are tightened. */
+  :is(.bom-btn, .bom-btn-primary, .bom-btn-secondary, .bom-btn-danger, .bom-btn-ghost, .bom-btn-icon) .material-icons {
+    @apply text-base leading-none;
+  }
+
   .bom-input {
     @apply block h-9 w-full rounded-md border-border bg-surface text-ink shadow-sm focus:border-primary focus:ring-primary text-sm;
   }
