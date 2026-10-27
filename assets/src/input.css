@@ -13,6 +13,20 @@
   font-display: swap;
 }
 
+/* Button-only face: native Vazirmatn metrics (≈102% / 54%) leave label
+   glyphs optically high vs the flex mid (Search) and uneven vs Material
+   Icons. Overrides keep body text on the main face; buttons use this. */
+@font-face {
+  font-family: "Vazirmatn Button";
+  src: url("../font/Vazirmatn-variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  ascent-override: 100%;
+  descent-override: 22%;
+  line-gap-override: 0%;
+}
+
 @font-face {
   font-family: "Parastoo";
   src: url("../font/Parastoo.woff2") format("woff2"),
@@ -271,27 +285,37 @@ html.dark .bom-brand-mark {
   }
 
   .bom-btn {
-    @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 text-sm font-medium leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .bom-btn-primary {
-    @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors bg-primary text-white hover:bg-primary-hover hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 text-sm font-medium leading-none transition-colors bg-primary text-white hover:bg-primary-hover hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .bom-btn-secondary {
-    @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-border bg-surface px-3 text-sm font-medium text-ink transition-colors hover:bg-surface-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-border bg-surface px-3 text-sm font-medium leading-none text-ink transition-colors hover:bg-surface-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .bom-btn-danger {
-    @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-danger px-3 text-sm font-medium text-white transition-colors hover:bg-red-800 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-danger px-3 text-sm font-medium leading-none text-white transition-colors hover:bg-red-800 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .bom-btn-ghost {
-    @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 text-sm font-medium leading-none text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .bom-btn-icon {
-    @apply inline-flex size-9 items-center justify-center rounded-md text-primary hover:bg-primary-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary;
+    @apply inline-flex size-9 items-center justify-center rounded-md leading-none text-primary hover:bg-primary-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary;
+  }
+
+  /* Shared vertical metrics for labeled buttons + icon lift for Material Icons. */
+  :is(.bom-btn, .bom-btn-primary, .bom-btn-secondary, .bom-btn-danger, .bom-btn-ghost) {
+    font-family: "Vazirmatn Button", var(--font-sans);
+  }
+
+  :is(.bom-btn, .bom-btn-primary, .bom-btn-secondary, .bom-btn-danger, .bom-btn-ghost, .bom-btn-icon) .material-icons {
+    @apply text-base leading-none;
+    translate: 0 -0.1em;
   }
 
   .bom-input {

@@ -364,6 +364,19 @@ class TestUiSmoke(TransactionTestCase):
         )
         self.assertIn("hover:text-white", src)
         self.assertIn(".bom-btn-primary{", css)
+        # Button vertical metrics: leading-none + button-scoped Vazirmatn face
+        # (ascent/descent overrides) + Material Icons leading-none.
+        self.assertIn("Vazirmatn Button", css)
+        self.assertIn("ascent-override:100%", css)
+        self.assertIn("descent-override:22%", css)
+        self.assertRegex(
+            css,
+            r"\.bom-btn-primary\{[^}]*line-height:1",
+        )
+        self.assertRegex(
+            css,
+            r":is\([^)]*bom-btn-primary[^)]*\)\s*\.material-icons\{[^}]*line-height:1",
+        )
         self.assertIn("color:var(--color-white)", css)
         self.assertIn("a{color:var(--color-primary)}", css)
 
