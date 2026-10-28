@@ -90,7 +90,7 @@ from bom.models import (
     User,
     UserMeta,
 )
-from bom.helpers import build_part_search_q
+from bom.helpers import build_part_search_q, resolve_home_part_jump
 from bom.list_queries import (
     paginate_part_revs,
     paginate_queryset,
@@ -146,11 +146,35 @@ def form_error_messages(form_errors) -> [str]:
 
 @login_required(login_url=BOM_LOGIN_URL)
 def home(request):
-    """Staff home hub — post-login landing and logo target."""
+    """Staff home hub — post-login landing and logo target.
+
+    Optional GET ``q`` is a compact jump-to-part control (exact PN preferred;
+    unique soft PN/MPN match also jumps; ambiguous stays on Home with a message).
+    """
     profile = request.user.bom_profile()
     organization = profile.organization
     if not organization:
         return HttpResponseRedirect(reverse("bom:organization-create"))
+
+    query = request.GET.get("q", "")
+    if query.strip():
+        part, status = resolve_home_part_jump(query, organization)
+        if status == "found":
+            return HttpResponseRedirect(
+                reverse("bom:part-info", kwargs={"part_id": part.id})
+            )
+        if status == "ambiguous":
+            messages.warning(
+                request,
+                _(
+                    'Multiple parts match "{q}". Enter a fuller part number.'
+                ).format(q=query.strip()),
+            )
+        else:
+            messages.error(
+                request,
+                _('No part found for "{q}".').format(q=query.strip()),
+            )
 
     name = "home"
     title = ""

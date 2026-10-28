@@ -934,6 +934,25 @@ html.dark .bom-hub-atmosphere {
   animation: bom-hub-enter 0.55s ease-out 0.16s both;
 }
 
+.bom-hub-jump {
+  display: flex;
+  width: min(22rem, 100%);
+  align-items: stretch;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  animation: bom-hub-enter 0.55s ease-out 0.22s both;
+}
+
+.bom-hub-jump .bom-input {
+  flex: 1;
+  min-width: 0;
+  text-align: start;
+}
+
+.bom-hub-jump .bom-btn-secondary {
+  flex-shrink: 0;
+}
+
 @keyframes bom-hub-enter {
   from {
     opacity: 0;
@@ -960,7 +979,8 @@ html.dark .bom-hub-atmosphere {
   .bom-hub-inner,
   .bom-hub-mark,
   .bom-hub-lede,
-  .bom-hub-actions {
+  .bom-hub-actions,
+  .bom-hub-jump {
     animation: none;
   }
 }
