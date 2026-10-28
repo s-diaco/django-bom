@@ -541,6 +541,24 @@ msgstr "خانه"
 msgid "Your workspace for materials, products, and BoM Price calculations."
 msgstr "فضای کاری شما برای مواد، محصولات و محاسبات قیمت BoM."
 
+#: bom/templates/bom/home.html:27
+msgid "Jump to part"
+msgstr "پرش به متریال"
+
+#: bom/templates/bom/home.html:35
+msgid "Go"
+msgstr "برو"
+
+#: bom/views/views.py:170
+#, python-brace-format
+msgid "Multiple parts match \"{q}\". Enter a fuller part number."
+msgstr "چند متریال با «{q}» مطابقت دارند. کد متریال کامل‌تری وارد کنید."
+
+#: bom/views/views.py:176
+#, python-brace-format
+msgid "No part found for \"{q}\"."
+msgstr "متریالی برای «{q}» پیدا نشد."
+
 #: bom/templates/bom/base.html:35 bom/templates/bom/ui/navbar.html:14
 msgid "Menu"
 msgstr "منو"

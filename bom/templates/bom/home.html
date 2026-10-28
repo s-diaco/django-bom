@@ -23,6 +23,20 @@
             <a class="bom-btn-ghost" href="{% url 'bom:report' %}">{% trans "Reports" %}</a>
             <a class="bom-btn-ghost" href="{% url 'bom:settings' tab_anchor='user' %}">{% trans "settings" %}</a>
         </div>
+        <form class="bom-hub-jump" action="{% url 'bom:home' %}" method="get" role="search" aria-label="{% trans "Jump to part" %}">
+            <label class="bom-sr-only" for="home-jump-q">{% trans "Part number" %}</label>
+            <input
+                type="search"
+                id="home-jump-q"
+                name="q"
+                class="bom-input"
+                dir="ltr"
+                autocomplete="off"
+                placeholder="{% trans "Part number" %}"
+                value="{% if query %}{{ query }}{% endif %}"
+            >
+            <button type="submit" class="bom-btn-secondary">{% trans "Go" %}</button>
+        </form>
     </div>
 </section>
 {% endblock %}

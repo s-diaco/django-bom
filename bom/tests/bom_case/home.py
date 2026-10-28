@@ -15,6 +15,23 @@ from bom.models import Part, Seller
 
 
 class HomeTestsMixin:
+    def test_home_jump_to_part_exact(self):
+        (p1, _p2, _p3, _p4) = create_some_fake_parts(organization=self.organization)
+        response = self.client.get(reverse("bom:home"), {"q": p1.full_part_number()})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url, reverse("bom:part-info", kwargs={"part_id": p1.id})
+        )
+
+    def test_home_jump_to_part_not_found(self):
+        create_some_fake_parts(organization=self.organization)
+        response = self.client.get(reverse("bom:home"), {"q": "NO-SUCH-PART-9999"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "bom-hub-jump")
+        self.assertContains(response, "bom-alert-error")
+        self.assertContains(response, "NO-SUCH-PART-9999")
+        self.assertNotContains(response, 'href="/part/')
+
     def test_home(self):
         response = self.client.post(reverse("bom:materials"))
         self.assertEqual(response.status_code, 200)
