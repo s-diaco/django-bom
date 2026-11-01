@@ -300,6 +300,8 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn("bom-hub-jump", hub_html)
         self.assertIn('action="/"', hub_html)
         self.assertIn('name="q"', hub_html)
+        self.assertIn('id="id_q"', hub_html)
+        self.assertIn(".autocomplete(", hub_html)
         self.assertIn('href="/"', hub_html)
         self.assertTrue(
             'title="Lithium | Home"' in hub_html

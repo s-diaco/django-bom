@@ -32,6 +32,25 @@ class HomeTestsMixin:
         self.assertContains(response, "NO-SUCH-PART-9999")
         self.assertNotContains(response, 'href="/part/')
 
+    def test_home_jump_autocomplete_part_numbers(self):
+        (p1, p2, _p3, _p4) = create_some_fake_parts(organization=self.organization)
+        rev = p1.latest()
+        rev.material = "with_loi"
+        rev.description = "Home jump description"
+        rev.save()
+
+        response = self.client.get(reverse("bom:home"))
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        self.assertIn("bom-hub-jump", html)
+        self.assertIn('id="id_q"', html)
+        self.assertIn(".autocomplete(", html)
+        self.assertIn(p1.full_part_number(), html)
+        self.assertIn(p2.full_part_number(), html)
+        self.assertIn("Home jump description", html)
+        self.assertNotIn("with_loi", html)
+        self.assertIn("form.submit()", html)
+
     def test_home(self):
         response = self.client.post(reverse("bom:materials"))
         self.assertEqual(response.status_code, 200)

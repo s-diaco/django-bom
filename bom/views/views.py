@@ -47,6 +47,7 @@ from bom.forms import (
     CustomerPriceForm,
     CustomerPriceLoadForm,
     FileForm,
+    HomeJumpForm,
     ManufacturerForm,
     ManufacturerPartForm,
     OrganizationCreateForm,
@@ -176,6 +177,7 @@ def home(request):
                 _('No part found for "{q}".').format(q=query.strip()),
             )
 
+    jump_form = HomeJumpForm(organization=organization, initial={"q": query})
     name = "home"
     title = ""
     return TemplateResponse(request, "bom/home.html", locals())

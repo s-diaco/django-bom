@@ -940,12 +940,18 @@ html.dark .bom-hub-atmosphere {
   align-items: stretch;
   gap: 0.5rem;
   margin-top: 0.25rem;
+  text-align: start;
   animation: bom-hub-enter 0.55s ease-out 0.22s both;
 }
 
-.bom-hub-jump .bom-input {
+.bom-hub-jump-field {
+  position: relative;
   flex: 1;
   min-width: 0;
+}
+
+.bom-hub-jump .bom-input {
+  width: 100%;
   text-align: start;
 }
 
