@@ -77,6 +77,47 @@ def build_part_search_q(search_terms, organization):
     )
 
 
+def resolve_home_part_jump(query, organization):
+    """Resolve a Home hub jump-to query to a Part.
+
+    Preference order (part-number jump, not materials-list search):
+    1. Exact part number via ``Part.from_part_number``
+    2. Unique exact primary manufacturer part number
+    3. Unique soft part-number match (``_part_number_partial_q``)
+
+    Returns ``(part, status)`` where status is one of:
+    ``empty``, ``found``, ``not_found``, ``ambiguous``.
+    Ambiguous soft/MPN matches do not auto-pick a "best" match.
+    """
+    query = (query or "").strip()
+    if not query:
+        return None, "empty"
+
+    try:
+        return Part.from_part_number(query, organization), "found"
+    except (Part.DoesNotExist, AttributeError):
+        pass
+
+    try:
+        mpn_part = Part.from_manufacturer_part_number(query, organization)
+    except ValueError:
+        return None, "ambiguous"
+    if mpn_part is not None:
+        return mpn_part, "found"
+
+    matches = (
+        Part.objects.filter(organization=organization)
+        .filter(_part_number_partial_q(query, organization))
+        .distinct()
+    )
+    count = matches.count()
+    if count == 1:
+        return matches.first(), "found"
+    if count == 0:
+        return None, "not_found"
+    return None, "ambiguous"
+
+
 def create_a_fake_organization(
     user,
     free=False,

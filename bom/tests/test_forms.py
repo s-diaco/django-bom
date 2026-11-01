@@ -9,6 +9,7 @@ from django.utils.translation import gettext
 from bom.forms import (
     AddSubpartForm,
     GroupedDecimalField,
+    HomeJumpForm,
     OrganizationExchangeRatesForm,
     PartFormSemiIntelligent,
     PartInfoForm,
@@ -136,6 +137,21 @@ class TestForms(TestCase):
         self.assertIn(p2.full_part_number(), html)
         self.assertIn(p2_rev.description, html)
         self.assertNotIn("with_loi", html)
+
+    def test_home_jump_form_autocomplete_labels(self):
+        (p1, p2, _p3, _p4) = create_some_fake_parts(organization=self.organization)
+        rev = p1.latest()
+        rev.material = "with_loi"
+        rev.description = "Known home jump description"
+        rev.save()
+        form = HomeJumpForm(organization=self.organization)
+        html = str(form["q"])
+        self.assertIn(p1.full_part_number(), html)
+        self.assertIn(p2.full_part_number(), html)
+        self.assertIn("Known home jump description", html)
+        self.assertNotIn("with_loi", html)
+        self.assertIn("form.submit()", html)
+        self.assertIn('name="q"', html)
 
     def test_add_sellerpart_form(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)

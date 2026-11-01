@@ -297,6 +297,12 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn(reverse("bom:report"), hub_html)
         self.assertIn(reverse("bom:settings", kwargs={"tab_anchor": "user"}), hub_html)
         self.assertNotIn("bom-action-bar", hub_html)
+        self.assertIn("bom-hub-tools", hub_html)
+        self.assertIn("bom-hub-jump", hub_html)
+        self.assertIn('action="/"', hub_html)
+        self.assertIn('name="q"', hub_html)
+        self.assertIn('id="id_q"', hub_html)
+        self.assertIn(".autocomplete(", hub_html)
         self.assertIn('href="/"', hub_html)
         self.assertTrue(
             'title="Lithium | Home"' in hub_html

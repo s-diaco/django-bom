@@ -13,15 +13,22 @@
             <h1 class="bom-hub-title">{% trans "Lithium" %}</h1>
         </div>
         <p class="bom-hub-lede">{% trans "Your workspace for materials, products, and BoM Price calculations." %}</p>
-        <div class="bom-hub-actions">
-            <a class="bom-btn-primary" href="{% url 'bom:materials' %}?product=0">{% trans "Raw Material" %}</a>
-            <a class="bom-btn-secondary" href="{% url 'bom:materials' %}?product=1">{% trans "Products" %}</a>
-            <a class="bom-btn-secondary" href="{% url 'bom:customers' %}">{% trans "customers" %}</a>
-            {% if profile.role == 'A' %}
-                <a class="bom-btn-secondary" href="{% url 'bom:create-part' %}">{% trans "New Material" %}</a>
-            {% endif %}
-            <a class="bom-btn-ghost" href="{% url 'bom:report' %}">{% trans "Reports" %}</a>
-            <a class="bom-btn-ghost" href="{% url 'bom:settings' tab_anchor='user' %}">{% trans "settings" %}</a>
+        <div class="bom-hub-tools">
+            <div class="bom-hub-actions">
+                <a class="bom-btn-primary" href="{% url 'bom:materials' %}?product=0">{% trans "Raw Material" %}</a>
+                <a class="bom-btn-secondary" href="{% url 'bom:materials' %}?product=1">{% trans "Products" %}</a>
+                <a class="bom-btn-secondary" href="{% url 'bom:customers' %}">{% trans "customers" %}</a>
+                {% if profile.role == 'A' %}
+                    <a class="bom-btn-secondary" href="{% url 'bom:create-part' %}">{% trans "New Material" %}</a>
+                {% endif %}
+                <a class="bom-btn-ghost" href="{% url 'bom:report' %}">{% trans "Reports" %}</a>
+                <a class="bom-btn-ghost" href="{% url 'bom:settings' tab_anchor='user' %}">{% trans "settings" %}</a>
+            </div>
+            <form class="bom-hub-jump" action="{% url 'bom:home' %}" method="get" role="search" aria-label="{% trans "Jump to part" %}">
+                <label class="bom-sr-only" for="{{ jump_form.q.id_for_label }}">{% trans "Part number" %}</label>
+                <div class="bom-hub-jump-field">{{ jump_form.q }}</div>
+                <button type="submit" class="bom-btn-secondary">{% trans "Go" %}</button>
+            </form>
         </div>
     </div>
 </section>
