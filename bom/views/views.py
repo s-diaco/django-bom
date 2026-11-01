@@ -95,6 +95,7 @@ from bom.list_queries import (
     paginate_part_revs,
     paginate_queryset,
     prepare_all_part_revs_for_list_page,
+    prepare_part_revs_for_export,
     querystring_except_page as build_querystring_except_page,
 )
 from bom.utils import (
@@ -300,8 +301,17 @@ def materials(request):
         csv_headers = organization.part_list_csv_headers()
         seller_csv_headers = SellerPartCSVHeaders()
         rows = []
+        prefilled = (
+            "part_number",
+            "part_category",
+            "part_synopsis",
+            "part_revision",
+            "part_manufacturer",
+            "part_manufacturer_part_number",
+            "bom_unit_cost",
+        )
 
-        for part_rev in part_revs:
+        for part_rev in prepare_part_revs_for_export(part_revs):
             if organization.number_scheme == constants.NUMBER_SCHEME_SEMI_INTELLIGENT:
                 row = {
                     csv_headers.get_default(
@@ -324,22 +334,9 @@ def materials(request):
                         else ""
                     ),
                 }
-                for field_name in csv_headers.get_default_all():
-                    if field_name not in csv_headers.get_defaults_list(
-                        [
-                            "part_number",
-                            "part_category",
-                            "part_synopsis",
-                            "part_revision",
-                            "part_manufacturer",
-                            "part_manufacturer_part_number",
-                        ]
-                        + seller_csv_headers.get_default_all()
-                    ):
-                        attr = getattr(part_rev, field_name)
-                        row[csv_headers.get_default(field_name)] = (
-                            attr if attr is not None else ""
-                        )
+                skip = csv_headers.get_defaults_list(
+                    list(prefilled) + seller_csv_headers.get_default_all()
+                )
             else:
                 row = {
                     csv_headers.get_default(
@@ -359,21 +356,27 @@ def materials(request):
                         else ""
                     ),
                 }
-                for field_name in csv_headers.get_default_all():
-                    if field_name not in csv_headers.get_defaults_list(
-                        [
-                            "part_number",
-                            "part_synopsis",
-                            "part_revision",
-                            "part_manufacturer",
-                            "part_manufacturer_part_number",
-                        ]
-                        + seller_csv_headers.get_default_all()
-                    ):
-                        attr = getattr(part_rev, field_name)
-                        row[csv_headers.get_default(field_name)] = (
-                            attr if attr is not None else ""
-                        )
+                skip = csv_headers.get_defaults_list(
+                    [
+                        "part_number",
+                        "part_synopsis",
+                        "part_revision",
+                        "part_manufacturer",
+                        "part_manufacturer_part_number",
+                        "bom_unit_cost",
+                    ]
+                    + seller_csv_headers.get_default_all()
+                )
+            for field_name in csv_headers.get_default_all():
+                if field_name not in skip:
+                    attr = getattr(part_rev, field_name)
+                    row[csv_headers.get_default(field_name)] = (
+                        attr if attr is not None else ""
+                    )
+            cost = part_rev.print_unit_cost
+            row[csv_headers.get_default("bom_unit_cost")] = (
+                cost if cost is not None else ""
+            )
 
             sellerparts = part_rev.part.seller_parts()
             if len(sellerparts) > 0:
