@@ -936,7 +936,7 @@ html.dark .bom-hub-atmosphere {
 
 .bom-hub-jump {
   display: flex;
-  width: min(22rem, 100%);
+  width: min(40rem, 100%);
   align-items: stretch;
   gap: 0.5rem;
   margin-top: 0.25rem;
