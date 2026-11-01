@@ -2,6 +2,8 @@
 
 from copy import deepcopy
 from re import finditer
+from unittest.mock import patch
+
 from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
@@ -11,7 +13,7 @@ from bom.helpers import (
     create_some_fake_part_classes,
     create_some_fake_parts,
 )
-from bom.models import Part, Seller
+from bom.models import Part, PartRevision, Seller
 
 
 class HomeTestsMixin:
@@ -275,3 +277,20 @@ class HomeTestsMixin:
             )
             self.assertEqual(len(search.context["part_revs"]), 1)
             self.assertEqual(next(iter(search.context["part_revs"])).part.id, p1.id)
+
+    def test_materials_csv_download_skips_bom_walk(self):
+        create_some_fake_parts(organization=self.organization)
+
+        with patch.object(
+            PartRevision,
+            "indented",
+            side_effect=AssertionError("list CSV must not walk BOM"),
+        ):
+            response = self.client.get(
+                reverse("bom:materials"),
+                {"download": "1", "format": "csv"},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/csv", response["Content-Type"])
+        self.assertIn("lithium_parts", response["Content-Disposition"])

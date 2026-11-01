@@ -120,6 +120,18 @@ class UnpaginatedPartRevList:
         return len(self.object_list)
 
 
+def list_unit_cost(part_rev, *, rollup_bom=True):
+    """Unit cost for list/print/export rows.
+
+    Raw materials use the optimal seller cost (no BOM walk). Products use the
+    rolled-up ``bom_unit_cost`` when ``rollup_bom`` is true.
+    """
+    if rollup_bom and part_rev.is_product:
+        return part_rev.bom_unit_cost
+    seller = part_rev.part.optimal_seller()
+    return seller.unit_cost if seller else None
+
+
 def prepare_all_part_revs_for_list_page(
     part_revs, quantity=LIST_PAGE_SELLER_QUANTITY
 ):
@@ -132,13 +144,27 @@ def prepare_all_part_revs_for_list_page(
     return page
 
 
+def prepare_part_revs_for_export(part_revs, quantity=LIST_PAGE_SELLER_QUANTITY):
+    """Prefetch sellers and attach CSV/XLSX prices without BOM walks.
+
+    ponytail: list export Price never calls ``indented()`` / ``bom_unit_cost``.
+    That walk monopolized a 1-worker gunicorn on production
+    (``/?download=1&format=csv`` → WORKER TIMEOUT → site unreachable on LAN).
+    Uses seller unit_cost only. Rolled-up product cost stays on part detail /
+    BOM CSV. Upgrade: Redis-cached rollup or async export if list CSV must
+    show BOM prices.
+    """
+    part_revs = part_revs.select_related(*LIST_PAGE_SELECT_RELATED)
+    page = prepare_part_revs_for_list_page(
+        UnpaginatedPartRevList(part_revs), quantity
+    )
+    for part_rev in page:
+        part_rev.print_unit_cost = list_unit_cost(part_rev, rollup_bom=False)
+    return page
+
+
 def attach_print_unit_costs(part_revs_page):
     """Set print_unit_cost without walking BOM trees for raw materials."""
     for part_rev in part_revs_page:
-        seller = part_rev.part.optimal_seller()
-        material = part_rev.material
-        if part_rev.is_product:
-            part_rev.print_unit_cost = part_rev.bom_unit_cost
-        else:
-            part_rev.print_unit_cost = seller.unit_cost if seller else None
+        part_rev.print_unit_cost = list_unit_cost(part_rev)
     return part_revs_page
