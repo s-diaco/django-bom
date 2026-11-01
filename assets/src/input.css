@@ -925,23 +925,30 @@ html.dark .bom-hub-atmosphere {
   animation: bom-hub-enter 0.55s ease-out 0.08s both;
 }
 
+.bom-hub-tools {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  animation: bom-hub-enter 0.55s ease-out 0.16s both;
+}
+
 .bom-hub-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 0.5rem;
-  animation: bom-hub-enter 0.55s ease-out 0.16s both;
 }
 
 .bom-hub-jump {
   display: flex;
-  width: min(40rem, 100%);
+  width: 100%;
   align-items: stretch;
   gap: 0.5rem;
-  margin-top: 0.25rem;
   text-align: start;
-  animation: bom-hub-enter 0.55s ease-out 0.22s both;
 }
 
 .bom-hub-jump-field {
@@ -985,8 +992,7 @@ html.dark .bom-hub-atmosphere {
   .bom-hub-inner,
   .bom-hub-mark,
   .bom-hub-lede,
-  .bom-hub-actions,
-  .bom-hub-jump {
+  .bom-hub-tools {
     animation: none;
   }
 }
