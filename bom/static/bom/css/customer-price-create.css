@@ -38,10 +38,16 @@
         max-width: none;
     }
 
-    body.printing-price-review #price-review-rest,
+    /* Peer block is printer-hide when empty — avoid a blank page break then. */
+    body.printing-price-review #price-review-peer-prices,
     body.printing-price-review #price-review-bom {
         break-before: page;
         page-break-before: always;
+    }
+
+    body.printing-price-review #price-review-peer-prices.printer-hide {
+        break-before: auto;
+        page-break-before: auto;
     }
 
     body.printing-price-review .printer-hide {
@@ -257,7 +263,7 @@
 
 .price-summary-list__row {
     display: grid;
-    grid-template-columns: minmax(7rem, 40%) 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 0.75rem 1rem;
     align-items: baseline;
     padding: 0.4rem 0;
