@@ -116,6 +116,113 @@ class ProductTypeOverheadTest(TestCase):
         self.assertEqual(raw_rev.bom_unit_cost_at_quantity(1), Money(44, self.currency))
 
 
+class PartInfoSellerSpecsTest(TestCase):
+    """Specs Seller section: product shows BoM Cost/Overhead/Total; else Cost."""
+
+    def setUp(self):
+        self.user, self.organization = create_user_and_organization()
+        self.part_class = create_some_fake_part_classes(self.organization)[0]
+        self.seller = create_some_fake_sellers(self.organization)[0]
+        self.manufacturer = create_some_fake_manufacturers(self.organization)[0]
+        self.currency = self.organization.currency
+        pt = self.organization.product_types.get(code="no_loi")
+        pt.overhead = Money(20, self.currency)
+        pt.save()
+        self.organization.invalidate_product_type_cache()
+        self.client = Client()
+        self.client.login(username="kasper", password="ghostpassword")
+        translation.activate("en-US")
+
+    def _make_part(self, number, material, seller_cost=None):
+        part = Part.objects.create(
+            organization=self.organization,
+            number_class=self.part_class,
+            number_item=number,
+        )
+        mp = ManufacturerPart.objects.create(
+            part=part,
+            manufacturer=self.manufacturer,
+            manufacturer_part_number=number,
+        )
+        part.primary_manufacturer_part = mp
+        part.save()
+        rev = PartRevision.objects.create(
+            part=part,
+            revision="1",
+            description=number,
+            material=material,
+        )
+        if seller_cost is not None:
+            create_a_fake_seller_part(
+                self.seller,
+                mp,
+                1,
+                1,
+                Money(seller_cost, self.currency),
+                1,
+                Money(0, self.currency),
+            )
+        return part, rev
+
+    def _add_child(self, parent_rev, child_rev, qty):
+        subpart = Subpart.objects.create(part_revision=child_rev, count=qty)
+        parent_rev.assembly.subparts.add(subpart)
+
+    def test_product_specs_seller_shows_bom_overhead_total(self):
+        _raw, raw_rev = self._make_part("RAW1", "no_bom", seller_cost=10)
+        prod, prod_rev = self._make_part("PRD1", "no_loi")
+        self._add_child(prod_rev, raw_rev, 2)
+
+        response = self.client.get(reverse("bom:part-info", kwargs={"part_id": prod.id}))
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        specs_at = html.find('id="specs"')
+        self.assertGreater(specs_at, -1)
+        next_tab = html.find('id="bom"', specs_at)
+        if next_tab < 0:
+            next_tab = html.find('id="used"', specs_at)
+        specs = html[specs_at:next_tab]
+        self.assertIn('id="specs-bom-cost"', specs)
+        self.assertIn('id="specs-overhead"', specs)
+        self.assertIn('id="specs-unit-cost"', specs)
+        self.assertTrue(
+            "BoM Cost" in specs or "هزینه صورت مواد" in specs,
+            "BoM Cost label missing in product specs Seller",
+        )
+        self.assertTrue(
+            "Overhead" in specs or "سربار" in specs,
+            "Overhead label missing in product specs Seller",
+        )
+        self.assertTrue(
+            "Total" in specs or "جمع" in specs,
+            "Total label missing in product specs Seller",
+        )
+        # Do not show a single misleading Price row for products.
+        self.assertNotRegex(specs, r">\s*Price\s*:")
+
+    def test_non_product_specs_seller_shows_cost_only(self):
+        raw, _raw_rev = self._make_part("RAW2", "no_bom", seller_cost=44)
+
+        response = self.client.get(reverse("bom:part-info", kwargs={"part_id": raw.id}))
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        specs_at = html.find('id="specs"')
+        self.assertGreater(specs_at, -1)
+        next_tab = html.find('id="used"', specs_at)
+        specs = html[specs_at:next_tab]
+        self.assertIn('id="specs-unit-cost"', specs)
+        self.assertNotIn('id="specs-bom-cost"', specs)
+        self.assertNotIn('id="specs-overhead"', specs)
+        self.assertTrue(
+            "Cost" in specs or "هزینه" in specs,
+            "Cost label missing in non-product specs Seller",
+        )
+        self.assertNotRegex(specs, r">\s*Price\s*:")
+        self.assertNotRegex(specs, r">\s*BoM Cost\s*:")
+        self.assertNotRegex(specs, r">\s*Overhead\s*:")
+        self.assertNotRegex(specs, r">\s*Total\s*:")
+
+
 class OverheadPricesViewTest(TestCase):
     def setUp(self):
         self.user, self.organization = create_user_and_organization()

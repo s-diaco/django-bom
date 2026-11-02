@@ -574,17 +574,38 @@ class TestCustomerPricing(TransactionTestCase):
             "Adjusted base (BoM + 7%)" in html or "BoM + ۷٪" in html or "BoM + 7%" in html,
             "adjusted base label missing",
         )
+        # Non-product: Cost + Adjusted base (no Overhead row in pricing summary).
+        summary_idx = html.find("Pricing summary")
+        if summary_idx < 0:
+            summary_idx = html.find("خلاصه قیمت")
+        self.assertGreater(summary_idx, -1)
+        summary_html = html[summary_idx : html.find('id="price-review-rest"', summary_idx)]
+        self.assertTrue(
+            ">Cost<" in summary_html or ">هزینه<" in summary_html,
+            "non-product Cost label missing from pricing summary",
+        )
+        self.assertNotIn('id="specs-overhead"', summary_html)
+        # Overhead may appear elsewhere; pricing-summary rows should not include it.
+        overhead_row = re.search(
+            r"<dt>\s*(Overhead|سربار)\s*</dt>",
+            summary_html,
+        )
+        self.assertIsNone(overhead_row, "non-product summary should not list Overhead")
         self.assertIn('name="from" value="customer"', html)
         # Material selection lives inside Pricing summary as a summary-list row.
         self.assertContains(response, 'id="price-load-form"')
         self.assertNotContains(response, 'id="price-input-panel"')
         self.assertContains(response, "price-summary-list__row--field")
-        summary_idx = html.find("Pricing summary")
-        if summary_idx < 0:
-            summary_idx = html.find("خلاصه قیمت")
         field_idx = html.find("price-summary-list__row--field")
-        self.assertGreater(summary_idx, -1)
         self.assertGreater(field_idx, summary_idx)
+        # Print lives at the top of Pricing summary (header), not under confirm actions.
+        print_idx = html.find('id="price-review-print-button"')
+        self.assertGreater(print_idx, summary_idx)
+        self.assertLess(print_idx, html.find("price-summary-list", summary_idx))
+        self.assertNotIn(
+            'id="price-review-print-button"',
+            html[html.find('id="price-selection-panel"') :],
+        )
         # Print header: one Customer Price Review, no logo, no redundant Price Review h4.
         self.assertTrue(
             "Customer Price Review" in html or "بازبینی قیمت مشتری" in html,
@@ -706,6 +727,30 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertNotContains(response, 'id="overview-print-button"')
         self.assertContains(response, 'id="price-review-print-button"')
         self.assertContains(response, "bomPrint")
+        # Product/BoM: Pricing summary shows BoM Cost, Overhead, Adjusted base.
+        summary_idx = html.find("Pricing summary")
+        if summary_idx < 0:
+            summary_idx = html.find("خلاصه قیمت")
+        self.assertGreater(summary_idx, -1)
+        summary_html = html[summary_idx : html.find('id="price-review-rest"', summary_idx)]
+        self.assertTrue(
+            "BoM Cost" in summary_html or "هزینه صورت مواد" in summary_html,
+            "BoM Cost missing from product pricing summary",
+        )
+        self.assertRegex(
+            summary_html,
+            r"<dt>\s*(Overhead|سربار)\s*</dt>",
+            "Overhead missing from product pricing summary",
+        )
+        self.assertTrue(
+            "Adjusted base (BoM + 7%)" in summary_html
+            or "BoM + ۷٪" in summary_html
+            or "BoM + 7%" in summary_html,
+            "Adjusted base missing from product pricing summary",
+        )
+        print_idx = html.find('id="price-review-print-button"')
+        self.assertGreater(print_idx, summary_idx)
+        self.assertLess(print_idx, html.find("price-summary-list", summary_idx))
         # Currency once in cost column headers; row JS formats amount only.
         from bom.utils import currency_label
 
@@ -716,9 +761,6 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertRegex(html, rf"Cost in BoM<br>\({curr}\)|قیمت در BoM<br>\({curr}\)")
         self.assertNotIn("style: 'currency'", html)
         self.assertNotIn('style: "currency"', html)
-        summary_idx = html.find("Pricing summary")
-        if summary_idx < 0:
-            summary_idx = html.find("خلاصه قیمت")
         self.assertLess(
             summary_idx,
             html.find('id="price-review-rest"'),

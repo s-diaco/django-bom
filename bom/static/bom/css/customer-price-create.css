@@ -157,6 +157,11 @@
 }
 
 .price-pair-panel__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
     padding: 0.875rem 1.25rem;
     border-bottom: 1px solid var(--color-border);
     background: var(--color-surface-sunken);
@@ -167,6 +172,10 @@
     font-size: 0.9375rem;
     font-weight: 600;
     color: var(--color-ink);
+}
+
+.price-pair-panel__header .bom-btn-secondary {
+    flex: 0 0 auto;
 }
 
 .price-pair-panel__hint {

@@ -714,10 +714,16 @@ msgstr "متریال"
 
 #: bom/templates/bom/components/customer-price-list.html:9
 #: bom/templates/bom/components/customer-price-peer-list.html:9
-#: bom/templates/bom/customer-price-create.html:119
-#: bom/templates/bom/part-info.html:347
+#: bom/templates/bom/customer-price-create.html:127
+#: bom/templates/bom/part-info.html:163
+#: bom/templates/bom/part-info.html:360
 msgid "BoM Cost"
 msgstr "هزینه صورت مواد"
+
+#: bom/templates/bom/customer-price-create.html:140
+#: bom/templates/bom/part-info.html:193
+msgid "Cost"
+msgstr "هزینه"
 
 #: bom/templates/bom/components/customer-price-list.html:10
 #: bom/templates/bom/components/customer-price-peer-list.html:10
