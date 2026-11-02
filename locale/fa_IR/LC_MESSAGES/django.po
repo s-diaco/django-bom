@@ -537,15 +537,11 @@ msgstr "لیتیوم"
 msgid "Home"
 msgstr "خانه"
 
-#: bom/templates/bom/home.html:15
-msgid "Your workspace for materials, products, and BoM Price calculations."
-msgstr "فضای کاری شما برای مواد، محصولات و محاسبات قیمت BoM."
-
-#: bom/templates/bom/home.html:27
+#: bom/templates/bom/home.html:26
 msgid "Jump to part"
 msgstr "پرش به متریال"
 
-#: bom/templates/bom/home.html:35
+#: bom/templates/bom/home.html:29
 msgid "Go"
 msgstr "برو"
 
