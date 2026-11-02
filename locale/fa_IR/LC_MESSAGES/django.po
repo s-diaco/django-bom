@@ -725,10 +725,15 @@ msgstr "هزینه صورت مواد"
 msgid "Cost"
 msgstr "هزینه"
 
+#: bom/views/views.py:1993
+msgid "Profit %"
+msgstr "درصد سود"
+
 #: bom/templates/bom/components/customer-price-list.html:10
 #: bom/templates/bom/components/customer-price-peer-list.html:10
-#: bom/templates/bom/part-info.html:348
-msgid "Profit %"
+#: bom/templates/bom/part-info.html:361
+# Template {% trans %} doubles % before catalog lookup — msgid must use %%.
+msgid "Profit %%"
 msgstr "درصد سود"
 
 
@@ -899,7 +904,8 @@ msgid "BoM + Overhead + 7%%"
 msgstr "صورت مواد + سربار + ۷٪"
 
 #: bom/templates/bom/customer-price-create.html:146
-msgid "Adjusted base (BoM + 7%)"
+# Template {% trans %} doubles % before catalog lookup — msgid must use %%.
+msgid "Adjusted base (BoM + 7%%)"
 msgstr "پایه تعدیل‌شده (BoM + ۷٪)"
 
 
@@ -907,14 +913,15 @@ msgstr "پایه تعدیل‌شده (BoM + ۷٪)"
 msgid "Preview"
 msgstr "پیش‌نمایش"
 
-#: bom/templates/bom/customer-price-create.html:146
-#: bom/templates/bom/customer-price-create.html:147
-msgid "Prices by profit %"
+#: bom/templates/bom/customer-price-create.html:168
+#: bom/templates/bom/customer-price-create.html:169
+# Template {% trans %} doubles % before catalog lookup — msgid must use %%.
+msgid "Prices by profit %%"
 msgstr "قیمت‌ها بر اساس درصد سود"
 
 
-#: bom/templates/bom/customer-price-create.html:150
-msgid "Click an item to select profit % and price."
+#: bom/templates/bom/customer-price-create.html:172
+msgid "Click an item to select profit %% and price."
 msgstr "برای انتخاب درصد سود و قیمت روی یک مورد کلیک کنید."
 
 
@@ -927,8 +934,9 @@ msgstr "آخرین قیمت‌های سایر مشتریان"
 msgid "Selected price"
 msgstr "قیمت انتخاب‌شده"
 
-#: bom/templates/bom/customer-price-create.html:191
-msgid "Selected profit %"
+#: bom/templates/bom/customer-price-create.html:215
+# Template {% trans %} doubles % before catalog lookup — msgid must use %%.
+msgid "Selected profit %%"
 msgstr "درصد سود انتخاب‌شده"
 
 
