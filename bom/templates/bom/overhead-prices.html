@@ -28,7 +28,7 @@
                         <tbody>
                         {% for form in overhead_price_formset %}
                             <tr>
-                                <td>{{ form.id }}{{ form.instance.name }}</td>
+                                <td>{{ form.id }}{% trans form.instance.name %}</td>
                                 <td>{{ form.overhead }}</td>
                             </tr>
                         {% endfor %}

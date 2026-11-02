@@ -3,6 +3,8 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
+from django.utils import translation
+from django.utils.translation import gettext
 from djmoney.money import Money
 
 from bom.helpers import (
@@ -181,3 +183,19 @@ class OverheadPricesViewTest(TestCase):
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, self.url)
+
+    def test_product_type_names_translated_under_fa(self):
+        # Match PartRevisionForm: gettext(pt.name) for known default types.
+        with translation.override("fa-IR"):
+            if gettext("Frit") != "فریت":
+                self.skipTest("fa_IR catalog not compiled")
+            response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE="fa-IR")
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        self.assertIn("فریت", html)
+        self.assertIn("کامپوند", html)
+        self.assertIn("مواد اولیه", html)
+        self.assertIn("جوهر", html)
+        self.assertIn("پودر", html)
+        for en in ("Frit", "Compound", "Raw Material", "Ink", "Powder"):
+            self.assertNotIn(f"{en}</td>", html)
