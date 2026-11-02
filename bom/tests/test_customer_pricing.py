@@ -598,13 +598,13 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertContains(response, "price-summary-list__row--field")
         field_idx = html.find("price-summary-list__row--field")
         self.assertGreater(field_idx, summary_idx)
-        # Print lives at the top of Pricing summary (header), not under confirm actions.
+        # Print sits before Pricing summary (outside the section), not under confirm.
         print_idx = html.find('id="price-review-print-button"')
-        self.assertGreater(print_idx, summary_idx)
-        self.assertLess(print_idx, html.find("price-summary-list", summary_idx))
+        self.assertGreater(print_idx, -1)
+        self.assertLess(print_idx, summary_idx)
         self.assertNotIn(
             'id="price-review-print-button"',
-            html[html.find('id="price-selection-panel"') :],
+            html[html.find('id="price-summary-and-tiers"') :],
         )
         # Print header: one Customer Price Review, no logo, no redundant Price Review h4.
         self.assertTrue(
@@ -749,8 +749,12 @@ class TestCustomerPricing(TransactionTestCase):
             "Adjusted base missing from product pricing summary",
         )
         print_idx = html.find('id="price-review-print-button"')
-        self.assertGreater(print_idx, summary_idx)
-        self.assertLess(print_idx, html.find("price-summary-list", summary_idx))
+        self.assertGreater(print_idx, -1)
+        self.assertLess(print_idx, summary_idx)
+        self.assertNotIn(
+            'id="price-review-print-button"',
+            html[html.find('id="price-summary-and-tiers"') :],
+        )
         # Currency once in cost column headers; row JS formats amount only.
         from bom.utils import currency_label
 

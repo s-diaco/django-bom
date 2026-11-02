@@ -157,11 +157,6 @@
 }
 
 .price-pair-panel__header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem 1rem;
     padding: 0.875rem 1.25rem;
     border-bottom: 1px solid var(--color-border);
     background: var(--color-surface-sunken);
@@ -174,8 +169,12 @@
     color: var(--color-ink);
 }
 
-.price-pair-panel__header .bom-btn-secondary {
-    flex: 0 0 auto;
+.price-review-print-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .price-pair-panel__hint {

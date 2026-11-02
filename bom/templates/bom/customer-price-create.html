@@ -43,16 +43,19 @@
             </div>
         {% endif %}
 
+        {% if show_preview and preview %}
+            <div class="price-review-print-bar printer-hide mb-3">
+                <button type="button" class="bom-btn-secondary" id="price-review-print-button">
+                    <i class="material-icons text-base">print</i>{% trans "Print" %}
+                </button>
+            </div>
+        {% endif %}
+
         <div class="row mb-4 price-pair-row" id="price-summary-and-tiers">
             <div class="col s12 {% if show_preview and preview %}m6{% endif %} price-pair-col">
                 <section class="bom-panel price-pair-panel">
                     <header class="price-pair-panel__header">
                         <h5>{% trans "Pricing summary" %}</h5>
-                        {% if show_preview and preview %}
-                            <button type="button" class="bom-btn-secondary printer-hide" id="price-review-print-button">
-                                <i class="material-icons text-base">print</i>{% trans "Print" %}
-                            </button>
-                        {% endif %}
                     </header>
                     <div class="price-pair-panel__body">
                         <form action="{{ action }}" method="post" id="price-load-form" class="price-summary-select">
