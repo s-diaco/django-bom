@@ -895,8 +895,8 @@ msgid "Pricing summary"
 msgstr "خلاصه قیمت‌گذاری"
 
 #: bom/templates/bom/customer-price-create.html:137
-msgid "BoM + Overhead + 7%"
-msgstr "BoM + سربار + ۷٪"
+msgid "BoM + Overhead + 7%%"
+msgstr "صورت مواد + سربار + ۷٪"
 
 #: bom/templates/bom/customer-price-create.html:146
 msgid "Adjusted base (BoM + 7%)"
