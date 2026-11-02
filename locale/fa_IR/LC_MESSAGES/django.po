@@ -894,7 +894,11 @@ msgstr "بازبینی قیمت"
 msgid "Pricing summary"
 msgstr "خلاصه قیمت‌گذاری"
 
-#: bom/templates/bom/customer-price-create.html:123
+#: bom/templates/bom/customer-price-create.html:137
+msgid "BoM + Overhead + 7%%"
+msgstr "صورت مواد + سربار + ۷٪"
+
+#: bom/templates/bom/customer-price-create.html:146
 msgid "Adjusted base (BoM + 7%)"
 msgstr "پایه تعدیل‌شده (BoM + ۷٪)"
 

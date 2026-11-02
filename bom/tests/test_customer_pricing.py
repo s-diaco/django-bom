@@ -743,10 +743,9 @@ class TestCustomerPricing(TransactionTestCase):
             "Overhead missing from product pricing summary",
         )
         self.assertTrue(
-            "Adjusted base (BoM + 7%)" in summary_html
-            or "BoM + ۷٪" in summary_html
-            or "BoM + 7%" in summary_html,
-            "Adjusted base missing from product pricing summary",
+            "BoM + Overhead + 7%" in summary_html
+            or "صورت مواد + سربار + ۷٪" in summary_html,
+            "BoM + Overhead + 7% missing from product pricing summary",
         )
         print_idx = html.find('id="price-review-print-button"')
         self.assertGreater(print_idx, -1)
