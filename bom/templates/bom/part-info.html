@@ -160,12 +160,16 @@
                         <li class="collection-item">
                             {% if part_revision.is_product %}
                                 <div class="row{% if indented_bom.missing_item_costs > 0 %} red-text{% endif %}">
-                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Price" %}:</div>
-                                    <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ indented_bom.unit_cost|default_if_none:'-' }}</span></div>
+                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "BoM Cost" %}:</div>
+                                    <div id="specs-bom-cost" class="col s8 l10"><span>{{ childs_unit_cost|default_if_none:'-' }}</span></div>
                                 </div>
                                 <div class="row">
                                     <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Overhead" %}:</div>
-                                    <div class="col s8 l10">{{ part_revision.type_overhead }}</div>
+                                    <div id="specs-overhead" class="col s8 l10">{{ type_overhead|default_if_none:part_revision.type_overhead }}</div>
+                                </div>
+                                <div class="row{% if indented_bom.missing_item_costs > 0 %} red-text{% endif %}">
+                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Total" %}:</div>
+                                    <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ bom_unit_cost|default_if_none:indented_bom.unit_cost|default_if_none:'-' }}</span></div>
                                 </div>
                                 {% if indented_bom.missing_item_costs > 0 %}
                                 <div class="row red-text">
@@ -185,7 +189,7 @@
                                 -->
                             {% else %}
                                 <div class="row">
-                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Price" %}:</div>
+                                    <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Cost" %}:</div>
                                     <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ indented_bom.unit_cost|default_if_none:'-' }}</span></div>
                                 </div>
                             {% endif %}

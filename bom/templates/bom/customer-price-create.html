@@ -43,6 +43,14 @@
             </div>
         {% endif %}
 
+        {% if show_preview and preview %}
+            <div class="price-review-print-bar printer-hide mb-3">
+                <button type="button" class="bom-btn-secondary" id="price-review-print-button">
+                    <i class="material-icons text-base">print</i>{% trans "Print" %}
+                </button>
+            </div>
+        {% endif %}
+
         <div class="row mb-4 price-pair-row" id="price-summary-and-tiers">
             <div class="col s12 {% if show_preview and preview %}m6{% endif %} price-pair-col">
                 <section class="bom-panel price-pair-panel">
@@ -116,14 +124,29 @@
                                             <dd>{{ preview.part_revision.description }}</dd>
                                         </div>
                                     {% endif %}
-                                    <div class="price-summary-list__row">
-                                        <dt>{% trans "BoM Cost" %}</dt>
-                                        <dd>{{ preview.base_cost }}</dd>
-                                    </div>
-                                    <div class="price-summary-list__row">
-                                        <dt>{% trans "Adjusted base (BoM + 7%)" %}</dt>
-                                        <dd>{{ preview.adjusted_base }}</dd>
-                                    </div>
+                                    {% if preview.part_revision.is_product %}
+                                        <div class="price-summary-list__row">
+                                            <dt>{% trans "BoM Cost" %}</dt>
+                                            <dd>{{ preview.childs_unit_cost|default_if_none:preview.base_cost }}</dd>
+                                        </div>
+                                        <div class="price-summary-list__row">
+                                            <dt>{% trans "Overhead" %}</dt>
+                                            <dd>{{ preview.type_overhead|default_if_none:preview.part_revision.type_overhead }}</dd>
+                                        </div>
+                                        <div class="price-summary-list__row">
+                                            <dt>{% trans "Adjusted base (BoM + 7%)" %}</dt>
+                                            <dd>{{ preview.adjusted_base }}</dd>
+                                        </div>
+                                    {% else %}
+                                        <div class="price-summary-list__row">
+                                            <dt>{% trans "Cost" %}</dt>
+                                            <dd>{{ preview.base_cost }}</dd>
+                                        </div>
+                                        <div class="price-summary-list__row">
+                                            <dt>{% trans "Adjusted base (BoM + 7%)" %}</dt>
+                                            <dd>{{ preview.adjusted_base }}</dd>
+                                        </div>
+                                    {% endif %}
                                 {% endif %}
                             </dl>
                             <div class="price-summary-select__actions flex justify-between printer-hide">
@@ -204,9 +227,6 @@
                         </div>
 
                         <div class="price-review-actions">
-                            <button type="button" class="bom-btn-secondary" id="price-review-print-button">
-                                <i class="material-icons text-base">print</i>{% trans "Print" %}
-                            </button>
                             <button class="bom-btn-primary" type="submit" name="action" value="confirm" id="confirm-price-button" disabled>
                                 {% trans "Confirm price" %}
                             </button>

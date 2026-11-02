@@ -169,6 +169,14 @@
     color: var(--color-ink);
 }
 
+.price-review-print-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .price-pair-panel__hint {
     margin: 0;
     padding: 0.65rem 1.25rem 0;
