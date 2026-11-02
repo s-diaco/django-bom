@@ -916,15 +916,6 @@ html.dark .bom-hub-atmosphere {
   color: var(--color-ink);
 }
 
-.bom-hub-lede {
-  margin: 0;
-  max-width: 28rem;
-  font-size: 1.05rem;
-  line-height: 1.5;
-  color: var(--color-ink-muted);
-  animation: bom-hub-enter 0.55s ease-out 0.08s both;
-}
-
 .bom-hub-tools {
   display: flex;
   width: fit-content;
@@ -991,7 +982,6 @@ html.dark .bom-hub-atmosphere {
 @media (prefers-reduced-motion: reduce) {
   .bom-hub-inner,
   .bom-hub-mark,
-  .bom-hub-lede,
   .bom-hub-tools {
     animation: none;
   }
