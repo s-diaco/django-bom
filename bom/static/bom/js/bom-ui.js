@@ -99,8 +99,32 @@
       ) {
         return true;
       }
+      // File downloads keep this document mounted, so the overlay would stick.
+      if (url.searchParams.has("download")) {
+        return true;
+      }
+      if (/(?:^|\/)export(?:\/|-|$)/.test(url.pathname)) {
+        return true;
+      }
     } catch (err) {
       return true;
+    }
+    return false;
+  }
+
+  function isAttachmentFormSubmit(form, event) {
+    if (!form) {
+      return false;
+    }
+    var submitter =
+      (event && event.originalEvent && event.originalEvent.submitter) ||
+      (event && event.submitter) ||
+      null;
+    if (submitter && submitter.getAttribute) {
+      var name = submitter.getAttribute("name") || "";
+      if (name.indexOf("export") !== -1 || name.indexOf("download") !== -1) {
+        return true;
+      }
     }
     return false;
   }
@@ -112,7 +136,10 @@
     schedulePageLoading();
   });
 
-  $(document).on("submit.bomPageLoading", "form", function () {
+  $(document).on("submit.bomPageLoading", "form", function (e) {
+    if (isAttachmentFormSubmit(this, e)) {
+      return;
+    }
     schedulePageLoading();
   });
 

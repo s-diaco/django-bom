@@ -294,3 +294,13 @@ class HomeTestsMixin:
         self.assertEqual(response.status_code, 200)
         self.assertIn("text/csv", response["Content-Type"])
         self.assertIn("lithium_parts", response["Content-Disposition"])
+
+    def test_materials_download_empty_product_filter_ok(self):
+        # No product-type parts → empty export must still return an attachment.
+        response = self.client.get(
+            reverse("bom:materials"),
+            {"download": "1", "format": "csv", "product": "1"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/csv", response["Content-Type"])
+        self.assertIn("lithium_parts", response["Content-Disposition"])
