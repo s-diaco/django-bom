@@ -513,3 +513,10 @@ class TestBomTabsUrlHash(SimpleTestCase):
         self.assertIn('document.fonts.load(\'400 12pt "Parastoo"\')', js)
         self.assertIn('document.fonts.load(\'700 12pt "Parastoo"\')', js)
         self.assertIn("printWithPreparedFonts", js)
+
+    def test_page_loading_ignores_attachment_downloads(self):
+        js = open("bom/static/bom/js/bom-ui.js").read()
+        self.assertIn('url.searchParams.has("download")', js)
+        self.assertIn("/(?:^|\\/)export(?:\\/|-|$)/", js)
+        self.assertIn("isAttachmentFormSubmit", js)
+        self.assertIn('name.indexOf("export")', js)

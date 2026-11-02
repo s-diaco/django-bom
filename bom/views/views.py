@@ -464,19 +464,21 @@ def materials(request):
             axis=1,
             errors="ignore",
         )
-        df["bom_unit_cost"] = (
-            df["bom_unit_cost"]
-            .astype(str)
-            .str.replace("ریال", "", regex=False)
-            .str.replace(",", "", regex=False)
-            .str.replace(
-                r"\s+", "", regex=True
-            )  # Remove all whitespace (including non-breaking spaces)
-            .str.replace(
-                r"[^\d.]", "", regex=True
-            )  # Remove any non-numeric characters except dots
-        )
-        df["bom_unit_cost"] = pd.to_numeric(df["bom_unit_cost"], errors="coerce")
+        # Empty product/raw filters yield no rows — skip cost scrub rather than KeyError.
+        if "bom_unit_cost" in df.columns:
+            df["bom_unit_cost"] = (
+                df["bom_unit_cost"]
+                .astype(str)
+                .str.replace("ریال", "", regex=False)
+                .str.replace(",", "", regex=False)
+                .str.replace(
+                    r"\s+", "", regex=True
+                )  # Remove all whitespace (including non-breaking spaces)
+                .str.replace(
+                    r"[^\d.]", "", regex=True
+                )  # Remove any non-numeric characters except dots
+            )
+            df["bom_unit_cost"] = pd.to_numeric(df["bom_unit_cost"], errors="coerce")
         df = df.rename(
             columns={
                 "part_number": _("Part number"),
