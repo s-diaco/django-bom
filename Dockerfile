@@ -45,7 +45,13 @@ FROM ${DEBIAN_IMAGE}
 ARG APT_MIRROR
 
 # Required for "entrypoint.sh, makemessages"
-RUN if [ -n "$APT_MIRROR" ]; then \
+# BuildKit apt caches survive layer invalidation (same idea as uv --mount=type=cache).
+# Omit rm of /var/lib/apt/lists so the lists cache mount stays warm; neutralize
+# docker-clean so downloaded .debs remain under /var/cache/apt.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean && \
+    if [ -n "$APT_MIRROR" ]; then \
       find /etc/apt -type f \( -name 'sources.list' -o -name '*.sources' \) -exec sed -i \
         -e "s|http://deb.debian.org/debian|$APT_MIRROR|g" \
         -e "s|http://security.debian.org/debian-security|$APT_MIRROR-security|g" \
@@ -55,8 +61,7 @@ RUN if [ -n "$APT_MIRROR" ]; then \
     fi && \
     apt-get -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update && \
     apt-get -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false \
-            install -y --allow-unauthenticated netcat-openbsd gettext \
-    && rm -rf /var/lib/apt/lists/*
+            install -y --no-install-recommends --allow-unauthenticated netcat-openbsd gettext
     
 # Setup a non-root user
 RUN groupadd --system --gid 999 nonroot \
