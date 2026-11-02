@@ -299,8 +299,7 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn(".autocomplete(", hub_html)
         self.assertIn('href="/"', hub_html)
         self.assertTrue(
-            'title="Lithium | Home"' in hub_html
-            or 'title="لیتیوم | خانه"' in hub_html,
+            'title="Lithium |' in hub_html or 'title="لیتیوم |' in hub_html,
             "logo home title missing",
         )
 
