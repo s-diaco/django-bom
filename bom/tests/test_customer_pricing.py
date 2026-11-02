@@ -422,6 +422,11 @@ class TestCustomerPricing(TransactionTestCase):
         )
         self.assertIn(preview_path, html)
         self.assertIn('name="from" value="part"', html)
+        # No peer prices → section stays on screen but is skipped when printing.
+        self.assertRegex(
+            html,
+            r'id="price-review-peer-prices"[^>]*class="[^"]*printer-hide',
+        )
         self.assertFalse(CustomerPrice.objects.filter(customer=self.customer).exists())
 
         response = self.client.post(
@@ -568,6 +573,7 @@ class TestCustomerPricing(TransactionTestCase):
             "Prices by profit %" in html or ("قیمت" in html and "سود" in html),
             "profit tier panel missing",
         )
+        self.assertRegex(html, r'id="price-review-peer-prices"(?![^>]*printer-hide)')
         self.assertContains(response, "17.5")
         self.assertContains(response, str(self._tier_price(base_cost, Decimal("30")).amount))
         self.assertTrue(
@@ -801,10 +807,11 @@ class TestCustomerPricing(TransactionTestCase):
         )
         self.assertRegex(
             css,
-            r"#price-review-rest,\s*"
+            r"#price-review-peer-prices,\s*"
             r"(?:body\.printing-price-review\s+)?#price-review-bom\s*\{[^}]*"
             r"page-break-before:\s*always",
         )
+        self.assertIn('id="price-review-peer-prices"', html)
         # BoM Overview print: 8pt for all headers and body cells (incl. Description).
         self.assertRegex(
             css,

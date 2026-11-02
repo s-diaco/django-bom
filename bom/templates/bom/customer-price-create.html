@@ -193,9 +193,12 @@
 
         {% if show_preview and preview %}
             <div class="price-review-panel" id="price-review-rest">
-                <h5 class="mb-2 printer-show">{% trans "Other customers' latest prices" %}</h5>
-                <h5 class="mb-2 printer-hide">{% trans "Other customers' latest prices" %}</h5>
-                {% include 'bom/components/customer-price-peer-list.html' with peer_prices=preview.peer_prices %}
+                {# Skip an empty peer-prices page when printing. #}
+                <div id="price-review-peer-prices"{% if not preview.peer_prices %} class="printer-hide"{% endif %}>
+                    <h5 class="mb-2 printer-show">{% trans "Other customers' latest prices" %}</h5>
+                    <h5 class="mb-2 printer-hide">{% trans "Other customers' latest prices" %}</h5>
+                    {% include 'bom/components/customer-price-peer-list.html' with peer_prices=preview.peer_prices %}
+                </div>
 
                 <div class="price-selection-panel printer-hide" id="price-selection-panel">
                     <h5 class="mb-2">{% trans "Selected price" %}</h5>
