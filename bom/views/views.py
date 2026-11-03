@@ -1300,15 +1300,14 @@ def overhead_prices(request):
 
     name = "overhead-prices"
     title = _("Overhead prices")
-    owner = organization.owner
 
     organization.ensure_default_product_types()
     OverheadPriceFormSet = overhead_price_formset_factory()
     queryset = organization.product_types.all()
 
     if request.method == "POST":
-        if owner != user:
-            messages.error(request, _("Owner privilege required."))
+        if profile.role != "A":
+            messages.error(request, _("Admin privilege required."))
             return HttpResponseRedirect(reverse("bom:overhead-prices"))
         if "submit-overhead-prices" in request.POST:
             overhead_price_formset = OverheadPriceFormSet(
