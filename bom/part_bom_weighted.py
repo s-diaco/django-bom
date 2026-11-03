@@ -103,7 +103,8 @@ class PartBomWeighted(PartBom):
                 )
             except AttributeError:
                 pass
-        elif not bom_part.part_revision.is_product:
+
+        if self.counts_as_missing_item_cost(bom_part):
             self.missing_item_costs += 1
 
 
