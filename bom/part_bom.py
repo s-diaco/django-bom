@@ -43,6 +43,29 @@ class PartBom(AsDictModel):
     def total_out_of_pocket_cost(self):
         return self.out_of_pocket_cost + self.nre_cost
 
+    @staticmethod
+    def cost_is_missing_or_zero(cost):
+        """True when a Money/Decimal cost is None or zero."""
+        if cost is None:
+            return True
+        amount = getattr(cost, "amount", cost)
+        return amount == 0
+
+    @classmethod
+    def seller_part_missing_price(cls, seller_part):
+        """True if no seller_part or its unit/landed cost is None or 0."""
+        if seller_part is None:
+            return True
+        return cls.cost_is_missing_or_zero(
+            seller_part.unit_cost
+        ) or cls.cost_is_missing_or_zero(seller_part.landed_unit_cost)
+
+    def counts_as_missing_item_cost(self, bom_part):
+        """Non-product leaf with no seller_part or None/0 unit/landed cost."""
+        if bom_part.part_revision.is_product:
+            return False
+        return self.seller_part_missing_price(bom_part.seller_part)
+
     def append_item_and_update(self, item):
         if item.bom_id in self.parts:
             self.parts[item.bom_id].extended_quantity += item.extended_quantity
@@ -88,7 +111,8 @@ class PartBom(AsDictModel):
                 if bom_part.seller_part.nre_cost is not None
                 else self.nre_cost
             )
-        else:
+
+        if self.counts_as_missing_item_cost(bom_part):
             self.missing_item_costs += 1
 
     def update(self):
