@@ -10,7 +10,7 @@
 
 {% block content %}
 <div class="container-app">
-    {% if owner == user %}
+    {% if profile.role == 'A' %}
         <div class="bom-panel-pad max-w-3xl">
             <h2 class="mb-2 text-xl font-semibold text-ink">{% trans "Overhead prices" %}</h2>
             <p class="bom-help mb-3">{% trans "Overhead is added once per product of this type, and also rolls up from child products." %}</p>
@@ -41,7 +41,7 @@
             </form>
         </div>
     {% else %}
-        {% include 'bom/nothing-to-see.html' with required_privilege='Owner' %}
+        {% include 'bom/nothing-to-see.html' with required_privilege='Admin' %}
     {% endif %}
 </div>
 {% endblock %}
