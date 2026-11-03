@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Prefetch, prefetch_related_objects
 
-from bom.models import ManufacturerPart, SellerPart
+from bom.models import ManufacturerPart, SellerPart, Subpart
 
 PAGE_SIZE_CHOICES = (10, 25, 50, 100)
 
@@ -14,6 +14,13 @@ LIST_PAGE_SELECT_RELATED = (
     "part__organization",
     "part__number_class",
     "part__primary_manufacturer_part",
+)
+
+_BOM_SUBPART_SELECT_RELATED = (
+    "part_revision__part__organization",
+    "part_revision__part__number_class",
+    "part_revision__part__primary_manufacturer_part",
+    "part_revision__assembly",
 )
 
 
@@ -62,8 +69,57 @@ def paginate_queryset(request, queryset, *, per_page=None):
         return paginator.page(paginator.num_pages)
 
 
+def _seller_nested_prefetch():
+    sellerpart_qs = SellerPart.objects.select_related("seller")
+    return Prefetch(
+        "part_revision__part__manufacturerpart_set",
+        queryset=ManufacturerPart.objects.prefetch_related(
+            Prefetch("sellerpart_set", queryset=sellerpart_qs)
+        ),
+    )
+
+
+def prefetch_bom_graphs(part_revisions):
+    """BFS-prefetch assembly→subparts (+ nested sellers) for indented walks.
+
+    Loads one BOM depth per query wave so ``_bom_walk_subparts`` / ``indented``
+    can reuse the prefetch cache instead of querying per assembly node.
+    """
+    frontier = [pr for pr in part_revisions if pr.assembly_id is not None]
+    seen_assembly_ids = set()
+    subpart_qs = Subpart.objects.select_related(
+        *_BOM_SUBPART_SELECT_RELATED
+    ).prefetch_related(_seller_nested_prefetch())
+
+    while frontier:
+        to_prefetch = []
+        for part_rev in frontier:
+            if part_rev.assembly_id in seen_assembly_ids:
+                continue
+            seen_assembly_ids.add(part_rev.assembly_id)
+            to_prefetch.append(part_rev)
+        if not to_prefetch:
+            break
+
+        prefetch_related_objects(
+            to_prefetch,
+            Prefetch("assembly__subparts", queryset=subpart_qs),
+        )
+
+        next_frontier = []
+        for part_rev in to_prefetch:
+            for subpart in part_rev.assembly.subparts.all():
+                child = subpart.part_revision
+                if child is not None and child.assembly_id is not None:
+                    next_frontier.append(child)
+        frontier = next_frontier
+
+
 def prepare_part_revs_for_list_page(
-    part_revs_page, quantity=LIST_PAGE_SELLER_QUANTITY
+    part_revs_page,
+    quantity=LIST_PAGE_SELLER_QUANTITY,
+    *,
+    attach_bom_costs=True,
 ):
     """Prefetch seller data and attach one optimal_seller per part on a page."""
     object_list = list(part_revs_page.object_list)
@@ -94,6 +150,9 @@ def prepare_part_revs_for_list_page(
         part._optimal_seller_result = seller
         part._optimal_seller_qty = quantity
         seen[part.pk] = seller
+
+    if attach_bom_costs:
+        attach_list_unit_costs(part_revs_page)
     return part_revs_page
 
 
@@ -132,6 +191,27 @@ def list_unit_cost(part_rev, *, rollup_bom=True):
     return seller.unit_cost if seller else None
 
 
+def attach_list_unit_costs(part_revs_page):
+    """Prefetch page BoM graphs and attach ``list_unit_cost`` per row.
+
+    Matches ``PartRevision.bom_unit_cost``: products = indented BoM + type
+    overhead; raw materials = optimal seller landed unit cost.
+    """
+    products = [part_rev for part_rev in part_revs_page if part_rev.is_product]
+    if products:
+        prefetch_bom_graphs(products)
+
+    for part_rev in part_revs_page:
+        if part_rev.is_product:
+            part_rev.list_unit_cost = part_rev.bom_unit_cost
+        else:
+            seller = part_rev.part.optimal_seller()
+            part_rev.list_unit_cost = (
+                seller.landed_unit_cost if seller else None
+            )
+    return part_revs_page
+
+
 def prepare_all_part_revs_for_list_page(
     part_revs, quantity=LIST_PAGE_SELLER_QUANTITY
 ):
@@ -156,7 +236,9 @@ def prepare_part_revs_for_export(part_revs, quantity=LIST_PAGE_SELLER_QUANTITY):
     """
     part_revs = part_revs.select_related(*LIST_PAGE_SELECT_RELATED)
     page = prepare_part_revs_for_list_page(
-        UnpaginatedPartRevList(part_revs), quantity
+        UnpaginatedPartRevList(part_revs),
+        quantity,
+        attach_bom_costs=False,
     )
     for part_rev in page:
         part_rev.print_unit_cost = list_unit_cost(part_rev, rollup_bom=False)
