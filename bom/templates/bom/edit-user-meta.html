@@ -24,6 +24,10 @@
                         {{ user_meta_form.role|bom_form:'s12 m6' }}
                     </div>
                     <div class="row">
+                        {{ user_meta_form.calendar|bom_form:'s12 m6' }}
+                        {{ user_meta_form.language|bom_form:'s12 m6' }}
+                    </div>
+                    <div class="row">
                         <div class="col s6">
                             <a href="{% url 'bom:settings' tab_anchor='organization' %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
                         </div>
