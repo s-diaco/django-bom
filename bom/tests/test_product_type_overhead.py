@@ -231,7 +231,7 @@ class OverheadPricesViewTest(TestCase):
         self.client.login(username="kasper", password="ghostpassword")
         self.url = reverse("bom:overhead-prices")
 
-    def test_owner_can_get_overhead_prices(self):
+    def test_admin_can_get_overhead_prices(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         html = response.content.decode("utf-8")
@@ -256,7 +256,7 @@ class OverheadPricesViewTest(TestCase):
         self.assertNotIn('name="form-0-DELETE"', html)
         self.assertIn("bom-nav-link-active", html)
 
-    def test_owner_can_update_overhead(self):
+    def test_admin_can_update_overhead(self):
         pts = list(self.organization.product_types.order_by("sort_order", "id"))
         post = {
             "form-TOTAL_FORMS": str(len(pts)),
@@ -277,7 +277,7 @@ class OverheadPricesViewTest(TestCase):
         pt = self.organization.product_types.get(code="no_loi")
         self.assertEqual(pt.overhead, Money(42, self.organization.currency))
 
-    def test_non_owner_cannot_post(self):
+    def test_non_owner_admin_can_get_and_post(self):
         User = get_user_model()
         other = User.objects.create_user("other", "other@example.com", "otherpass")
         profile = other.bom_profile(organization=self.organization)
@@ -285,6 +285,46 @@ class OverheadPricesViewTest(TestCase):
         profile.save()
         client = Client()
         client.login(username="other", password="otherpass")
+
+        get_response = client.get(self.url)
+        self.assertEqual(get_response.status_code, 200)
+        self.assertIn(
+            'name="submit-overhead-prices"', get_response.content.decode("utf-8")
+        )
+
+        pts = list(self.organization.product_types.order_by("sort_order", "id"))
+        post = {
+            "form-TOTAL_FORMS": str(len(pts)),
+            "form-INITIAL_FORMS": str(len(pts)),
+            "form-MIN_NUM_FORMS": "0",
+            "form-MAX_NUM_FORMS": "1000",
+            "submit-overhead-prices": "1",
+        }
+        for i, pt in enumerate(pts):
+            post[f"form-{i}-id"] = str(pt.id)
+            post[f"form-{i}-overhead"] = "17" if pt.code == "with_loi" else str(
+                pt.overhead.amount if pt.overhead else 0
+            )
+        response = client.post(self.url, post)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, self.url)
+        pt = self.organization.product_types.get(code="with_loi")
+        self.assertEqual(pt.overhead, Money(17, self.organization.currency))
+
+    def test_viewer_cannot_post(self):
+        User = get_user_model()
+        viewer = User.objects.create_user("viewer", "viewer@example.com", "viewerpass")
+        profile = viewer.bom_profile(organization=self.organization)
+        profile.role = "V"
+        profile.save()
+        client = Client()
+        client.login(username="viewer", password="viewerpass")
+
+        get_response = client.get(self.url)
+        self.assertEqual(get_response.status_code, 200)
+        html = get_response.content.decode("utf-8")
+        self.assertNotIn('name="submit-overhead-prices"', html)
+
         response = client.post(
             self.url, {"submit-overhead-prices": "1"}, follow=False
         )
