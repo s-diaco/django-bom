@@ -346,26 +346,22 @@ def implied_profit_percent(base_cost, price):
 
 CUSTOMER_PRICE_PROFIT_TIERS = (
     Decimal("15"),
-    Decimal("17.5"),
     Decimal("20"),
-    Decimal("22.5"),
     Decimal("25"),
-    Decimal("27.5"),
     Decimal("30"),
+    Decimal("35"),
+    Decimal("40"),
+    Decimal("45"),
 )
-
-CUSTOMER_PRICE_BASE_MARKUP_PERCENT = Decimal("7")
 
 
 def customer_price_adjusted_base(base_cost, currency=None):
-    """BoM cost with the standard 7% markup applied before tier profit %."""
-    return apply_profit(
-        base_cost, CUSTOMER_PRICE_BASE_MARKUP_PERCENT, currency=currency
-    )
+    """BoM cost (+ overhead when present); no extra markup before tier profit %."""
+    return apply_profit(base_cost, Decimal("0"), currency=currency)
 
 
 def customer_price_profit_tiers(base_cost, currency=None):
-    """Return standard profit % tiers priced from BoM cost + 7% markup."""
+    """Return standard profit % tiers priced from BoM cost (+ overhead)."""
     adjusted_base = customer_price_adjusted_base(base_cost, currency=currency)
     return [
         {

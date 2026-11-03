@@ -48,16 +48,33 @@ class TestCustomerPricingHelpers(TransactionTestCase):
         self.assertIsNone(implied_profit_percent(Decimal("0"), Decimal("10")))
         self.assertIsNone(implied_profit_percent(None, Decimal("10")))
 
-    def test_customer_price_profit_tiers_use_seven_percent_base_markup(self):
+    def test_customer_price_profit_tiers_use_bom_overhead_base(self):
         tiers = customer_price_profit_tiers(
             Decimal("100"), currency="USD"
         )
         adjusted = customer_price_adjusted_base(Decimal("100"), currency="USD")
-        self.assertEqual(adjusted, Money(107, "USD"))
+        self.assertEqual(adjusted, Money(100, "USD"))
+        self.assertEqual(
+            [t["profit_percent"] for t in tiers],
+            [
+                Decimal("15"),
+                Decimal("20"),
+                Decimal("25"),
+                Decimal("30"),
+                Decimal("35"),
+                Decimal("40"),
+                Decimal("45"),
+            ],
+        )
         tier_20 = next(t for t in tiers if t["profit_percent"] == Decimal("20"))
         self.assertEqual(
             tier_20["price"],
             apply_profit(adjusted, Decimal("20"), currency="USD"),
+        )
+        tier_45 = next(t for t in tiers if t["profit_percent"] == Decimal("45"))
+        self.assertEqual(
+            tier_45["price"],
+            apply_profit(adjusted, Decimal("45"), currency="USD"),
         )
 
     def test_format_datetime_helper(self):
@@ -574,10 +591,10 @@ class TestCustomerPricing(TransactionTestCase):
             "profit tier panel missing",
         )
         self.assertRegex(html, r'id="price-review-peer-prices"(?![^>]*printer-hide)')
-        self.assertContains(response, "17.5")
+        self.assertContains(response, "45")
         self.assertContains(response, str(self._tier_price(base_cost, Decimal("30")).amount))
         self.assertTrue(
-            "Adjusted base (BoM + 7%)" in html or "BoM + ۷٪" in html or "BoM + 7%" in html,
+            "Adjusted base (BoM)" in html or "پایه تعدیل‌شده (BoM)" in html,
             "adjusted base label missing",
         )
         # Non-product: Cost + Adjusted base (no Overhead row in pricing summary).
@@ -749,9 +766,9 @@ class TestCustomerPricing(TransactionTestCase):
             "Overhead missing from product pricing summary",
         )
         self.assertTrue(
-            "BoM + Overhead + 7%" in summary_html
-            or "صورت مواد + سربار + ۷٪" in summary_html,
-            "BoM + Overhead + 7% missing from product pricing summary",
+            "BoM + Overhead" in summary_html
+            or "صورت مواد + سربار" in summary_html,
+            "BoM + Overhead missing from product pricing summary",
         )
         print_idx = html.find('id="price-review-print-button"')
         self.assertGreater(print_idx, -1)
