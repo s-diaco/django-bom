@@ -2027,19 +2027,15 @@ def user_meta_edit(request, user_meta_id):
 
     if request.method == "POST":
         user_meta_user_form = UserForm(request.POST, instance=user_meta_user)
-        if user_meta_user_form.is_valid():
-            user_meta_form = UserMetaForm(
-                request.POST, instance=user_meta, organization=organization
+        user_meta_form = UserMetaForm(
+            request.POST, instance=user_meta, organization=organization
+        )
+        if user_meta_user_form.is_valid() and user_meta_form.is_valid():
+            user_meta_user_form.save()
+            user_meta_form.save()
+            return HttpResponseRedirect(
+                reverse("bom:settings", kwargs={"tab_anchor": "organization"})
             )
-            if user_meta_form.is_valid():
-                user_meta_user_form.save()
-                user_meta_form.save()
-                return HttpResponseRedirect(
-                    reverse("bom:settings", kwargs={"tab_anchor": "organization"})
-                )
-
-        return TemplateResponse(request, "bom/edit-user-meta.html", locals())
-
     else:
         user_meta_user_form = UserForm(instance=user_meta_user)
         user_meta_form = UserMetaForm(instance=user_meta, organization=organization)

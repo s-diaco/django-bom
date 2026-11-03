@@ -231,8 +231,11 @@ class UserAddForm(forms.ModelForm):
 class UserMetaForm(forms.ModelForm):
     class Meta:
         model = UserMeta
-        exclude = [
-            "user",
+        # Edit template only posts role; calendar/language are set on settings.
+        # Including them here made POST validation fail silently (fields required,
+        # not rendered, errors never shown).
+        fields = [
+            "role",
         ]
 
     def __init__(self, *args, **kwargs):
