@@ -1,6 +1,12 @@
 """BOM tests: upload parts."""
 
+from django.contrib.auth.models import User
 from django.urls import reverse
+from bom.constants import (
+    CALENDAR_GREGORIAN,
+    CALENDAR_JALALI,
+    ROLE_TYPE_VIEWER,
+)
 from bom.helpers import (
     create_some_fake_part_classes,
 )
@@ -225,10 +231,43 @@ class UploadPartsTestsMixin:
         self.assertEqual(subparts[16].count, 1)
 
     def test_edit_user_meta(self):
+        """Saving user-meta edit must persist User + meta fields (not silently re-render)."""
+        other = User.objects.create_user("edith", "edith@example.com", "ghostpassword")
+        other.first_name = "Edith"
+        other.last_name = "Old"
+        other.save()
+        other_meta = other.bom_profile(organization=self.organization)
+        other_meta.role = ROLE_TYPE_VIEWER
+        other_meta.calendar = CALENDAR_JALALI
+        other_meta.language = "fa"
+        other_meta.save()
+
         response = self.client.post(
             reverse(
                 "bom:user-meta-edit",
-                kwargs={"user_meta_id": self.user.bom_profile().id},
-            )
+                kwargs={"user_meta_id": other_meta.id},
+            ),
+            {
+                "first_name": "Ada",
+                "last_name": "Lovelace",
+                "email": "ada@example.com",
+                "role": "A",
+                "calendar": CALENDAR_GREGORIAN,
+                "language": "en",
+            },
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse("bom:settings", kwargs={"tab_anchor": "organization"}),
+        )
+
+        other.refresh_from_db()
+        other_meta.refresh_from_db()
+        self.assertEqual(other.first_name, "Ada")
+        self.assertEqual(other.last_name, "Lovelace")
+        self.assertEqual(other.email, "ada@example.com")
+        self.assertEqual(other_meta.role, "A")
+        self.assertEqual(other_meta.calendar, CALENDAR_GREGORIAN)
+        self.assertEqual(other_meta.language, "en")
+        self.assertEqual(other_meta.organization_id, self.organization.id)

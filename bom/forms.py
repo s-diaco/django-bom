@@ -231,8 +231,12 @@ class UserAddForm(forms.ModelForm):
 class UserMetaForm(forms.ModelForm):
     class Meta:
         model = UserMeta
-        exclude = [
-            "user",
+        # Keep in sync with edit-user-meta.html — omitted fields fail required
+        # validation with no visible errors on that page.
+        fields = [
+            "role",
+            "calendar",
+            "language",
         ]
 
     def __init__(self, *args, **kwargs):
