@@ -1101,8 +1101,15 @@ class PartRevision(models.Model):
     def _bom_walk_subparts(self):
         if self.assembly_id is None:
             return []
+        assembly = self.assembly
+        # Prefer page/list bulk prefetch (see list_queries.prefetch_bom_graphs).
+        # Calling select_related/prefetch_related on the manager would force a
+        # new query and ignore the already-loaded graph.
+        cache = getattr(assembly, "_prefetched_objects_cache", {})
+        if "subparts" in cache:
+            return list(assembly.subparts.all())
         return list(
-            self.assembly.subparts.select_related(
+            assembly.subparts.select_related(
                 "part_revision__part__organization",
                 "part_revision__part__number_class",
                 "part_revision__part__primary_manufacturer_part",
