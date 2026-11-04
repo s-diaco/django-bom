@@ -1,6 +1,6 @@
 # Material List Performance Improvement Plan (Fixed)
 
-Revised plan incorporating codebase review (August 2026). Supersedes gaps and stale items in [material-list-performance-plan.md](material-list-performance-plan.md).
+Revised plan incorporating codebase review (August 2026).
 
 ## Objective
 

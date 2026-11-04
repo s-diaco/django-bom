@@ -7,8 +7,6 @@ One-time (idempotent) data migration for an organization:
 - Upsert Customer rows from a CSV with header company_name
 
 Dry-run by default. Pass --execute to apply. Requires --organization-id.
-
-Runbook: docs/seed-customers-and-product-types.md
 """
 
 from __future__ import annotations

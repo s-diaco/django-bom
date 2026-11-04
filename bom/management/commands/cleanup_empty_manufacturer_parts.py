@@ -12,8 +12,6 @@ manufacturer is represented as manufacturer=None (no sentinel Manufacturer).
 New BOM/parts CSV rows with no manufacturer name and no MPN skip creating a
 manufacturer part. A ManufacturerPart with manufacturer=None is created later
 if a seller price is added.
-
-Runbook: docs/cleanup-empty-manufacturer-parts.md
 """
 
 from collections import defaultdict
