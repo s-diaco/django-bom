@@ -41,46 +41,27 @@
                         </select>
                     </div>
                 {% endif %}
-                <div class="col {% if part_revision %}m3 s1{% else %}m3 s12{% endif %} self-end">
+                <div class="col {% if part_revision %}l10 m9 s12{% else %}m3 s12{% endif %} self-end">
                     {% if profile.role == 'A' and part_revision %}
-                            <!-- Dropdown Trigger -->
-                            <button class='dropdown-trigger hide-on-small-and-down bom-btn-secondary'
-                                    href='#' data-target='dropdown-revision'><i class="material-icons text-base">settings</i>{% trans "Manage revision" %}<i class="material-icons text-base">arrow_drop_down</i>
-                            </button>
-                            <a class='dropdown-trigger hide-on-med-and-up' href='#' data-target='dropdown-revision'><i
-                                    class="material-icons green-text text-lighten-1">more_vert</i></a>
-                            <!-- Dropdown Structure -->
-                            <ul id='dropdown-revision' class='dropdown-content'>
-                                {% if part_revision.configuration == 'W' %}
-                                    <li>
-                                        <a class="green-text text-lighten-1"
-                                        href="{% url 'bom:part-revision-edit' part_id=part.id part_revision_id=part_revision.id %}">
-                                            <i class="material-icons green-text text-lighten-1 right">edit</i>{% trans "Edit" %}</a>
-                                    </li>
-                                    <li>
-                                        <a class="green-text text-lighten-1" href="{% url 'bom:part-revision-release' part_id=part.id part_revision_id=part_revision.id %}">
-                                            <i class="material-icons green-text text-lighten-1 right">check</i>{% trans "Deactivate revision" %}</a>
-                                    </li>
-                                {% endif %}
-                                <li>
-                                    <a class="green-text text-lighten-1" href="{% url 'bom:part-revision-new' part_id=part.id %}">
-                                        <i class="material-icons green-text text-lighten-1 right">add</i>{% trans "New revision" %}</a>
-                                </li>
-                                {% if part_revision.configuration == 'R' %}
-                                    <li>
-                                        <a class="green-text text-lighten-1 disabled" onclick="revertPartRevision()">
-                                            <i class="material-icons green-text text-lighten-1 right">undo</i>{% trans "Re-enable editing" %}</a>
-                                    </li>
-                                {% endif %}
-                                <li class="divider" tabindex="-1"></li>
-                                <li>
-                                    <a class="red-text text-lighten-1" onclick="deletePartRevision()">
-                                        <i class="material-icons red-text text-lighten-1 right">delete</i>{% trans "Delete" %}</a>
-                                </li>
-                            </ul>
+                        <div class="part-info-revision-actions flex flex-wrap gap-1 justify-end">
+                            {% if part_revision.configuration == 'W' %}
+                                <a class="bom-btn-secondary"
+                                   href="{% url 'bom:part-revision-edit' part_id=part.id part_revision_id=part_revision.id %}">
+                                    <i class="material-icons text-base">edit</i>{% trans "Edit" %}
+                                </a>
+                                <a class="bom-btn-secondary"
+                                   href="{% url 'bom:part-revision-release' part_id=part.id part_revision_id=part_revision.id %}">
+                                    <i class="material-icons text-base">check</i>{% trans "Deactivate" %}
+                                </a>
+                            {% endif %}
+                            <a class="bom-btn-secondary"
+                               href="{% url 'bom:part-revision-new' part_id=part.id %}">
+                                <i class="material-icons text-base">add</i>{% trans "New" %}
+                            </a>
+                        </div>
                     {% elif profile.role == 'A' and not part_revision %}
                         <a class='bom-btn-secondary'
-                           href='{% url 'bom:part-revision-new' part_id=part.id %}'><i class="material-icons left">add</i>{% trans "Add revision" %}</a>
+                           href='{% url 'bom:part-revision-new' part_id=part.id %}'><i class="material-icons text-base">add</i>{% trans "Add revision" %}</a>
                     {% endif %}
                 </div>
             </div>
@@ -495,31 +476,6 @@
             }
             window.location.href = url;
         });
-    </script>
-
-    <!-- Confirmation popups?  -->
-    <script>
-        function deletePartRevision() {
-            {% if part_revision is not None %}
-                let url = "{% url 'bom:part-revision-delete' part_id=part.id part_revision_id=part_revision.id %}";
-                if (confirm("Are you sure you want to delete this revision?\n\nIt will be deleted permanently.")) {
-                    window.location.href = url;
-                }
-            {% else %}
-                confirm("No part revisions to delete!");
-            {% endif %}
-        }
-
-        function revertPartRevision() {
-            {% if part_revision is not None %}
-                let url = "{% url 'bom:part-revision-revert' part_id=part.id part_revision_id=part_revision.id %}";
-                if (confirm("Are you sure you want to revert this revision?\n\n")) {
-                    window.location.href = url;
-                }
-            {% else %}
-                confirm("No part revisions to revert!");
-            {% endif %}
-        }
     </script>
 
     <script>

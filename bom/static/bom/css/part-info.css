@@ -4,10 +4,8 @@
     box-sizing: border-box;
 }
 
-@media (min-width: 601px) {
-    .part-info-revision-row .hide-on-small-and-down.bom-btn-secondary {
-        display: inline-flex;
-    }
+.part-info-revision-actions {
+    margin-top: 1.25rem;
 }
 
 @media print {

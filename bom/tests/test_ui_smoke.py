@@ -374,7 +374,28 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn('href="#specs"', info_html)
         self.assertIn('href="#sourcing"', info_html)
         self.assertIn('href="#customers"', info_html)
-        self.assertIn("dropdown-trigger", info_html)
+        self.assertIn("part-info-revision-actions", info_html)
+        self.assertIn("bom-btn-secondary", info_html)
+        self.assertNotIn("dropdown-revision", info_html)
+        self.assertNotIn("Manage revision", info_html)
+        self.assertIn(
+            reverse(
+                "bom:part-revision-edit",
+                kwargs={"part_id": part.id, "part_revision_id": part.latest().id},
+            ),
+            info_html,
+        )
+        self.assertIn(
+            reverse(
+                "bom:part-revision-release",
+                kwargs={"part_id": part.id, "part_revision_id": part.latest().id},
+            ),
+            info_html,
+        )
+        self.assertIn(
+            reverse("bom:part-revision-new", kwargs={"part_id": part.id}),
+            info_html,
+        )
         self.assertIn("bom-table", info_html)
         self.assertIn("collection", info_html)
         self.assertNotIn("متریال جدید", info_html)

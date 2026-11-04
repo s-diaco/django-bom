@@ -1165,25 +1165,21 @@ msgstr "اطلاعات مربوط به ورژن انتخاب شده"
 msgid "Revision %(rev)s"
 msgstr "ورژن %(rev)s"
 
-#: bom/templates/bom/part-info.html:48
-msgid "Manage revision"
-msgstr "مدیریت ورژن"
+#: bom/templates/bom/part-info.html:54
+msgid "Deactivate"
+msgstr "غیرفعال کردن"
 
-#: bom/templates/bom/part-info.html:62
-msgid "Deactivate revision"
-msgstr "غیر فعال کردن ورژن"
+#: bom/templates/bom/part-info.html:59
+msgid "New"
+msgstr "جدید"
 
-#: bom/templates/bom/part-info.html:67
-msgid "New revision"
-msgstr "ورژن جدید"
-
-#: bom/templates/bom/part-info.html:72
-msgid "Re-enable editing"
-msgstr "باز کردن امکان ویرایش"
-
-#: bom/templates/bom/part-info.html:83
+#: bom/templates/bom/part-info.html:64
 msgid "Add revision"
 msgstr "افزودن ورژن"
+
+#: bom/templates/bom/part-revision-new.html:20
+msgid "New revision"
+msgstr "ورژن جدید"
 
 #: bom/templates/bom/part-info.html:90 bom/templates/bom/part-info.html:104
 msgid "Specifications"
