@@ -13,19 +13,21 @@
     <div class="container-app">
         <div class="row" style="margin-bottom: 5px;">
             <div class="col s12">
-                <div class="flex flex-wrap items-center gap-2">
-                    <h3 class="light mb-0">{% blocktrans with name=seller.name %}Seller: {{ name }}{% endblocktrans %}</h3>
-                    {% if profile.role == 'A' and seller %}
-                        <div class="flex flex-wrap gap-1">
-                            <a class="bom-btn-secondary"
-                               href="{% url 'bom:seller-edit' seller_id=seller.id %}">
-                                <i class="material-icons text-base">edit</i>{% trans "Edit" %}
-                            </a>
-                            <a class="bom-btn-secondary red-text" onclick="deleteSeller()">
-                                <i class="material-icons text-base">delete</i>{% trans "Delete" %}
-                            </a>
-                        </div>
-                    {% endif %}
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h3 class="light mb-0">{% blocktrans with name=seller.name %}Seller: {{ name }}{% endblocktrans %}</h3>
+                        {% if profile.role == 'A' and seller %}
+                            <div class="flex flex-wrap gap-1">
+                                <a class="bom-btn-secondary"
+                                   href="{% url 'bom:seller-edit' seller_id=seller.id %}">
+                                    <i class="material-icons text-base">edit</i>{% trans "Edit" %}
+                                </a>
+                                <a class="bom-btn-secondary red-text" onclick="deleteSeller()">
+                                    <i class="material-icons text-base">delete</i>{% trans "Delete" %}
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
                     <a href="{% url 'bom:sellers' %}">{% trans "Sellers list" %}</a>
                 </div>
             </div>
