@@ -4,7 +4,7 @@ from django.urls import reverse
 from bom.helpers import (
     create_some_fake_parts,
 )
-from bom.models import Manufacturer, ManufacturerPart
+from bom.models import Manufacturer, ManufacturerPart, Seller
 
 
 class SellersTestsMixin:
@@ -201,9 +201,42 @@ class SellersTestsMixin:
         )
         self.assertEqual(response.status_code, 302)
 
-    def test_manufacturer_delete(self):
+    def test_manufacturer_delete_blocked_when_part_on_bom(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
-        manufacturer_id = p1.primary_manufacturer_part.manufacturer.id
+        # p1 is a BoM subpart of p2/p3 assemblies.
+        manufacturer = p1.primary_manufacturer_part.manufacturer
+        manufacturer_id = manufacturer.id
+        response = self.client.post(
+            reverse(
+                "bom:manufacturer-delete",
+                kwargs={"manufacturer_id": manufacturer_id},
+            )
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Manufacturer.objects.filter(id=manufacturer_id).exists())
+        self.assertEqual(
+            response.url,
+            reverse(
+                "bom:manufacturer-info", kwargs={"manufacturer_id": manufacturer_id}
+            ),
+        )
+        messages = [str(m) for m in response.wsgi_request._messages]
+        self.assertTrue(
+            any("used on BoMs" in msg and manufacturer.name in msg for msg in messages)
+        )
+
+    def test_manufacturer_delete_allowed_when_not_on_bom(self):
+        (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+        # Spare manufacturer with a part that is not used as a BoM subpart.
+        manufacturer = Manufacturer.objects.create(
+            name="Unused Mfr", organization=self.organization
+        )
+        ManufacturerPart.objects.create(
+            part=p4,
+            manufacturer=manufacturer,
+            manufacturer_part_number="UNUSED-MPN",
+        )
+        manufacturer_id = manufacturer.id
         response = self.client.post(
             reverse(
                 "bom:manufacturer-delete",
@@ -212,6 +245,7 @@ class SellersTestsMixin:
         )
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Manufacturer.objects.filter(id=manufacturer_id).exists())
+        self.assertEqual(response.url, reverse("bom:manufacturers"))
 
     def test_sellers(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
@@ -247,15 +281,41 @@ class SellersTestsMixin:
         )
         self.assertEqual(response.status_code, 302)
 
-    def test_seller_delete(self):
+    def test_seller_delete_blocked_when_part_on_bom(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+        seller = p2.primary_manufacturer_part.optimal_seller().seller
+        seller_id = seller.id
         response = self.client.post(
             reverse(
                 "bom:seller-delete",
-                kwargs={"seller_id": p2.primary_manufacturer_part.optimal_seller().seller_id},
+                kwargs={"seller_id": seller_id},
             )
         )
         self.assertEqual(response.status_code, 302)
+        self.assertTrue(Seller.objects.filter(id=seller_id).exists())
+        self.assertEqual(
+            response.url,
+            reverse("bom:seller-info", kwargs={"seller_id": seller_id}),
+        )
+        messages = [str(m) for m in response.wsgi_request._messages]
+        self.assertTrue(
+            any("used on BoMs" in msg and seller.name in msg for msg in messages)
+        )
+
+    def test_seller_delete_allowed_when_not_on_bom(self):
+        create_some_fake_parts(organization=self.organization)
+        # Archibald is created by fixtures with no SellerParts.
+        seller = Seller.objects.get(name="Archibald", organization=self.organization)
+        seller_id = seller.id
+        response = self.client.post(
+            reverse(
+                "bom:seller-delete",
+                kwargs={"seller_id": seller_id},
+            )
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Seller.objects.filter(id=seller_id).exists())
+        self.assertEqual(response.url, reverse("bom:sellers"))
 
     def test_manufacturer_part_edit(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
