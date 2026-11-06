@@ -175,13 +175,21 @@ class SellersTestsMixin:
 
     def test_manufacturer_info(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+        manufacturer_id = p1.primary_manufacturer_part.manufacturer.id
         response = self.client.post(
             reverse(
                 "bom:manufacturer-info",
-                kwargs={"manufacturer_id": p1.primary_manufacturer_part.manufacturer.id},
+                kwargs={"manufacturer_id": manufacturer_id},
             )
         )
         self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        self.assertNotIn("dropdown-revision", html)
+        self.assertIn(
+            reverse("bom:manufacturer-edit", kwargs={"manufacturer_id": manufacturer_id}),
+            html,
+        )
+        self.assertIn("deleteManufacturer()", html)
 
     def test_manufacturer_edit(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
@@ -212,13 +220,21 @@ class SellersTestsMixin:
 
     def test_seller_info(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+        seller_id = p2.primary_manufacturer_part.optimal_seller().seller_id
         response = self.client.post(
             reverse(
                 "bom:seller-info",
-                kwargs={"seller_id": p2.primary_manufacturer_part.optimal_seller().seller_id},
+                kwargs={"seller_id": seller_id},
             )
         )
         self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        self.assertNotIn("dropdown-revision", html)
+        self.assertIn(
+            reverse("bom:seller-edit", kwargs={"seller_id": seller_id}),
+            html,
+        )
+        self.assertIn("deleteSeller()", html)
 
     def test_seller_edit(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
