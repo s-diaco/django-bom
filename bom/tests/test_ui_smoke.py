@@ -374,10 +374,12 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn('href="#specs"', info_html)
         self.assertIn('href="#sourcing"', info_html)
         self.assertIn('href="#customers"', info_html)
+        self.assertIn("part-info-revision-controls", info_html)
         self.assertIn("part-info-revision-actions", info_html)
         self.assertIn("bom-btn-secondary", info_html)
         self.assertNotIn("dropdown-revision", info_html)
         self.assertNotIn("Manage revision", info_html)
+        self.assertNotIn("Revision 1", info_html)
         self.assertIn(
             reverse(
                 "bom:part-revision-edit",

@@ -1160,20 +1160,15 @@ msgstr "ورژن: %(rev)s"
 msgid "Information about the selected revision"
 msgstr "اطلاعات مربوط به ورژن انتخاب شده"
 
-#: bom/templates/bom/part-info.html:39
-#, python-format
-msgid "Revision %(rev)s"
-msgstr "ورژن %(rev)s"
-
-#: bom/templates/bom/part-info.html:54
+#: bom/templates/bom/part-info.html:52
 msgid "Deactivate"
 msgstr "غیرفعال کردن"
 
-#: bom/templates/bom/part-info.html:59
+#: bom/templates/bom/part-info.html:57
 msgid "New"
 msgstr "جدید"
 
-#: bom/templates/bom/part-info.html:64
+#: bom/templates/bom/part-info.html:66
 msgid "Add revision"
 msgstr "افزودن ورژن"
 

@@ -4,8 +4,14 @@
     box-sizing: border-box;
 }
 
-.part-info-revision-actions {
-    margin-top: 1.25rem;
+.part-info-revision-select {
+    width: auto;
+    min-width: 7rem;
+    max-width: 12rem;
+}
+
+.part-info-revision-controls {
+    margin-top: 0.25rem;
 }
 
 @media print {

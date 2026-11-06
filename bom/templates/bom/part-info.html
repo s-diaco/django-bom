@@ -27,43 +27,45 @@
                     {% endif %}
                 </div>
             </div>
-            <div class="row printer-hide items-end part-info-revision-row">
+            <div class="row printer-hide part-info-revision-row">
                 {% if part_revision %}
-                    <div class="col l2 m3 s5">
+                    <div class="col s12">
                         <label class="bom-label" for="select-revision">{% trans "Revision" %}</label>
-                        <select id="select-revision" class="bom-select">
+                        <div class="part-info-revision-controls flex flex-wrap items-center gap-1">
+                            <select id="select-revision" class="bom-select part-info-revision-select">
                                 {% for r in revisions.all %}
                                     <option {% if part_revision.id == r.id %}selected{% endif %}
                                             value="{% if r == part.latest %}{% url 'bom:part-info' part_id=part.id %}
                                                     {% else %}{% url 'bom:part-info-history' part_id=part.id part_revision_id=r.id %}
-                                                    {% endif %}">{% blocktrans with rev=r.revision %}Revision {{ rev }}{% endblocktrans %}{% if r.configuration == 'W' %} ({% trans "Active" %}){% endif %}</option>
+                                                    {% endif %}">{{ r.revision }}{% if r.configuration == 'W' %} ({% trans "Active" %}){% endif %}</option>
                                 {% endfor %}
-                        </select>
-                    </div>
-                {% endif %}
-                <div class="col {% if part_revision %}l10 m9 s12{% else %}m3 s12{% endif %} self-end">
-                    {% if profile.role == 'A' and part_revision %}
-                        <div class="part-info-revision-actions flex flex-wrap gap-1 justify-end">
-                            {% if part_revision.configuration == 'W' %}
-                                <a class="bom-btn-secondary"
-                                   href="{% url 'bom:part-revision-edit' part_id=part.id part_revision_id=part_revision.id %}">
-                                    <i class="material-icons text-base">edit</i>{% trans "Edit" %}
-                                </a>
-                                <a class="bom-btn-secondary"
-                                   href="{% url 'bom:part-revision-release' part_id=part.id part_revision_id=part_revision.id %}">
-                                    <i class="material-icons text-base">check</i>{% trans "Deactivate" %}
-                                </a>
+                            </select>
+                            {% if profile.role == 'A' %}
+                                <div class="part-info-revision-actions flex flex-wrap gap-1">
+                                    {% if part_revision.configuration == 'W' %}
+                                        <a class="bom-btn-secondary"
+                                           href="{% url 'bom:part-revision-edit' part_id=part.id part_revision_id=part_revision.id %}">
+                                            <i class="material-icons text-base">edit</i>{% trans "Edit" %}
+                                        </a>
+                                        <a class="bom-btn-secondary"
+                                           href="{% url 'bom:part-revision-release' part_id=part.id part_revision_id=part_revision.id %}">
+                                            <i class="material-icons text-base">check</i>{% trans "Deactivate" %}
+                                        </a>
+                                    {% endif %}
+                                    <a class="bom-btn-secondary"
+                                       href="{% url 'bom:part-revision-new' part_id=part.id %}">
+                                        <i class="material-icons text-base">add</i>{% trans "New" %}
+                                    </a>
+                                </div>
                             {% endif %}
-                            <a class="bom-btn-secondary"
-                               href="{% url 'bom:part-revision-new' part_id=part.id %}">
-                                <i class="material-icons text-base">add</i>{% trans "New" %}
-                            </a>
                         </div>
-                    {% elif profile.role == 'A' and not part_revision %}
+                    </div>
+                {% elif profile.role == 'A' %}
+                    <div class="col m3 s12">
                         <a class='bom-btn-secondary'
                            href='{% url 'bom:part-revision-new' part_id=part.id %}'><i class="material-icons text-base">add</i>{% trans "Add revision" %}</a>
-                    {% endif %}
-                </div>
+                    </div>
+                {% endif %}
             </div>
             <div class="row">
                 <div class="col s12 printer-hide">
