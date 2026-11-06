@@ -12,22 +12,22 @@
 {% block content %}
     <div class="container-app">
         <div class="row" style="margin-bottom: 5px;">
-            <div class="col m8 hide-on-small-and-down">
-                <h3 class="light">{% blocktrans with name=seller.name %}Seller: {{ name }}{% endblocktrans %}</h3>
+            <div class="col s12">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="light mb-0">{% blocktrans with name=seller.name %}Seller: {{ name }}{% endblocktrans %}</h3>
+                    {% if profile.role == 'A' and seller %}
+                        <div class="flex flex-wrap gap-1">
+                            <a class="bom-btn-secondary"
+                               href="{% url 'bom:seller-edit' seller_id=seller.id %}">
+                                <i class="material-icons text-base">edit</i>{% trans "Edit" %}
+                            </a>
+                            <a class="bom-btn-secondary red-text" onclick="deleteSeller()">
+                                <i class="material-icons text-base">delete</i>{% trans "Delete" %}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
                 <a href="{% url 'bom:sellers' %}">{% trans "Back to sellers list" %}</a>
-            </div>
-            <div class="col m4 s12">
-                {% if profile.role == 'A' and seller %}
-                    <div style="margin-top: 1.5rem;" class="flex flex-wrap gap-1 justify-end">
-                        <a class="bom-btn-secondary"
-                           href="{% url 'bom:seller-edit' seller_id=seller.id %}">
-                            <i class="material-icons text-base">edit</i>{% trans "Edit" %}
-                        </a>
-                        <a class="bom-btn-secondary red-text" onclick="deleteSeller()">
-                            <i class="material-icons text-base">delete</i>{% trans "Delete" %}
-                        </a>
-                    </div>
-                {% endif %}
             </div>
         </div>
 
