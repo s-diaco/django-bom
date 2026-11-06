@@ -1,47 +1,29 @@
-# Material List Performance Improvement Plan (Fixed)
+# Material List Performance — Remaining Work
 
-Revised plan incorporating codebase review (August 2026).
+Targets the materials list (`materials()` in `bom/views/views.py`, template `dashboard.html`). Staff hub at `/` is separate; list lives at `/materials/`.
 
-## Objective
+**Goals (unchanged):** page nav under ~1 s in production-like PostgreSQL; no N+1; no behavior changes to latest-revision semantics, seller selection, pricing, search, print, export, auth, or tenancy.
 
-Reduce the time required to navigate between pages of the material list rendered by `home()` in `bom/views/views.py`. Pagination currently takes more than five seconds in production.
+## Done (do not re-implement)
 
-Target outcomes:
+| Work | Where |
+| --- | --- |
+| Stage A seller prefetch + optimal-seller cache on page rows | `bom/list_queries.py` (`paginate_part_revs`, `prepare_part_revs_for_list_page`); baseline `stage-a` (~110 queries vs ~1,015) |
+| CSV/XLSX export without BOM walk (#109) | `prepare_part_revs_for_export`; seller-only `print_unit_cost`; `test_list_export_cost.py` |
+| List `list_unit_cost` + BoM graph prefetch (#123) | `prefetch_bom_graphs`, `attach_list_unit_costs`; `dashboard.html` uses `list_unit_cost`; `test_list_unit_cost.py` |
+| Autocomplete off by default | `BOM_CONFIG.admin_dashboard.enable_autocomplete: False` |
 
-- Page navigation under 500 ms where practical, and under one second at normal production load.
-- Search and material filters under one second where practical.
-- No N+1 queries.
-- No behavior changes to latest-revision selection, seller selection, pricing, search, print, export, authorization, or organization isolation.
+Perf harness exists (`bom/tests/test_performance.py`, `perf/baseline.json`, `perf/README.md`) but still measures page 1 only on an 80-part SQLite dataset (query ceiling 200). Extend it as part of remaining Stage A measurement below.
 
-## Current State vs Baseline
+`report()` still shares the same latest-revision / search construction pattern as `materials()` — fix both when touching query construction.
 
-| Metric | Before Stage A | After Stage A | Plan target |
-| --- | ---: | ---: | ---: |
-| Home page queries (SQLite, 80-part dataset) | 1,015 | 110 | < 15 |
-| Perf test query ceiling | — | 200 | Tighten after fixes |
-| Page-2 measurement | — | Not measured | Required |
-| PostgreSQL wall-time SLA | — | Not measured | < 1 s page 1/2 |
+---
 
-Source: `perf/baseline.json`, `bom/tests/test_performance.py`.
+## Open bugs (fix first)
 
-Production dump (~480 parts, ~594 revisions) is too small to explain 5 s pagination alone. Remaining latency is likely query shape, a latest-revision subquery bug, recursive BOM cost on assembly rows, expensive `COUNT(*)`, PostgreSQL plans, or infrastructure latency.
+### B0 — Latest-revision subquery returns every revision
 
-## Already Implemented (Stage A — Seller Prefetch)
-
-The following work is **done** on `main` via `bom/list_queries.py` and the `stage-a` baseline:
-
-- `paginate_part_revs()` applies `select_related` for part, organization, number class, and primary manufacturer part.
-- `prepare_part_revs_for_list_page()` prefetches manufacturer parts → seller parts → sellers for the current page only.
-- Optimal seller is computed once per distinct part on the page and cached on the part instance via `_optimal_seller_result` / `_optimal_seller_qty`.
-- Print/export uses `prepare_all_part_revs_for_list_page()` and `attach_print_unit_costs()` for raw materials.
-
-Home queries dropped from ~1,015 to ~110. **Do not re-implement seller N+1 elimination** — remaining seller work is explicit row attributes and regression tests (see Stage C).
-
-## Known Bugs (Fix Before Other Optimizations)
-
-### 1. Latest-revision subquery returns all revisions, not one per part
-
-Current code in `home()` (`bom/views/views.py`):
+Still wrong in `materials()` and `report()`:
 
 ```python
 PartRevision.objects.filter(part_id__in=part_ids)
@@ -49,204 +31,64 @@ PartRevision.objects.filter(part_id__in=part_ids)
     .values("id")
 ```
 
-Django groups by revision `id`, so every revision row passes through the subquery instead of one latest revision per part.
+Django groups by revision `id`, so the subquery does not collapse to one row per part.
 
-Canonical pattern already used in `Customer.latest_prices()` (`bom/models.py`):
-
-```python
-.values("part_id")
-.annotate(max_id=Max("id"))
-.values("max_id")
-```
-
-**Impact:** inflated row count (~594 vs ~480), heavier `Paginator` count, more page/export work.
-
-**Action:** add a correctness test (one revision per part), then fix all occurrences in `home()` and related views.
-
-### 2. Search rebuild drops `product` filter
-
-When `query` is present, `home()` rebuilds `part_revs` (lines 240–248) but does not re-apply the `product=0/1` filter from lines 204–208. `/?product=0&q=...` likely ignores raw-material filtering.
-
-**Action:** unify query construction so all filters apply in one pipeline; add regression test for search + product combinations.
-
-## Current Hot Paths (Remaining)
-
-### Query construction
-
-- Eager `part_ids = list(parts.values_list("id", flat=True))` materializes all IDs in Python (lines 191, 238).
-- Latest-revision queryset is built twice: before and after search.
-- No deterministic ordering tie-breaker (`part_id` or `part_revision_id`).
-
-### Pagination count
-
-`Paginator` issues `COUNT(*)` over the full latest-revision queryset. The UI (`bom/templates/bom/ui/pagination.html`) shows page numbers only — no "Showing X of Y" — but Django still runs the count internally.
-
-### Seller display (clarity, not N+1)
-
-The template calls `part.optimal_seller` again after prefetch. This is a **cached Python re-call**, not extra SQL when prefetch succeeded. Remaining work: attach explicit `part_rev.list_seller` and test that the fallback DB path never runs during list rendering.
-
-### BOM unit cost (likely main remaining latency driver)
-
-The template renders `part_rev.bom_unit_cost`. For assemblies this calls `self.indented().bom_unit_cost`, recursively walking the BOM. Cached per revision, but expensive on first access for each assembly row on the page.
-
-Print path partially mitigates via `attach_print_unit_costs()`; the normal paginated list path does not.
-
-### Autocomplete (disabled by default)
-
-When `enable_autocomplete=True`, `home()` iterates all matching revisions and manufacturer parts and embeds the full dictionary in every HTML response before pagination. Keep disabled; move to a separate endpoint if needed.
-
-## Phase 1: Establish a Production-Like Baseline
-
-1. Measure separately:
-
-   - `/`
-   - `/?page=2`
-   - `/?page=10`
-   - `/?product=0`
-   - `/?product=1`
-   - `/?q=<common-term>`
-   - `/?page=2&q=<common-term>`
-   - `/?product=0&q=<common-term>` (validates product-filter bug fix)
-
-2. Record total wall time, database time, query count, response size, and database CPU/load.
-
-3. Add temporary timing instrumentation around:
-
-   - `PartClassSelectionForm`
-   - base `parts` queryset construction
-   - search filtering
-   - latest-revision queryset construction
-   - autocomplete generation
-   - `paginate_part_revs`
-   - seller prefetch and optimal-seller calculation
-   - `bom_unit_cost` / `indented()` per row
-   - template rendering
-
-4. Capture SQL from the slowest requests and run `EXPLAIN (ANALYZE, BUFFERS)` on PostgreSQL.
-
-5. Measure paginator count separately. Determine whether time is spent in count, page query, prefetch, BOM cost, Python, or template rendering.
-
-6. Extend `bom/tests/test_performance.py` and `perf/measure_e2e.sh` beyond page 1. Add a dataset closer to the production dump (~480 parts).
-
-Do not add indexes or rewrite queries based only on assumptions. Keep before/after plans and timings.
-
-## Phase 2: Fix Latest-Revision Subquery and Query Construction
-
-### 0. Fix latest-revision subquery (first)
-
-Replace broken subquery with the `Customer.latest_prices()` pattern. Verify with tests that exactly one revision per part is returned.
-
-### 1. Keep part IDs lazy
-
-Replace:
+Canonical pattern (`Customer.latest_prices()` in `bom/models.py`):
 
 ```python
-part_ids = list(parts.values_list("id", flat=True))
+.values("part_id").annotate(max_id=Max("id")).values("max_id")
 ```
 
-with a subquery:
+**Do:** correctness test (exactly one revision per part) → fix all four subquery sites in `materials`/`report` → re-measure row count and paginator `COUNT(*)`.
 
-```python
-part_ids = parts.values("id")
-```
+### Search rebuild drops `product` filter
 
-### 2. Apply filters before selecting latest revisions
+`materials()` applies `product=0/1` on `part_revs`, then when `q` is set rebuilds `part_revs` from searched parts **without** re-applying the material filter. `/?product=0&q=...` can ignore raw-material filtering.
 
-Refactor `home()` into one query-building path:
+**Do:** one query-building path (filters → latest rev → product filter → order); regression test for search + product combinations.
 
-1. Resolve organization and form state.
-2. Create `Part.objects.filter(organization=organization)`.
-3. Apply part-class filtering.
-4. Apply search filtering.
-5. Select the latest revision for the resulting parts.
-6. Apply `product=1` or `product=0` material filtering.
-7. Apply stable ordering.
-8. Handle download, print, or pagination.
+---
 
-Do not build one latest-revision query and then rebuild it after search.
+## Remaining stages
 
-### 3. Preserve and document latest-revision semantics
+### Stage A (measure) — finish
 
-The intended rule is greatest `PartRevision.id` per part. Verify this is the domain rule before changing it. If timestamp is the true rule, use `timestamp DESC, id DESC` and update tests deliberately.
+Still needed:
 
-### 4. Add a unique ordering tie-breaker
+1. Measure `/materials/`, page 2/10, `product=0/1`, search, and `product`+`q` (wall time, DB time, query count, response size).
+2. Temporary instrumentation around form, query build, paginate/prefetch, template.
+3. PostgreSQL `EXPLAIN (ANALYZE, BUFFERS)` on slowest requests; separate count vs page vs prefetch cost.
+4. Extend `test_performance.py` / `perf/measure_e2e.sh` beyond page 1; dataset closer to ~480 parts. Point e2e at `/materials/`, not the hub `/`.
 
-```python
-.order_by(
-    "part__number_class__code",
-    "part__number_item",
-    "part__number_variation",
-    "part_id",
-)
-```
+No indexes or query rewrites from assumptions alone.
 
-### 5. Investigate the count query
+### Stage B — Query construction
 
-First optimize the underlying queryset (subquery fix alone may help significantly). If count remains costly, evaluate:
+After B0:
 
-- A count-friendly queryset.
-- Counting matching parts rather than materialized revision rows where equivalent.
-- Short-lived organization/filter-specific count caching.
-- Removing exact totals from the UI in favor of next/previous navigation, only if product requirements allow it (low UX impact today since totals are not displayed).
+1. Keep part IDs lazy (`parts.values("id")` or `part__in=parts`) — drop eager `list(parts.values_list(...))`.
+2. Single pipeline: org → part-class → search → latest revision → product filter → stable order → download/print/paginate.
+3. Confirm domain rule remains greatest `PartRevision.id` per part before changing it.
+4. Ordering tie-breaker: add `part_id` (or revision id) after number fields.
+5. Revisit `Paginator` `COUNT(*)` only after the subquery fix; consider count-friendly queryset or next/prev-only if still hot (UI already omits totals).
 
-## Phase 3: Page-Row Preparation (Seller + Unit Cost)
+### Stage C — Explicit `list_seller`
 
-### Seller (explicit attributes)
+Unit cost attachment is done (#123). Seller column still calls `part.optimal_seller` in the template (cached Python after Stage A prefetch, not SQL N+1).
 
-1. Inspect the `Prefetch` graph in `bom/list_queries.py` — already covers seller/manufacturer access for the dashboard.
-2. Attach prepared values on each row:
+1. Attach `part_rev.list_seller` in `prepare_part_revs_for_list_page`.
+2. Update `dashboard.html` / print templates to use it.
+3. Query-capture tests: page 1 and 2 never hit `Part.optimal_seller()` fallback DB path.
 
-```python
-part_rev.list_seller = seller
-```
+Do not push seller selection into SQL unless profiling shows Python cost matters after prefetch.
 
-3. Update `dashboard.html`:
+### Stage D — Autocomplete (optional)
 
-```django
-{% with part=part_rev.part seller=part_rev.list_seller %}
-```
+Keep default off. If product needs it: separate authenticated JSON endpoint (org-scoped, min chars, small result set, debounce) — remove full-catalog embed from the list request. Not blocking list latency while disabled.
 
-4. Add query-capture tests proving page 1 and page 2 do not issue per-row seller queries and never hit `Part.optimal_seller()` fallback DB path.
+### Stage E — Indexes (plan-driven only)
 
-Do not move seller selection into SQL unless profiling proves Python selection is still expensive after prefetch. The dump has only 453 seller parts.
-
-### BOM unit cost (elevated priority)
-
-1. Profile pages with only raw materials, only assemblies, and mixed rows.
-2. Confirm whether `bom_unit_cost` causes additional queries during list rendering.
-3. Ensure nested BOM traversal uses prefetched data where possible.
-4. Attach prepared display value on each row:
-
-```python
-part_rev.list_unit_cost = ...
-```
-
-5. If recursive computation remains the bottleneck:
-
-   - Short term: compute once per row in `prepare_part_revs_for_list_page()`.
-   - Medium term: bulk-prefetch the BOM graph.
-   - Long term: denormalized calculated cost per revision/currency with invalidation on pricing/BOM changes.
-
-6. Preserve raw-material seller cost vs assembly BOM cost distinction. Add correctness tests before denormalizing.
-
-## Phase 4: Remove Full-Catalog Autocomplete Work
-
-Keep `enable_autocomplete=False` by default.
-
-If autocomplete is required:
-
-1. Add a separate authenticated JSON endpoint, e.g. `/search-autocomplete/?q=...`.
-2. Scope every query to the current organization.
-3. Require at least two or three characters.
-4. Return only 10–20 results.
-5. Debounce browser requests.
-6. Use `select_related` and `values()`/`values_list()` for a small response.
-7. Cache common results briefly with organization-scoped keys.
-8. Remove full dictionary generation and JSON embedding from the normal dashboard request.
-
-## Phase 5: Add Indexes Based on PostgreSQL Plans
-
-Evaluate candidates only after capturing query plans:
+Candidates only after PostgreSQL plans:
 
 ```text
 bom_partrevision (part_id, id DESC)
@@ -255,134 +97,36 @@ bom_part (organization_id, number_class_id, number_item, number_variation, id)
 bom_sellerpart (manufacturer_part_id, minimum_order_quantity)
 ```
 
-For `icontains` search, evaluate `pg_trgm` plus GIN/GiST indexes on:
+For `icontains` search, evaluate `pg_trgm` GIN/GiST only if search plans justify it. Before/after `EXPLAIN` + `ANALYZE` for every index.
 
-- `bom_partrevision.searchable_synopsis`
-- primary manufacturer-part number
-- manufacturer name, if needed
+### Stage F — Only if measured
 
-For every index: capture before plan, add migration, run `ANALYZE`, capture after plan, compare execution time and buffers. Do not add speculative indexes.
+- Further BOM cost denormalization / invalidation (list path already prefetches graphs).
+- Current-revision FK / read model at larger scale.
+- Keyset pagination or org-scoped count/autocomplete caches — only when offset/count/page latency proves it.
 
-## Phase 6: Reduce Row and Template Work Carefully
+---
 
-After query-count tests exist, evaluate `only()` or `defer()` for fields not needed by the table and its properties. Deferred fields accessed by model properties can create hidden queries.
+## Acceptance (when remaining work ships)
 
-Prepare transient list-row values where useful:
+- One latest revision per part under all list filters.
+- Search + product filters compose correctly.
+- Query count independent of page row count for seller/BOM depth; normal paginated materials page trending toward &lt; 15 queries (tighten ceiling after fixes).
+- Page 1 and 2 under one second on production-like PostgreSQL; no SQLite-only success claims.
+- Unchanged search, filter, cost, print, export, auth, tenancy behavior.
 
-- `list_part_number`
-- `list_seller`
-- `list_unit_cost`
-- `list_category_name`
+## Constraints
 
-Do not duplicate business logic without tests.
+- Fix B0 and search+product before indexes or caching.
+- No PostgreSQL-only ORM unless PostgreSQL is the supported production DB (it is).
+- Cache only org/permission-isolated data.
+- Preserve scalability beyond the ~480-part dump.
 
-## Phase 7: Evaluate Pagination and Caching
+## Relevant files
 
-### Offset pagination
-
-Measure pages 1, 2, 10, and 50. Five seconds on page 2 with ~480 parts is unlikely from offset alone. Implement keyset pagination only if latency grows substantially with page number.
-
-### Current revision modeling
-
-At larger scale, consider a current-revision relationship on `Part` or a read-model table. Not the first optimization for the current dump size.
-
-### Caching
-
-Cache only safe, organization-scoped data (part-class choices, autocomplete results, short-lived counts). Full-page cache must account for organization, role, language, currency, CSRF, and catalog-version invalidation. Add caching only after query and N+1 problems are fixed.
-
-## Tests and Acceptance Criteria
-
-Add or update tests for:
-
-- one latest revision per part (subquery correctness)
-- page 1, page 2, and stable ordering
-- part-class, product, and raw-material filters
-- search + product filter combinations
-- all supported search sources
-- empty results
-- seller and unit-cost display
-- print and CSV/XLSX export
-- admin-only controls and deletion behavior
-- multi-organization isolation
-- no per-row queries on page 1 and page 2
-
-Extend `bom/tests/test_performance.py` with a production-like dataset. Run against PostgreSQL as well as SQLite; only PostgreSQL timings represent production.
-
-After optimization, target:
-
-- fewer than 15 queries for a normal paginated home page
-- query count independent of page row count
-- no query count growth from seller or BOM depth
-- page 1 and page 2 under one second in production-like PostgreSQL conditions
-- pagination materially below the current five-second behavior
-- unchanged search, filtering, cost, print, export, authorization, and tenancy behavior
-
-## Recommended Delivery Order
-
-### Stage A: Measure — partial
-
-Done: baseline JSON, perf test, README, e2e script, Stage A seller prefetch baseline.
-
-Remaining: page-2/filter/search measurements, view instrumentation, PostgreSQL `EXPLAIN` artifacts, larger dataset.
-
-### Stage B0: Fix latest-revision subquery
-
-1. Add correctness test.
-2. Fix subquery using `.values("part_id").annotate(max_id=Max("id")).values("max_id")`.
-3. Re-measure row count and count-query cost.
-
-### Stage B: Fix query construction
-
-1. Remove eager `part_ids` materialization.
-2. Apply all part filters before latest-revision selection in one path.
-3. Re-apply `product` filter after search (or eliminate duplicate path).
-4. Add deterministic ordering tie-breaker.
-5. Add query-count regression tests.
-
-### Stage C: Fix page-row preparation
-
-1. Attach and render `list_seller` explicitly.
-2. Profile and attach `list_unit_cost` for assembly rows.
-3. Verify no seller N+1 and no BOM-cost query explosion.
-4. Add page-1/page-2 query regression tests.
-
-### Stage D: Isolate optional work
-
-1. Keep autocomplete off by default.
-2. Move autocomplete to a limited endpoint if needed.
-3. Remove full-catalog serialization from the dashboard path.
-
-### Stage E: Optimize PostgreSQL
-
-1. Add only plan-supported indexes.
-2. Add trigram search indexes only if search plans justify them.
-3. Re-run production-like benchmarks.
-
-### Stage F: Address remaining bottlenecks
-
-1. Optimize or denormalize BOM costs if proven necessary.
-2. Consider current-revision modeling at larger scale.
-3. Consider keyset pagination or safe caching only when measurements justify them.
-
-## Implementation Constraints
-
-- Do not change the meaning of latest revision without confirming the domain rule.
-- Do not use PostgreSQL-only ORM features unless PostgreSQL is the supported production database.
-- Do not cache data without organization and permission isolation.
-- Do not denormalize costs before proving recursive calculation is a bottleneck.
-- Do not optimize only for the 480-part dump; preserve scalability.
-- Do not trust template caching implicitly; make prepared row values explicit.
-- Do not claim success from SQLite-only timings.
-- Fix known bugs (subquery, search+product) before indexes or caching.
-
-## Relevant Files
-
-- `bom/views/views.py` — `home()` query construction
-- `bom/list_queries.py` — pagination, seller prefetch, print unit cost
-- `bom/models.py` — `PartRevision.bom_unit_cost`, `Customer.latest_prices()` pattern
-- `bom/templates/bom/dashboard.html` — list rendering
-- `bom/templates/bom/ui/pagination.html` — pagination UI
-- `bom/tests/test_performance.py` — query-count regression
-- `bom/tests/test_bom.py` — behavioral tests
-- `perf/baseline.json` — recorded baselines
-- `perf/README.md` — how to run benchmarks
+- `bom/views/views.py` — `materials()`, `report()` query construction
+- `bom/list_queries.py` — pagination, seller/BOM prefetch, export/print costs
+- `bom/models.py` — `Customer.latest_prices()` pattern; `PartRevision.bom_unit_cost`
+- `bom/templates/bom/dashboard.html` — list rendering (`list_unit_cost`, still `optimal_seller`)
+- `bom/tests/test_performance.py`, `test_list_unit_cost.py`, `test_list_export_cost.py`
+- `perf/baseline.json`, `perf/README.md`
