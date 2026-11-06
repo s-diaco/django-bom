@@ -10,8 +10,10 @@
     max-width: 12rem;
 }
 
-.part-info-revision-controls {
-    margin-top: 0.25rem;
+.part-info-revision-label {
+    flex: none;
+    margin-bottom: 0;
+    white-space: nowrap;
 }
 
 @media print {

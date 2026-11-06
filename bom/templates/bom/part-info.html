@@ -30,8 +30,8 @@
             <div class="row printer-hide part-info-revision-row">
                 {% if part_revision %}
                     <div class="col s12">
-                        <label class="bom-label" for="select-revision">{% trans "Revision" %}</label>
                         <div class="part-info-revision-controls flex flex-wrap items-center gap-1">
+                            <label class="bom-label part-info-revision-label mb-0" for="select-revision">{% trans "Revision" %}</label>
                             <select id="select-revision" class="bom-select part-info-revision-select">
                                 {% for r in revisions.all %}
                                     <option {% if part_revision.id == r.id %}selected{% endif %}
