@@ -300,6 +300,39 @@ class PartClass(models.Model):
         return f"{self.code}: {self.name}"
 
 
+def _bom_usage_lines_for_part_ids(part_ids, limit=8):
+    """Format 'part → parent Rev X' lines for parts that appear as BoM subparts."""
+    part_ids = list(part_ids)
+    if not part_ids:
+        return []
+
+    subparts = (
+        Subpart.objects.filter(
+            part_revision__part_id__in=part_ids,
+            assemblies__isnull=False,
+        )
+        .select_related("part_revision__part")
+        .distinct()
+    )
+    lines = []
+    seen_part_ids = set()
+    for subpart in subparts:
+        part = subpart.part_revision.part
+        if part.id in seen_part_ids:
+            continue
+        seen_part_ids.add(part.id)
+        parents = PartRevision.objects.filter(
+            assembly__in=subpart.assemblies.all()
+        ).select_related("part")[:3]
+        if not parents:
+            continue
+        parent_desc = ", ".join(str(parent) for parent in parents)
+        lines.append(f"{part.full_part_number()} → {parent_desc}")
+        if len(lines) >= limit:
+            break
+    return lines
+
+
 class Manufacturer(models.Model, AsDictModel):
     name = models.CharField(max_length=128, default=None)
     organization = models.ForeignKey(
@@ -308,6 +341,22 @@ class Manufacturer(models.Model, AsDictModel):
 
     class Meta:
         ordering = ["name"]
+
+    def bom_usage_lines(self, limit=8):
+        """Summaries of this manufacturer's parts that appear on a BoM."""
+        part_ids = ManufacturerPart.objects.filter(manufacturer=self).values_list(
+            "part_id", flat=True
+        )
+        return _bom_usage_lines_for_part_ids(part_ids, limit=limit)
+
+    def delete(self, *args, **kwargs):
+        usages = self.bom_usage_lines()
+        if usages:
+            raise ValidationError(
+                f"Cannot delete manufacturer {self.name} because its parts are "
+                f"used on BoMs: {'; '.join(usages)}"
+            )
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return "%s" % self.name
@@ -1404,6 +1453,22 @@ class ManufacturerPart(models.Model, AsDictModel):
 class Seller(models.Model, AsDictModel):
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT)
     name = models.CharField(max_length=128, default=None)
+
+    def bom_usage_lines(self, limit=8):
+        """Summaries of this seller's parts that appear on a BoM."""
+        part_ids = SellerPart.objects.filter(seller=self).values_list(
+            "manufacturer_part__part_id", flat=True
+        )
+        return _bom_usage_lines_for_part_ids(part_ids, limit=limit)
+
+    def delete(self, *args, **kwargs):
+        usages = self.bom_usage_lines()
+        if usages:
+            raise ValidationError(
+                f"Cannot delete seller {self.name} because its parts are "
+                f"used on BoMs: {'; '.join(usages)}"
+            )
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return "%s" % (self.name)

@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import (
     Count,
     ProtectedError,
@@ -1244,10 +1244,19 @@ def manufacturer_edit(request, manufacturer_id):
 @organization_admin
 def manufacturer_delete(request, manufacturer_id):
     manufacturer = get_object_or_404(Manufacturer, pk=manufacturer_id)
-    Part.objects.filter(primary_manufacturer_part__manufacturer=manufacturer).update(
-        primary_manufacturer_part=None
-    )
-    manufacturer.delete()
+    try:
+        with transaction.atomic():
+            Part.objects.filter(
+                primary_manufacturer_part__manufacturer=manufacturer
+            ).update(primary_manufacturer_part=None)
+            manufacturer.delete()
+    except ValidationError as e:
+        messages.error(request, str(e.message))
+        return HttpResponseRedirect(
+            reverse(
+                "bom:manufacturer-info", kwargs={"manufacturer_id": manufacturer_id}
+            )
+        )
     return HttpResponseRedirect(reverse("bom:manufacturers"))
 
 
@@ -1416,9 +1425,14 @@ def seller_edit(request, seller_id):
 @login_required(login_url=BOM_LOGIN_URL)
 @organization_admin
 def seller_delete(request, seller_id):
-    # TODO: dont delete if seller has seller parts
     seller = get_object_or_404(Seller, pk=seller_id)
-    seller.delete()
+    try:
+        seller.delete()
+    except ValidationError as e:
+        messages.error(request, str(e.message))
+        return HttpResponseRedirect(
+            reverse("bom:seller-info", kwargs={"seller_id": seller_id})
+        )
     return HttpResponseRedirect(reverse("bom:sellers"))
 
 
