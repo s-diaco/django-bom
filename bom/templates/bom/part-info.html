@@ -18,13 +18,6 @@
             <div class="row" style="margin-bottom: 5px;">
                 <div class="col m8 hide-on-small-and-down">
                     <h3 class="light printer-hide">{{ part.full_part_number }}</h3>
-                    {% if part_revision %}
-                        {% if profile.role == 'A' %}
-                            <p class="printer-hide">{% trans "Information about the selected revision" %}</p>
-                        {% else %}
-                            <p class="printer-hide">Select a revision for viewing</p>
-                        {% endif %}
-                    {% endif %}
                 </div>
             </div>
             <div class="row printer-hide part-info-revision-row">
