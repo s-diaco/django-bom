@@ -12,35 +12,25 @@
 {% block content %}
     <div class="container-app">
         <div class="row" style="margin-bottom: 5px;">
-            <div class="col m8 hide-on-small-and-down">
-                <h3 class="light">{% blocktrans with name=seller.name %}Seller: {{ name }}{% endblocktrans %}</h3>
-                <a href="{% url 'bom:sellers' %}">{% trans "Back to sellers list" %}</a>
-            </div>
-        </div>
-        <div class="col {% if seller %}m3 s1{% else %}m3 s12{% endif %}">
-            {% if profile.role == 'A' and seller %}
-                <div style="margin-top: 1.5rem;">
-                    <!-- Dropdown Trigger -->
-                    <button class='dropdown-trigger hide-on-small-and-down bom-btn-secondary'
-                            href='#' data-target='dropdown-revision'><i class="material-icons text-base">settings</i>{% trans "Manage" %}<i class="material-icons text-base">arrow_drop_down</i>
-                    </button>
-                    <a class='dropdown-trigger hide-on-med-and-up' href='#' data-target='dropdown-revision'><i
-                            class="material-icons green-text text-lighten-1">more_vert</i></a>
-                    <!-- Dropdown Structure -->
-                    <ul id='dropdown-revision' class='dropdown-content'>
-                        <li>
-                            <a class="green-text text-lighten-1"
-                               href="{% url 'bom:seller-edit' seller_id=seller.id %}">
-                                <i class="material-icons green-text text-lighten-1 right">edit</i>{% trans "Edit" %}</a>
-                        </li>
-                        <li class="divider" tabindex="-1"></li>
-                        <li>
-                            <a class="red-text text-lighten-1" onclick="deleteSeller()">
-                                <i class="material-icons red-text text-lighten-1 right">delete</i>{% trans "Delete" %}</a>
-                        </li>
-                    </ul>
+            <div class="col s12">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h3 class="light mb-0">{% blocktrans with name=seller.name %}Seller: {{ name }}{% endblocktrans %}</h3>
+                        {% if profile.role == 'A' and seller %}
+                            <div class="flex flex-wrap gap-1">
+                                <a class="bom-btn-secondary"
+                                   href="{% url 'bom:seller-edit' seller_id=seller.id %}">
+                                    <i class="material-icons text-base">edit</i>{% trans "Edit" %}
+                                </a>
+                                <a class="bom-btn-secondary red-text" onclick="deleteSeller()">
+                                    <i class="material-icons text-base">delete</i>{% trans "Delete" %}
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'bom:sellers' %}">{% trans "Sellers list" %}</a>
                 </div>
-            {% endif %}
+            </div>
         </div>
 
         {% include 'bom/components/seller-part-list.html' with seller_parts=seller_parts profile=profile %}
@@ -63,23 +53,5 @@
             confirm("No seller to delete!");
         {% endif %}
     }
-</script>
-
-    <!-- Handle if there's an anchor, select tab -->
-<script type='text/javascript'>
-    // For dropdown menu
-    $(document).ready(function () {
-        $('.dropdown-trigger').dropdown({
-                inDuration: 300,
-                outDuration: 225,
-                constrainWidth: false, // Does not change width of dropdown to that of the activator
-                hover: false, // Activate on hover
-                gutter: 0, // Spacing from edge
-                alignment: 'left', // Displays dropdown with edge aligned to the left of button
-                stopPropagation: false, // Stops event propagation
-                coverTrigger: false
-            }
-        );
-    });
 </script>
 {% endblock %}

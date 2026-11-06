@@ -1117,9 +1117,9 @@ msgstr ""
 msgid "Manufacturer / %(name)s"
 msgstr "تولید کننده / %(name)s"
 
-#: bom/templates/bom/manufacturer-info.html:17
-msgid "Back to manufacturers list"
-msgstr "بازگشت به لیست تولید کنندگان"
+#: bom/templates/bom/manufacturer-info.html:30
+msgid "Manufacturers list"
+msgstr "لیست تولید کنندگان"
 
 #: bom/templates/bom/manufacturers.html:17
 msgid "Search manufacturers:"
@@ -1156,34 +1156,21 @@ msgstr ""
 msgid "Revision: %(rev)s"
 msgstr "ورژن: %(rev)s"
 
-#: bom/templates/bom/part-info.html:23
-msgid "Information about the selected revision"
-msgstr "اطلاعات مربوط به ورژن انتخاب شده"
+#: bom/templates/bom/part-info.html:51
+msgid "Deactivate"
+msgstr "غیرفعال کردن"
 
-#: bom/templates/bom/part-info.html:39
-#, python-format
-msgid "Revision %(rev)s"
-msgstr "ورژن %(rev)s"
+#: bom/templates/bom/part-info.html:57
+msgid "New"
+msgstr "جدید"
 
-#: bom/templates/bom/part-info.html:48
-msgid "Manage revision"
-msgstr "مدیریت ورژن"
-
-#: bom/templates/bom/part-info.html:62
-msgid "Deactivate revision"
-msgstr "غیر فعال کردن ورژن"
-
-#: bom/templates/bom/part-info.html:67
-msgid "New revision"
-msgstr "ورژن جدید"
-
-#: bom/templates/bom/part-info.html:72
-msgid "Re-enable editing"
-msgstr "باز کردن امکان ویرایش"
-
-#: bom/templates/bom/part-info.html:83
+#: bom/templates/bom/part-info.html:66
 msgid "Add revision"
 msgstr "افزودن ورژن"
+
+#: bom/templates/bom/part-revision-new.html:20
+msgid "New revision"
+msgstr "ورژن جدید"
 
 #: bom/templates/bom/part-info.html:90 bom/templates/bom/part-info.html:104
 msgid "Specifications"
@@ -1387,9 +1374,9 @@ msgstr ""
 msgid "Seller: %(name)s"
 msgstr "تأمین کننده: %(name)s"
 
-#: bom/templates/bom/seller-info.html:17
-msgid "Back to sellers list"
-msgstr "بازگشت به لیست تأمین کنندگان"
+#: bom/templates/bom/seller-info.html:30
+msgid "Sellers list"
+msgstr "لیست تأمین کنندگان"
 
 #: bom/templates/bom/sellers.html:17
 msgid "Search sellers:"
