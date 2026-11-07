@@ -850,9 +850,15 @@ msgstr "متریال جدید"
 msgid "Back to customers"
 msgstr "بازگشت به مشتریان"
 
-#: bom/templates/bom/customer-info.html:22 bom/templates/bom/part-info.html:386
+#: bom/templates/bom/customer-info.html:22
+#: bom/templates/bom/components/customer-price-create-panel.html
+#: bom/templates/bom/part-info.html
 msgid "Add Price"
 msgstr "افزودن قیمت"
+
+#: bom/templates/bom/part-info.html
+msgid "Add price for %(name)s"
+msgstr "افزودن قیمت برای %(name)s"
 
 #: bom/templates/bom/customer-info.html:25
 msgid "Generate Prices"
@@ -924,8 +930,8 @@ msgid "Click an item to select profit %% and price."
 msgstr "برای انتخاب درصد سود و قیمت روی یک مورد کلیک کنید."
 
 
-#: bom/templates/bom/customer-price-create.html:198
-#: bom/templates/bom/customer-price-create.html:199
+#: bom/templates/bom/components/customer-price-create-panel.html:256
+#: bom/templates/bom/components/customer-price-create-panel.html:257
 msgid "latest prices"
 msgstr "آخرین قیمت‌ها"
 
@@ -943,10 +949,11 @@ msgstr "درصد سود انتخاب‌شده"
 msgid "Note"
 msgstr "یادداشت"
 
-#: bom/forms.py:948 bom/templates/bom/customer-price-create.html:226
+#: bom/forms.py:948
+#: bom/templates/bom/components/customer-price-create-panel.html
 #: bom/templates/bom/components/customer-price-list.html:12
 #: bom/templates/bom/components/customer-price-peer-list.html:12
-#: bom/templates/bom/part-info.html:339 bom/views/views.py:2008
+#: bom/templates/bom/part-info.html bom/views/views.py:2008
 msgid "Order quantity (kg)"
 msgstr "مقدار سفارش (کیلوگرم)"
 
