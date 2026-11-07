@@ -363,7 +363,7 @@
                                     {% if profile.role == 'A' %}
                                         <td class="text-normal td-med">
                                             <a class="bom-btn-ghost"
-                                               href="{% url 'bom:part-info' part_id=part.id %}?price_customer={{ row.customer.id }}#customers"
+                                               href="{% url 'bom:part-customer-price-create-for-customer' part_id=part.id customer_id=row.customer.id %}?from=part"
                                                aria-label="{% blocktrans with name=row.customer.name %}Add price for {{ name }}{% endblocktrans %}">
                                                 <i class="material-icons text-base" aria-hidden="true">add</i>{% trans "Add Price" %}
                                             </a>

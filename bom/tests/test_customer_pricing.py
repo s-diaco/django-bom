@@ -374,8 +374,14 @@ class TestCustomerPricing(TransactionTestCase):
             "visible Add Price label missing from customers table",
         )
         add_href = (
-            reverse("bom:part-info", kwargs={"part_id": self.part.id})
-            + f"?price_customer={self.customer.id}#customers"
+            reverse(
+                "bom:part-customer-price-create-for-customer",
+                kwargs={
+                    "part_id": self.part.id,
+                    "customer_id": self.customer.id,
+                },
+            )
+            + "?from=part"
         )
         self.assertIn(add_href, html)
         self.assertRegex(
@@ -446,17 +452,14 @@ class TestCustomerPricing(TransactionTestCase):
         part_revision = self.part.latest()
         base_cost = part_revision.bom_unit_cost_at_quantity(1)
         expected_price = self._tier_price(base_cost, Decimal("20"))
-        preview_post_path = reverse(
+        preview_path = reverse(
             "bom:part-customer-price-create-for-customer",
             kwargs={
                 "part_id": self.part.id,
                 "customer_id": self.customer.id,
             },
         )
-        inline_preview_url = (
-            reverse("bom:part-info", kwargs={"part_id": self.part.id})
-            + f"?price_customer={self.customer.id}#customers"
-        )
+        preview_url = f"{preview_path}?from=part"
         cancel_url = (
             reverse("bom:part-info", kwargs={"part_id": self.part.id}) + "#customers"
         )
@@ -471,20 +474,12 @@ class TestCustomerPricing(TransactionTestCase):
             },
         )
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, inline_preview_url)
+        self.assertEqual(response.url, preview_url)
 
-        # Deep link to create-for-customer redirects onto the inline panel.
-        response = self.client.get(f"{preview_post_path}?from=part")
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, inline_preview_url)
-
-        response = self.client.get(
-            reverse("bom:part-info", kwargs={"part_id": self.part.id})
-            + f"?price_customer={self.customer.id}"
-        )
+        response = self.client.get(preview_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.context["customer_price_show_preview"])
-        self.assertEqual(response.context["customer_price_cancel_url"], cancel_url)
+        self.assertTrue(response.context["show_preview"])
+        self.assertEqual(response.context["cancel_url"], cancel_url)
         self.assertContains(response, str(base_cost.amount))
         self.assertContains(response, str(expected_price.amount))
         html = response.content.decode()
@@ -496,7 +491,7 @@ class TestCustomerPricing(TransactionTestCase):
             "Prices by profit %" in html or ("قیمت" in html and "سود" in html),
             "profit tier panel missing",
         )
-        self.assertIn(preview_post_path, html)
+        self.assertIn(preview_path, html)
         self.assertIn('name="from" value="part"', html)
         # No peer prices → section stays on screen but is skipped when printing.
         self.assertRegex(
@@ -515,11 +510,8 @@ class TestCustomerPricing(TransactionTestCase):
             },
         )
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, inline_preview_url)
-        response = self.client.get(
-            reverse("bom:part-info", kwargs={"part_id": self.part.id})
-            + f"?price_customer={self.customer.id}"
-        )
+        self.assertEqual(response.url, preview_url)
+        response = self.client.get(preview_url)
         self.assertEqual(response.status_code, 200)
         html = response.content.decode()
         self.assertTrue(

@@ -1564,12 +1564,9 @@ def _part_customer_price_preview_url(part_id, customer_id, entry_from="part"):
     return f"{url}?from={entry_from}"
 
 
-def _part_info_add_price_url(part_id, customer_id=None):
-    """Inline Add Price panel on part-info #customers (optional preview customer)."""
-    url = reverse("bom:part-info", kwargs={"part_id": part_id})
-    if customer_id is not None:
-        return f"{url}?price_customer={customer_id}#customers"
-    return f"{url}#customers"
+def _part_info_add_price_url(part_id):
+    """Inline Add Price picker on part-info #customers."""
+    return reverse("bom:part-info", kwargs={"part_id": part_id}) + "#customers"
 
 
 def _flash_form_errors(request, form):
@@ -1578,49 +1575,22 @@ def _flash_form_errors(request, form):
             messages.error(request, error)
 
 
-def _part_info_customer_price_panel(
-    request, organization, profile, part, *, price_customer_id=None
-):
-    """Build context for the inline Add Price panel on part-info #customers."""
-    cancel_url = _part_info_add_price_url(part.id)
-    action = reverse(
-        "bom:part-customer-price-create", kwargs={"part_id": part.id}
-    )
-    selected_customer = None
-    show_preview = False
-    preview = None
-    load_form = CustomerPriceLoadForm(organization=organization, part=part)
-
-    if price_customer_id:
-        selected_customer = Customer.objects.filter(
-            pk=price_customer_id,
-            organization=organization,
-            is_active=True,
-        ).first()
-        if selected_customer is not None:
-            action = _part_customer_price_preview_url(
-                part.id, selected_customer.id, entry_from="part"
-            )
-            load_form = CustomerPriceLoadForm(
-                organization=organization,
-                part=part,
-                initial={"customer": selected_customer.name},
-            )
-            show_preview = True
-            preview = customer_price_preview_context(
-                part, selected_customer, organization
-            )
-
+def _part_info_customer_price_panel(organization, part):
+    """Build context for the compact Add Price picker on part-info #customers."""
     return {
-        "customer_price_action": action,
-        "customer_price_load_form": load_form,
+        "customer_price_action": reverse(
+            "bom:part-customer-price-create", kwargs={"part_id": part.id}
+        ),
+        "customer_price_load_form": CustomerPriceLoadForm(
+            organization=organization, part=part
+        ),
         "customer_price_confirm_form": None,
-        "customer_price_show_preview": show_preview,
-        "customer_price_preview": preview,
-        "customer_price_cancel_url": cancel_url,
+        "customer_price_show_preview": False,
+        "customer_price_preview": None,
+        "customer_price_cancel_url": _part_info_add_price_url(part.id),
         "customer_price_entry_from": "part",
         "customer_price_part_locked": True,
-        "customer_price_selected_customer": selected_customer,
+        "customer_price_selected_customer": None,
         "customer_price_currency_unit_txt": currency_label(organization.currency),
     }
 
@@ -1834,9 +1804,6 @@ def part_customer_price_create(request, part_id, customer_id=None):
             return HttpResponseRedirect(part_info_url)
 
     def preview_url_for(selected_part, selected_customer):
-        # Part-tab flow stays on part-info #customers; customer-tab keeps create URL.
-        if entry_from == "part":
-            return _part_info_add_price_url(selected_part.id, selected_customer.id)
         return _part_customer_price_preview_url(
             selected_part.id, selected_customer.id, entry_from=entry_from
         )
@@ -1852,13 +1819,10 @@ def part_customer_price_create(request, part_id, customer_id=None):
         part_locked = True
         success_url = part_info_url
 
-    # Deep links for the part-entry flow land on the inline panel.
-    if request.method == "GET" and part_locked:
-        return HttpResponseRedirect(
-            _part_info_add_price_url(
-                part_id, customer.id if customer is not None else None
-            )
-        )
+    # Empty part-entry create URL → inline picker on #customers.
+    # Preview (with customer) stays on the create-for-customer page.
+    if request.method == "GET" and part_locked and customer is None:
+        return HttpResponseRedirect(_part_info_add_price_url(part_id))
 
     if customer is not None:
         action = _part_customer_price_preview_url(
@@ -1921,15 +1885,15 @@ def part_customer_price_create(request, part_id, customer_id=None):
                 confirm_form.save()
                 messages.success(request, _("Customer price recorded."))
                 return HttpResponseRedirect(success_url)
+            # Failed confirm: rebuild load form and re-show preview.
             if part_locked:
-                _flash_form_errors(request, confirm_form)
-                return HttpResponseRedirect(
-                    _part_info_add_price_url(part_id, request.POST.get("customer"))
+                load_form = CustomerPriceLoadForm(
+                    request.POST, organization=organization, part=part
                 )
-            # Failed confirm (customer entry): rebuild load form and re-show preview.
-            load_form = CustomerPriceLoadForm(
-                request.POST, organization=organization, customer=customer
-            )
+            else:
+                load_form = CustomerPriceLoadForm(
+                    request.POST, organization=organization, customer=customer
+                )
             if load_form.is_valid():
                 selected_part = load_form.cleaned_data["part"]
                 selected_customer = load_form.cleaned_data["customer"]
@@ -1956,7 +1920,8 @@ def part_customer_price_create(request, part_id, customer_id=None):
                         load_form.cleaned_data["customer"],
                     )
                 )
-            if part_locked:
+            if part_locked and customer is None:
+                # Invalid picker submit from #customers → stay on the tab.
                 _flash_form_errors(request, load_form)
                 return HttpResponseRedirect(_part_info_add_price_url(part_id))
             result, context = _customer_price_create_context(
@@ -2246,17 +2211,9 @@ def part_info(request, part_id, part_revision_id=None):
     ).order_by("name")
 
     context = locals()
-    # Inline Add Price panel on #customers (admins only).
+    # Compact Add Price picker on #customers (admins only).
     if profile.role == "A":
-        context.update(
-            _part_info_customer_price_panel(
-                request,
-                organization,
-                profile,
-                part,
-                price_customer_id=request.GET.get("price_customer"),
-            )
-        )
+        context.update(_part_info_customer_price_panel(organization, part))
 
     return TemplateResponse(request, "bom/part-info.html", context)
 
