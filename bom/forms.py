@@ -948,7 +948,7 @@ class CustomerPriceConfirmForm(forms.Form):
         required=True,
         min_value=1,
         initial=1,
-        label=_("Order quantity"),
+        label=_("Order quantity (kg)"),
     )
     note = forms.CharField(required=False, widget=forms.Textarea)
 

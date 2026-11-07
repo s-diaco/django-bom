@@ -339,7 +339,7 @@ class TestCustomerPricing(TransactionTestCase):
         body = response.content.decode("utf-8")
         self.assertIn("کد متریال", body)
         self.assertIn("قیمت", body)
-        self.assertIn("مقدار سفارش", body)
+        self.assertIn("مقدار سفارش (کیلوگرم)", body)
         self.assertIn(self.part.full_part_number(), body)
 
     def test_part_info_customers_tab_context(self):
@@ -722,14 +722,14 @@ class TestCustomerPricing(TransactionTestCase):
             reverse("bom:customer-info", kwargs={"customer_id": self.customer.id})
         )
         self.assertEqual(customer_info.status_code, 200)
-        self.assertContains(customer_info, "مقدار سفارش")
+        self.assertContains(customer_info, "مقدار سفارش (کیلوگرم)")
         self.assertContains(customer_info, "250")
 
         part_info = self.client.get(
             reverse("bom:part-info", kwargs={"part_id": self.part.id})
         )
         self.assertEqual(part_info.status_code, 200)
-        self.assertContains(part_info, "مقدار سفارش")
+        self.assertContains(part_info, "مقدار سفارش (کیلوگرم)")
         self.assertContains(part_info, "250")
 
     def test_preview_shows_bom_overview(self):

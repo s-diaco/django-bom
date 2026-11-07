@@ -947,8 +947,8 @@ msgstr "یادداشت"
 #: bom/templates/bom/components/customer-price-list.html:12
 #: bom/templates/bom/components/customer-price-peer-list.html:12
 #: bom/templates/bom/part-info.html:339 bom/views/views.py:2008
-msgid "Order quantity"
-msgstr "مقدار سفارش"
+msgid "Order quantity (kg)"
+msgstr "مقدار سفارش (کیلوگرم)"
 
 #: bom/templates/bom/customer-price-create.html:211
 msgid "Confirm price"

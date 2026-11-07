@@ -11,6 +11,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="customerprice",
             name="quantity",
-            field=models.PositiveIntegerField(verbose_name="Order quantity"),
+            field=models.PositiveIntegerField(verbose_name="Order quantity (kg)"),
         ),
     ]
