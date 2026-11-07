@@ -8,7 +8,8 @@
         <tr>
             <th class="text-normal td-med">{% trans "Part" %}</th>
             <th class="text-normal td-med">{% trans "BoM Cost" %}</th>
-            <th class="text-normal td-med">{% trans "Profit %" %}</th>
+            <th class="text-normal td-med">{% trans "Confirmed profit %" %}</th>
+            <th class="text-normal td-med">{% trans "Current profit %" %}</th>
             <th class="text-normal td-med">{% trans "Price" %}</th>
             <th class="text-normal td-med">{% trans "Order quantity (kg)" %}</th>
             {% if show_history %}
@@ -32,6 +33,7 @@
                 </td>
                 <td class="text-normal td-med">{{ row.base_cost|default:"-" }}</td>
                 <td class="text-normal td-med">{{ row.profit_percent }}</td>
+                <td class="text-normal td-med">{{ row.current_profit_percent|default:"-" }}</td>
                 <td class="text-normal td-med">{{ row.price|default:"-" }}</td>
                 <td class="text-normal td-med">{{ row.quantity }}</td>
                 {% if show_history %}

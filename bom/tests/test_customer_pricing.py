@@ -21,7 +21,9 @@ from bom.helpers import (
 from bom.models import Customer, CustomerPrice, Organization, User
 from bom.utils import (
     apply_profit,
+    attach_current_profit_percents,
     customer_price_adjusted_base,
+    customer_price_current_base,
     customer_price_profit_tiers,
     implied_profit_percent,
 )
@@ -494,6 +496,113 @@ class TestCustomerPricing(TransactionTestCase):
             html,
             r'<i class="material-icons text-base"[^>]*>add</i>\s*(Add Price|افزودن قیمت)',
         )
+
+    def test_attach_current_profit_percents_tracks_bom_change(self):
+        from bom.models import SellerPart
+
+        row = create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("20")
+        )
+        annotated = attach_current_profit_percents(
+            [row], currency=self.organization.currency
+        )
+        current_base = customer_price_current_base(
+            self.part, currency=self.organization.currency
+        )
+        self.assertEqual(
+            annotated[0].current_profit_percent,
+            implied_profit_percent(current_base, row.price),
+        )
+
+        seller_part = SellerPart.objects.filter(
+            manufacturer_part__part=self.part
+        ).first()
+        seller_part.unit_cost = Money(80, self.organization.currency)
+        seller_part.save()
+        self.part.latest().clear_bom_unit_cost_cache()
+
+        refreshed = attach_current_profit_percents(
+            CustomerPrice.objects.filter(pk=row.pk).select_related("part"),
+            currency=self.organization.currency,
+        )[0]
+        self.assertEqual(refreshed.profit_percent, Decimal("20.00"))
+        new_base = customer_price_current_base(
+            self.part, currency=self.organization.currency
+        )
+        self.assertEqual(
+            refreshed.current_profit_percent,
+            implied_profit_percent(new_base, refreshed.price),
+        )
+        self.assertGreater(
+            refreshed.current_profit_percent, refreshed.profit_percent
+        )
+
+    def test_part_info_customers_shows_confirmed_and_current_profit(self):
+        row = create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("20")
+        )
+        # Drop today's BoM cost so current implied % diverges from confirmed.
+        from bom.models import SellerPart
+
+        seller_part = SellerPart.objects.filter(
+            manufacturer_part__part=self.part
+        ).first()
+        seller_part.unit_cost = Money(80, self.organization.currency)
+        seller_part.save()
+        self.part.latest().clear_bom_unit_cost_cache()
+
+        response = self.client.get(
+            reverse("bom:part-info", kwargs={"part_id": self.part.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode()
+        self.assertTrue(
+            "Confirmed profit %" in html or "درصد سود تأییدشده" in html
+        )
+        self.assertTrue(
+            "Current profit %" in html or "درصد سود فعلی" in html
+        )
+        annotated = response.context["customer_prices"]
+        self.assertEqual(len(annotated), 1)
+        self.assertEqual(annotated[0].profit_percent, Decimal("20.00"))
+        expected_current = implied_profit_percent(
+            customer_price_current_base(
+                self.part, currency=self.organization.currency
+            ),
+            row.price,
+        )
+        self.assertEqual(annotated[0].current_profit_percent, expected_current)
+        self.assertNotEqual(
+            annotated[0].current_profit_percent, annotated[0].profit_percent
+        )
+        self.assertContains(response, str(expected_current))
+
+    def test_customer_info_shows_confirmed_and_current_profit(self):
+        row = create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("25")
+        )
+        response = self.client.get(
+            reverse("bom:customer-info", kwargs={"customer_id": self.customer.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode()
+        self.assertTrue(
+            "Confirmed profit %" in html or "درصد سود تأییدشده" in html
+        )
+        self.assertTrue(
+            "Current profit %" in html or "درصد سود فعلی" in html
+        )
+        latest = response.context["latest_prices"]
+        self.assertEqual(len(latest), 1)
+        expected_current = implied_profit_percent(
+            customer_price_current_base(
+                self.part, currency=self.organization.currency
+            ),
+            row.price,
+        )
+        self.assertEqual(latest[0].current_profit_percent, expected_current)
+        history = list(response.context["price_history"])
+        self.assertEqual(history[0].current_profit_percent, expected_current)
 
     def test_part_customer_price_create(self):
         create_url = reverse(

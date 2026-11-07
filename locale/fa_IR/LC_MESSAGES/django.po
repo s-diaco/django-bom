@@ -715,10 +715,31 @@ msgstr "درصد سود"
 
 #: bom/templates/bom/components/customer-price-list.html:10
 #: bom/templates/bom/components/customer-price-peer-list.html:10
-#: bom/templates/bom/part-info.html:361
+#: bom/templates/bom/part-info.html:345
 # Template {% trans %} doubles % before catalog lookup — msgid must use %%.
 msgid "Profit %%"
 msgstr "درصد سود"
+
+#: bom/views/views.py
+msgid "Confirmed profit %"
+msgstr "درصد سود تأییدشده"
+
+#: bom/templates/bom/components/customer-price-list.html:10
+#: bom/templates/bom/components/customer-price-peer-list.html:10
+#: bom/templates/bom/part-info.html:345
+# Template {% trans %} doubles % before catalog lookup — msgid must use %%.
+msgid "Confirmed profit %%"
+msgstr "درصد سود تأییدشده"
+
+#: bom/views/views.py
+msgid "Current profit %"
+msgstr "درصد سود فعلی"
+
+#: bom/templates/bom/components/customer-price-list.html:11
+#: bom/templates/bom/part-info.html:346
+# Template {% trans %} doubles % before catalog lookup — msgid must use %%.
+msgid "Current profit %%"
+msgstr "درصد سود فعلی"
 
 
 #: bom/templates/bom/components/customer-price-list.html:13
