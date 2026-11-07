@@ -145,6 +145,15 @@
     }
 }
 
+.customer-price-create--embedded {
+    margin-top: 0.5rem;
+}
+
+.part-customers-add-price .customer-price-create--embedded > .printer-hide.mb-3 h5 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
 .price-pair-row {
     align-items: stretch;
 }

@@ -1,0 +1,130 @@
+<script>
+    (function () {
+        var printButton = document.getElementById('price-review-print-button');
+        if (printButton) {
+            function setPrintMode(on) {
+                document.body.classList.toggle('printing-price-review', on);
+            }
+            function clearPrintMode() {
+                setPrintMode(false);
+            }
+            window.addEventListener('beforeprint', function () {
+                setPrintMode(true);
+            });
+            window.addEventListener('afterprint', clearPrintMode);
+            printButton.addEventListener('click', function () {
+                setPrintMode(true);
+                // Flush layout so sticky→static and page breaks apply before Chrome snapshots.
+                void document.body.offsetHeight;
+                requestAnimationFrame(function () {
+                    var printFn = (window.bomPrint && window.bomPrint.print)
+                        ? window.bomPrint.print
+                        : function () { window.print(); };
+                    printFn();
+                });
+            });
+        }
+
+        var profitInput = document.getElementById('confirm-profit-percent');
+        var referenceInput = document.getElementById('confirm-reference-price');
+        var priceInput = document.getElementById('confirm-price');
+        var profitDisplay = document.getElementById('selected-profit-display');
+        var confirmButton = document.getElementById('confirm-price-button');
+        var confirmForm = document.getElementById('price-confirm-form');
+        if (!profitInput || !priceInput || !confirmButton || !confirmForm) {
+            return;
+        }
+
+        var baseCost = parseFloat(confirmForm.getAttribute('data-base-cost') || '0');
+        var selectedProfitPercent = '';
+        var stripPrice = (window.bomPriceInput && window.bomPriceInput.strip)
+            ? window.bomPriceInput.strip
+            : function (value) { return String(value || '').replace(/[٬,\s\u00a0]/g, ''); };
+        var formatPrice = (window.bomPriceInput && window.bomPriceInput.format)
+            ? window.bomPriceInput.format
+            : function (value) { return stripPrice(value); };
+
+        function roundHalfUp(value, decimals) {
+            var factor = Math.pow(10, decimals);
+            return Math.round((value + Number.EPSILON) * factor) / factor;
+        }
+
+        function pricesMatch(left, right) {
+            if (left === '' || right === '') {
+                return false;
+            }
+            return roundHalfUp(parseFloat(stripPrice(left)), 2) === roundHalfUp(parseFloat(stripPrice(right)), 2);
+        }
+
+        function impliedProfitPercent(price) {
+            if (!baseCost) {
+                return null;
+            }
+            return roundHalfUp((price / baseCost - 1) * 100, 2);
+        }
+
+        function updateProfitFromPrice() {
+            var priceValue = priceInput.value.trim();
+            if (!priceValue) {
+                profitDisplay.value = '—';
+                confirmButton.disabled = true;
+                return;
+            }
+
+            var price = parseFloat(stripPrice(priceValue));
+            if (!Number.isFinite(price)) {
+                profitDisplay.value = '—';
+                confirmButton.disabled = true;
+                return;
+            }
+
+            if (!baseCost) {
+                profitDisplay.value = '—';
+                confirmButton.disabled = true;
+                return;
+            }
+
+            var referencePrice = referenceInput.value;
+            if (selectedProfitPercent && pricesMatch(priceValue, referencePrice)) {
+                profitDisplay.value = selectedProfitPercent;
+                profitInput.value = selectedProfitPercent;
+            } else {
+                var implied = impliedProfitPercent(price);
+                profitDisplay.value = implied === null ? '—' : String(implied);
+                profitInput.value = implied === null ? '' : String(implied);
+            }
+
+            confirmButton.disabled = false;
+        }
+
+        function clearSelectedRows() {
+            document.querySelectorAll('.price-select-row.price-row-selected').forEach(function (row) {
+                row.classList.remove('price-row-selected');
+            });
+        }
+
+        function selectRow(row) {
+            clearSelectedRows();
+            row.classList.add('price-row-selected');
+            selectedProfitPercent = row.getAttribute('data-profit-percent') || '';
+            profitInput.value = selectedProfitPercent;
+            referenceInput.value = row.getAttribute('data-price') || '';
+            priceInput.value = formatPrice(row.getAttribute('data-price') || '');
+            updateProfitFromPrice();
+        }
+
+        document.querySelectorAll('.price-select-row').forEach(function (row) {
+            row.addEventListener('click', function () {
+                selectRow(row);
+            });
+            row.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    selectRow(row);
+                }
+            });
+        });
+
+        priceInput.addEventListener('input', updateProfitFromPrice);
+    })();
+</script>
