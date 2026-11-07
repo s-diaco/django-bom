@@ -949,6 +949,14 @@ msgstr "درصد سود انتخاب‌شده"
 msgid "Note"
 msgstr "یادداشت"
 
+#: bom/forms.py:948
+#: bom/templates/bom/components/customer-price-create-panel.html
+#: bom/templates/bom/components/customer-price-list.html:12
+#: bom/templates/bom/components/customer-price-peer-list.html:12
+#: bom/templates/bom/part-info.html bom/views/views.py:2008
+msgid "Order quantity (kg)"
+msgstr "مقدار سفارش (کیلوگرم)"
+
 #: bom/templates/bom/customer-price-create.html:211
 msgid "Confirm price"
 msgstr "تأیید قیمت"

@@ -143,7 +143,14 @@ class TestCustomerPricing(TransactionTestCase):
             adjusted, profit_percent, currency=self.organization.currency
         )
 
-    def _confirm_payload(self, profit_percent, price_amount, reference_price=None, note=""):
+    def _confirm_payload(
+        self,
+        profit_percent,
+        price_amount,
+        reference_price=None,
+        note="",
+        quantity=1,
+    ):
         reference = (
             price_amount if reference_price is None else reference_price
         )
@@ -153,6 +160,7 @@ class TestCustomerPricing(TransactionTestCase):
             "profit_percent": str(profit_percent),
             "price": str(price_amount),
             "reference_price": str(reference),
+            "quantity": str(quantity),
             "note": note,
         }
 
@@ -331,7 +339,7 @@ class TestCustomerPricing(TransactionTestCase):
         body = response.content.decode("utf-8")
         self.assertIn("کد متریال", body)
         self.assertIn("قیمت", body)
-        self.assertNotIn("مقدار", body)
+        self.assertIn("مقدار سفارش (کیلوگرم)", body)
         self.assertIn(self.part.full_part_number(), body)
 
     def test_part_info_customers_tab_context(self):
@@ -438,6 +446,7 @@ class TestCustomerPricing(TransactionTestCase):
                         Decimal("15"),
                     ).amount
                 ),
+                "quantity": "1",
                 "note": "from part",
             },
         )
@@ -751,6 +760,41 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertEqual(row.note, "confirmed")
         self.assertEqual(row.base_cost, base_cost)
         self.assertEqual(row.price, tier_price)
+
+    def test_customer_price_create_persists_order_quantity(self):
+        part_revision = self.part.latest()
+        base_cost = part_revision.bom_unit_cost_at_quantity(1)
+        tier_price = self._tier_price(base_cost, Decimal("20"))
+
+        response = self.client.post(
+            reverse(
+                "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
+            ),
+            self._confirm_payload(
+                Decimal("20"),
+                tier_price.amount,
+                note="qty order",
+                quantity=250,
+            ),
+        )
+        self.assertEqual(response.status_code, 302)
+        row = CustomerPrice.objects.get(customer=self.customer, part=self.part)
+        self.assertEqual(row.quantity, 250)
+        self.assertEqual(row.note, "qty order")
+
+        customer_info = self.client.get(
+            reverse("bom:customer-info", kwargs={"customer_id": self.customer.id})
+        )
+        self.assertEqual(customer_info.status_code, 200)
+        self.assertContains(customer_info, "مقدار سفارش (کیلوگرم)")
+        self.assertContains(customer_info, "250")
+
+        part_info = self.client.get(
+            reverse("bom:part-info", kwargs={"part_id": self.part.id})
+        )
+        self.assertEqual(part_info.status_code, 200)
+        self.assertContains(part_info, "مقدار سفارش (کیلوگرم)")
+        self.assertContains(part_info, "250")
 
     def test_preview_shows_bom_overview(self):
         part_revision = self.part.latest()

@@ -279,6 +279,12 @@
                             <label class="bom-label" for="confirm-price">{% trans "Price" %} | {{ currency_unit_txt }}</label>
                             <input type="text" name="price" id="confirm-price" class="bom-input bom-price-input" inputmode="decimal" autocomplete="off" min="0" required>
                         </div>
+                        <div class="col s12 m4">
+                            <label class="bom-label" for="confirm-quantity">{% trans "Order quantity (kg)" %}</label>
+                            <input type="number" name="quantity" id="confirm-quantity" class="bom-input" inputmode="numeric" min="1" step="1" required
+                                   value="{% if confirm_form and confirm_form.quantity.value %}{{ confirm_form.quantity.value }}{% else %}1{% endif %}">
+                            {% if confirm_form and confirm_form.quantity.errors %}<p class="bom-error">{{ confirm_form.quantity.errors.0 }}</p>{% endif %}
+                        </div>
                     </div>
                     <div class="row mb-4">
                         <div class="col s12">
