@@ -100,6 +100,7 @@ from bom.list_queries import (
     querystring_except_page as build_querystring_except_page,
 )
 from bom.utils import (
+    attach_current_profit_percents,
     bom_overview_context,
     currency_label,
     customer_price_preview_from_form,
@@ -1516,7 +1517,10 @@ def customer_info(request, customer_id):
         messages.error(request, _("Can't access a customer that is not yours!"))
         return HttpResponseRedirect(reverse("bom:customers"))
 
-    latest_prices = customer.latest_prices()
+    currency = organization.currency
+    latest_prices = attach_current_profit_percents(
+        customer.latest_prices(), currency=currency
+    )
     price_history = (
         CustomerPrice.objects.filter(customer=customer)
         .select_related("part", "part_revision", "created_by")
@@ -1524,6 +1528,10 @@ def customer_info(request, customer_id):
     )
 
     price_history = paginate_queryset(request, price_history)
+    # Annotate only the current page of history rows.
+    price_history.object_list = attach_current_profit_percents(
+        price_history.object_list, currency=currency
+    )
     querystring_except_page = build_querystring_except_page(request)
 
     context = locals()
@@ -2037,7 +2045,9 @@ def customer_export_prices(request, customer_id):
 
     export_format = request.GET.get("format", "xlsx")
     rows = []
-    for row in customer.latest_prices():
+    for row in attach_current_profit_percents(
+        customer.latest_prices(), currency=organization.currency
+    ):
         rows.append(
             {
                 _("Part number"): row.part.full_part_number(),
@@ -2050,7 +2060,8 @@ def customer_export_prices(request, customer_id):
                 _("Base cost"): (
                     row.base_cost.amount if row.base_cost is not None else None
                 ),
-                _("Profit %"): row.profit_percent,
+                _("Confirmed profit %"): row.profit_percent,
+                _("Current profit %"): row.current_profit_percent,
                 _("Price"): row.price.amount if row.price is not None else None,
                 _("Order quantity (kg)"): row.quantity,
                 _("Manual"): _("Yes") if row.is_manual_price else _("No"),
@@ -2207,10 +2218,13 @@ def part_info(request, part_id, part_revision_id=None):
 
     where_used_part = part.where_used()
     seller_parts = part.seller_parts()
-    customer_prices = (
-        CustomerPrice.objects.filter(part=part, customer__organization=organization)
-        .select_related("customer", "part_revision", "created_by")
-        .order_by("customer__name", "-created_at", "-id")
+    customer_prices = attach_current_profit_percents(
+        CustomerPrice.objects.filter(
+            part=part, customer__organization=organization
+        )
+        .select_related("customer", "part", "part_revision", "created_by")
+        .order_by("customer__name", "-created_at", "-id"),
+        currency=organization.currency,
     )
     customers = Customer.objects.filter(
         organization=organization, is_active=True
