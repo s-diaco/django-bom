@@ -1753,6 +1753,14 @@ msgstr "%(created)d قیمت ایجاد شد؛ %(skipped)d رد شد."
 msgid "Customer price deleted."
 msgstr "قیمت مشتری حذف شد."
 
+#: bom/views/views.py
+msgid "Edit Customer Price"
+msgstr "ویرایش قیمت مشتری"
+
+#: bom/views/views.py
+msgid "Customer price updated."
+msgstr "قیمت مشتری به‌روزرسانی شد."
+
 #: bom/views/views.py:1729
 msgid "Base cost"
 msgstr "هزینه پایه"

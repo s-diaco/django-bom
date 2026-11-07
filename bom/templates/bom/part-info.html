@@ -348,6 +348,7 @@
                                 <th class="text-normal td-med">{% trans "Created" %}</th>
                                 {% if profile.role == 'A' %}
                                     <th class="text-normal td-med">{% trans "Add Price" %}</th>
+                                    <th class="text-normal td-small"></th>
                                 {% endif %}
                             </tr>
                             </thead>
@@ -368,6 +369,17 @@
                                                href="{% url 'bom:part-customer-price-create-for-customer' part_id=part.id customer_id=row.customer.id %}?from=part"
                                                aria-label="{% blocktrans with name=row.customer.name %}Add price for {{ name }}{% endblocktrans %}">
                                                 <i class="material-icons text-base" aria-hidden="true">add</i>{% trans "Add Price" %}
+                                            </a>
+                                        </td>
+                                        <td class="text-normal td-small">
+                                            <a class="green-text text-lighten-1" href="{% url 'bom:customer-price-edit' customer_price_id=row.id %}?from=part"
+                                               title="{% trans "Edit" %}" aria-label="{% trans "Edit" %}">
+                                                <i class="material-icons text-base">edit</i>
+                                            </a>
+                                            <a class="red-text" href="{% url 'bom:customer-price-delete' customer_price_id=row.id %}?from=part"
+                                               onclick="return confirm('{% trans "Delete this price record?" %}');"
+                                               title="{% trans "Delete" %}" aria-label="{% trans "Delete" %}">
+                                                <i class="material-icons text-base">delete</i>
                                             </a>
                                         </td>
                                     {% endif %}
