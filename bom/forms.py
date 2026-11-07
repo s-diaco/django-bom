@@ -944,6 +944,12 @@ class CustomerPriceConfirmForm(forms.Form):
     profit_percent = forms.DecimalField(required=False, min_value=0)
     price = GroupedDecimalField(required=True, min_value=0)
     reference_price = GroupedDecimalField(required=False, min_value=0)
+    quantity = forms.IntegerField(
+        required=True,
+        min_value=1,
+        initial=1,
+        label=_("Order quantity"),
+    )
     note = forms.CharField(required=False, widget=forms.Textarea)
 
     def __init__(self, *args, **kwargs):
@@ -979,8 +985,11 @@ class CustomerPriceConfirmForm(forms.Form):
         profit_percent = cleaned_data.get("profit_percent")
         price = cleaned_data.get("price")
         reference_price = cleaned_data.get("reference_price")
+        quantity = cleaned_data.get("quantity")
 
-        cleaned_data["quantity"] = self.UNIT_QUANTITY
+        if quantity is None:
+            quantity = self.UNIT_QUANTITY
+        cleaned_data["quantity"] = quantity
         cleaned_data["part"] = part
         cleaned_data["customer"] = customer
 
@@ -1041,7 +1050,7 @@ class CustomerPriceConfirmForm(forms.Form):
             customer=self.cleaned_data["customer"],
             part=self.cleaned_data["part"],
             part_revision=self.cleaned_data["part_revision"],
-            quantity=self.UNIT_QUANTITY,
+            quantity=self.cleaned_data["quantity"],
             base_cost=self.cleaned_data["base_cost"],
             profit_percent=self.cleaned_data["profit_percent"],
             price=self.cleaned_data["price"],

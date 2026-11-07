@@ -336,6 +336,7 @@
                                 <th class="text-normal td-med">{% trans "BoM Cost" %}</th>
                                 <th class="text-normal td-med">{% trans "Profit %" %}</th>
                                 <th class="text-normal td-med">{% trans "Price" %}</th>
+                                <th class="text-normal td-med">{% trans "Order quantity" %}</th>
                                 <th class="text-normal td-med">{% trans "Created" %}</th>
                                 <th class="text-normal td-small"></th>
                             </tr>
@@ -349,6 +350,7 @@
                                     <td class="text-normal td-med">{{ row.base_cost|default:"-" }}</td>
                                     <td class="text-normal td-med">{{ row.profit_percent }}</td>
                                     <td class="text-normal td-med">{{ row.price|default:"-" }}</td>
+                                    <td class="text-normal td-med">{{ row.quantity }}</td>
                                     <td class="text-normal td-med">{% user_datetime row.created_at %}</td>
                                     <td class="text-normal td-small">
                                         {% if profile.role == 'A' %}

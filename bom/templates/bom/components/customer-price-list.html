@@ -9,6 +9,7 @@
             <th class="text-normal td-med">{% trans "BoM Cost" %}</th>
             <th class="text-normal td-med">{% trans "Profit %" %}</th>
             <th class="text-normal td-med">{% trans "Price" %}</th>
+            <th class="text-normal td-med">{% trans "Order quantity" %}</th>
             {% if show_history %}
                 <th class="text-normal td-med">{% trans "Manual" %}</th>
                 <th class="text-normal td-med">{% trans "Created" %}</th>
@@ -31,6 +32,7 @@
                 <td class="text-normal td-med">{{ row.base_cost|default:"-" }}</td>
                 <td class="text-normal td-med">{{ row.profit_percent }}</td>
                 <td class="text-normal td-med">{{ row.price|default:"-" }}</td>
+                <td class="text-normal td-med">{{ row.quantity }}</td>
                 {% if show_history %}
                     <td class="text-normal td-med">{% if row.is_manual_price %}{% trans "Yes" %}{% else %}{% trans "No" %}{% endif %}</td>
                     <td class="text-normal td-med">{% user_datetime row.created_at %}</td>
