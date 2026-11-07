@@ -1,0 +1,33 @@
+{% load bom_forms %}
+
+{# Compact one-row Add Price picker (Material or Customer + Preview, no Cancel). #}
+{# Expects: action, load_form, entry_from; optional part_locked (default false). #}
+<form action="{{ action }}" method="post" id="price-load-form" class="price-add-inline printer-hide mb-4">
+    {% csrf_token %}
+    {% if entry_from %}<input type="hidden" name="from" value="{{ entry_from }}">{% endif %}
+    {% if part_locked %}
+        <label class="bom-label price-add-inline__label mb-0" for="{{ load_form.customer.id_for_label }}">
+            {{ load_form.customer.label }}{% if load_form.customer.field.required %} <span class="text-danger">*</span>{% endif %}
+        </label>
+        <div class="price-add-inline__field">
+            {{ load_form.customer }}
+        </div>
+        {% if load_form.customer.errors %}
+            <p class="bom-error price-add-inline__error">{{ load_form.customer.errors.0 }}</p>
+        {% endif %}
+    {% else %}
+        <label class="bom-label price-add-inline__label mb-0" for="{{ load_form.part.id_for_label }}">
+            {{ load_form.part.label }}{% if load_form.part.field.required %} <span class="text-danger">*</span>{% endif %}
+        </label>
+        <div class="price-add-inline__field">
+            {{ load_form.part }}
+        </div>
+        {% if load_form.part.errors %}
+            <p class="bom-error price-add-inline__error">{{ load_form.part.errors.0 }}</p>
+        {% endif %}
+    {% endif %}
+    <button class="bom-btn-primary price-add-inline__submit" type="submit" name="action" value="preview">{% trans "Preview" %}</button>
+    {% for err in load_form.non_field_errors %}
+        <p class="bom-error price-add-inline__error">{{ err }}</p>
+    {% endfor %}
+</form>

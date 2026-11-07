@@ -420,9 +420,7 @@ def customer_price_preview_context(part, customer, organization, quantity=1):
         "part_revision": part_revision,
         "base_cost": base_cost,
         "adjusted_base": customer_price_adjusted_base(base_cost, currency=currency),
-        "peer_prices": part.latest_prices_for_other_customers(
-            customer, organization
-        ),
+        "peer_prices": part.latest_prices_by_customer(organization),
         "profit_price_tiers": customer_price_profit_tiers(
             base_cost, currency=currency
         ),

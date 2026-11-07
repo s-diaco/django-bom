@@ -775,8 +775,8 @@ msgid "No current prices."
 msgstr "قیمت جاری وجود ندارد."
 
 #: bom/templates/bom/components/customer-price-peer-list.html:34
-msgid "No prices for other customers yet."
-msgstr "هنوز قیمتی برای سایر مشتریان ثبت نشده است."
+msgid "No prices yet."
+msgstr "هنوز قیمتی ثبت نشده است."
 
 #: bom/templates/bom/components/manufacturer-part-list.html:78
 #: bom/templates/bom/customer-info.html:19
@@ -930,10 +930,10 @@ msgid "Click an item to select profit %% and price."
 msgstr "برای انتخاب درصد سود و قیمت روی یک مورد کلیک کنید."
 
 
-#: bom/templates/bom/customer-price-create.html:174
-#: bom/templates/bom/customer-price-create.html:175
-msgid "Other customers' latest prices"
-msgstr "آخرین قیمت‌های سایر مشتریان"
+#: bom/templates/bom/components/customer-price-create-panel.html:256
+#: bom/templates/bom/components/customer-price-create-panel.html:257
+msgid "latest prices"
+msgstr "آخرین قیمت‌ها"
 
 #: bom/templates/bom/customer-price-create.html:179
 msgid "Selected price"

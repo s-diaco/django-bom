@@ -324,6 +324,76 @@ class TestCustomerPricing(TransactionTestCase):
             ).exists()
         )
 
+    def test_customer_info_inline_material_picker(self):
+        customer_url = reverse(
+            "bom:customer-info", kwargs={"customer_id": self.customer.id}
+        )
+        create_url = reverse(
+            "bom:customer-price-create", kwargs={"customer_id": self.customer.id}
+        )
+        preview_url = (
+            reverse(
+                "bom:part-customer-price-create-for-customer",
+                kwargs={
+                    "part_id": self.part.id,
+                    "customer_id": self.customer.id,
+                },
+            )
+            + "?from=customer"
+        )
+
+        # Empty create deep link lands on the inline picker.
+        response = self.client.get(create_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, customer_url)
+
+        response = self.client.get(customer_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="price-load-form"')
+        self.assertContains(response, "price-add-inline")
+        self.assertContains(response, 'id="id_part"')
+        self.assertContains(response, create_url)
+        html = response.content.decode()
+        form_idx = html.find('id="price-load-form"')
+        current_idx = html.find("Current prices")
+        if current_idx < 0:
+            current_idx = html.find("قیمت‌های جاری")
+        self.assertGreater(form_idx, -1)
+        self.assertGreater(current_idx, -1)
+        self.assertLess(
+            form_idx,
+            current_idx,
+            "Material picker should sit above Current prices",
+        )
+        panel_html = html[form_idx:current_idx]
+        self.assertNotRegex(
+            panel_html,
+            r">\s*(Cancel|انصراف)\s*<",
+            "embedded Material picker should not include Cancel",
+        )
+        # Header no longer links to the intermediate create page.
+        self.assertNotRegex(
+            html,
+            r'href="' + create_url + r'"[^>]*>\s*<i[^>]*>add</i>',
+        )
+
+        response = self.client.post(
+            create_url,
+            {
+                "action": "preview",
+                "part": self.part.full_part_number(),
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, preview_url)
+
+        response = self.client.post(
+            create_url,
+            {"action": "preview", "part": "not-a-real-part"},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, customer_url)
+
     def test_export_prices_columns(self):
         create_a_fake_customer_price(
             self.customer, self.part, profit_percent=Decimal("20")
@@ -589,7 +659,7 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertIn(response.status_code, (302, 307))
         self.assertFalse(CustomerPrice.objects.exists())
 
-    def test_latest_prices_for_other_customers(self):
+    def test_latest_prices_by_customer_includes_all(self):
         other_customer = create_a_fake_customer(
             self.organization, name="Buyer Two"
         )
@@ -603,20 +673,19 @@ class TestCustomerPricing(TransactionTestCase):
             self.customer, self.part, profit_percent=Decimal("25")
         )
 
-        peer_prices = list(
-            self.part.latest_prices_for_other_customers(
-                self.customer, self.organization
-            )
-        )
-        self.assertEqual(len(peer_prices), 1)
-        self.assertEqual(peer_prices[0].customer_id, other_customer.id)
-        self.assertEqual(peer_prices[0].profit_percent, Decimal("30.00"))
+        latest = list(self.part.latest_prices_by_customer(self.organization))
+        by_customer = {row.customer_id: row for row in latest}
+        self.assertEqual(set(by_customer), {self.customer.id, other_customer.id})
+        self.assertEqual(by_customer[other_customer.id].profit_percent, Decimal("30.00"))
+        self.assertEqual(by_customer[self.customer.id].profit_percent, Decimal("25.00"))
 
     def test_customer_price_create_preview(self):
         other_customer = create_a_fake_customer(
             self.organization, name="Peer Buyer"
         )
         create_a_fake_customer_price(other_customer, self.part)
+        # Selected customer's prior price must still appear in the latest-prices table.
+        create_a_fake_customer_price(self.customer, self.part)
 
         part_revision = self.part.latest()
         base_cost = part_revision.bom_unit_cost_at_quantity(1)
@@ -654,7 +723,15 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertContains(response, str(base_cost.amount))
         self.assertContains(response, str(expected_price.amount))
         self.assertContains(response, "Peer Buyer")
+        self.assertContains(response, self.customer.name)
+        peer_ids = {row.customer_id for row in response.context["preview"]["peer_prices"]}
+        self.assertEqual(peer_ids, {self.customer.id, other_customer.id})
         html = response.content.decode()
+        self.assertTrue(
+            "latest prices" in html or "آخرین قیمت‌ها" in html,
+            "latest prices table label missing",
+        )
+        self.assertNotIn("Other customers' latest prices", html)
         self.assertTrue(
             "Confirm price" in html or "تأیید قیمت" in html,
             "confirm price action missing",
@@ -718,7 +795,10 @@ class TestCustomerPricing(TransactionTestCase):
             r'<h4[^>]*class="[^"]*printer-show[^"]*"[^>]*>\s*(Price Review|بازبینی قیمت)\s*</h4>',
         )
         self.assertIsNotNone(response.context["print_generated_at"])
-        self.assertFalse(CustomerPrice.objects.filter(customer=self.customer).exists())
+        # Preview must not create an additional price for the selected customer.
+        self.assertEqual(
+            CustomerPrice.objects.filter(customer=self.customer).count(), 1
+        )
 
     def test_customer_price_create_confirm_from_peer_price(self):
         peer_customer = create_a_fake_customer(
