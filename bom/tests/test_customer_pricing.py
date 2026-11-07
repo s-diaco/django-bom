@@ -342,8 +342,9 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.customer.name)
         self.assertIn("customer_prices", response.context)
-        # Inline Add Price panel (posts to create URL; no navigate-away button).
+        # Inline Add Price panel above the table (one-row picker, no Cancel).
         self.assertContains(response, 'id="price-load-form"')
+        self.assertContains(response, "price-add-inline")
         self.assertContains(
             response,
             reverse(
@@ -351,6 +352,23 @@ class TestCustomerPricing(TransactionTestCase):
             ),
         )
         html = response.content.decode()
+        customers_idx = html.find('id="customers"')
+        load_form_idx = html.find('id="price-load-form"', customers_idx)
+        table_wrap_idx = html.find("bom-table-wrap", customers_idx)
+        self.assertGreater(load_form_idx, -1)
+        self.assertGreater(table_wrap_idx, -1)
+        self.assertLess(
+            load_form_idx,
+            table_wrap_idx,
+            "Add Price panel should sit above the prices table",
+        )
+        panel_html = html[load_form_idx:table_wrap_idx]
+        self.assertNotIn("{% trans", panel_html)
+        self.assertNotRegex(
+            panel_html,
+            r">\s*(Cancel|انصراف)\s*<",
+            "embedded Add Price picker should not include Cancel",
+        )
         self.assertTrue(
             "Add Price" in html or "افزودن قیمت" in html,
             "visible Add Price label missing from customers table",
@@ -363,6 +381,10 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertRegex(
             html,
             r'aria-label="[^"]*(Add price for|افزودن قیمت)',
+        )
+        self.assertRegex(
+            html,
+            r'<i class="material-icons text-base"[^>]*>add</i>\s*(Add Price|افزودن قیمت)',
         )
 
     def test_part_customer_price_create(self):

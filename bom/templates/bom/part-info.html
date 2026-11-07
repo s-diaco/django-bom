@@ -331,6 +331,11 @@
                 {% endif %}
                 <div id="customers" class="col s12">
                     <h4 class="printer-show">{% trans "Customer prices" %}</h4>
+                    {% if profile.role == 'A' and customer_price_load_form %}
+                        <div class="part-customers-add-price printer-hide mb-4">
+                            {% include 'bom/components/customer-price-create-panel.html' with action=customer_price_action load_form=customer_price_load_form confirm_form=customer_price_confirm_form show_preview=customer_price_show_preview preview=customer_price_preview part_locked=customer_price_part_locked cancel_url=customer_price_cancel_url entry_from=customer_price_entry_from currency_unit_txt=customer_price_currency_unit_txt customer=customer_price_selected_customer embedded=1 %}
+                        </div>
+                    {% endif %}
                     <div class="bom-table-wrap responsive-table-wrapper mb-4">
                         <table class="bom-table part-list single-line">
                             <thead>
@@ -360,7 +365,7 @@
                                             <a class="bom-btn-ghost"
                                                href="{% url 'bom:part-info' part_id=part.id %}?price_customer={{ row.customer.id }}#customers"
                                                aria-label="{% blocktrans with name=row.customer.name %}Add price for {{ name }}{% endblocktrans %}">
-                                                {% trans "Add Price" %}
+                                                <i class="material-icons text-base" aria-hidden="true">add</i>{% trans "Add Price" %}
                                             </a>
                                         </td>
                                     {% endif %}
@@ -375,11 +380,6 @@
                             </tbody>
                         </table>
                     </div>
-                    {% if profile.role == 'A' and customer_price_load_form %}
-                        <div class="part-customers-add-price printer-hide mb-4">
-                            {% include 'bom/components/customer-price-create-panel.html' with action=customer_price_action load_form=customer_price_load_form confirm_form=customer_price_confirm_form show_preview=customer_price_show_preview preview=customer_price_preview part_locked=customer_price_part_locked cancel_url=customer_price_cancel_url entry_from=customer_price_entry_from currency_unit_txt=customer_price_currency_unit_txt customer=customer_price_selected_customer embedded=1 %}
-                        </div>
-                    {% endif %}
                 </div>
                 {% if part_revision.is_product %}
                 <div id="overview" class="col s12">
