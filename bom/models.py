@@ -1660,7 +1660,7 @@ class CustomerPrice(models.Model, AsDictModel):
         blank=True,
         related_name="customer_prices",
     )
-    quantity = models.PositiveIntegerField()
+    quantity = models.PositiveIntegerField(verbose_name="Order quantity (kg)")
     base_cost = MoneyField(
         max_digits=19, decimal_places=UNIT_COST_DECIMAL_PLACES, default_currency="USD"
     )

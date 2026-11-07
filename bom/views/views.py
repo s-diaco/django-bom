@@ -2005,6 +2005,7 @@ def customer_export_prices(request, customer_id):
                 ),
                 _("Profit %"): row.profit_percent,
                 _("Price"): row.price.amount if row.price is not None else None,
+                _("Order quantity (kg)"): row.quantity,
                 _("Manual"): _("Yes") if row.is_manual_price else _("No"),
                 _("Note"): row.note,
                 _("Date"): row.created_at,
