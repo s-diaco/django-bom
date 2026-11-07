@@ -604,15 +604,14 @@ class Part(models.Model):
             .first()
         )
 
-    def latest_prices_for_other_customers(self, customer, organization):
-        """Newest CustomerPrice per other active customer for this part."""
+    def latest_prices_by_customer(self, organization):
+        """Newest CustomerPrice per active customer for this part."""
         latest_ids = (
             CustomerPrice.objects.filter(
                 part=self,
                 customer__organization=organization,
                 customer__is_active=True,
             )
-            .exclude(customer=customer)
             .values("customer_id")
             .annotate(max_id=Max("id"))
             .values("max_id")
