@@ -1483,6 +1483,29 @@ def customer_create(request):
     return TemplateResponse(request, "bom/bom-form.html", locals())
 
 
+def _customer_info_url(customer_id):
+    return reverse("bom:customer-info", kwargs={"customer_id": customer_id})
+
+
+def _flash_form_errors(request, form):
+    for errors in form.errors.values():
+        for error in errors:
+            messages.error(request, error)
+
+
+def _customer_info_add_price_panel(organization, customer):
+    """Build context for the compact Material picker on customer-info."""
+    return {
+        "customer_price_action": reverse(
+            "bom:customer-price-create", kwargs={"customer_id": customer.id}
+        ),
+        "customer_price_load_form": CustomerPriceLoadForm(
+            organization=organization, customer=customer
+        ),
+        "customer_price_entry_from": "customer",
+    }
+
+
 @login_required(login_url=BOM_LOGIN_URL)
 def customer_info(request, customer_id):
     profile = request.user.bom_profile()
@@ -1503,7 +1526,11 @@ def customer_info(request, customer_id):
     price_history = paginate_queryset(request, price_history)
     querystring_except_page = build_querystring_except_page(request)
 
-    return TemplateResponse(request, "bom/customer-info.html", locals())
+    context = locals()
+    if profile.role == "A":
+        context.update(_customer_info_add_price_panel(organization, customer))
+
+    return TemplateResponse(request, "bom/customer-info.html", context)
 
 
 @login_required(login_url=BOM_LOGIN_URL)
@@ -1639,7 +1666,7 @@ def customer_price_create(request, customer_id):
     action = reverse(
         "bom:customer-price-create", kwargs={"customer_id": customer_id}
     )
-    cancel_url = reverse("bom:customer-info", kwargs={"customer_id": customer_id})
+    cancel_url = _customer_info_url(customer_id)
 
     # Deep link with part_id → shared preview URL (both ids in the path).
     part_id = request.GET.get("part_id")
@@ -1653,6 +1680,10 @@ def customer_price_create(request, customer_id):
             )
         except Part.DoesNotExist:
             pass
+
+    # Empty create URL → inline Material picker on customer-info.
+    if request.method == "GET":
+        return HttpResponseRedirect(cancel_url)
 
     load_form = CustomerPriceLoadForm(
         organization=organization,
@@ -1700,6 +1731,8 @@ def customer_price_create(request, customer_id):
                         entry_from="customer",
                     )
                 )
+            _flash_form_errors(request, confirm_form)
+            return HttpResponseRedirect(cancel_url)
         else:
             load_form = CustomerPriceLoadForm(
                 request.POST,
@@ -1715,33 +1748,11 @@ def customer_price_create(request, customer_id):
                         entry_from="customer",
                     )
                 )
-            result, context = _customer_price_create_context(
-                request,
-                organization,
-                profile,
-                customer=customer,
-                part=None,
-                part_locked=False,
-                action=action,
-                load_form=load_form,
-                cancel_url=cancel_url,
-                entry_from="customer",
-            )
-    else:
-        result, context = _customer_price_create_context(
-            request,
-            organization,
-            profile,
-            customer=customer,
-            part=None,
-            part_locked=False,
-            action=action,
-            load_form=load_form,
-            cancel_url=cancel_url,
-            entry_from="customer",
-        )
+            # Invalid picker submit → stay on customer-info.
+            _flash_form_errors(request, load_form)
+            return HttpResponseRedirect(cancel_url)
 
-    return TemplateResponse(request, "bom/customer-price-create.html", context)
+    return HttpResponseRedirect(cancel_url)
 
 
 @login_required(login_url=BOM_LOGIN_URL)

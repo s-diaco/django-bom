@@ -145,6 +145,39 @@
     }
 }
 
+.price-add-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+}
+
+.price-add-inline__label {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.price-add-inline__field {
+    flex: 1 1 12rem;
+    min-width: 10rem;
+    max-width: 24rem;
+    position: relative;
+}
+
+.price-add-inline__field .bom-input {
+    width: 100%;
+    margin: 0;
+}
+
+.price-add-inline__submit {
+    flex: 0 0 auto;
+}
+
+.price-add-inline__error {
+    flex: 1 0 100%;
+    margin: 0;
+}
+
 .price-pair-row {
     align-items: stretch;
 }

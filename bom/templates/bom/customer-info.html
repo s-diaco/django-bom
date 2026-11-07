@@ -5,6 +5,12 @@
 
 {% block head-title %}{{ customer.name }}{% endblock %}
 
+{% block head %}
+    {% if profile.role == 'A' %}
+        <link rel="stylesheet" type="text/css" href="{% static 'bom/css/customer-price-create.css' %}"/>
+    {% endif %}
+{% endblock %}
+
 {% block content %}
     <div class="container-app">
         <div class="row" style="margin-bottom: 5px;">
@@ -17,9 +23,6 @@
                     <div style="margin-top: 1.5rem;" class="flex flex-wrap gap-1 justify-end">
                         <a class="bom-btn-secondary" href="{% url 'bom:customer-edit' customer_id=customer.id %}">
                             <i class="material-icons left">edit</i>{% trans "Edit" %}
-                        </a>
-                        <a class="bom-btn-secondary" href="{% url 'bom:customer-price-create' customer_id=customer.id %}">
-                            <i class="material-icons left">add</i>{% trans "Add Price" %}
                         </a>
                         <a class="bom-btn-secondary" href="{% url 'bom:customer-price-bulk-create' customer_id=customer.id %}">
                             <i class="material-icons left">playlist_add</i>{% trans "Generate Prices" %}
@@ -45,6 +48,11 @@
                 <div class="row"><div class="col s4 l2 text-right">{% trans "Notes" %}:</div><div class="col s8 l10">{{ customer.notes|default:"-" }}</div></div>
             </li>
         </ul>
+
+        {% if profile.role == 'A' and customer_price_load_form %}
+            <h5 class="mb-2">{% trans "Add Price" %}</h5>
+            {% include 'bom/components/customer-price-add-inline.html' with action=customer_price_action load_form=customer_price_load_form entry_from=customer_price_entry_from part_locked=False %}
+        {% endif %}
 
         <h5 class="mb-2">{% trans "Current prices" %}</h5>
         {% include 'bom/components/customer-price-list.html' with prices=latest_prices show_history=False profile=profile %}
