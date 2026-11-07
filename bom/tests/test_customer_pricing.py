@@ -493,6 +493,16 @@ class TestCustomerPricing(TransactionTestCase):
         )
         self.assertIn(preview_path, html)
         self.assertIn('name="from" value="part"', html)
+        # Part-locked create-for-customer: selection is fixed — no Cancel/Preview.
+        self.assertNotRegex(
+            html,
+            r'price-summary-select__actions[^>]*>[\s\S]*?(Cancel|انصراف|Preview|پیش‌نمایش)',
+        )
+        self.assertNotRegex(
+            html,
+            r'class="bom-nav-link"[^>]*>\s*(Cancel|انصراف)\s*<',
+        )
+        self.assertNotContains(response, 'id="id_customer"')
         # No peer prices → section stays on screen but is skipped when printing.
         self.assertRegex(
             html,

@@ -15,10 +15,13 @@
 {% block printer-doc %}{% endblock %}
 
 {% block bom-menu %}
-    {% if cancel_url %}
-        <a class="bom-nav-link" href="{{ cancel_url }}">{% trans "Cancel" %}</a>
-    {% else %}
-        <a class="bom-nav-link" href="javascript:history.back()">{% trans "Cancel" %}</a>
+    {# Part-locked create-for-customer already has the selection; skip Cancel. #}
+    {% if not part_locked %}
+        {% if cancel_url %}
+            <a class="bom-nav-link" href="{{ cancel_url }}">{% trans "Cancel" %}</a>
+        {% else %}
+            <a class="bom-nav-link" href="javascript:history.back()">{% trans "Cancel" %}</a>
+        {% endif %}
     {% endif %}
 {% endblock %}
 
