@@ -14,6 +14,7 @@ from django.core.validators import (
 from django.db import IntegrityError
 from django.db.models import OuterRef, Subquery
 from django.forms.models import BaseModelFormSet, modelformset_factory, model_to_dict
+from django.utils import timezone
 from django.utils.translation import gettext, gettext_lazy as _
 
 from djmoney.money import Money
@@ -1061,6 +1062,82 @@ class CustomerPriceConfirmForm(forms.Form):
 
 # Backwards-compatible alias for imports/tests.
 CustomerPriceForm = CustomerPriceConfirmForm
+
+
+class CustomerPriceEditForm(forms.Form):
+    """Minimal edit for an existing CustomerPrice row (admin)."""
+
+    price = GroupedDecimalField(required=True, min_value=0, label=_("Price"))
+    quantity = forms.IntegerField(
+        required=True,
+        min_value=1,
+        label=_("Order quantity (kg)"),
+    )
+    note = forms.CharField(required=False, widget=forms.Textarea, label=_("Note"))
+    created_at = forms.DateTimeField(
+        required=True,
+        label=_("Date"),
+        input_formats=["%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"],
+        widget=forms.DateTimeInput(
+            format="%Y-%m-%dT%H:%M",
+            attrs={"type": "datetime-local"},
+        ),
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.instance = kwargs.pop("instance")
+        self.organization = kwargs.pop("organization")
+        super().__init__(*args, **kwargs)
+        if not self.is_bound:
+            self.fields["price"].initial = (
+                self.instance.price.amount if self.instance.price is not None else None
+            )
+            self.fields["quantity"].initial = self.instance.quantity
+            self.fields["note"].initial = self.instance.note
+            created_at = self.instance.created_at
+            if timezone.is_aware(created_at):
+                created_at = timezone.localtime(created_at)
+            self.fields["created_at"].initial = created_at
+
+    def clean(self):
+        cleaned_data = super().clean()
+        price = cleaned_data.get("price")
+        if price is None:
+            return cleaned_data
+
+        price_amount = Decimal(price)
+        cleaned_data["price"] = Money(price_amount, self.organization.currency)
+
+        base_cost = self.instance.base_cost
+        implied = implied_profit_percent(base_cost, price_amount)
+        if implied is None:
+            raise forms.ValidationError(
+                _("Cannot derive profit % when base cost is zero."),
+                code="invalid",
+            )
+        if implied < 0:
+            raise forms.ValidationError(
+                _("Price cannot be less than BoM cost."), code="invalid"
+            )
+        cleaned_data["profit_percent"] = implied
+        cleaned_data["is_manual_price"] = True
+        cleaned_data["note"] = cleaned_data.get("note") or ""
+        created_at = cleaned_data.get("created_at")
+        if created_at is not None and timezone.is_naive(created_at):
+            cleaned_data["created_at"] = timezone.make_aware(
+                created_at, timezone.get_current_timezone()
+            )
+        return cleaned_data
+
+    def save(self):
+        self.instance.price = self.cleaned_data["price"]
+        self.instance.quantity = self.cleaned_data["quantity"]
+        self.instance.note = self.cleaned_data["note"]
+        self.instance.created_at = self.cleaned_data["created_at"]
+        self.instance.profit_percent = self.cleaned_data["profit_percent"]
+        self.instance.is_manual_price = self.cleaned_data["is_manual_price"]
+        self.instance.save()
+        return self.instance
 
 
 class PartClassForm(forms.ModelForm):

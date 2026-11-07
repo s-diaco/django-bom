@@ -1203,3 +1203,186 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, expected)
         self.assertNotContains(response, "specs-revision-timestamp")
+
+    def test_customer_info_lists_expose_edit_and_delete(self):
+        row = create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("20")
+        )
+        response = self.client.get(
+            reverse("bom:customer-info", kwargs={"customer_id": self.customer.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        edit_url = (
+            reverse(
+                "bom:customer-price-edit", kwargs={"customer_price_id": row.id}
+            )
+            + "?from=customer"
+        )
+        delete_url = (
+            reverse(
+                "bom:customer-price-delete", kwargs={"customer_price_id": row.id}
+            )
+            + "?from=customer"
+        )
+        self.assertContains(response, edit_url)
+        self.assertContains(response, delete_url)
+        # Current prices + history each render the action links.
+        html = response.content.decode()
+        self.assertGreaterEqual(html.count(edit_url), 2)
+        self.assertGreaterEqual(html.count(delete_url), 2)
+
+    def test_part_customers_tab_exposes_edit_and_delete(self):
+        row = create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("20")
+        )
+        response = self.client.get(
+            reverse("bom:part-info", kwargs={"part_id": self.part.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        edit_url = (
+            reverse(
+                "bom:customer-price-edit", kwargs={"customer_price_id": row.id}
+            )
+            + "?from=part"
+        )
+        delete_url = (
+            reverse(
+                "bom:customer-price-delete", kwargs={"customer_price_id": row.id}
+            )
+            + "?from=part"
+        )
+        self.assertContains(response, edit_url)
+        self.assertContains(response, delete_url)
+
+    def test_customer_price_delete_returns_to_source_list(self):
+        row = create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("20")
+        )
+        response = self.client.get(
+            reverse(
+                "bom:customer-price-delete", kwargs={"customer_price_id": row.id}
+            )
+            + "?from=part"
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse("bom:part-info", kwargs={"part_id": self.part.id}) + "#customers",
+        )
+        self.assertFalse(CustomerPrice.objects.filter(pk=row.id).exists())
+
+        row = create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("20")
+        )
+        response = self.client.get(
+            reverse(
+                "bom:customer-price-delete", kwargs={"customer_price_id": row.id}
+            )
+            + "?from=customer"
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse("bom:customer-info", kwargs={"customer_id": self.customer.id}),
+        )
+        self.assertFalse(CustomerPrice.objects.filter(pk=row.id).exists())
+
+    def test_customer_price_edit_updates_and_returns_to_source_list(self):
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+
+        row = create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("20")
+        )
+        edit_url = (
+            reverse(
+                "bom:customer-price-edit", kwargs={"customer_price_id": row.id}
+            )
+            + "?from=part"
+        )
+        response = self.client.get(edit_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Edit Customer Price")
+        self.assertContains(response, 'name="price"')
+        self.assertContains(response, 'name="quantity"')
+        self.assertContains(response, 'name="note"')
+        self.assertContains(response, 'name="created_at"')
+
+        new_price = row.base_cost.amount + Decimal("25")
+        tehran = ZoneInfo("Asia/Tehran")
+        new_created = datetime(2026, 1, 15, 10, 0, tzinfo=tehran)
+        response = self.client.post(
+            edit_url,
+            {
+                "price": str(new_price),
+                "quantity": "5",
+                "note": "adjusted",
+                "created_at": new_created.strftime("%Y-%m-%dT%H:%M"),
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse("bom:part-info", kwargs={"part_id": self.part.id}) + "#customers",
+        )
+        row.refresh_from_db()
+        self.assertEqual(row.price.amount, new_price)
+        self.assertEqual(row.quantity, 5)
+        self.assertEqual(row.note, "adjusted")
+        self.assertEqual(
+            row.profit_percent,
+            implied_profit_percent(row.base_cost, new_price),
+        )
+        self.assertTrue(row.is_manual_price)
+
+        edit_url = (
+            reverse(
+                "bom:customer-price-edit", kwargs={"customer_price_id": row.id}
+            )
+            + "?from=customer"
+        )
+        response = self.client.post(
+            edit_url,
+            {
+                "price": str(new_price),
+                "quantity": "6",
+                "note": "from customer",
+                "created_at": new_created.strftime("%Y-%m-%dT%H:%M"),
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse("bom:customer-info", kwargs={"customer_id": self.customer.id}),
+        )
+        row.refresh_from_db()
+        self.assertEqual(row.quantity, 6)
+        self.assertEqual(row.note, "from customer")
+
+    def test_viewer_cannot_edit_or_delete_customer_price(self):
+        row = create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("20")
+        )
+        self.profile.role = "V"
+        self.profile.save(update_fields=["role"])
+
+        response = self.client.get(
+            reverse(
+                "bom:customer-price-edit", kwargs={"customer_price_id": row.id}
+            ),
+            HTTP_REFERER=reverse(
+                "bom:customer-info", kwargs={"customer_id": self.customer.id}
+            ),
+        )
+        self.assertIn(response.status_code, (302, 307))
+
+        response = self.client.get(
+            reverse(
+                "bom:customer-price-delete", kwargs={"customer_price_id": row.id}
+            ),
+            HTTP_REFERER=reverse(
+                "bom:customer-info", kwargs={"customer_id": self.customer.id}
+            ),
+        )
+        self.assertIn(response.status_code, (302, 307))
+        self.assertTrue(CustomerPrice.objects.filter(pk=row.id).exists())

@@ -61,6 +61,11 @@ bom_patterns = [
         name="customer-export-prices",
     ),
     path(
+        "customer-price/<int:customer_price_id>/edit/",
+        views.customer_price_edit,
+        name="customer-price-edit",
+    ),
+    path(
         "customer-price/<int:customer_price_id>/delete/",
         views.customer_price_delete,
         name="customer-price-delete",
