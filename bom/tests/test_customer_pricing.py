@@ -1302,7 +1302,11 @@ class TestCustomerPricing(TransactionTestCase):
         )
         response = self.client.get(edit_url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Edit Customer Price")
+        html = response.content.decode()
+        self.assertTrue(
+            "Edit Customer Price" in html or "ویرایش قیمت مشتری" in html,
+            "edit customer price title missing",
+        )
         self.assertContains(response, 'name="price"')
         self.assertContains(response, 'name="quantity"')
         self.assertContains(response, 'name="note"')
