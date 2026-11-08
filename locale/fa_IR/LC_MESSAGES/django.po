@@ -736,6 +736,7 @@ msgid "Current profit %"
 msgstr "درصد سود فعلی"
 
 #: bom/templates/bom/components/customer-price-list.html:11
+#: bom/templates/bom/components/customer-price-peer-list.html:11
 #: bom/templates/bom/part-info.html:346
 # Template {% trans %} doubles % before catalog lookup — msgid must use %%.
 msgid "Current profit %%"

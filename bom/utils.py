@@ -448,13 +448,18 @@ def customer_price_preview_context(part, customer, organization, quantity=1):
     if base_cost is None:
         raise ValueError("No BoM cost available")
     currency = organization.currency
+    adjusted_base = customer_price_adjusted_base(base_cost, currency=currency)
+    peer_prices = list(part.latest_prices_by_customer(organization))
+    # Same part for every peer row — reuse today's create-flow base.
+    for row in peer_prices:
+        row.current_profit_percent = implied_profit_percent(adjusted_base, row.price)
     return {
         "customer": customer,
         "part": part,
         "part_revision": part_revision,
         "base_cost": base_cost,
-        "adjusted_base": customer_price_adjusted_base(base_cost, currency=currency),
-        "peer_prices": part.latest_prices_by_customer(organization),
+        "adjusted_base": adjusted_base,
+        "peer_prices": peer_prices,
         "profit_price_tiers": customer_price_profit_tiers(
             base_cost, currency=currency
         ),

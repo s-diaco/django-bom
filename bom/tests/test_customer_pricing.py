@@ -857,9 +857,26 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertContains(response, str(expected_price.amount))
         self.assertContains(response, "Peer Buyer")
         self.assertContains(response, self.customer.name)
-        peer_ids = {row.customer_id for row in response.context["preview"]["peer_prices"]}
+        peer_prices = list(response.context["preview"]["peer_prices"])
+        peer_ids = {row.customer_id for row in peer_prices}
         self.assertEqual(peer_ids, {self.customer.id, other_customer.id})
+        adjusted = customer_price_adjusted_base(
+            base_cost, currency=self.organization.currency
+        )
+        for peer_row in peer_prices:
+            self.assertEqual(
+                peer_row.current_profit_percent,
+                implied_profit_percent(adjusted, peer_row.price),
+            )
         html = response.content.decode()
+        self.assertTrue(
+            "Confirmed profit %" in html or "درصد سود تأییدشده" in html,
+            "confirmed profit header missing from latest prices table",
+        )
+        self.assertTrue(
+            "Current profit %" in html or "درصد سود فعلی" in html,
+            "current profit header missing from latest prices table",
+        )
         self.assertTrue(
             "latest prices" in html or "آخرین قیمت‌ها" in html,
             "latest prices table label missing",
