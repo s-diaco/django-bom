@@ -43,6 +43,7 @@ from bom.forms import (
     BOMCSVForm,
     CustomerForm,
     CustomerPriceConfirmForm,
+    CustomerPriceEditForm,
     CustomerPriceForm,
     CustomerPriceLoadForm,
     FileForm,
@@ -1963,6 +1964,64 @@ def part_customer_price_create(request, part_id, customer_id=None):
     return TemplateResponse(request, "bom/customer-price-create.html", context)
 
 
+def _customer_price_list_from(request):
+    value = request.POST.get("from") or request.GET.get("from") or "customer"
+    return value if value in ("part", "customer") else "customer"
+
+
+def _customer_price_return_url(customer_price, list_from="customer"):
+    if list_from == "part":
+        return (
+            reverse("bom:part-info", kwargs={"part_id": customer_price.part_id})
+            + "#customers"
+        )
+    return reverse(
+        "bom:customer-info", kwargs={"customer_id": customer_price.customer_id}
+    )
+
+
+@login_required(login_url=BOM_LOGIN_URL)
+@organization_admin
+def customer_price_edit(request, customer_price_id):
+    profile = request.user.bom_profile()
+    organization = profile.organization
+    customer_price = get_object_or_404(CustomerPrice, pk=customer_price_id)
+
+    if customer_price.customer.organization != organization:
+        messages.error(request, _("Can't access a customer that is not yours!"))
+        return HttpResponseRedirect(reverse("bom:customers"))
+
+    list_from = _customer_price_list_from(request)
+    title = _("Edit Customer Price")
+    action = (
+        reverse(
+            "bom:customer-price-edit",
+            kwargs={"customer_price_id": customer_price_id},
+        )
+        + f"?from={list_from}"
+    )
+
+    if request.method == "POST":
+        form = CustomerPriceEditForm(
+            request.POST,
+            instance=customer_price,
+            organization=organization,
+        )
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("Customer price updated."))
+            return HttpResponseRedirect(
+                _customer_price_return_url(customer_price, list_from)
+            )
+    else:
+        form = CustomerPriceEditForm(
+            instance=customer_price,
+            organization=organization,
+        )
+
+    return TemplateResponse(request, "bom/bom-form.html", locals())
+
+
 @login_required(login_url=BOM_LOGIN_URL)
 @organization_admin
 def customer_price_delete(request, customer_price_id):
@@ -1974,12 +2033,11 @@ def customer_price_delete(request, customer_price_id):
         messages.error(request, _("Can't access a customer that is not yours!"))
         return HttpResponseRedirect(reverse("bom:customers"))
 
-    customer_id = customer_price.customer_id
+    list_from = _customer_price_list_from(request)
+    return_url = _customer_price_return_url(customer_price, list_from)
     customer_price.delete()
     messages.success(request, _("Customer price deleted."))
-    return HttpResponseRedirect(
-        reverse("bom:customer-info", kwargs={"customer_id": customer_id})
-    )
+    return HttpResponseRedirect(return_url)
 
 
 @login_required(login_url=BOM_LOGIN_URL)
