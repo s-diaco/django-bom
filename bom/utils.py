@@ -360,6 +360,40 @@ def customer_price_adjusted_base(base_cost, currency=None):
     return apply_profit(base_cost, Decimal("0"), currency=currency)
 
 
+def customer_price_current_base(part, currency=None, quantity=1):
+    """Today's BoM+overhead pricing base for a part (same as create-flow base)."""
+    part_revision = part.latest()
+    if part_revision is None:
+        return None
+    base_cost = part_revision.bom_unit_cost_at_quantity(quantity)
+    if base_cost is None:
+        return None
+    return customer_price_adjusted_base(base_cost, currency=currency)
+
+
+def attach_current_profit_percents(price_rows, currency=None):
+    """Attach ``current_profit_percent`` using today's BoM+overhead base.
+
+    Computes each distinct part's current base once so list pages stay cheap.
+    Returns a list (attributes cannot stick on a raw queryset).
+    """
+    rows = list(price_rows)
+    bases_by_part_id = {}
+    for row in rows:
+        part_id = row.part_id
+        if part_id not in bases_by_part_id:
+            part = getattr(row, "part", None)
+            bases_by_part_id[part_id] = (
+                customer_price_current_base(part, currency=currency)
+                if part is not None
+                else None
+            )
+        row.current_profit_percent = implied_profit_percent(
+            bases_by_part_id[part_id], row.price
+        )
+    return rows
+
+
 def customer_price_profit_tiers(base_cost, currency=None):
     """Return standard profit % tiers priced from BoM cost (+ overhead)."""
     adjusted_base = customer_price_adjusted_base(base_cost, currency=currency)
@@ -414,13 +448,18 @@ def customer_price_preview_context(part, customer, organization, quantity=1):
     if base_cost is None:
         raise ValueError("No BoM cost available")
     currency = organization.currency
+    adjusted_base = customer_price_adjusted_base(base_cost, currency=currency)
+    peer_prices = list(part.latest_prices_by_customer(organization))
+    # Same part for every peer row — reuse today's create-flow base.
+    for row in peer_prices:
+        row.current_profit_percent = implied_profit_percent(adjusted_base, row.price)
     return {
         "customer": customer,
         "part": part,
         "part_revision": part_revision,
         "base_cost": base_cost,
-        "adjusted_base": customer_price_adjusted_base(base_cost, currency=currency),
-        "peer_prices": part.latest_prices_by_customer(organization),
+        "adjusted_base": adjusted_base,
+        "peer_prices": peer_prices,
         "profit_price_tiers": customer_price_profit_tiers(
             base_cost, currency=currency
         ),
