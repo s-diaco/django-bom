@@ -907,6 +907,7 @@ class TestCustomerPricing(TransactionTestCase):
         html = response.content.decode()
         self.assertTrue(
             "Confirmed profit %" in html
+            or "سود تأیید شده ٪" in html
             or "سود تأیید ٪" in html
             or "درصد سود تأییدشده" in html,
             "confirmed profit header missing from latest prices table",
@@ -1306,7 +1307,9 @@ class TestCustomerPricing(TransactionTestCase):
         other_customer = create_a_fake_customer(
             self.organization, name="Peer Buyer"
         )
-        row = create_a_fake_customer_price(other_customer, self.part)
+        row = create_a_fake_customer_price(
+            other_customer, self.part, profit_percent=Decimal("20.00")
+        )
         tehran = ZoneInfo("Asia/Tehran")
         row.created_at = datetime(2026, 8, 23, 12, 30, tzinfo=tehran)
         row.save(update_fields=["created_at"])
@@ -1333,6 +1336,13 @@ class TestCustomerPricing(TransactionTestCase):
         ]
         self.assertIn(expected_date, peer_table)
         self.assertNotIn(datetime_full, peer_table)
+        # Display profit without decimals; keep full precision in data attrs.
+        self.assertRegex(
+            peer_table,
+            r"<td class=\"text-normal td-med\">20</td>",
+        )
+        self.assertNotIn(">20.00<", peer_table)
+        self.assertIn('data-profit-percent="20.00"', peer_table)
 
     def test_price_history_shows_jalali_created_at(self):
         from datetime import datetime

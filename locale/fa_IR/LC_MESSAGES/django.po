@@ -722,14 +722,14 @@ msgstr "درصد سود"
 
 #: bom/views/views.py
 msgid "Confirmed profit %"
-msgstr "سود تأیید ٪"
+msgstr "سود تأیید شده ٪"
 
 #: bom/templates/bom/components/customer-price-list.html:10
 #: bom/templates/bom/components/customer-price-peer-list.html:10
 #: bom/templates/bom/part-info.html:345
 # Template {% trans %} doubles % before catalog lookup — msgid must use %%.
 msgid "Confirmed profit %%"
-msgstr "سود تأیید ٪"
+msgstr "سود تأیید شده ٪"
 
 #: bom/views/views.py
 msgid "Current profit %"
