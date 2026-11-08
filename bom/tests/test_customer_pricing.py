@@ -1367,7 +1367,7 @@ class TestCustomerPricing(TransactionTestCase):
         # Display profit without decimals; keep full precision in data attrs.
         self.assertRegex(
             peer_table,
-            r"<td class=\"text-normal td-med\">20</td>",
+            r"<td class=\"text-normal td-med text-center\">20</td>",
         )
         self.assertNotIn(">20.00<", peer_table)
         self.assertIn('data-profit-percent="20.00"', peer_table)
@@ -1388,8 +1388,9 @@ class TestCustomerPricing(TransactionTestCase):
         )
         self.assertNotRegex(
             peer_table,
-            rf"<td class=\"text-normal td-med\">[^<]*{re.escape(curr)}[^<]*</td>",
+            rf"<td class=\"text-normal td-med text-center\">[^<]*{re.escape(curr)}[^<]*</td>",
         )
+        self.assertIn('class="text-normal td-med text-center"', peer_table)
 
     def test_price_history_shows_jalali_created_at(self):
         from datetime import datetime
