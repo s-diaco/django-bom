@@ -230,6 +230,30 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertEqual(self.part.latest_customer_price(self.customer).id, newer.id)
         self.assertNotEqual(older.id, newer.id)
 
+    def test_price_history_excludes_current_prices(self):
+        older = create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("10")
+        )
+        newer = create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("30")
+        )
+        history = list(self.customer.price_history())
+        self.assertEqual([row.id for row in history], [older.id])
+        self.assertNotIn(newer.id, [row.id for row in history])
+
+        response = self.client.get(
+            reverse("bom:customer-info", kwargs={"customer_id": self.customer.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [row.id for row in response.context["latest_prices"]],
+            [newer.id],
+        )
+        self.assertEqual(
+            [row.id for row in response.context["price_history"]],
+            [older.id],
+        )
+
     def test_bom_unit_cost_varies_with_quantity_via_seller_selection(self):
         from bom.models import SellerPart
 
@@ -1113,7 +1137,13 @@ class TestCustomerPricing(TransactionTestCase):
         from bom.constants import CALENDAR_JALALI
         from bom.datetime_format import format_datetime
 
-        row = create_a_fake_customer_price(self.customer, self.part)
+        # History excludes the current (newest) row; date the older history row.
+        row = create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("10")
+        )
+        create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("30")
+        )
         tehran = ZoneInfo("Asia/Tehran")
         row.created_at = datetime(2026, 8, 23, 12, 30, tzinfo=tehran)
         row.save(update_fields=["created_at"])
@@ -1142,7 +1172,12 @@ class TestCustomerPricing(TransactionTestCase):
         from bom.constants import CALENDAR_GREGORIAN, CALENDAR_JALALI
         from bom.datetime_format import format_datetime
 
-        row = create_a_fake_customer_price(self.customer, self.part)
+        row = create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("10")
+        )
+        create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("30")
+        )
         tehran = ZoneInfo("Asia/Tehran")
         row.created_at = datetime(2026, 8, 23, 12, 30, tzinfo=tehran)
         row.save(update_fields=["created_at"])
@@ -1226,10 +1261,10 @@ class TestCustomerPricing(TransactionTestCase):
         )
         self.assertContains(response, edit_url)
         self.assertContains(response, delete_url)
-        # Current prices + history each render the action links.
+        # Single current row appears once; history excludes current prices.
         html = response.content.decode()
-        self.assertGreaterEqual(html.count(edit_url), 2)
-        self.assertGreaterEqual(html.count(delete_url), 2)
+        self.assertEqual(html.count(edit_url), 1)
+        self.assertEqual(html.count(delete_url), 1)
 
     def test_part_customers_tab_exposes_edit_and_delete(self):
         row = create_a_fake_customer_price(
