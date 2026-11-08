@@ -255,7 +255,7 @@
             <div id="price-review-peer-prices"{% if not preview.peer_prices %} class="printer-hide"{% endif %}>
                 <h5 class="mb-2 printer-show">{% trans "latest prices" %}</h5>
                 <h5 class="mb-2 printer-hide">{% trans "latest prices" %}</h5>
-                {% include 'bom/components/customer-price-peer-list.html' with peer_prices=preview.peer_prices %}
+                {% include 'bom/components/customer-price-peer-list.html' with peer_prices=preview.peer_prices currency_unit_txt=currency_unit_txt %}
             </div>
 
             <div class="price-selection-panel printer-hide" id="price-selection-panel">

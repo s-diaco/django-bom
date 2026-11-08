@@ -905,18 +905,38 @@ class TestCustomerPricing(TransactionTestCase):
                 implied_profit_percent(adjusted, peer_row.price),
             )
         html = response.content.decode()
-        self.assertTrue(
-            "Confirmed profit %" in html
-            or "سود تأیید شده ٪" in html
-            or "سود تأیید ٪" in html
-            or "درصد سود تأییدشده" in html,
-            "confirmed profit header missing from latest prices table",
+        from bom.utils import currency_label
+
+        curr = currency_label(self.organization.currency)
+        peer_table = html[
+            html.find('id="customer-price-peer-table"') : html.find(
+                "</table>", html.find('id="customer-price-peer-table"')
+            )
+        ]
+        self.assertRegex(
+            peer_table,
+            r"Confirmed profit<br>\(%\)|سود تأیید شده<br>\(درصد\)",
+            "confirmed profit two-row header missing from latest prices table",
         )
-        self.assertTrue(
-            "Current profit %" in html
-            or "سود فعلی ٪" in html
-            or "درصد سود فعلی" in html,
-            "current profit header missing from latest prices table",
+        self.assertRegex(
+            peer_table,
+            r"Current profit<br>\(%\)|سود فعلی<br>\(درصد\)",
+            "current profit two-row header missing from latest prices table",
+        )
+        self.assertRegex(
+            peer_table,
+            rf"BoM Cost<br>\({curr}\)|هزینه صورت مواد<br>\({curr}\)",
+            "BoM Cost currency second-row header missing",
+        )
+        self.assertRegex(
+            peer_table,
+            rf"Price<br>\({curr}\)|قیمت<br>\({curr}\)",
+            "Price currency second-row header missing",
+        )
+        self.assertRegex(
+            peer_table,
+            r"Order quantity<br>\(kg\)|مقدار سفارش<br>\(کیلوگرم\)",
+            "Order quantity unit second-row header missing",
         )
         self.assertTrue(
             "latest prices" in html or "آخرین قیمت‌ها" in html,
@@ -1343,6 +1363,18 @@ class TestCustomerPricing(TransactionTestCase):
         )
         self.assertNotIn(">20.00<", peer_table)
         self.assertIn('data-profit-percent="20.00"', peer_table)
+        # Amount-only money cells; currency lives in the header second row.
+        from bom.templatetags.bom_i18n import money_amount
+        from bom.utils import currency_label
+
+        curr = currency_label(self.organization.currency)
+        self.assertIn(money_amount(row.base_cost), peer_table)
+        self.assertIn(money_amount(row.price), peer_table)
+        self.assertRegex(peer_table, rf"BoM Cost<br>\({curr}\)")
+        self.assertNotRegex(
+            peer_table,
+            rf"<td class=\"text-normal td-med\">[^<]*{re.escape(curr)}[^<]*</td>",
+        )
 
     def test_price_history_shows_jalali_created_at(self):
         from datetime import datetime
