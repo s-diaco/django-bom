@@ -42,7 +42,6 @@ from bom.forms import (
     AddSubpartForm,
     BOMCSVForm,
     CustomerForm,
-    CustomerPriceBulkForm,
     CustomerPriceConfirmForm,
     CustomerPriceForm,
     CustomerPriceLoadForm,
@@ -1962,48 +1961,6 @@ def part_customer_price_create(request, part_id, customer_id=None):
 
     context["part_info_url"] = part_info_url
     return TemplateResponse(request, "bom/customer-price-create.html", context)
-
-
-@login_required(login_url=BOM_LOGIN_URL)
-def customer_price_bulk_create(request, customer_id):
-    profile = request.user.bom_profile()
-    organization = profile.organization
-    customer = get_object_or_404(Customer, pk=customer_id)
-
-    if customer.organization != organization:
-        messages.error(request, _("Can't access a customer that is not yours!"))
-        return HttpResponseRedirect(reverse("bom:customers"))
-
-    title = _("Generate Customer Prices")
-    action = reverse(
-        "bom:customer-price-bulk-create", kwargs={"customer_id": customer_id}
-    )
-
-    if request.method == "POST":
-        form = CustomerPriceBulkForm(
-            request.POST,
-            organization=organization,
-            customer=customer,
-            user=request.user,
-        )
-        if form.is_valid():
-            created, skipped = form.save()
-            messages.success(
-                request,
-                _("Created %(created)d prices; skipped %(skipped)d.")
-                % {"created": len(created), "skipped": len(skipped)},
-            )
-            return HttpResponseRedirect(
-                reverse("bom:customer-info", kwargs={"customer_id": customer_id})
-            )
-    else:
-        form = CustomerPriceBulkForm(
-            organization=organization,
-            customer=customer,
-            user=request.user,
-        )
-
-    return TemplateResponse(request, "bom/bom-form.html", locals())
 
 
 @login_required(login_url=BOM_LOGIN_URL)

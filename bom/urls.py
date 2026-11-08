@@ -56,11 +56,6 @@ bom_patterns = [
         name="customer-price-create",
     ),
     path(
-        "customer/<int:customer_id>/prices/bulk/",
-        views.customer_price_bulk_create,
-        name="customer-price-bulk-create",
-    ),
-    path(
         "customer/<int:customer_id>/prices/export/",
         views.customer_export_prices,
         name="customer-export-prices",
