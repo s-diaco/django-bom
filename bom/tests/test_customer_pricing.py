@@ -578,6 +578,10 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertContains(response, str(expected_current))
 
     def test_customer_info_shows_confirmed_and_current_profit(self):
+        # Older row lands in history (excluded from current after LI-33).
+        older = create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("15")
+        )
         row = create_a_fake_customer_price(
             self.customer, self.part, profit_percent=Decimal("25")
         )
@@ -602,7 +606,16 @@ class TestCustomerPricing(TransactionTestCase):
         )
         self.assertEqual(latest[0].current_profit_percent, expected_current)
         history = list(response.context["price_history"])
-        self.assertEqual(history[0].current_profit_percent, expected_current)
+        self.assertEqual([h.id for h in history], [older.id])
+        self.assertEqual(
+            history[0].current_profit_percent,
+            implied_profit_percent(
+                customer_price_current_base(
+                    self.part, currency=self.organization.currency
+                ),
+                older.price,
+            ),
+        )
 
     def test_part_customer_price_create(self):
         create_url = reverse(
