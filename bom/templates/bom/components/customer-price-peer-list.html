@@ -8,8 +8,8 @@
         <tr>
             <th class="text-normal td-med">{% trans "Customer" %}</th>
             <th class="text-normal td-med">{% trans "BoM Cost" %}<br>({% firstof currency_unit_txt organization.currency|currency_label %})</th>
-            <th class="text-normal td-med">{% trans "Confirmed profit" %}<br>({% trans "%" %})</th>
-            <th class="text-normal td-med">{% trans "Current profit" %}<br>({% trans "%" %})</th>
+            <th class="text-normal td-med">{% trans "Confirmed profit" %}<br>({% percent_unit %})</th>
+            <th class="text-normal td-med">{% trans "Current profit" %}<br>({% percent_unit %})</th>
             <th class="text-normal td-med">{% trans "Price" %}<br>({% firstof currency_unit_txt organization.currency|currency_label %})</th>
             <th class="text-normal td-med">{% trans "Order quantity" %}<br>({% trans "kg" %})</th>
             <th class="text-normal td-med">{% trans "Created" %}</th>

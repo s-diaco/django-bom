@@ -748,7 +748,8 @@ msgstr "سود فعلی ٪"
 msgid "Current profit %%"
 msgstr "سود فعلی ٪"
 
-#: bom/templates/bom/components/customer-price-peer-list.html
+# Used by bom_i18n.percent_unit (Django {% trans "%" %} does not translate).
+#: bom/templatetags/bom_i18n.py
 msgid "%"
 msgstr "درصد"
 

@@ -580,10 +580,14 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         html = response.content.decode()
         self.assertTrue(
-            "Confirmed profit %" in html or "درصد سود تأییدشده" in html
+            "Confirmed profit %" in html
+            or "سود تأیید شده ٪" in html
+            or "درصد سود تأییدشده" in html
         )
         self.assertTrue(
-            "Current profit %" in html or "درصد سود فعلی" in html
+            "Current profit %" in html
+            or "سود فعلی ٪" in html
+            or "درصد سود فعلی" in html
         )
         annotated = response.context["customer_prices"]
         self.assertEqual(len(annotated), 1)
@@ -614,10 +618,14 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         html = response.content.decode()
         self.assertTrue(
-            "Confirmed profit %" in html or "درصد سود تأییدشده" in html
+            "Confirmed profit %" in html
+            or "سود تأیید شده ٪" in html
+            or "درصد سود تأییدشده" in html
         )
         self.assertTrue(
-            "Current profit %" in html or "درصد سود فعلی" in html
+            "Current profit %" in html
+            or "سود فعلی ٪" in html
+            or "درصد سود فعلی" in html
         )
         latest = response.context["latest_prices"]
         self.assertEqual(len(latest), 1)
@@ -1370,7 +1378,14 @@ class TestCustomerPricing(TransactionTestCase):
         curr = currency_label(self.organization.currency)
         self.assertIn(money_amount(row.base_cost), peer_table)
         self.assertIn(money_amount(row.price), peer_table)
-        self.assertRegex(peer_table, rf"BoM Cost<br>\({curr}\)")
+        self.assertRegex(
+            peer_table,
+            rf"(?:BoM Cost|هزینه صورت مواد)<br>\({re.escape(curr)}\)",
+        )
+        self.assertRegex(
+            peer_table,
+            r"Confirmed profit<br>\(%\)|سود تأیید شده<br>\(درصد\)",
+        )
         self.assertNotRegex(
             peer_table,
             rf"<td class=\"text-normal td-med\">[^<]*{re.escape(curr)}[^<]*</td>",
