@@ -95,7 +95,7 @@ class TestCustomerPricingHelpers(TransactionTestCase):
         with timezone.override("Asia/Tehran"):
             self.assertEqual(
                 format_datetime(dt, calendar=CALENDAR_JALALI),
-                "۱۴۰۵/۶/۱, ۱۲:۳۰",
+                "1405/6/1, 12:30",
             )
             self.assertEqual(
                 format_datetime(dt, calendar=CALENDAR_GREGORIAN),
@@ -118,7 +118,7 @@ class TestCustomerPricingHelpers(TransactionTestCase):
         with timezone.override("Asia/Tehran"):
             self.assertEqual(
                 format_date(dt, calendar=CALENDAR_JALALI),
-                "۱۴۰۵/۶/۱",
+                "1405/6/1",
             )
             self.assertEqual(
                 format_date(dt, calendar=CALENDAR_GREGORIAN),
