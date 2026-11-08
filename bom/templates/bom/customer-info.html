@@ -24,9 +24,6 @@
                         <a class="bom-btn-secondary" href="{% url 'bom:customer-edit' customer_id=customer.id %}">
                             <i class="material-icons left">edit</i>{% trans "Edit" %}
                         </a>
-                        <a class="bom-btn-secondary" href="{% url 'bom:customer-price-bulk-create' customer_id=customer.id %}">
-                            <i class="material-icons left">playlist_add</i>{% trans "Generate Prices" %}
-                        </a>
                         <a class="bom-btn-secondary" href="{% url 'bom:customer-export-prices' customer_id=customer.id %}?format=xlsx">
                             <i class="material-icons left">file_download</i>{% trans "Export" %}
                         </a>

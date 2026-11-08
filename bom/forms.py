@@ -62,7 +62,6 @@ from .models import (
     UserMeta,
 )
 from .utils import (
-    apply_profit,
     convert_arabic_to_english,
     currency_label,
     implied_profit_percent,
@@ -1062,78 +1061,6 @@ class CustomerPriceConfirmForm(forms.Form):
 
 # Backwards-compatible alias for imports/tests.
 CustomerPriceForm = CustomerPriceConfirmForm
-
-
-class CustomerPriceBulkForm(forms.Form):
-    UNIT_QUANTITY = 1
-    parts = forms.ModelMultipleChoiceField(
-        queryset=Part.objects.none(),
-        required=True,
-        label=_("Parts"),
-    )
-    profit_percent = forms.DecimalField(
-        required=False,
-        min_value=0,
-        max_digits=6,
-        decimal_places=2,
-        label=_("Profit % (markup on cost)"),
-    )
-
-    def __init__(self, *args, **kwargs):
-        self.organization = kwargs.pop("organization", None)
-        self.customer = kwargs.pop("customer", None)
-        self.user = kwargs.pop("user", None)
-        product_only = kwargs.pop("product_only", True)
-        super().__init__(*args, **kwargs)
-        parts_qs = Part.objects.filter(organization=self.organization)
-        if product_only:
-            self.organization.ensure_default_product_types()
-            product_part_ids = (
-                PartRevision.objects.filter(
-                    part__organization=self.organization,
-                    material__in=self.organization.product_type_codes(has_bom=True),
-                )
-                .values_list("part_id", flat=True)
-                .distinct()
-            )
-            parts_qs = parts_qs.filter(id__in=product_part_ids)
-        self.fields["parts"].queryset = parts_qs.order_by(
-            "number_class__code", "number_item", "number_variation"
-        )
-
-    def save(self):
-        quantity = self.UNIT_QUANTITY
-        profit_percent = self.cleaned_data.get("profit_percent")
-        if profit_percent is None:
-            profit_percent = Decimal("0")
-
-        created = []
-        skipped = []
-        for part in self.cleaned_data["parts"]:
-            part_revision = part.latest()
-            if part_revision is None:
-                skipped.append((part, _("No revision")))
-                continue
-            base_cost = part_revision.bom_unit_cost_at_quantity(quantity)
-            if base_cost is None:
-                skipped.append((part, _("No BoM cost")))
-                continue
-            price = apply_profit(
-                base_cost, profit_percent, currency=self.organization.currency
-            )
-            row = CustomerPrice.objects.create(
-                customer=self.customer,
-                part=part,
-                part_revision=part_revision,
-                quantity=quantity,
-                base_cost=base_cost,
-                profit_percent=profit_percent,
-                price=price,
-                is_manual_price=False,
-                created_by=self.user,
-            )
-            created.append(row)
-        return created, skipped
 
 
 class PartClassForm(forms.ModelForm):

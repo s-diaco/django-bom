@@ -312,22 +312,6 @@ msgstr "وقتی هزینه پایه صفر است نمی‌توان درصد س
 msgid "Price cannot be less than BoM cost."
 msgstr "قیمت نمی‌تواند کمتر از هزینه BoM باشد."
 
-#: bom/forms.py:910
-msgid "Parts"
-msgstr "متریال‌ها"
-
-#: bom/forms.py:917
-msgid "Profit % (markup on cost)"
-msgstr "درصد سود (حاشیه روی هزینه)"
-
-#: bom/forms.py:952
-msgid "No revision"
-msgstr "بدون ورژن"
-
-#: bom/forms.py:956
-msgid "No BoM cost"
-msgstr "بدون هزینه BoM"
-
 #: bom/forms.py:1315
 #, python-brace-format
 msgid "Part {0} on row {1} already exists. This part was not uploaded."
@@ -860,11 +844,7 @@ msgstr "افزودن قیمت"
 msgid "Add price for %(name)s"
 msgstr "افزودن قیمت برای %(name)s"
 
-#: bom/templates/bom/customer-info.html:25
-msgid "Generate Prices"
-msgstr "تولید قیمت‌ها"
-
-#: bom/templates/bom/customer-info.html:28
+#: bom/templates/bom/customer-info.html:27
 msgid "Export"
 msgstr "خروجی"
 
@@ -1739,15 +1719,6 @@ msgstr "قیمت مشتری ثبت شد."
 #: bom/views/views.py:1564
 msgid "Can't access a part that is not yours!"
 msgstr "نمی‌توانید به متریالی که متعلق به شما نیست دسترسی داشته باشید!"
-
-#: bom/views/views.py:1656
-msgid "Generate Customer Prices"
-msgstr "تولید قیمت‌های مشتری"
-
-#: bom/views/views.py:1672
-#, python-format
-msgid "Created %(created)d prices; skipped %(skipped)d."
-msgstr "%(created)d قیمت ایجاد شد؛ %(skipped)d رد شد."
 
 #: bom/views/views.py:1701
 msgid "Customer price deleted."
