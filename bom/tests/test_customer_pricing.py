@@ -1235,6 +1235,12 @@ class TestCustomerPricing(TransactionTestCase):
             r"(?:body\.printing-price-review\s+)?#price-review-bom\s*\{[^}]*"
             r"page-break-before:\s*always",
         )
+        self.assertRegex(
+            css,
+            r"body\.printing-price-review\s+#customer-price-peer-table\s+th,\s*"
+            r"body\.printing-price-review\s+#customer-price-peer-table\s+td\s*\{[^}]*"
+            r"text-align:\s*center",
+        )
         self.assertIn('id="price-review-peer-prices"', html)
         # BoM Overview print: 8pt for all headers and body cells (incl. Description).
         self.assertRegex(

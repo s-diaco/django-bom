@@ -45,6 +45,12 @@
         page-break-before: always;
     }
 
+    /* Override style.css print `table.part-list … text-align: right`. */
+    body.printing-price-review #customer-price-peer-table th,
+    body.printing-price-review #customer-price-peer-table td {
+        text-align: center;
+    }
+
     body.printing-price-review #price-review-peer-prices.printer-hide {
         break-before: auto;
         page-break-before: auto;
