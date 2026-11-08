@@ -102,6 +102,29 @@ class TestCustomerPricingHelpers(TransactionTestCase):
                 "2026/8/23, 12:30",
             )
 
+    def test_format_date_helper(self):
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+
+        from django.utils import timezone
+
+        from bom.constants import CALENDAR_GREGORIAN, CALENDAR_JALALI
+        from bom.datetime_format import format_date
+
+        self.assertEqual(format_date(None), "-")
+
+        tehran = ZoneInfo("Asia/Tehran")
+        dt = datetime(2026, 8, 23, 12, 30, tzinfo=tehran)
+        with timezone.override("Asia/Tehran"):
+            self.assertEqual(
+                format_date(dt, calendar=CALENDAR_JALALI),
+                "۱۴۰۵/۶/۱",
+            )
+            self.assertEqual(
+                format_date(dt, calendar=CALENDAR_GREGORIAN),
+                "2026/8/23",
+            )
+
 
 @override_settings(BOM_CONFIG=settings.BOM_CONFIG_DEFAULT)
 class TestCustomerPricing(TransactionTestCase):
@@ -883,11 +906,15 @@ class TestCustomerPricing(TransactionTestCase):
             )
         html = response.content.decode()
         self.assertTrue(
-            "Confirmed profit %" in html or "درصد سود تأییدشده" in html,
+            "Confirmed profit %" in html
+            or "سود تأیید ٪" in html
+            or "درصد سود تأییدشده" in html,
             "confirmed profit header missing from latest prices table",
         )
         self.assertTrue(
-            "Current profit %" in html or "درصد سود فعلی" in html,
+            "Current profit %" in html
+            or "سود فعلی ٪" in html
+            or "درصد سود فعلی" in html,
             "current profit header missing from latest prices table",
         )
         self.assertTrue(
@@ -1266,6 +1293,46 @@ class TestCustomerPricing(TransactionTestCase):
             reverse("bom:customer-info", kwargs={"customer_id": self.customer.id}),
         )
         self.assertContains(response, self.part.full_part_number())
+
+    def test_peer_list_created_uses_user_date(self):
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+
+        from django.utils import timezone
+
+        from bom.constants import CALENDAR_JALALI
+        from bom.datetime_format import format_date, format_datetime
+
+        other_customer = create_a_fake_customer(
+            self.organization, name="Peer Buyer"
+        )
+        row = create_a_fake_customer_price(other_customer, self.part)
+        tehran = ZoneInfo("Asia/Tehran")
+        row.created_at = datetime(2026, 8, 23, 12, 30, tzinfo=tehran)
+        row.save(update_fields=["created_at"])
+        self.profile.calendar = CALENDAR_JALALI
+        self.profile.save(update_fields=["calendar"])
+
+        preview_url = reverse(
+            "bom:part-customer-price-create-for-customer",
+            kwargs={
+                "part_id": self.part.id,
+                "customer_id": self.customer.id,
+            },
+        )
+        with timezone.override("Asia/Tehran"):
+            expected_date = format_date(row.created_at, calendar=CALENDAR_JALALI)
+            datetime_full = format_datetime(row.created_at, calendar=CALENDAR_JALALI)
+            response = self.client.get(preview_url)
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode()
+        peer_table = html[
+            html.find('id="customer-price-peer-table"') : html.find(
+                "</table>", html.find('id="customer-price-peer-table"')
+            )
+        ]
+        self.assertIn(expected_date, peer_table)
+        self.assertNotIn(datetime_full, peer_table)
 
     def test_price_history_shows_jalali_created_at(self):
         from datetime import datetime

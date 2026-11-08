@@ -37,3 +37,24 @@ def format_datetime(value, calendar=CALENDAR_JALALI):
         f"{jalali.hour}:{jalali.minute:02d}"
     )
     return formatted.translate(_PERSIAN_DIGITS)
+
+
+def format_date(value, calendar=CALENDAR_JALALI):
+    """Format a datetime as a date only; same calendar/locale path as format_datetime.
+
+    Jalali example: ۱۴۰۵/۶/۱
+    Gregorian example: 2026/8/23
+    """
+    if value is None:
+        return "-"
+    if isinstance(value, str):
+        return value
+    if not isinstance(value, datetime):
+        return "-"
+
+    value = _localize(value)
+    if calendar == CALENDAR_GREGORIAN:
+        return f"{value.year}/{value.month}/{value.day}"
+
+    jalali = jdatetime.datetime.fromgregorian(datetime=value)
+    return f"{jalali.year}/{jalali.month}/{jalali.day}".translate(_PERSIAN_DIGITS)

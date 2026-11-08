@@ -30,7 +30,7 @@
                 <td class="text-normal td-med">{{ row.current_profit_percent|default:"-" }}</td>
                 <td class="text-normal td-med">{{ row.price|default:"-" }}</td>
                 <td class="text-normal td-med">{{ row.quantity }}</td>
-                <td class="text-normal td-med">{% user_datetime row.created_at %}</td>
+                <td class="text-normal td-med">{% user_date row.created_at %}</td>
             </tr>
         {% empty %}
             <tr>
