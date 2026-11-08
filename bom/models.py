@@ -1626,22 +1626,34 @@ class Customer(models.Model, AsDictModel):
     def __str__(self):
         return self.name
 
-    def latest_prices(self):
-        """Return the newest CustomerPrice row per part for this customer."""
-        latest_ids = (
+    def _latest_price_ids(self):
+        """Newest CustomerPrice id per part for this customer."""
+        return (
             CustomerPrice.objects.filter(customer=self)
             .values("part_id")
             .annotate(max_id=Max("id"))
             .values("max_id")
         )
+
+    def latest_prices(self):
+        """Return the newest CustomerPrice row per part for this customer."""
         return (
-            CustomerPrice.objects.filter(id__in=Subquery(latest_ids))
+            CustomerPrice.objects.filter(id__in=Subquery(self._latest_price_ids()))
             .select_related("part", "part_revision", "part__number_class")
             .order_by(
                 "part__number_class__code",
                 "part__number_item",
                 "part__number_variation",
             )
+        )
+
+    def price_history(self):
+        """Past prices for this customer, excluding the current row per part."""
+        return (
+            CustomerPrice.objects.filter(customer=self)
+            .exclude(id__in=Subquery(self._latest_price_ids()))
+            .select_related("part", "part_revision", "created_by")
+            .order_by("-created_at", "-id")
         )
 
 

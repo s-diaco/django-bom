@@ -1517,13 +1517,7 @@ def customer_info(request, customer_id):
         return HttpResponseRedirect(reverse("bom:customers"))
 
     latest_prices = customer.latest_prices()
-    price_history = (
-        CustomerPrice.objects.filter(customer=customer)
-        .select_related("part", "part_revision", "created_by")
-        .order_by("-created_at", "-id")
-    )
-
-    price_history = paginate_queryset(request, price_history)
+    price_history = paginate_queryset(request, customer.price_history())
     querystring_except_page = build_querystring_except_page(request)
 
     context = locals()
