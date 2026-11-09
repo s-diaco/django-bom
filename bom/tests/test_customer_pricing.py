@@ -397,6 +397,16 @@ class TestCustomerPricing(TransactionTestCase):
             ).exists()
         )
 
+    def test_customers_list_search_autocomplete(self):
+        response = self.client.get(reverse("bom:customers"))
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        self.assertIn('class="bom-input autocomplete"', html)
+        self.assertIn(".autocomplete(", html)
+        self.assertIn(self.customer.name, html)
+        self.assertIn("JSON.parse(", html)
+        self.assertIn("form.submit()", html)
+
     def test_customer_info_inline_material_picker(self):
         customer_url = reverse(
             "bom:customer-info", kwargs={"customer_id": self.customer.id}
