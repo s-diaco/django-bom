@@ -2232,7 +2232,7 @@ def part_info(request, part_id, part_revision_id=None):
             part=part, customer__organization=organization
         )
         .select_related("customer", "part", "part_revision", "created_by")
-        .order_by("customer__name", "-created_at", "-id"),
+        .order_by("-created_at", "-id"),
         currency=organization.currency,
     )
     customers = Customer.objects.filter(
