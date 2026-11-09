@@ -279,6 +279,27 @@ class TestCustomerPricing(TransactionTestCase):
             [older.id],
         )
 
+    def test_price_history_omits_manual_column(self):
+        create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("10")
+        )
+        create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("30")
+        )
+        response = self.client.get(
+            reverse("bom:customer-info", kwargs={"customer_id": self.customer.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode()
+        history_idx = html.find("Price history")
+        if history_idx < 0:
+            history_idx = html.find("تاریخچه قیمت")
+        self.assertGreater(history_idx, -1)
+        history_html = html[history_idx:]
+        self.assertNotRegex(history_html, r">\s*(Manual|دستی)\s*<")
+        self.assertRegex(history_html, r">\s*(Created|ایجاد شده)\s*<")
+        self.assertRegex(history_html, r">\s*(By|توسط)\s*<")
+
     def test_bom_unit_cost_varies_with_quantity_via_seller_selection(self):
         from bom.models import SellerPart
 
