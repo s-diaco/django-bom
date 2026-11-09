@@ -467,7 +467,10 @@ class TestCustomerPricing(TransactionTestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.customer.name)
-        self.assertContains(response, str(row.price.amount))
+        # Page renders Money as currency display ($ 120.00), not Decimal('120.0000').
+        from bom.templatetags.bom_i18n import money_amount
+
+        self.assertContains(response, money_amount(row.price))
 
         response = self.client.get(
             reverse(
