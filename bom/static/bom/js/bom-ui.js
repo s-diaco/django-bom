@@ -413,6 +413,18 @@
     return negative ? "-" + formatted : formatted;
   }
 
+  function formatWholeGrouped(value) {
+    var raw = stripPriceGrouping(value);
+    if (!raw) {
+      return "";
+    }
+    var n = Math.round(Number(raw));
+    if (!isFinite(n)) {
+      return String(value == null ? "" : value);
+    }
+    return formatPriceGrouped(String(n));
+  }
+
   function digitsBeforeCaret(value, caret) {
     var count = 0;
     var i;
@@ -491,6 +503,7 @@
 
   window.bomPriceInput = {
     format: formatPriceGrouped,
+    formatWhole: formatWholeGrouped,
     strip: stripPriceGrouping,
     bind: bindPriceInputs,
   };

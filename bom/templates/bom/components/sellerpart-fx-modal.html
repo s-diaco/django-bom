@@ -43,6 +43,17 @@
         rates = {};
     }
 
+    function formatWholeRate(rate) {
+        if (window.bomPriceInput && typeof window.bomPriceInput.formatWhole === "function") {
+            return window.bomPriceInput.formatWhole(rate);
+        }
+        var n = Math.round(Number(String(rate).replace(/[٬,\s\u00a0]/g, "")));
+        if (!isFinite(n)) {
+            return String(rate);
+        }
+        return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
     function refreshFxHint() {
         if (!currencySelect || !panel) return;
         const code = currencySelect.value;
@@ -53,7 +64,10 @@
         panel.classList.remove("hidden");
         rateCurrency.textContent = code;
         const rate = rates[code];
-        rateValue.textContent = rate == null || rate === "" ? "{% trans "not set" %}" : rate;
+        rateValue.textContent =
+            rate == null || rate === ""
+                ? "{% trans "not set" %}"
+                : formatWholeRate(rate);
         if (modalCurrency) modalCurrency.value = code;
         if (modalRate && rate != null && rate !== "") modalRate.value = rate;
     }

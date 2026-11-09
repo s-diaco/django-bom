@@ -511,6 +511,27 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn('class="bom-label"', html)
         self.assertIn("bom-btn-primary", html)
 
+    def test_sellerpart_edit_uses_spaced_panel_layout(self):
+        user, organization = create_user_and_organization()
+        self.client.login(username="kasper", password="ghostpassword")
+        parts = create_some_fake_parts(organization=organization)
+        seller_part = parts[0].optimal_seller()
+        self.assertIsNotNone(seller_part)
+        response = self.client.get(
+            reverse("bom:sellerpart-edit", kwargs={"sellerpart_id": seller_part.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        self.assertIn("bom-panel-pad", html)
+        self.assertIn("max-w-2xl", html)
+        self.assertIn("gap-y-5", html)
+        self.assertIn('id="fx-rate-panel"', html)
+        self.assertIn("formatWholeRate", html)
+        self.assertIn("bomPriceInput.formatWhole", html)
+        # Wider fields (m6) — not the old cramped l2 strip.
+        self.assertIn("md:col-span-6", html)
+        self.assertNotIn("lg:col-span-2", html)
+
 
 class TestBomTabsUrlHash(SimpleTestCase):
     def test_tabs_js_syncs_address_bar_hash(self):
@@ -543,3 +564,9 @@ class TestBomTabsUrlHash(SimpleTestCase):
         self.assertIn("/(?:^|\\/)export(?:\\/|-|$)/", js)
         self.assertIn("isAttachmentFormSubmit", js)
         self.assertIn('name.indexOf("export")', js)
+
+    def test_price_js_formats_whole_grouped_rates(self):
+        js = open("bom/static/bom/js/bom-ui.js").read()
+        self.assertIn("function formatWholeGrouped", js)
+        self.assertIn("formatWhole: formatWholeGrouped", js)
+        self.assertIn("Math.round(Number(raw))", js)
