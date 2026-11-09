@@ -624,13 +624,22 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertIn(self.part.full_part_number(), body)
 
     def test_part_info_customers_tab_context(self):
-        create_a_fake_customer_price(self.customer, self.part)
+        # Names reverse of create order so A→Z would put Alpha first; newest-first
+        # should put Zulu (created last) first in the #customers table.
+        alpha = create_a_fake_customer(self.organization, name="Alpha Buyer")
+        zulu = create_a_fake_customer(self.organization, name="Zulu Buyer")
+        alpha_row = create_a_fake_customer_price(alpha, self.part)
+        zulu_row = create_a_fake_customer_price(zulu, self.part)
         response = self.client.get(
             reverse("bom:part-info", kwargs={"part_id": self.part.id})
         )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, self.customer.name)
+        self.assertContains(response, zulu.name)
         self.assertIn("customer_prices", response.context)
+        self.assertEqual(
+            [row.id for row in response.context["customer_prices"]],
+            [zulu_row.id, alpha_row.id],
+        )
         # Inline Add Price panel above the table (one-row picker, no Cancel).
         self.assertContains(response, 'id="price-load-form"')
         self.assertContains(response, "price-add-inline")
@@ -666,7 +675,7 @@ class TestCustomerPricing(TransactionTestCase):
             "bom:part-customer-price-create-for-customer",
             kwargs={
                 "part_id": self.part.id,
-                "customer_id": self.customer.id,
+                "customer_id": zulu.id,
             },
         )
         self.assertIn(add_path, html)
