@@ -368,7 +368,7 @@
                                     <td class="text-normal td-med">{% user_datetime row.created_at %}</td>
                                     <td class="text-normal td-med">
                                         <a class="bom-btn-ghost"
-                                           href="{% url 'bom:part-customer-price-create-for-customer' part_id=part.id customer_id=row.customer.id %}?from=part"
+                                           href="{% url 'bom:part-customer-price-create-for-customer' part_id=part.id customer_id=row.customer.id %}?from=part{% if part_revision %}&part_revision_id={{ part_revision.id }}{% endif %}"
                                            aria-label="{% blocktrans with name=row.customer.name %}Add price for {{ name }}{% endblocktrans %}">
                                             <i class="material-icons text-base" aria-hidden="true">add</i>{% trans "Add Price" %}
                                         </a>

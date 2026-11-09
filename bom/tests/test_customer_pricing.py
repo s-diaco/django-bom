@@ -13,6 +13,7 @@ from bom.forms import _resolve_customer_for_organization
 from bom.helpers import (
     create_a_fake_customer,
     create_a_fake_customer_price,
+    create_a_fake_part_revision,
     create_a_fake_seller_part,
     create_some_fake_parts,
     create_some_fake_sellers,
@@ -24,6 +25,7 @@ from bom.utils import (
     attach_current_profit_percents,
     customer_price_adjusted_base,
     customer_price_current_base,
+    customer_price_preview_context,
     customer_price_profit_tiers,
     implied_profit_percent,
 )
@@ -660,17 +662,16 @@ class TestCustomerPricing(TransactionTestCase):
             "Add Price" in html or "افزودن قیمت" in html,
             "visible Add Price label missing from customers table",
         )
-        add_href = (
-            reverse(
-                "bom:part-customer-price-create-for-customer",
-                kwargs={
-                    "part_id": self.part.id,
-                    "customer_id": self.customer.id,
-                },
-            )
-            + "?from=part"
+        add_path = reverse(
+            "bom:part-customer-price-create-for-customer",
+            kwargs={
+                "part_id": self.part.id,
+                "customer_id": self.customer.id,
+            },
         )
-        self.assertIn(add_href, html)
+        self.assertIn(add_path, html)
+        self.assertIn("from=part", html)
+        self.assertIn(f"part_revision_id={self.part.latest().id}", html)
         self.assertRegex(
             html,
             r'aria-label="[^"]*(Add price for|افزودن قیمت)',
@@ -1859,3 +1860,100 @@ class TestCustomerPricing(TransactionTestCase):
         )
         self.assertIn(response.status_code, (302, 307))
         self.assertTrue(CustomerPrice.objects.filter(pk=row.id).exists())
+
+    def test_customer_price_create_uses_selected_part_revision(self):
+        """Preview/confirm on part/<id>/rev/<id>/ pins that revision, not latest()."""
+        old_rev = self.part.latest()
+        new_rev = create_a_fake_part_revision(
+            self.part, None, description="Newer priced rev", revision="2"
+        )
+        new_rev.material = "no_bom"
+        new_rev.save()
+        self.assertNotEqual(old_rev.id, new_rev.id)
+        self.assertEqual(self.part.latest().id, new_rev.id)
+        # Seed a row so the customers table renders the Add Price deep link.
+        create_a_fake_customer_price(self.customer, self.part)
+
+        preview = customer_price_preview_context(
+            self.part, self.customer, self.organization, part_revision=old_rev
+        )
+        self.assertEqual(preview["part_revision"].id, old_rev.id)
+
+        history_customers = (
+            reverse(
+                "bom:part-info-history",
+                kwargs={
+                    "part_id": self.part.id,
+                    "part_revision_id": old_rev.id,
+                },
+            )
+            + "#customers"
+        )
+        response = self.client.get(
+            reverse(
+                "bom:part-info-history",
+                kwargs={
+                    "part_id": self.part.id,
+                    "part_revision_id": old_rev.id,
+                },
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+        action = response.context["customer_price_action"]
+        self.assertIn(f"part_revision_id={old_rev.id}", action)
+        add_path = reverse(
+            "bom:part-customer-price-create-for-customer",
+            kwargs={
+                "part_id": self.part.id,
+                "customer_id": self.customer.id,
+            },
+        )
+        html = response.content.decode()
+        self.assertIn(add_path, html)
+        self.assertIn(f"part_revision_id={old_rev.id}", html)
+
+        preview_path = reverse(
+            "bom:part-customer-price-create-for-customer",
+            kwargs={
+                "part_id": self.part.id,
+                "customer_id": self.customer.id,
+            },
+        )
+        preview_url = f"{preview_path}?from=part&part_revision_id={old_rev.id}"
+        response = self.client.get(preview_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["show_preview"])
+        self.assertEqual(
+            response.context["preview"]["part_revision"].id, old_rev.id
+        )
+        self.assertEqual(response.context["cancel_url"], history_customers)
+
+        base_cost = old_rev.bom_unit_cost_at_quantity(1)
+        price = self._tier_price(base_cost, Decimal("15"))
+        response = self.client.post(
+            preview_url,
+            {
+                "action": "confirm",
+                "part": self.part.id,
+                "customer": self.customer.id,
+                "part_revision_id": old_rev.id,
+                "profit_percent": "15",
+                "price": str(price.amount),
+                "reference_price": str(price.amount),
+                "quantity": "1",
+                "note": "selected revision",
+                "from": "part",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, history_customers)
+        row = (
+            CustomerPrice.objects.filter(
+                customer=self.customer, part=self.part, note="selected revision"
+            )
+            .order_by("-id")
+            .first()
+        )
+        self.assertIsNotNone(row)
+        self.assertEqual(row.part_revision_id, old_rev.id)
+        self.assertNotEqual(row.part_revision_id, new_rev.id)

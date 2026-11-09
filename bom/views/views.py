@@ -12,7 +12,6 @@ from django.db.models import (
     Count,
     ProtectedError,
     Q,
-    Subquery,
     prefetch_related_objects,
 )
 from django.db.models.aggregates import Max
@@ -93,6 +92,7 @@ from bom.models import (
 )
 from bom.helpers import build_part_search_q, resolve_home_part_jump
 from bom.list_queries import (
+    latest_part_revision_ids,
     paginate_part_revs,
     paginate_queryset,
     prepare_all_part_revs_for_list_page,
@@ -261,11 +261,7 @@ def materials(request):
     part_ids = list(parts.values_list("id", flat=True))
 
     part_revs = PartRevision.objects.filter(
-        id__in=Subquery(
-            PartRevision.objects.filter(part_id__in=part_ids)
-            .annotate(max_id=Max("id"))
-            .values("id")
-        )
+        id__in=latest_part_revision_ids(part_ids)
     ).order_by(
         "part__number_class__code",
         "part__number_item",
@@ -311,11 +307,7 @@ def materials(request):
         part_ids = list(parts.values_list("id", flat=True))
 
         part_revs = PartRevision.objects.filter(
-            id__in=Subquery(
-                PartRevision.objects.filter(part_id__in=part_ids)
-                .annotate(max_id=Max("id"))
-                .values("id")
-            )
+            id__in=latest_part_revision_ids(part_ids)
         ).order_by(
             "part__number_class__code", "part__number_item", "part__number_variation"
         )
@@ -597,11 +589,7 @@ def report(request):
     part_ids = list(parts.values_list("id", flat=True))
 
     part_revs = PartRevision.objects.filter(
-        id__in=Subquery(
-            PartRevision.objects.filter(part_id__in=part_ids)
-            .annotate(max_id=Max("id"))
-            .values("id")
-        )
+        id__in=latest_part_revision_ids(part_ids)
     ).order_by(
         "part__number_class__code",
         "part__number_item",
@@ -640,11 +628,7 @@ def report(request):
         part_ids = list(parts.values_list("id", flat=True))
 
         part_revs = PartRevision.objects.filter(
-            id__in=Subquery(
-                PartRevision.objects.filter(part_id__in=part_ids)
-                .annotate(max_id=Max("id"))
-                .values("id")
-            )
+            id__in=latest_part_revision_ids(part_ids)
         ).order_by(
             "part__number_class__code", "part__number_item", "part__number_variation"
         )
@@ -1587,36 +1571,84 @@ def _price_create_entry_from(request):
     return value if value in ("part", "customer") else "part"
 
 
-def _part_customer_price_preview_url(part_id, customer_id, entry_from="part"):
+def _request_part_revision_id(request):
+    raw = request.POST.get("part_revision_id") or request.GET.get("part_revision_id")
+    if raw is None or raw == "":
+        return None
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return None
+
+
+def _resolve_part_revision_for_part(part, part_revision_id=None):
+    """Selected revision for pricing; falls back to ``part.latest()``."""
+    if part_revision_id is None:
+        return part.latest()
+    return get_object_or_404(PartRevision, pk=part_revision_id, part=part)
+
+
+def _part_info_customers_url(part, part_revision=None):
+    """Return URL for part-info #customers; use history path when not latest."""
+    if part_revision is None:
+        base = reverse("bom:part-info", kwargs={"part_id": part.id})
+    else:
+        latest = part.latest()
+        if latest is not None and part_revision.pk == latest.pk:
+            base = reverse("bom:part-info", kwargs={"part_id": part.id})
+        else:
+            base = reverse(
+                "bom:part-info-history",
+                kwargs={
+                    "part_id": part.id,
+                    "part_revision_id": part_revision.id,
+                },
+            )
+    return base + "#customers"
+
+
+def _part_customer_price_preview_url(
+    part_id, customer_id, entry_from="part", part_revision_id=None
+):
     url = reverse(
         "bom:part-customer-price-create-for-customer",
         kwargs={"part_id": part_id, "customer_id": customer_id},
     )
-    return f"{url}?from={entry_from}"
+    qs = f"from={entry_from}"
+    if part_revision_id is not None:
+        qs += f"&part_revision_id={part_revision_id}"
+    return f"{url}?{qs}"
 
 
-def _part_info_add_price_url(part_id):
+def _part_info_add_price_url(part, part_revision=None):
     """Inline Add Price picker on part-info #customers."""
-    return reverse("bom:part-info", kwargs={"part_id": part_id}) + "#customers"
+    return _part_info_customers_url(part, part_revision=part_revision)
 
 
-def _part_info_customer_price_panel(organization, part):
+def _part_info_customer_price_panel(organization, part, part_revision=None):
     """Build context for the compact Add Price picker on part-info #customers."""
+    part_revision_id = part_revision.id if part_revision is not None else None
+    action = reverse(
+        "bom:part-customer-price-create", kwargs={"part_id": part.id}
+    )
+    if part_revision_id is not None:
+        action = f"{action}?part_revision_id={part_revision_id}"
     return {
-        "customer_price_action": reverse(
-            "bom:part-customer-price-create", kwargs={"part_id": part.id}
-        ),
+        "customer_price_action": action,
         "customer_price_load_form": CustomerPriceLoadForm(
-            organization=organization, part=part
+            organization=organization, part=part, part_revision=part_revision
         ),
         "customer_price_confirm_form": None,
         "customer_price_show_preview": False,
         "customer_price_preview": None,
-        "customer_price_cancel_url": _part_info_add_price_url(part.id),
+        "customer_price_cancel_url": _part_info_add_price_url(
+            part, part_revision=part_revision
+        ),
         "customer_price_entry_from": "part",
         "customer_price_part_locked": True,
         "customer_price_selected_customer": None,
         "customer_price_currency_unit_txt": currency_label(organization.currency),
+        "customer_price_part_revision": part_revision,
     }
 
 
@@ -1633,6 +1665,7 @@ def _customer_price_create_context(
     confirm_form=None,
     cancel_url=None,
     entry_from="part",
+    part_revision=None,
 ):
     show_preview = False
     preview = None
@@ -1647,6 +1680,7 @@ def _customer_price_create_context(
             "confirm_form": confirm_form,
             "customer": customer,
             "part": part,
+            "part_revision": part_revision,
             "part_locked": part_locked,
             "profile": profile,
             "show_preview": show_preview,
@@ -1662,6 +1696,8 @@ def _customer_price_create_context(
             load_form.cleaned_data["part"],
             load_form.cleaned_data["customer"],
             organization,
+            part_revision=load_form.cleaned_data.get("part_revision")
+            or part_revision,
         )
 
     return "preview", {
@@ -1671,6 +1707,7 @@ def _customer_price_create_context(
         "confirm_form": confirm_form,
         "customer": customer,
         "part": part,
+        "part_revision": part_revision,
         "part_locked": part_locked,
         "profile": profile,
         "show_preview": show_preview,
@@ -1796,7 +1833,19 @@ def part_customer_price_create(request, part_id, customer_id=None):
         return HttpResponseRedirect(reverse("bom:materials"))
 
     entry_from = _price_create_entry_from(request)
-    part_info_url = reverse("bom:part-info", kwargs={"part_id": part_id}) + "#customers"
+    part_revision_id = _request_part_revision_id(request)
+    part_revision = _resolve_part_revision_for_part(part, part_revision_id)
+    # Only pin when the client named a revision (part page / redirects).
+    # Unscoped creates keep using part.latest() with no query param.
+    pinned_revision_id = (
+        part_revision.id if part_revision_id is not None else None
+    )
+    selected_revision = (
+        part_revision if part_revision_id is not None else None
+    )
+    part_info_url = _part_info_customers_url(
+        part, part_revision=selected_revision
+    )
 
     customer = None
     if customer_id is not None:
@@ -1812,9 +1861,19 @@ def part_customer_price_create(request, part_id, customer_id=None):
                 )
             return HttpResponseRedirect(part_info_url)
 
-    def preview_url_for(selected_part, selected_customer):
+    def preview_url_for(selected_part, selected_customer, selected_revision=None):
+        rev_id = None
+        if pinned_revision_id is not None:
+            rev_id = (
+                selected_revision.id
+                if selected_revision is not None
+                else pinned_revision_id
+            )
         return _part_customer_price_preview_url(
-            selected_part.id, selected_customer.id, entry_from=entry_from
+            selected_part.id,
+            selected_customer.id,
+            entry_from=entry_from,
+            part_revision_id=rev_id,
         )
 
     if entry_from == "customer" and customer is not None:
@@ -1831,16 +1890,22 @@ def part_customer_price_create(request, part_id, customer_id=None):
     # Empty part-entry create URL → inline picker on #customers.
     # Preview (with customer) stays on the create-for-customer page.
     if request.method == "GET" and part_locked and customer is None:
-        return HttpResponseRedirect(_part_info_add_price_url(part_id))
+        return HttpResponseRedirect(
+            _part_info_add_price_url(part, part_revision=selected_revision)
+        )
 
     if customer is not None:
         action = _part_customer_price_preview_url(
-            part.id, customer.id, entry_from=entry_from
+            part.id,
+            customer.id,
+            entry_from=entry_from,
+            part_revision_id=pinned_revision_id,
         )
         if part_locked:
             load_form = CustomerPriceLoadForm(
                 organization=organization,
                 part=part,
+                part_revision=selected_revision,
                 initial={"customer": customer.name},
             )
         else:
@@ -1853,9 +1918,12 @@ def part_customer_price_create(request, part_id, customer_id=None):
         action = reverse(
             "bom:part-customer-price-create", kwargs={"part_id": part_id}
         )
+        if pinned_revision_id is not None:
+            action = f"{action}?part_revision_id={pinned_revision_id}"
         load_form = CustomerPriceLoadForm(
             organization=organization,
             part=part,
+            part_revision=selected_revision,
         )
 
     confirm_form = None
@@ -1868,6 +1936,7 @@ def part_customer_price_create(request, part_id, customer_id=None):
                     request.POST,
                     organization=organization,
                     part=part,
+                    part_revision=selected_revision,
                     user=request.user,
                 )
             else:
@@ -1889,6 +1958,7 @@ def part_customer_price_create(request, part_id, customer_id=None):
                 confirm_form=confirm_form,
                 cancel_url=cancel_url,
                 entry_from=entry_from,
+                part_revision=selected_revision,
             )
             if confirm_form.is_valid():
                 confirm_form.save()
@@ -1897,7 +1967,10 @@ def part_customer_price_create(request, part_id, customer_id=None):
             # Failed confirm: rebuild load form and re-show preview.
             if part_locked:
                 load_form = CustomerPriceLoadForm(
-                    request.POST, organization=organization, part=part
+                    request.POST,
+                    organization=organization,
+                    part=part,
+                    part_revision=selected_revision,
                 )
             else:
                 load_form = CustomerPriceLoadForm(
@@ -1906,17 +1979,26 @@ def part_customer_price_create(request, part_id, customer_id=None):
             if load_form.is_valid():
                 selected_part = load_form.cleaned_data["part"]
                 selected_customer = load_form.cleaned_data["customer"]
-                target = preview_url_for(selected_part, selected_customer)
+                form_revision = load_form.cleaned_data.get("part_revision")
+                target = preview_url_for(
+                    selected_part, selected_customer, form_revision
+                )
                 if request.get_full_path() != target:
                     return HttpResponseRedirect(target)
                 context["show_preview"] = True
                 context["preview"] = customer_price_preview_context(
-                    selected_part, selected_customer, organization
+                    selected_part,
+                    selected_customer,
+                    organization,
+                    part_revision=form_revision,
                 )
         else:
             if part_locked or customer is None:
                 load_form = CustomerPriceLoadForm(
-                    request.POST, organization=organization, part=part
+                    request.POST,
+                    organization=organization,
+                    part=part,
+                    part_revision=selected_revision,
                 )
             else:
                 load_form = CustomerPriceLoadForm(
@@ -1927,12 +2009,17 @@ def part_customer_price_create(request, part_id, customer_id=None):
                     preview_url_for(
                         load_form.cleaned_data["part"],
                         load_form.cleaned_data["customer"],
+                        load_form.cleaned_data.get("part_revision"),
                     )
                 )
             if part_locked and customer is None:
                 # Invalid picker submit from #customers → stay on the tab.
                 _flash_form_errors(request, load_form)
-                return HttpResponseRedirect(_part_info_add_price_url(part_id))
+                return HttpResponseRedirect(
+                    _part_info_add_price_url(
+                        part, part_revision=selected_revision
+                    )
+                )
             result, context = _customer_price_create_context(
                 request,
                 organization,
@@ -1944,6 +2031,7 @@ def part_customer_price_create(request, part_id, customer_id=None):
                 load_form=load_form,
                 cancel_url=cancel_url,
                 entry_from=entry_from,
+                part_revision=selected_revision,
             )
     else:
         result, context = _customer_price_create_context(
@@ -1957,11 +2045,15 @@ def part_customer_price_create(request, part_id, customer_id=None):
             load_form=load_form,
             cancel_url=cancel_url,
             entry_from=entry_from,
+            part_revision=selected_revision,
         )
         if customer is not None:
             context["show_preview"] = True
             context["preview"] = customer_price_preview_context(
-                part, customer, organization
+                part,
+                customer,
+                organization,
+                part_revision=selected_revision,
             )
 
     context["part_info_url"] = part_info_url
@@ -2250,7 +2342,11 @@ def part_info(request, part_id, part_revision_id=None):
     context = locals()
     # Compact Add Price picker on #customers (admins only).
     if profile.role == "A":
-        context.update(_part_info_customer_price_panel(organization, part))
+        context.update(
+            _part_info_customer_price_panel(
+                organization, part, part_revision=part_revision
+            )
+        )
 
     return TemplateResponse(request, "bom/part-info.html", context)
 
