@@ -39,4 +39,8 @@ def money_amount(value):
     amount = amount.quantize(quant, rounding=ROUND_HALF_UP)
     if UNIT_COST_DECIMAL_PLACES == 0:
         return f"{int(amount):,}"
-    return f"{amount:,.{UNIT_COST_DECIMAL_PLACES}f}"
+    formatted = f"{amount:,.{UNIT_COST_DECIMAL_PLACES}f}"
+    # Keep whole-currency amounts tidy (98,000) while preserving real fractions.
+    if "." in formatted:
+        formatted = formatted.rstrip("0").rstrip(".")
+    return formatted

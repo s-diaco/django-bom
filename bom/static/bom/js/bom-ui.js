@@ -381,6 +381,7 @@
 
   function stripPriceGrouping(value) {
     return String(value || "")
+      .replace(/٫/g, ".")
       .replace(/[٬,\s\u00a0]/g, "")
       .replace(/[۰-۹]/g, function (d) {
         return String("۰۱۲۳۴۵۶۷۸۹".indexOf(d));

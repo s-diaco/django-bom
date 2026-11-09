@@ -37,9 +37,9 @@ class TestCustomerPricingHelpers(TransactionTestCase):
         price = apply_profit(Decimal("100"), Decimal("20"), currency="USD")
         self.assertEqual(price, Money(120, "USD"))
 
-        # Half-up to whole units (UNIT_COST_DECIMAL_PLACES = 0)
+        # Half-up to UNIT_COST_DECIMAL_PLACES (4)
         price = apply_profit(Decimal("100"), Decimal("12.5"), currency="IRR")
-        self.assertEqual(price, Money(113, "IRR"))
+        self.assertEqual(price, Money(Decimal("112.5000"), "IRR"))
 
         price = apply_profit(Money(10, "USD"), Decimal("0"))
         self.assertEqual(price, Money(10, "USD"))
