@@ -1,7 +1,7 @@
 from django import template
 
 from bom.constants import CALENDAR_JALALI
-from bom.datetime_format import format_datetime
+from bom.datetime_format import format_date, format_datetime
 
 register = template.Library()
 
@@ -22,6 +22,12 @@ def _resolve_calendar(context, calendar=None):
 def user_datetime(context, value, calendar=None):
     """Format a datetime using the current user's calendar preference."""
     return format_datetime(value, calendar=_resolve_calendar(context, calendar))
+
+
+@register.simple_tag(takes_context=True)
+def user_date(context, value, calendar=None):
+    """Format a date using the current user's calendar preference (no time)."""
+    return format_date(value, calendar=_resolve_calendar(context, calendar))
 
 
 @register.filter(name="user_datetime")

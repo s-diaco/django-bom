@@ -720,27 +720,46 @@ msgstr "درصد سود"
 msgid "Profit %%"
 msgstr "درصد سود"
 
+#: bom/templates/bom/components/customer-price-peer-list.html
+msgid "Confirmed profit"
+msgstr "سود تأیید شده"
+
 #: bom/views/views.py
 msgid "Confirmed profit %"
-msgstr "درصد سود تأییدشده"
+msgstr "سود تأیید شده ٪"
 
 #: bom/templates/bom/components/customer-price-list.html:10
-#: bom/templates/bom/components/customer-price-peer-list.html:10
 #: bom/templates/bom/part-info.html:345
 # Template {% trans %} doubles % before catalog lookup — msgid must use %%.
 msgid "Confirmed profit %%"
-msgstr "درصد سود تأییدشده"
+msgstr "سود تأیید شده ٪"
+
+#: bom/templates/bom/components/customer-price-peer-list.html
+msgid "Current profit"
+msgstr "سود فعلی"
 
 #: bom/views/views.py
 msgid "Current profit %"
-msgstr "درصد سود فعلی"
+msgstr "سود فعلی ٪"
 
 #: bom/templates/bom/components/customer-price-list.html:11
-#: bom/templates/bom/components/customer-price-peer-list.html:11
 #: bom/templates/bom/part-info.html:346
 # Template {% trans %} doubles % before catalog lookup — msgid must use %%.
 msgid "Current profit %%"
-msgstr "درصد سود فعلی"
+msgstr "سود فعلی ٪"
+
+# Used by bom_i18n.percent_unit (Django {% trans "%" %} does not translate).
+#: bom/templatetags/bom_i18n.py
+msgid "%"
+msgstr "درصد"
+
+#: bom/templates/bom/components/customer-price-peer-list.html
+msgid "kg"
+msgstr "کیلوگرم"
+
+#: bom/templates/bom/components/customer-price-peer-list.html
+msgid "Order quantity"
+msgstr "مقدار سفارش"
 
 
 #: bom/templates/bom/components/customer-price-list.html:13

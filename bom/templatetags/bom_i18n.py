@@ -1,6 +1,7 @@
 from decimal import ROUND_HALF_UP, Decimal
 
 from django import template
+from django.utils.translation import gettext as _
 
 from bom.constants import UNIT_COST_DECIMAL_PLACES
 from bom.utils import currency_label as _currency_label
@@ -11,6 +12,13 @@ register = template.Library()
 @register.filter(name="currency_label")
 def currency_label(code):
     return _currency_label(code)
+
+
+@register.simple_tag
+def percent_unit():
+    """Percent unit for two-row headers. Template `{% trans "%" %}` does not translate."""
+    # Translators: unit under profit column headers (English "%", Persian "درصد")
+    return _("%")
 
 
 @register.filter(name="money_amount")
