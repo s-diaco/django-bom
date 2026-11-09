@@ -534,6 +534,23 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertIn(self.customer.name, html)
         self.assertIn("JSON.parse(", html)
         self.assertIn("form.submit()", html)
+        # Customers search is name__icontains with no quote stripping;
+        # do not wrap the selected value in quotes (unlike dashboard/report).
+        self.assertIn("input.value = val;", html)
+        self.assertNotIn('input.value = `"${val}"`;', html)
+
+    def test_customers_list_search_by_exact_name(self):
+        response = self.client.get(
+            reverse("bom:customers"), {"q": self.customer.name}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.customer.name)
+        # Quoted query (old autocomplete behavior) must not match.
+        response = self.client.get(
+            reverse("bom:customers"), {"q": f'"{self.customer.name}"'}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No customers found.")
 
     def test_customer_info_inline_material_picker(self):
         customer_url = reverse(

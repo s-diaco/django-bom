@@ -69,7 +69,7 @@
                 onAutocomplete: function (val) {
                     var form = document.getElementById("searchForm");
                     var input = document.getElementById("autocomplete-input");
-                    input.value = `"${val}"`;
+                    input.value = val;
                     form.submit();
                 },
                 minLength: 1,
