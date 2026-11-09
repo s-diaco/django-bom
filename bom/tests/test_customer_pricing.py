@@ -256,15 +256,18 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertNotEqual(older.id, newer.id)
 
     def test_price_history_excludes_current_prices(self):
-        older = create_a_fake_customer_price(
+        oldest = create_a_fake_customer_price(
             self.customer, self.part, profit_percent=Decimal("10")
         )
-        newer = create_a_fake_customer_price(
+        middle = create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("20")
+        )
+        newest = create_a_fake_customer_price(
             self.customer, self.part, profit_percent=Decimal("30")
         )
         history = list(self.customer.price_history())
-        self.assertEqual([row.id for row in history], [older.id])
-        self.assertNotIn(newer.id, [row.id for row in history])
+        self.assertEqual([row.id for row in history], [middle.id, oldest.id])
+        self.assertNotIn(newest.id, [row.id for row in history])
 
         response = self.client.get(
             reverse("bom:customer-info", kwargs={"customer_id": self.customer.id})
@@ -272,11 +275,11 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             [row.id for row in response.context["latest_prices"]],
-            [newer.id],
+            [newest.id],
         )
         self.assertEqual(
             [row.id for row in response.context["price_history"]],
-            [older.id],
+            [middle.id, oldest.id],
         )
 
     def test_price_history_omits_manual_column(self):
@@ -858,24 +861,28 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertFalse(CustomerPrice.objects.exists())
 
     def test_latest_prices_by_customer_includes_all(self):
-        other_customer = create_a_fake_customer(
-            self.organization, name="Buyer Two"
+        # Names reverse of create order so A→Z would put Alpha first; newest-first
+        # should put Zulu (created last) first.
+        alpha = create_a_fake_customer(self.organization, name="Alpha Buyer")
+        zulu = create_a_fake_customer(self.organization, name="Zulu Buyer")
+        create_a_fake_customer_price(
+            alpha, self.part, profit_percent=Decimal("10")
         )
         create_a_fake_customer_price(
-            other_customer, self.part, profit_percent=Decimal("10")
+            alpha, self.part, profit_percent=Decimal("30")
         )
         create_a_fake_customer_price(
-            other_customer, self.part, profit_percent=Decimal("30")
-        )
-        create_a_fake_customer_price(
-            self.customer, self.part, profit_percent=Decimal("25")
+            zulu, self.part, profit_percent=Decimal("25")
         )
 
         latest = list(self.part.latest_prices_by_customer(self.organization))
+        self.assertEqual(
+            [row.customer_id for row in latest],
+            [zulu.id, alpha.id],
+        )
         by_customer = {row.customer_id: row for row in latest}
-        self.assertEqual(set(by_customer), {self.customer.id, other_customer.id})
-        self.assertEqual(by_customer[other_customer.id].profit_percent, Decimal("30.00"))
-        self.assertEqual(by_customer[self.customer.id].profit_percent, Decimal("25.00"))
+        self.assertEqual(by_customer[alpha.id].profit_percent, Decimal("30.00"))
+        self.assertEqual(by_customer[zulu.id].profit_percent, Decimal("25.00"))
 
     def test_customer_price_create_preview(self):
         other_customer = create_a_fake_customer(
