@@ -14,21 +14,21 @@ class Migration(migrations.Migration):
             model_name="customerprice",
             name="base_cost",
             field=djmoney.models.fields.MoneyField(
-                decimal_places=4, default_currency="USD", max_digits=19
+                decimal_places=2, default_currency="USD", max_digits=19
             ),
         ),
         migrations.AlterField(
             model_name="customerprice",
             name="price",
             field=djmoney.models.fields.MoneyField(
-                decimal_places=4, default_currency="USD", max_digits=19
+                decimal_places=2, default_currency="USD", max_digits=19
             ),
         ),
         migrations.AlterField(
             model_name="producttype",
             name="overhead",
             field=djmoney.models.fields.MoneyField(
-                decimal_places=4,
+                decimal_places=2,
                 default=djmoney.money.Money(0, "USD"),
                 default_currency="USD",
                 max_digits=19,
@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
             model_name="sellerpart",
             name="shipping",
             field=djmoney.models.fields.MoneyField(
-                decimal_places=4,
+                decimal_places=2,
                 default=djmoney.money.Money(0, "USD"),
                 default_currency="USD",
                 max_digits=19,
@@ -48,7 +48,7 @@ class Migration(migrations.Migration):
             model_name="sellerpart",
             name="unit_cost",
             field=djmoney.models.fields.MoneyField(
-                decimal_places=4, default_currency="USD", max_digits=19
+                decimal_places=2, default_currency="USD", max_digits=19
             ),
         ),
     ]
