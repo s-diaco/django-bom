@@ -619,7 +619,7 @@ class Part(models.Model):
         return (
             CustomerPrice.objects.filter(id__in=Subquery(latest_ids))
             .select_related("customer", "part_revision", "created_by")
-            .order_by("customer__name")
+            .order_by("-created_at", "-id")
         )
 
     def manufacturer_parts(self, exclude_primary=False):
