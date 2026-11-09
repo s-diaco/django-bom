@@ -439,11 +439,21 @@ def bom_overview_context(part_revision, quantity=1):
         return empty
 
 
-def customer_price_preview_context(part, customer, organization, quantity=1):
-    """Build preview dict for a part/customer pair."""
-    part_revision = part.latest()
+def customer_price_preview_context(
+    part, customer, organization, quantity=1, part_revision=None
+):
+    """Build preview dict for a part/customer pair.
+
+    When ``part_revision`` is omitted, uses ``part.latest()``. Callers that
+    have a selected revision (e.g. part/<id>/rev/<id>/) must pass it so BoM
+    cost matches the page, not always the newest revision.
+    """
+    if part_revision is None:
+        part_revision = part.latest()
     if part_revision is None:
         raise ValueError("Part has no revision")
+    if part_revision.part_id != part.id:
+        raise ValueError("Part revision does not belong to part")
     base_cost = part_revision.bom_unit_cost_at_quantity(quantity)
     if base_cost is None:
         raise ValueError("No BoM cost available")
@@ -472,7 +482,12 @@ def customer_price_preview_from_form(form, organization):
     cleaned = form.cleaned_data
     part = cleaned["part"]
     customer = cleaned["customer"]
-    preview = customer_price_preview_context(part, customer, organization)
+    preview = customer_price_preview_context(
+        part,
+        customer,
+        organization,
+        part_revision=cleaned.get("part_revision"),
+    )
     preview.update(
         {
             "profit_percent": cleaned.get("profit_percent"),

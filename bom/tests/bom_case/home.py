@@ -304,3 +304,37 @@ class HomeTestsMixin:
         self.assertEqual(response.status_code, 200)
         self.assertIn("text/csv", response["Content-Type"])
         self.assertIn("lithium_parts", response["Content-Disposition"])
+
+    def test_materials_list_shows_latest_rev_and_links_to_it(self):
+        """List rows are Part.latest() (max id); part link opens that revision."""
+        (p1, _p2, _p3, _p4) = create_some_fake_parts(organization=self.organization)
+        old_rev = p1.latest()
+        new_rev = create_a_fake_part_revision(
+            p1, None, description="Newer rev", revision="2"
+        )
+        self.assertGreater(new_rev.id, old_rev.id)
+        self.assertEqual(p1.latest().id, new_rev.id)
+
+        response = self.client.get(reverse("bom:materials"))
+        self.assertEqual(response.status_code, 200)
+        part_revs = list(response.context["part_revs"])
+        p1_rows = [pr for pr in part_revs if pr.part_id == p1.id]
+        self.assertEqual(len(p1_rows), 1)
+        self.assertEqual(p1_rows[0].id, new_rev.id)
+
+        history_url = reverse(
+            "bom:part-info-history",
+            kwargs={"part_id": p1.id, "part_revision_id": new_rev.id},
+        )
+        self.assertContains(response, history_url)
+        bare_url = reverse("bom:part-info", kwargs={"part_id": p1.id})
+        # Part-number cell must target the row revision, not bare part-info.
+        html = response.content.decode("utf-8")
+        self.assertIn(
+            f'href="{history_url}"',
+            html,
+        )
+        self.assertNotIn(
+            f'<td><a href="{bare_url}">{p1.full_part_number()}</a></td>',
+            html,
+        )

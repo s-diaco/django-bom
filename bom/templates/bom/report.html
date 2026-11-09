@@ -111,7 +111,7 @@
                                         <input type="checkbox" class="checkbox-array" name="actions" value="{{ part.id }}">{% endif %}</label></td>
                                 {% endif %}
 
-                                <td class="text-normal td-med"><a href="{% url 'bom:part-info' part_id=part.id %}">{{ part.full_part_number }}</a></td>
+                                <td class="text-normal td-med"><a href="{% url 'bom:part-info-history' part_id=part.id part_revision_id=part_rev.id %}">{{ part.full_part_number }}</a></td>
 
                                 {% if organization.number_scheme == 'S' %}
                                     <td class="text-normal td-small">{{ part.number_class.name }}</td>
