@@ -61,6 +61,21 @@
 {% endblock %}
 
 {% block bom-script %}
+    <script>
+        var data = JSON.parse('{{ autocomplete|safe }}');
+        $(document).ready(function () {
+            $('input.autocomplete').autocomplete({
+                data: data,
+                onAutocomplete: function (val) {
+                    var form = document.getElementById("searchForm");
+                    var input = document.getElementById("autocomplete-input");
+                    input.value = `"${val}"`;
+                    form.submit();
+                },
+                minLength: 1,
+            });
+        });
+    </script>
     <script type="text/javascript" src="{% static 'bom/js/jquery.ba-floatingscrollbar.min.js' %}"></script>
     <script>
         $(function () {
