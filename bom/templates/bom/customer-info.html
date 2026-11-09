@@ -46,19 +46,21 @@
             </li>
         </ul>
 
-        {% if profile.role == 'A' and customer_price_load_form %}
-            <h5 class="mb-2">{% trans "Add Price" %}</h5>
-            {% include 'bom/components/customer-price-add-inline.html' with action=customer_price_action load_form=customer_price_load_form entry_from=customer_price_entry_from part_locked=False %}
-        {% endif %}
+        {% if profile.role == 'A' %}
+            {% if customer_price_load_form %}
+                <h5 class="mb-2">{% trans "Add Price" %}</h5>
+                {% include 'bom/components/customer-price-add-inline.html' with action=customer_price_action load_form=customer_price_load_form entry_from=customer_price_entry_from part_locked=False %}
+            {% endif %}
 
-        <h5 class="mb-2">{% trans "Current prices" %}</h5>
-        {% include 'bom/components/customer-price-list.html' with prices=latest_prices show_history=False profile=profile %}
+            <h5 class="mb-2">{% trans "Current prices" %}</h5>
+            {% include 'bom/components/customer-price-list.html' with prices=latest_prices show_history=False profile=profile %}
 
-        <h5 class="mb-2 mt-4">{% trans "Price history" %}</h5>
-        {% include 'bom/components/customer-price-list.html' with prices=price_history show_history=True profile=profile %}
+            <h5 class="mb-2 mt-4">{% trans "Price history" %}</h5>
+            {% include 'bom/components/customer-price-list.html' with prices=price_history show_history=True profile=profile %}
 
-        {% if price_history.has_other_pages %}
-            {% include 'bom/ui/pagination.html' with page_obj=price_history extra_query=querystring_except_page %}
+            {% if price_history.has_other_pages %}
+                {% include 'bom/ui/pagination.html' with page_obj=price_history extra_query=querystring_except_page %}
+            {% endif %}
         {% endif %}
     </div>
 {% endblock %}

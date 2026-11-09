@@ -16,8 +16,8 @@
             <div class="bom-hub-actions">
                 <a class="bom-btn-primary" href="{% url 'bom:materials' %}?product=0">{% trans "Raw Material" %}</a>
                 <a class="bom-btn-secondary" href="{% url 'bom:materials' %}?product=1">{% trans "Products" %}</a>
-                <a class="bom-btn-secondary" href="{% url 'bom:customers' %}">{% trans "customers" %}</a>
                 {% if profile.role == 'A' %}
+                    <a class="bom-btn-secondary" href="{% url 'bom:customers' %}">{% trans "customers" %}</a>
                     <a class="bom-btn-secondary" href="{% url 'bom:create-part' %}">{% trans "New Material" %}</a>
                 {% endif %}
                 <a class="bom-btn-ghost" href="{% url 'bom:report' %}">{% trans "Reports" %}</a>

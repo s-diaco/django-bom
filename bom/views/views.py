@@ -1438,6 +1438,7 @@ def seller_delete(request, seller_id):
 
 
 @login_required(login_url=BOM_LOGIN_URL)
+@organization_admin
 def customers(request):
     profile = request.user.bom_profile()
     organization = profile.organization
@@ -1508,6 +1509,7 @@ def _customer_info_add_price_panel(organization, customer):
 
 
 @login_required(login_url=BOM_LOGIN_URL)
+@organization_admin
 def customer_info(request, customer_id):
     profile = request.user.bom_profile()
     organization = profile.organization
@@ -2043,6 +2045,7 @@ def customer_price_delete(request, customer_price_id):
 
 
 @login_required(login_url=BOM_LOGIN_URL)
+@organization_admin
 def customer_export_prices(request, customer_id):
     profile = request.user.bom_profile()
     organization = profile.organization
@@ -2227,17 +2230,22 @@ def part_info(request, part_id, part_revision_id=None):
 
     where_used_part = part.where_used()
     seller_parts = part.seller_parts()
-    customer_prices = attach_current_profit_percents(
-        CustomerPrice.objects.filter(
-            part=part, customer__organization=organization
+    # Customer prices are organization-admin only (read + write).
+    if profile.role == "A":
+        customer_prices = attach_current_profit_percents(
+            CustomerPrice.objects.filter(
+                part=part, customer__organization=organization
+            )
+            .select_related("customer", "part", "part_revision", "created_by")
+            .order_by("customer__name", "-created_at", "-id"),
+            currency=organization.currency,
         )
-        .select_related("customer", "part", "part_revision", "created_by")
-        .order_by("customer__name", "-created_at", "-id"),
-        currency=organization.currency,
-    )
-    customers = Customer.objects.filter(
-        organization=organization, is_active=True
-    ).order_by("name")
+        customers = Customer.objects.filter(
+            organization=organization, is_active=True
+        ).order_by("name")
+    else:
+        customer_prices = []
+        customers = Customer.objects.none()
 
     context = locals()
     # Compact Add Price picker on #customers (admins only).

@@ -364,6 +364,132 @@ class TestCustomerPricing(TransactionTestCase):
         self.assertIn(response.status_code, (302, 307))
         self.assertTrue(Customer.objects.filter(pk=self.customer.id).exists())
 
+    def test_viewer_cannot_view_customer_prices(self):
+        row = create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("20")
+        )
+        self.profile.role = "V"
+        self.profile.save(update_fields=["role"])
+        referer = reverse("bom:materials")
+
+        response = self.client.get(
+            reverse("bom:customers"), HTTP_REFERER=referer
+        )
+        self.assertIn(response.status_code, (302, 307, 403))
+
+        response = self.client.get(
+            reverse("bom:customer-info", kwargs={"customer_id": self.customer.id}),
+            HTTP_REFERER=referer,
+        )
+        self.assertIn(response.status_code, (302, 307, 403))
+
+        response = self.client.get(
+            reverse(
+                "bom:customer-export-prices",
+                kwargs={"customer_id": self.customer.id},
+            )
+            + "?format=csv",
+            HTTP_REFERER=referer,
+        )
+        self.assertIn(response.status_code, (302, 307, 403))
+
+        response = self.client.get(
+            reverse(
+                "bom:part-customer-price-create",
+                kwargs={"part_id": self.part.id},
+            ),
+            HTTP_REFERER=referer,
+        )
+        self.assertIn(response.status_code, (302, 307, 403))
+
+        response = self.client.get(
+            reverse(
+                "bom:part-customer-price-create-for-customer",
+                kwargs={
+                    "part_id": self.part.id,
+                    "customer_id": self.customer.id,
+                },
+            ),
+            HTTP_REFERER=referer,
+        )
+        self.assertIn(response.status_code, (302, 307, 403))
+
+        response = self.client.get(
+            reverse(
+                "bom:customer-price-edit", kwargs={"customer_price_id": row.id}
+            ),
+            HTTP_REFERER=referer,
+        )
+        self.assertIn(response.status_code, (302, 307, 403))
+
+        response = self.client.get(
+            reverse(
+                "bom:customer-price-delete",
+                kwargs={"customer_price_id": row.id},
+            ),
+            HTTP_REFERER=referer,
+        )
+        self.assertIn(response.status_code, (302, 307, 403))
+        self.assertTrue(CustomerPrice.objects.filter(pk=row.id).exists())
+
+        response = self.client.get(
+            reverse("bom:part-info", kwargs={"part_id": self.part.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode()
+        self.assertNotIn('id="customers-tab"', html)
+        self.assertNotIn('id="customers"', html)
+        self.assertNotIn(str(row.price.amount), html)
+        self.assertEqual(list(response.context["customer_prices"]), [])
+
+        response = self.client.get(reverse("bom:home"))
+        self.assertEqual(response.status_code, 200)
+        home_html = response.content.decode()
+        self.assertNotIn(reverse("bom:customers"), home_html)
+
+        response = self.client.get(reverse("bom:materials"))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(reverse("bom:customers"), response.content.decode())
+
+    def test_admin_can_view_customer_prices(self):
+        row = create_a_fake_customer_price(
+            self.customer, self.part, profit_percent=Decimal("20")
+        )
+
+        response = self.client.get(reverse("bom:customers"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.customer.name)
+
+        response = self.client.get(
+            reverse("bom:customer-info", kwargs={"customer_id": self.customer.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.customer.name)
+        self.assertContains(response, str(row.price.amount))
+
+        response = self.client.get(
+            reverse(
+                "bom:customer-export-prices",
+                kwargs={"customer_id": self.customer.id},
+            )
+            + "?format=csv"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.part.full_part_number(), response.content.decode())
+
+        response = self.client.get(
+            reverse("bom:part-info", kwargs={"part_id": self.part.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode()
+        self.assertIn('id="customers-tab"', html)
+        self.assertIn('id="customers"', html)
+        self.assertContains(response, self.customer.name)
+
+        response = self.client.get(reverse("bom:home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(reverse("bom:customers"), response.content.decode())
+
     def test_admin_can_delete_customer(self):
         response = self.client.get(
             reverse("bom:customer-delete", kwargs={"customer_id": self.customer.id})
