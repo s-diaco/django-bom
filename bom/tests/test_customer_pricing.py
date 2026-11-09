@@ -545,12 +545,13 @@ class TestCustomerPricing(TransactionTestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.customer.name)
+        self.assertIn(self.customer, response.context["customers"])
         # Quoted query (old autocomplete behavior) must not match.
         response = self.client.get(
             reverse("bom:customers"), {"q": f'"{self.customer.name}"'}
         )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "No customers found.")
+        self.assertEqual(len(response.context["customers"]), 0)
 
     def test_customer_info_inline_material_picker(self):
         customer_url = reverse(
