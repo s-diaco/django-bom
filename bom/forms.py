@@ -852,6 +852,30 @@ def _resolve_customer_for_organization(organization, customer_value):
     raise forms.ValidationError(_("Unknown customer."), code="invalid")
 
 
+def _resolve_selected_part_revision(part, part_revision=None, part_revision_id=None):
+    """Prefer posted revision id, then an explicit instance, else ``part.latest()``."""
+    if part_revision_id is not None:
+        try:
+            rev_id = int(part_revision_id)
+        except (TypeError, ValueError):
+            raise forms.ValidationError(
+                _("Invalid part revision."), code="invalid"
+            )
+        selected = PartRevision.objects.filter(pk=rev_id, part=part).first()
+        if selected is None:
+            raise forms.ValidationError(
+                _("Invalid part revision."), code="invalid"
+            )
+        return selected
+    if part_revision is not None:
+        if part_revision.part_id != part.id:
+            raise forms.ValidationError(
+                _("Part revision does not belong to this part."), code="invalid"
+            )
+        return part_revision
+    return part.latest()
+
+
 class CustomerPriceLoadForm(forms.Form):
     UNIT_QUANTITY = 1
 
@@ -859,7 +883,14 @@ class CustomerPriceLoadForm(forms.Form):
         self.organization = kwargs.pop("organization", None)
         self.customer = kwargs.pop("customer", None)
         self.part = kwargs.pop("part", None)
+        self.part_revision = kwargs.pop("part_revision", None)
         super().__init__(*args, **kwargs)
+
+        self.fields["part_revision_id"] = forms.IntegerField(
+            required=False, widget=forms.HiddenInput()
+        )
+        if self.part_revision is not None:
+            self.fields["part_revision_id"].initial = self.part_revision.id
 
         if self.part is not None:
             self.fields["customer"] = forms.CharField(
@@ -919,7 +950,11 @@ class CustomerPriceLoadForm(forms.Form):
                 _("Customer does not belong to your organization."), code="invalid"
             )
 
-        part_revision = part.latest()
+        part_revision = _resolve_selected_part_revision(
+            part,
+            part_revision=self.part_revision,
+            part_revision_id=cleaned_data.get("part_revision_id"),
+        )
         if part_revision is None:
             raise forms.ValidationError(
                 _("Part has no revision; cannot compute BoM cost."), code="invalid"
@@ -951,11 +986,13 @@ class CustomerPriceConfirmForm(forms.Form):
         label=_("Order quantity (kg)"),
     )
     note = forms.CharField(required=False, widget=forms.Textarea)
+    part_revision_id = forms.IntegerField(required=False, widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
         self.customer = kwargs.pop("customer", None)
         self.part = kwargs.pop("part", None)
+        self.part_revision = kwargs.pop("part_revision", None)
         self.user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
@@ -973,6 +1010,8 @@ class CustomerPriceConfirmForm(forms.Form):
                 required=True,
                 widget=forms.HiddenInput(),
             )
+        if self.part_revision is not None and not self.data:
+            self.fields["part_revision_id"].initial = self.part_revision.id
 
     def clean(self):
         cleaned_data = super().clean()
@@ -1001,7 +1040,11 @@ class CustomerPriceConfirmForm(forms.Form):
                 _("Customer is required."), code="invalid"
             )
 
-        part_revision = part.latest()
+        part_revision = _resolve_selected_part_revision(
+            part,
+            part_revision=self.part_revision,
+            part_revision_id=cleaned_data.get("part_revision_id"),
+        )
         if part_revision is None:
             raise forms.ValidationError(
                 _("Part has no revision; cannot compute BoM cost."), code="invalid"

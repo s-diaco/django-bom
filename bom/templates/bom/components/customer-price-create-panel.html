@@ -40,6 +40,7 @@
         <form action="{{ action }}" method="post" id="price-load-form" class="price-add-inline printer-hide mb-4">
             {% csrf_token %}
             {% if entry_from %}<input type="hidden" name="from" value="{{ entry_from }}">{% endif %}
+            {{ load_form.part_revision_id }}
             {% if part_locked %}
                 <label class="bom-label price-add-inline__label mb-0" for="{{ load_form.customer.id_for_label }}">
                     {{ load_form.customer.label }}{% if load_form.customer.field.required %} <span class="text-danger">*</span>{% endif %}
@@ -264,6 +265,9 @@
                     {% csrf_token %}
                     {% if entry_from %}<input type="hidden" name="from" value="{{ entry_from }}">{% endif %}
                     <input type="hidden" name="part" value="{{ preview.part.id }}">
+                    {% if preview.part_revision %}
+                        <input type="hidden" name="part_revision_id" value="{{ preview.part_revision.id }}">
+                    {% endif %}
                     {% if part_locked %}
                         <input type="hidden" name="customer" value="{{ preview.customer.id }}">
                     {% endif %}

@@ -2,9 +2,19 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Prefetch, prefetch_related_objects
+from django.db.models import Max, Prefetch, Subquery, prefetch_related_objects
 
-from bom.models import ManufacturerPart, SellerPart, Subpart
+from bom.models import ManufacturerPart, PartRevision, SellerPart, Subpart
+
+
+def latest_part_revision_ids(part_ids):
+    """Subquery of max PartRevision.id per part — same rule as Part.latest()."""
+    return Subquery(
+        PartRevision.objects.filter(part_id__in=part_ids)
+        .values("part_id")
+        .annotate(max_id=Max("id"))
+        .values("max_id")
+    )
 
 PAGE_SIZE_CHOICES = (10, 25, 50, 100)
 
