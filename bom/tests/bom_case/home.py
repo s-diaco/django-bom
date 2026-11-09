@@ -280,7 +280,11 @@ class HomeTestsMixin:
 
     def test_materials_list_hides_revision_column(self):
         (p1, _p2, _p3, _p4) = create_some_fake_parts(organization=self.organization)
-        part_href = reverse("bom:part-info", kwargs={"part_id": p1.id})
+        latest = p1.latest()
+        part_href = reverse(
+            "bom:part-info-history",
+            kwargs={"part_id": p1.id, "part_revision_id": latest.id},
+        )
 
         response = self.client.get(reverse("bom:materials"))
         self.assertEqual(response.status_code, 200)
