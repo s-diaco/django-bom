@@ -12,7 +12,6 @@
                     <th>{% trans "Category" %}</th>
                 {% endif %}
                 <th>{% trans "Material" %}</th>
-                <th>{% trans "Revision" %}</th>
                 <th>{% trans "Seller Part Number" %}</th>
                 <th>{% trans "Seller" %}</th>
                 <th class="bom-num">{% trans "Unit Cost" %}</th>
@@ -27,7 +26,6 @@
                         <td>{{ part.number_class.name }}</td>
                     {% endif %}
                     <td>{{ part_rev.description }}</td>
-                    <td>{{ part_rev.revision }}</td>
                     <td>{% if seller %}{{ seller.seller_part_number }}{% endif %}</td>
                     <td>{% if seller and seller.seller %}{{ seller.seller }}{% endif %}</td>
                     <td class="bom-num">{{ part_rev.print_unit_cost|default_if_none:"" }}</td>

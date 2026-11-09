@@ -278,6 +278,29 @@ class HomeTestsMixin:
             self.assertEqual(len(search.context["part_revs"]), 1)
             self.assertEqual(next(iter(search.context["part_revs"])).part.id, p1.id)
 
+    def test_materials_list_hides_revision_column(self):
+        (p1, _p2, _p3, _p4) = create_some_fake_parts(organization=self.organization)
+        latest = p1.latest()
+        part_href = reverse(
+            "bom:part-info-history",
+            kwargs={"part_id": p1.id, "part_revision_id": latest.id},
+        )
+
+        response = self.client.get(reverse("bom:materials"))
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        self.assertNotRegex(html, r"<th[^>]*>\s*Revision\s*</th>")
+        self.assertIn(f'href="{part_href}"', html)
+        self.assertIn(p1.full_part_number(), html)
+
+        printed = self.client.get(
+            reverse("bom:materials"), {"print": "1", "print_go": "1"}
+        )
+        self.assertEqual(printed.status_code, 200)
+        print_html = printed.content.decode("utf-8")
+        self.assertNotRegex(print_html, r"<th[^>]*>\s*Revision\s*</th>")
+        self.assertIn(p1.full_part_number(), print_html)
+
     def test_materials_csv_download_skips_bom_walk(self):
         create_some_fake_parts(organization=self.organization)
 
