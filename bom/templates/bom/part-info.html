@@ -74,7 +74,9 @@
                         {% if not part_revision.is_product %}
                         <li class="tab"><a id="sourcing-tab" href="#sourcing">{% trans "Seller" %}</a></li>
                         {% endif %}
+                        {% if profile.role == 'A' %}
                         <li class="tab"><a id="customers-tab" href="#customers">{% trans "Customers" %}</a></li>
+                        {% endif %}
                         {% if part_revision.is_product %}
                         <li class="tab"><a id="overview-tab" href="#overview">{% trans "Overview" %}</a></li>
                         {% endif %}
@@ -329,9 +331,10 @@
                     {% endif %}
                 </div>
                 {% endif %}
+                {% if profile.role == 'A' %}
                 <div id="customers" class="col s12">
                     <h4 class="printer-show">{% trans "Customer prices" %}</h4>
-                    {% if profile.role == 'A' and customer_price_load_form %}
+                    {% if customer_price_load_form %}
                         <div class="part-customers-add-price printer-hide mb-4">
                             {% include 'bom/components/customer-price-create-panel.html' with action=customer_price_action load_form=customer_price_load_form confirm_form=customer_price_confirm_form show_preview=customer_price_show_preview preview=customer_price_preview part_locked=customer_price_part_locked cancel_url=customer_price_cancel_url entry_from=customer_price_entry_from currency_unit_txt=customer_price_currency_unit_txt customer=customer_price_selected_customer embedded=1 %}
                         </div>
@@ -347,10 +350,8 @@
                                 <th class="text-normal td-med">{% trans "Price" %}</th>
                                 <th class="text-normal td-med">{% trans "Order quantity (kg)" %}</th>
                                 <th class="text-normal td-med">{% trans "Created" %}</th>
-                                {% if profile.role == 'A' %}
-                                    <th class="text-normal td-med">{% trans "Add Price" %}</th>
-                                    <th class="text-normal td-small"></th>
-                                {% endif %}
+                                <th class="text-normal td-med">{% trans "Add Price" %}</th>
+                                <th class="text-normal td-small"></th>
                             </tr>
                             </thead>
                             <tbody>
@@ -365,26 +366,24 @@
                                     <td class="text-normal td-med">{{ row.price|default:"-" }}</td>
                                     <td class="text-normal td-med">{{ row.quantity }}</td>
                                     <td class="text-normal td-med">{% user_datetime row.created_at %}</td>
-                                    {% if profile.role == 'A' %}
-                                        <td class="text-normal td-med">
-                                            <a class="bom-btn-ghost"
-                                               href="{% url 'bom:part-customer-price-create-for-customer' part_id=part.id customer_id=row.customer.id %}?from=part{% if part_revision %}&part_revision_id={{ part_revision.id }}{% endif %}"
-                                               aria-label="{% blocktrans with name=row.customer.name %}Add price for {{ name }}{% endblocktrans %}">
-                                                <i class="material-icons text-base" aria-hidden="true">add</i>{% trans "Add Price" %}
-                                            </a>
-                                        </td>
-                                        <td class="text-normal td-small">
-                                            <a class="green-text text-lighten-1" href="{% url 'bom:customer-price-edit' customer_price_id=row.id %}?from=part"
-                                               title="{% trans "Edit" %}" aria-label="{% trans "Edit" %}">
-                                                <i class="material-icons text-base">edit</i>
-                                            </a>
-                                            <a class="red-text" href="{% url 'bom:customer-price-delete' customer_price_id=row.id %}?from=part"
-                                               onclick="return confirm('{% trans "Delete this price record?" %}');"
-                                               title="{% trans "Delete" %}" aria-label="{% trans "Delete" %}">
-                                                <i class="material-icons text-base">delete</i>
-                                            </a>
-                                        </td>
-                                    {% endif %}
+                                    <td class="text-normal td-med">
+                                        <a class="bom-btn-ghost"
+                                           href="{% url 'bom:part-customer-price-create-for-customer' part_id=part.id customer_id=row.customer.id %}?from=part{% if part_revision %}&part_revision_id={{ part_revision.id }}{% endif %}"
+                                           aria-label="{% blocktrans with name=row.customer.name %}Add price for {{ name }}{% endblocktrans %}">
+                                            <i class="material-icons text-base" aria-hidden="true">add</i>{% trans "Add Price" %}
+                                        </a>
+                                    </td>
+                                    <td class="text-normal td-small">
+                                        <a class="green-text text-lighten-1" href="{% url 'bom:customer-price-edit' customer_price_id=row.id %}?from=part"
+                                           title="{% trans "Edit" %}" aria-label="{% trans "Edit" %}">
+                                            <i class="material-icons text-base">edit</i>
+                                        </a>
+                                        <a class="red-text" href="{% url 'bom:customer-price-delete' customer_price_id=row.id %}?from=part"
+                                           onclick="return confirm('{% trans "Delete this price record?" %}');"
+                                           title="{% trans "Delete" %}" aria-label="{% trans "Delete" %}">
+                                            <i class="material-icons text-base">delete</i>
+                                        </a>
+                                    </td>
                                 </tr>
                             {% empty %}
                                 <tr>
@@ -397,6 +396,7 @@
                         </table>
                     </div>
                 </div>
+                {% endif %}
                 {% if part_revision.is_product %}
                 <div id="overview" class="col s12">
                     <h4 class="printer-show">{% trans "Overview" %}</h4>
