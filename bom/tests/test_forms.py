@@ -208,6 +208,8 @@ class TestForms(TestCase):
 
         self.assertEqual(money_amount(Money(98000, "IRR")), "98,000")
         self.assertEqual(money_amount(Money(4310, "USD")), "4,310")
+        self.assertEqual(money_amount(Money(Decimal("12.5"), "USD")), "12.5")
+        self.assertEqual(money_amount(Money(Decimal("1.23"), "USD")), "1.23")
         self.assertEqual(money_amount(None), "")
 
     def test_product_type_labels_translated(self):
@@ -251,6 +253,9 @@ class TestForms(TestCase):
         self.assertEqual(normalize_grouped_number("1,234,567"), "1234567")
         self.assertEqual(normalize_grouped_number("1٬234٬567"), "1234567")
         self.assertEqual(normalize_grouped_number("12 345"), "12345")
+        self.assertEqual(normalize_grouped_number("12.5"), "12.5")
+        self.assertEqual(normalize_grouped_number("1,234.56"), "1234.56")
+        self.assertEqual(normalize_grouped_number("۱۲٫۵"), "12.5")
         self.assertEqual(normalize_grouped_number(Decimal("10")), Decimal("10"))
 
     def test_seller_part_form_accepts_grouped_unit_cost(self):
@@ -272,10 +277,70 @@ class TestForms(TestCase):
         self.assertEqual(form.cleaned_data["shipping"], Decimal("10000"))
         self.assertIn("bom-price-input", form.fields["unit_cost"].widget.attrs.get("class", ""))
 
+    def test_seller_part_form_accepts_and_saves_decimals(self):
+        from bom.models import SellerPart
+        from bom.templatetags.bom_i18n import money_amount
+
+        parts = create_some_fake_parts(organization=self.organization)
+        mp = parts[0].primary_manufacturer_part
+        seller = Seller.objects.filter(organization=self.organization)[0]
+        form = SellerPartForm(
+            {
+                "seller": seller.id,
+                "seller_part_number": "DEC-1",
+                "currency": self.organization.currency,
+                "unit_cost": "12.34",
+                "shipping": "1.25",
+                "customs_duty_percent": "7.5",
+            },
+            organization=self.organization,
+            manufacturer_part=mp,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["unit_cost"], Decimal("12.34"))
+        self.assertEqual(form.cleaned_data["shipping"], Decimal("1.25"))
+        self.assertEqual(form.cleaned_data["customs_duty_percent"], Decimal("7.5"))
+        sp = form.save()
+        sp.refresh_from_db()
+        self.assertEqual(sp.unit_cost.amount, Decimal("12.34"))
+        self.assertEqual(sp.shipping.amount, Decimal("1.25"))
+        self.assertEqual(sp.customs_duty_percent, Decimal("7.50"))
+        self.assertEqual(str(sp.unit_cost.currency), self.organization.currency)
+        self.assertEqual(str(sp.shipping.currency), self.organization.currency)
+        self.assertEqual(money_amount(sp.unit_cost), "12.34")
+        self.assertEqual(money_amount(sp.shipping), "1.25")
+
+        # More than 2 decimal places is rejected.
+        too_precise = SellerPartForm(
+            {
+                "seller": seller.id,
+                "seller_part_number": "DEC-2",
+                "currency": self.organization.currency,
+                "unit_cost": "12.345",
+                "shipping": "1.259",
+                "customs_duty_percent": "7.555",
+            },
+            organization=self.organization,
+            manufacturer_part=mp,
+        )
+        self.assertFalse(too_precise.is_valid())
+        self.assertIn("unit_cost", too_precise.errors)
+        self.assertIn("shipping", too_precise.errors)
+        self.assertIn("customs_duty_percent", too_precise.errors)
+
+        # Round-trip edit form shows the stored decimals.
+        edit = SellerPartForm(instance=sp, organization=self.organization)
+        self.assertEqual(edit.initial["unit_cost"], Decimal("12.34"))
+        self.assertEqual(edit.initial["shipping"], Decimal("1.25"))
+        self.assertEqual(edit.initial["customs_duty_percent"], Decimal("7.50"))
+        self.assertEqual(SellerPart.objects.filter(pk=sp.pk).count(), 1)
+
     def test_grouped_decimal_field_to_python(self):
         field = GroupedDecimalField()
         self.assertEqual(field.clean("1,234,567"), Decimal("1234567"))
         self.assertEqual(field.clean("9٬876"), Decimal("9876"))
+        self.assertEqual(field.clean("1,234.56"), Decimal("1234.56"))
+        self.assertEqual(field.clean("12.5"), Decimal("12.5"))
 
     def test_exchange_rate_forms_accept_grouped_rates(self):
         self.organization.currency = "IRR"

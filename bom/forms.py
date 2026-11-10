@@ -33,6 +33,7 @@ from .constants import (
     POWER_UNITS,
     ROLE_TYPE_VIEWER,
     TEMPERATURE_UNITS,
+    UNIT_COST_DECIMAL_PLACES,
     VALUE_UNITS,
     VOLTAGE_UNITS,
     WAVELENGTH_UNITS,
@@ -611,17 +612,24 @@ class SellerPartForm(forms.ModelForm):
             required=True,
             label=_("Price"),
             initial=0,
+            max_digits=19,
+            decimal_places=UNIT_COST_DECIMAL_PLACES,
+            min_value=0,
         )
         self.base_fields["shipping"] = GroupedDecimalField(
             required=False,
             label=_("Shipping"),
             initial=0,
+            max_digits=19,
+            decimal_places=UNIT_COST_DECIMAL_PLACES,
             min_value=0,
         )
-        self.base_fields["customs_duty_percent"] = forms.DecimalField(
+        self.base_fields["customs_duty_percent"] = GroupedDecimalField(
             required=False,
             label=_("Customs Duty (%)"),
             initial=0,
+            max_digits=6,
+            decimal_places=2,
             min_value=0,
         )
 

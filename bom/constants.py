@@ -39,7 +39,7 @@ NUMBER_SCHEMES = (
 
 NUMBER_CLASS_CODE_LEN_MIN = 2
 NUMBER_CLASS_CODE_LEN_MAX = 16
-UNIT_COST_DECIMAL_PLACES = 0
+UNIT_COST_DECIMAL_PLACES = 2
 
 # Common currencies for imported raw-material quotes (org currency is always added in forms).
 IMPORT_CURRENCY_CODES = ("IRR", "USD", "EUR", "CNY", "AED", "TRY", "GBP")

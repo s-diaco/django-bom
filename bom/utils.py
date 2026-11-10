@@ -27,6 +27,8 @@ def normalize_grouped_number(value):
     if not text:
         return text
     text = convert_arabic_to_english(text)
+    # Arabic decimal separator → ASCII so Decimal/form parsing accepts it.
+    text = text.replace("٫", ".")
     for sep in (",", "٬", " ", "\u00a0"):
         text = text.replace(sep, "")
     return text
