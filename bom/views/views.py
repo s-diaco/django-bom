@@ -2540,6 +2540,7 @@ def part_export_bom(
 def import_systemgroup_bom(request):
     """Admin UI for SystemGroup PAC Engineering BoM import (same backend as CLI)."""
     from bom.systemgroup.access import client_for_user_meta, user_can_import_systemgroup
+    from bom.systemgroup.client import SystemGroupClientError
     from bom.systemgroup.forms import SystemGroupBomImportForm
     from bom.systemgroup.importer import (
         AmbiguousBomMatch,
@@ -2603,12 +2604,23 @@ def import_systemgroup_bom(request):
         if cleaned.get("load_revisions"):
             pn = cleaned.get("part_id") or cleaned.get("parent_part_number")
             try:
+                # Build the client inside the try: missing CRM_BASE_URL / bad
+                # credentials raise SystemGroupClientError before list fetch.
                 revision_candidates = list_revisions_for_part(
                     pn,
                     client=client_for_user_meta(profile),
                 )
-            except SystemGroupImportError as exc:
+            except (SystemGroupImportError, SystemGroupClientError) as exc:
                 messages.error(request, str(exc))
+            except Exception as exc:  # noqa: BLE001 — surface CRM outages as UI errors
+                messages.error(
+                    request,
+                    _(
+                        "Could not reach the SystemGroup CRM to load revisions: "
+                        "%(error)s"
+                    )
+                    % {"error": exc},
+                )
             else:
                 revision_part_query = pn
                 messages.info(

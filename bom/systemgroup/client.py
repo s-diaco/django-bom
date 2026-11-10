@@ -8,7 +8,7 @@ from urllib.parse import parse_qs, unquote, urlencode, urljoin, urlparse, urlunp
 
 import requests
 
-from .parser import LoginFormFields, parse_login_form
+from .parser import LoginFormFields, SystemGroupParseError, parse_login_form
 from .rsa_login import build_hashed_password, unicode_correct_invalid_characters
 
 
@@ -168,10 +168,18 @@ class SystemGroupClient:
                 resp = self.session.get(login_url, timeout=self.timeout)
                 resp.raise_for_status()
             except requests.RequestException as exc:
-                raise SystemGroupClientError(f"Failed to fetch login page: {exc}") from exc
+                raise SystemGroupClientError(
+                    "Could not reach the SystemGroup CRM login page "
+                    f"({login_url}): {exc}"
+                ) from exc
             login_html = resp.text
 
-        form = parse_login_form(login_html)
+        try:
+            form = parse_login_form(login_html)
+        except SystemGroupParseError as exc:
+            raise SystemGroupClientError(
+                f"CRM login page was not usable: {exc}"
+            ) from exc
         action_url = urljoin(login_url, form.action) if form.action else login_url
         payload = self.build_login_payload(form)
         try:
@@ -183,7 +191,9 @@ class SystemGroupClient:
             )
             resp.raise_for_status()
         except requests.RequestException as exc:
-            raise SystemGroupClientError(f"Login POST failed: {exc}") from exc
+            raise SystemGroupClientError(
+                f"Could not complete SystemGroup CRM login ({action_url}): {exc}"
+            ) from exc
 
         # Heuristic: still on login page with password field → failed auth
         lower = resp.text.lower()

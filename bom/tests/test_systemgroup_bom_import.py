@@ -988,6 +988,36 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertContains(response, "39477")
         self.assertContains(response, "40001")
 
+    def test_load_revisions_unreachable_crm_shows_error_not_500(self):
+        with mock.patch(
+            "bom.systemgroup.access.client_for_user_meta",
+            side_effect=SystemGroupClientError(
+                "Failed to fetch login page: Connection refused"
+            ),
+        ):
+            response = self.client.post(
+                self.url,
+                {"part_id": "1155F229", "load_revisions": "1"},
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Failed to fetch login page")
+        self.assertNotContains(response, "Import this BoM")
+
+    def test_load_revisions_missing_base_url_shows_error_not_500(self):
+        with mock.patch(
+            "bom.systemgroup.access.client_for_user_meta",
+            side_effect=SystemGroupClientError(
+                "Missing CRM_BASE_URL. Set it in the server environment "
+                "(e.g. .env.prod); never commit secrets."
+            ),
+        ):
+            response = self.client.post(
+                self.url,
+                {"part_id": "1155F229", "load_revisions": "1"},
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Missing CRM_BASE_URL")
+
     def test_import_selected_revision_posts_bom_id_and_rev(self):
         html = (FIXTURES / "bom_edit.html").read_bytes()
         # Same payload shape as the revision-picker "Import this BoM" button.
