@@ -29,6 +29,22 @@ class LoginFormFields:
     password_name: str
     submit_name: str | None = None
     submit_value: str | None = None
+    # SystemGroup RSA login (Login.js beforeLogin); absent on plain forms.
+    rsa_exponent_hex: str | None = None
+    rsa_modulus_hex: str | None = None
+    session_id: str | None = None
+    hashed_password_name: str | None = None
+    hid_submit_name: str | None = None
+    hid_submit_value: str | None = None
+
+    @property
+    def uses_rsa_password(self) -> bool:
+        return bool(
+            self.rsa_exponent_hex
+            and self.rsa_modulus_hex
+            and self.session_id is not None
+            and self.hashed_password_name
+        )
 
 
 @dataclass
@@ -198,6 +214,31 @@ def parse_login_form(html: str) -> LoginFormFields:
                 password_name = inp["name"]
                 break
 
+    # Prefer hidden programmatic submit used by beforeLogin → btnHidSubmit.click()
+    hid_submit_name = None
+    hid_submit_value = None
+    for inp in chosen["inputs"]:
+        name = inp["name"]
+        if not name:
+            continue
+        if name.lower() in ("btnhidsubmit", "hidsubmit") or "hidsubmit" in name.lower():
+            hid_submit_name = name
+            hid_submit_value = inp["value"] or ""
+            break
+
+    rsa_e = hidden.get("rsa_e") or None
+    rsa_m = hidden.get("rsa_m") or None
+    session_id = hidden.get("sessionid")
+    if session_id is None and "sessionid" in {i["name"].lower() for i in chosen["inputs"]}:
+        session_id = ""
+    hashed_name = None
+    for inp in chosen["inputs"]:
+        if inp["name"] and inp["name"].lower() == "hashedpassword":
+            hashed_name = inp["name"]
+            break
+    if hashed_name is None and "hashedPassword" in hidden:
+        hashed_name = "hashedPassword"
+
     return LoginFormFields(
         action=chosen["action"],
         method=chosen["method"] or "post",
@@ -206,6 +247,12 @@ def parse_login_form(html: str) -> LoginFormFields:
         password_name=password_name,
         submit_name=submit_name,
         submit_value=submit_value,
+        rsa_exponent_hex=rsa_e,
+        rsa_modulus_hex=rsa_m,
+        session_id=session_id,
+        hashed_password_name=hashed_name,
+        hid_submit_name=hid_submit_name,
+        hid_submit_value=hid_submit_value,
     )
 
 

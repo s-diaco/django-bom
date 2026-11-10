@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from unittest import mock
 
@@ -36,6 +37,14 @@ from bom.systemgroup.parser import (
     parse_bom_list_document,
     parse_login_form,
 )
+from bom.systemgroup.rsa_login import (
+    bi_to_hex,
+    build_hashed_password,
+    deterministic_randbelow,
+    digit_size_for_modulus,
+    encrypted_string,
+    unicode_correct_invalid_characters,
+)
 
 FIXTURES = Path("bom/test_files/systemgroup")
 
@@ -45,16 +54,92 @@ class SystemGroupLoginParseTests(TestCase):
     def test_parse_login_form_extracts_aspnet_fields(self):
         html = (FIXTURES / "login.aspx.html").read_text(encoding="utf-8")
         form = parse_login_form(html)
-        self.assertEqual(form.username_name, "ctl00$MainContent$UserName")
-        self.assertEqual(form.password_name, "ctl00$MainContent$Password")
+        self.assertEqual(form.username_name, "txtUsername")
+        self.assertEqual(form.password_name, "txtPassword")
         self.assertIn("__VIEWSTATE", form.hidden)
         self.assertIn("__EVENTVALIDATION", form.hidden)
-        self.assertEqual(form.submit_name, "ctl00$MainContent$LoginButton")
+        self.assertTrue(form.uses_rsa_password)
+        self.assertEqual(form.rsa_exponent_hex, "010001")
+        self.assertTrue(form.rsa_modulus_hex)
+        self.assertEqual(form.session_id, "fixture-session-001")
+        self.assertEqual(form.hashed_password_name, "hashedPassword")
+        self.assertEqual(form.hid_submit_name, "btnHidSubmit")
         self.assertEqual(form.method, "post")
 
     def test_parse_login_form_missing_password_raises(self):
         with self.assertRaises(SystemGroupParseError):
             parse_login_form("<html><form><input name='u' type='text'></form></html>")
+
+
+class SystemGroupRsaLoginTests(TestCase):
+    # Fresh 1024-bit keypair for decrypt round-trips only (not the CRM key).
+    _N_HEX = (
+        "cc175d0a4536caa7ce8b05bb30b8b2da836d9fc82e7bfbd31daadbbbb816b40bcc8fac18"
+        "4dbdd85c6ccd763a0c3df10b77a8d6fb54507d13a62b1ddc68420f8d1929551c03485646"
+        "bddb24010d37eb92b8280c74eee3e1ad2b1bfb12a4df8733cc6590829619a3ae76ea76ed"
+        "627084a6642d91141008b7336fbb59abcb9ccf65"
+    )
+    _D_HEX = (
+        "8848b5ad6d08a88d23e43be0832962ed7dc40f658a7cea6d50ab4e6ded00e41bd8eebbb9"
+        "c2f819e9a6121177b3c30d1a5e3e55c8a0c5daafeb4f717244009106b2a7d09fe23625af"
+        "55661274814b25cc25d245fb658bf6720cbef7480b3df8b832e23f4bd594ceaee8e4a0d1"
+        "84f0d4dc51a25a28a10f9229e953ea1711e34621"
+    )
+    _E_HEX = "010001"
+
+    def test_unicode_correct_arabic_yeh_keh(self):
+        # Arabic yeh U+064A → Farsi yeh U+06CC; Arabic kaf U+0643 → Farsi keheh U+06A9
+        self.assertEqual(
+            unicode_correct_invalid_characters("\u064a\u0643"),
+            "\u06cc\u06a9",
+        )
+        self.assertEqual(unicode_correct_invalid_characters("abc"), "abc")
+
+    def test_digit_size_1024(self):
+        n = int(self._N_HEX, 16)
+        self.assertEqual(n.bit_length(), 1024)
+        self.assertEqual(digit_size_for_modulus(n), 128)
+
+    def test_encrypted_string_roundtrip_pkcs1(self):
+        plaintext = "fixture-session-001--s3cret"
+        ct_hex = encrypted_string(
+            plaintext,
+            exponent_hex=self._E_HEX,
+            modulus_hex=self._N_HEX,
+            randbelow=deterministic_randbelow(42),
+        )
+        self.assertTrue(re.fullmatch(r"[0-9a-f]+( [0-9a-f]+)*", ct_hex))
+        c_int = int(ct_hex.split()[0], 16)
+        n = int(self._N_HEX, 16)
+        d = int(self._D_HEX, 16)
+        m_int = pow(c_int, d, n)
+        k = digit_size_for_modulus(n)
+        em = m_int.to_bytes(k, "big")
+        self.assertEqual(em[0], 0x00)
+        self.assertEqual(em[1], 0x02)
+        sep = em.index(0x00, 2)
+        recovered = em[sep + 1 :]
+        self.assertEqual(recovered.decode("utf-8"), plaintext)
+
+    def test_build_hashed_password_uses_session_separator(self):
+        ct = build_hashed_password(
+            "pw",
+            session_id="SID",
+            exponent_hex=self._E_HEX,
+            modulus_hex=self._N_HEX,
+            randbelow=deterministic_randbelow(7),
+        )
+        c_int = int(ct.split()[0], 16)
+        n = int(self._N_HEX, 16)
+        d = int(self._D_HEX, 16)
+        em = pow(c_int, d, n).to_bytes(digit_size_for_modulus(n), "big")
+        sep = em.index(0x00, 2)
+        self.assertEqual(em[sep + 1 :].decode("utf-8"), "SID--pw")
+
+    def test_bi_to_hex_groups(self):
+        self.assertEqual(bi_to_hex(0), "0000")
+        self.assertEqual(bi_to_hex(0x2), "0002")
+        self.assertEqual(bi_to_hex(0xABCD), "abcd")
 
 
 class SystemGroupBomParseTests(TestCase):
@@ -184,10 +269,16 @@ class SystemGroupClientTests(TestCase):
             password="secret",
         )
         payload = client.build_login_payload(form)
-        self.assertEqual(payload["ctl00$MainContent$UserName"], "alice")
-        self.assertEqual(payload["ctl00$MainContent$Password"], "secret")
+        self.assertEqual(payload["txtUsername"], "alice")
+        self.assertEqual(payload["txtPassword"], "")  # cleared; RSA hashedPassword used
         self.assertEqual(payload["__VIEWSTATE"], "/wEPDwUKLTFixtureViewState")
-        self.assertEqual(payload["ctl00$MainContent$LoginButton"], "Log in")
+        self.assertIn("btnHidSubmit", payload)
+        self.assertNotIn("btnSubmit", payload)
+        self.assertTrue(payload["hashedPassword"])
+        self.assertRegex(payload["hashedPassword"], r"^[0-9a-f]+( [0-9a-f]+)*$")
+        # Decrypt with CRM public encrypt is one-way here; ensure plaintext shape via
+        # our test key in SystemGroupRsaLoginTests. Spot-check session separator length.
+        self.assertGreater(len(payload["hashedPassword"]), 64)
 
     def test_bom_edit_url(self):
         url = bom_edit_url("http://192.168.3.193/", 39477)

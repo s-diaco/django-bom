@@ -9,6 +9,7 @@ from urllib.parse import parse_qs, unquote, urlencode, urljoin, urlparse, urlunp
 import requests
 
 from .parser import LoginFormFields, parse_login_form
+from .rsa_login import build_hashed_password, unicode_correct_invalid_characters
 
 
 class SystemGroupClientError(RuntimeError):
@@ -126,11 +127,37 @@ class SystemGroupClient:
         return urljoin(self.base_url, DEFAULT_LOGIN_PATH.lstrip("/"))
 
     def build_login_payload(self, form: LoginFormFields) -> dict[str, str]:
+        """Build POST body matching Login.aspx / beforeLogin() when RSA fields exist."""
         payload = dict(form.hidden)
-        payload[form.username_name] = self.username
-        payload[form.password_name] = self.password
-        if form.submit_name:
-            payload[form.submit_name] = form.submit_value or "Login"
+        username = unicode_correct_invalid_characters(self.username) or ""
+        password = unicode_correct_invalid_characters(self.password) or ""
+        payload[form.username_name] = username
+
+        if form.uses_rsa_password:
+            # Login.js: clear txtPassword; set hashedPassword = encrypt(sessionid + "--" + password)
+            payload[form.password_name] = ""
+            try:
+                payload[form.hashed_password_name] = build_hashed_password(
+                    password,
+                    session_id=form.session_id or "",
+                    exponent_hex=form.rsa_exponent_hex or "",
+                    modulus_hex=form.rsa_modulus_hex or "",
+                )
+            except (ValueError, TypeError) as exc:
+                raise SystemGroupClientError(
+                    f"Failed to build RSA hashedPassword: {exc}"
+                ) from exc
+            # beforeLogin clicks #btnHidSubmit (not the visible btnSubmit)
+            if form.hid_submit_name:
+                payload[form.hid_submit_name] = form.hid_submit_value or ""
+                if form.submit_name and form.submit_name != form.hid_submit_name:
+                    payload.pop(form.submit_name, None)
+            elif form.submit_name:
+                payload[form.submit_name] = form.submit_value or "Login"
+        else:
+            payload[form.password_name] = password
+            if form.submit_name:
+                payload[form.submit_name] = form.submit_value or "Login"
         return payload
 
     def login(self, login_html: str | None = None) -> None:

@@ -19,6 +19,7 @@ from .parser import (
     parse_bom_list_document,
     parse_login_form,
 )
+from .rsa_login import build_hashed_password, unicode_correct_invalid_characters
 
 __all__ = [
     "AmbiguousBomMatch",
@@ -38,4 +39,6 @@ __all__ = [
     "ParsedBom",
     "parse_bom_document",
     "parse_login_form",
+    "build_hashed_password",
+    "unicode_correct_invalid_characters",
 ]
