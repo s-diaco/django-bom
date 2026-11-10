@@ -2509,6 +2509,75 @@ def part_export_bom(
 
 
 @login_required(login_url=BOM_LOGIN_URL)
+@organization_admin
+def import_systemgroup_bom(request):
+    """Admin UI for SystemGroup PAC Engineering BoM import (same backend as CLI)."""
+    from bom.systemgroup.forms import SystemGroupBomImportForm
+    from bom.systemgroup.importer import SystemGroupImportError, run_systemgroup_import
+
+    user = request.user
+    profile = user.bom_profile()
+    organization = profile.organization
+    title = _("Import SystemGroup BoM")
+    form = SystemGroupBomImportForm(
+        request.POST or None,
+        request.FILES or None,
+        initial={
+            "parent_part_number": request.GET.get("parent_part", ""),
+            "bom_id": request.GET.get("bom_id", ""),
+            "crm_url": request.GET.get("crm_url", ""),
+        },
+    )
+
+    if request.method == "POST" and form.is_valid():
+        cleaned = form.cleaned_data
+        html_content = None
+        json_content = None
+        source = cleaned.get("source_file")
+        if source is not None:
+            raw = source.read()
+            if isinstance(raw, bytes):
+                text = raw.decode("utf-8-sig", errors="replace")
+            else:
+                text = str(raw)
+            name = (getattr(source, "name", "") or "").lower()
+            if name.endswith(".json") or text.lstrip()[:1] in "{[":
+                json_content = text
+            else:
+                html_content = text
+        try:
+            result = run_systemgroup_import(
+                organization,
+                bom_id=cleaned.get("bom_id"),
+                crm_url=cleaned.get("crm_url"),
+                parent_part_number=cleaned.get("parent_part_number") or None,
+                html_content=html_content,
+                json_content=json_content,
+                dry_run=bool(cleaned.get("dry_run")),
+            )
+        except SystemGroupImportError as exc:
+            messages.error(request, str(exc))
+        else:
+            for msg in result.successes:
+                messages.info(request, msg)
+            for msg in result.warnings:
+                messages.warning(request, msg)
+            for msg in result.errors:
+                messages.error(request, msg)
+            if result.ok and result.parent_part is not None and not result.dry_run:
+                return HttpResponseRedirect(
+                    reverse(
+                        "bom:part-info",
+                        kwargs={"part_id": result.parent_part.id},
+                    )
+                )
+            if result.ok and result.dry_run:
+                messages.info(request, _("Dry run completed; nothing was written."))
+
+    return TemplateResponse(request, "bom/import-systemgroup-bom.html", locals())
+
+
+@login_required(login_url=BOM_LOGIN_URL)
 def upload_bom(request):
     user = request.user
     profile = user.bom_profile()

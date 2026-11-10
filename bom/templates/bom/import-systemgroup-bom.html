@@ -1,0 +1,68 @@
+{% extends 'bom/bom-base.html' %}
+
+{% load static %}
+{% load bom_forms %}
+{% load i18n %}
+
+{% block head-title %}{{ title }}{% endblock %}
+
+{% block main %}
+{% endblock %}
+
+{% block bom-menu %}
+    <a class="bom-nav-link" href="{% url 'bom:materials' %}">{% trans "Cancel" %}</a>
+{% endblock %}
+
+{% block content %}
+    <div class="container-app">
+        {% if profile.role == 'A' %}
+            <div class="bom-panel-pad">
+                <h1 class="mb-2 text-lg font-semibold text-ink">{% trans "Import SystemGroup BoM" %}</h1>
+                <p class="mb-2 text-sm text-ink-muted">
+                    {% trans "Pull a PAC Engineering BoM from the on-LAN SystemGroup CRM into Lithium. Existing parts are filled; missing parts and revisions are created — same rules as CSV / Add all subparts." %}
+                </p>
+                <p class="mb-4 text-sm text-ink-muted">
+                    {% trans "Server credentials (never entered here):" %}
+                    <code>CRM_BASE_URL</code>, <code>CRM_USERNAME</code>, <code>CRM_PASSWORD</code>.
+                    {% trans "CLI equivalent:" %}
+                    <code>python manage.py import_systemgroup_bom</code>.
+                </p>
+
+                <form action="{% url 'bom:import-systemgroup-bom' %}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="mb-4 text-sm text-red-700">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="row items-end gap-y-3">
+                        {{ form.bom_id|bom_form:'m4 s12' }}
+                        {{ form.crm_url|bom_form:'m8 s12' }}
+                    </div>
+                    <div class="row items-end gap-y-3 mt-2">
+                        {{ form.parent_part_number|bom_form:'m4 s12' }}
+                        <div class="col m8 s12 text-sm text-ink-muted">
+                            <p class="bom-help">[{% trans "Optional" %}] {% trans "Lithium parent part number. Leave blank to use / create from the CRM header." %}</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex flex-wrap items-end gap-3">
+                        <div>
+                            <label class="bom-label" for="{{ form.source_file.id_for_label }}">{{ form.source_file.label }}</label>
+                            {{ form.source_file }}
+                            {{ form.source_file.errors }}
+                            <p class="bom-help mt-1">{{ form.source_file.help_text }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        {{ form.dry_run|bom_form }}
+                    </div>
+                    <div class="mt-6 flex flex-wrap items-center justify-between gap-2">
+                        <a href="{% url 'bom:materials' %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
+                        <button class="bom-btn-primary" type="submit">{% trans "Import" %}</button>
+                    </div>
+                </form>
+            </div>
+        {% else %}
+            {% include 'bom/nothing-to-see.html' with required_privilege='Admin' %}
+        {% endif %}
+    </div>
+{% endblock %}

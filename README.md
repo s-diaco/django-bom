@@ -264,6 +264,29 @@ where `base.html` is your base template. `page_loading_delay_ms` controls how lo
 
 ## Integrations
 
+### SystemGroup PAC Engineering BoM import
+
+Admin-runnable import from the on-LAN SystemGroup CRM into Lithium parts/revisions (same create/update semantics as **Add all subparts** / CSV BoM upload). **CLI and Admin GUI share one backend.**
+
+Set gitignored env vars (see `.env.example`):
+
+```
+CRM_BASE_URL=http://192.168.3.193/
+CRM_USERNAME=...
+CRM_PASSWORD=...
+```
+
+**GUI (Admin only):** Upload → **Import SystemGroup BoM**, or a part’s BoM tab → **Import from SystemGroup CRM…**
+
+**CLI:**
+
+```
+python manage.py import_systemgroup_bom --bom-id 39477 --organization-id 1
+python manage.py import_systemgroup_bom --html-file ./saved-edit.html --organization-id 1 --parent-part 500-1234-00
+```
+
+Parser fixtures live under `bom/test_files/systemgroup/` because the CRM is LAN-only. Replace them with a saved authenticated Edit HTML/JSON sample to lock production markup.
+
 ### FIXER
 Fixer.io is used to handle exchange rate calculations. This is helpful if you may be purchasing parts from another currency (especially via Mouser) and you still need to estimate your part costs.
 
