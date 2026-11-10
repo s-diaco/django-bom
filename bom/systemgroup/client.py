@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import os
-from urllib.parse import urlencode, urljoin, urlparse, urlunparse
+import re
+from urllib.parse import parse_qs, unquote, urlencode, urljoin, urlparse, urlunparse
 
 import requests
 
@@ -16,6 +17,34 @@ class SystemGroupClientError(RuntimeError):
 
 DEFAULT_LOGIN_PATH = "/Authentication/Login.aspx"
 DEFAULT_BOM_EDIT_PAGE = "PAC/Engineering/BomPages/Edit.aspx"
+
+_BOM_ID_IN_URL = re.compile(
+    r"(?:[?&]id=|/id/)(\d+)",
+    re.IGNORECASE,
+)
+
+
+def extract_bom_id_from_url(url: str) -> str | None:
+    """Pull BoM id from a Shell/Edit CRM URL (handles nested page= query)."""
+    if not url or not str(url).strip():
+        return None
+    raw = str(url).strip()
+    # Nested page=PAC/...Edit.aspx?id=N may be percent-encoded once or twice.
+    candidates = [raw, unquote(raw), unquote(unquote(raw))]
+    for candidate in candidates:
+        parsed = urlparse(candidate)
+        qs = parse_qs(parsed.query)
+        if "id" in qs and qs["id"]:
+            return qs["id"][0]
+        if "page" in qs and qs["page"]:
+            page_val = qs["page"][0]
+            match = _BOM_ID_IN_URL.search(page_val)
+            if match:
+                return match.group(1)
+        match = _BOM_ID_IN_URL.search(candidate)
+        if match:
+            return match.group(1)
+    return None
 
 
 def credentials_from_env() -> tuple[str, str, str]:

@@ -5,13 +5,21 @@ from __future__ import annotations
 from pathlib import Path
 from unittest import mock
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
+from django.urls import reverse
 
 from bom.helpers import create_some_fake_parts, create_user_and_organization
 from bom.models import Part
-from bom.systemgroup.client import SystemGroupClient, SystemGroupClientError, bom_edit_url
+from bom.systemgroup.client import (
+    SystemGroupClient,
+    SystemGroupClientError,
+    bom_edit_url,
+    extract_bom_id_from_url,
+)
+from bom.systemgroup.forms import SystemGroupBomImportForm
 from bom.systemgroup.importer import import_parsed_bom, parsed_bom_to_csv_bytes
 from bom.systemgroup.parser import (
     SystemGroupParseError,
@@ -103,6 +111,23 @@ class SystemGroupClientTests(TestCase):
         self.assertIn("Edit.aspx", url)
         # page=...Edit.aspx?id=39477 is query-encoded
         self.assertIn("id%3D39477", url)
+
+    def test_extract_bom_id_from_url(self):
+        self.assertEqual(
+            extract_bom_id_from_url(
+                "http://192.168.3.193/Shell.aspx?page=PAC/Engineering/BomPages/Edit.aspx?id=39477"
+            ),
+            "39477",
+        )
+        encoded = bom_edit_url("http://192.168.3.193/", 39477)
+        self.assertEqual(extract_bom_id_from_url(encoded), "39477")
+        self.assertEqual(
+            extract_bom_id_from_url(
+                "http://192.168.3.193/PAC/Engineering/BomPages/Edit.aspx?id=12"
+            ),
+            "12",
+        )
+        self.assertIsNone(extract_bom_id_from_url("http://example/no-id"))
 
     def test_credentials_from_env_missing(self):
         with mock.patch.dict("os.environ", {}, clear=True):
@@ -278,3 +303,98 @@ class SystemGroupManagementCommandTests(TestCase):
                 "import_systemgroup_bom",
                 organization_id=self.organization.id,
             )
+
+
+class SystemGroupAdminGuiTests(TestCase):
+    def setUp(self):
+        self.user, self.organization = create_user_and_organization()
+        create_some_fake_parts(organization=self.organization)
+        self.client = Client()
+        self.client.login(username="kasper", password="ghostpassword")
+        self.url = reverse("bom:import-systemgroup-bom")
+
+    def test_admin_get_form(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Import SystemGroup BoM")
+        self.assertContains(response, "CRM_BASE_URL")
+
+    def test_viewer_denied(self):
+        profile = self.user.bom_profile()
+        profile.role = "V"
+        profile.save()
+        response = self.client.get(self.url, HTTP_REFERER=reverse("bom:materials"))
+        self.assertIn(response.status_code, (301, 302, 303, 307, 308))
+        self.assertEqual(response.url, reverse("bom:materials"))
+
+    def test_form_extracts_id_from_crm_url(self):
+        form = SystemGroupBomImportForm(
+            data={
+                "crm_url": "http://192.168.3.193/Shell.aspx?page=PAC/Engineering/BomPages/Edit.aspx?id=39477",
+            }
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["bom_id"], "39477")
+
+    def test_post_html_upload_imports(self):
+        parent = [
+            p
+            for p in Part.objects.filter(organization=self.organization)
+            if p.full_part_number() != "200-3333-00"
+        ][0]
+        if parent.latest().assembly is None:
+            from bom.helpers import create_a_fake_assembly
+
+            rev = parent.latest()
+            rev.assembly = create_a_fake_assembly()
+            rev.save()
+
+        html = (FIXTURES / "bom_edit.html").read_bytes()
+        response = self.client.post(
+            self.url,
+            {
+                "parent_part_number": parent.full_part_number(),
+                "source_file": SimpleUploadedFile(
+                    "bom_edit.html", html, content_type="text/html"
+                ),
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        parent.refresh_from_db()
+        pns = {
+            sp.part_revision.part.full_part_number()
+            for sp in parent.latest().assembly.subparts.all()
+        }
+        self.assertIn("500-7777-00", pns)
+
+    def test_upload_menu_link_present_for_admin(self):
+        response = self.client.get(reverse("bom:materials"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse("bom:import-systemgroup-bom"))
+        self.assertContains(response, "Import SystemGroup BoM")
+
+    def test_part_bom_tab_deep_link(self):
+        # BoM tab only renders for product revisions (has_bom material type).
+        part = [
+            p
+            for p in Part.objects.filter(organization=self.organization)
+            if p.latest() is not None
+        ][0]
+        self.organization.ensure_default_product_types()
+        product_code = next(
+            pt.code for pt in self.organization.product_types.all() if pt.has_bom
+        )
+        rev = part.latest()
+        rev.material = product_code
+        rev.save()
+        response = self.client.get(
+            reverse("bom:part-info", kwargs={"part_id": part.id}) + "?tab_anchor=bom"
+        )
+        self.assertEqual(response.status_code, 200)
+        expected = (
+            reverse("bom:import-systemgroup-bom")
+            + f"?parent_part={part.full_part_number()}"
+        )
+        self.assertContains(response, "Import from SystemGroup CRM")
+        self.assertContains(response, expected)

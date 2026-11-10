@@ -85,6 +85,11 @@ bom_patterns = [
     path("upload-parts/", views.upload_parts, name="upload-parts"),
     path("upload-parts-help/", views.upload_parts_help, name="upload-parts-help"),
     path("upload-bom/", views.upload_bom, name="upload-bom"),
+    path(
+        "import-systemgroup-bom/",
+        views.import_systemgroup_bom,
+        name="import-systemgroup-bom",
+    ),
     path("part/<int:part_id>/", views.part_info, name="part-info"),
     path(
         "part/<int:part_id>/customer-prices/create/",

@@ -8,25 +8,23 @@ Credentials (env only, never commit):
 Examples:
   python manage.py import_systemgroup_bom --bom-id 39477 --organization-id 1
   python manage.py import_systemgroup_bom --html-file ./bom-edit.html --organization-id 1 --parent-part 500-1234-00
+
+Admin UI: Upload → Import SystemGroup BoM (same backend).
 """
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from django.core.management.base import BaseCommand, CommandError
 
-from bom.models import Organization, Part
-from bom.systemgroup.client import SystemGroupClient, SystemGroupClientError
-from bom.systemgroup.importer import import_parsed_bom
-from bom.systemgroup.parser import SystemGroupParseError, parse_bom_document
+from bom.models import Organization
+from bom.systemgroup.importer import SystemGroupImportError, run_systemgroup_import
 
 
 class Command(BaseCommand):
     help = (
         "Import a SystemGroup PAC Engineering BoM into Lithium parts/revisions "
         "(reuses CSV BoM / Add-all-subparts semantics). Credentials: CRM_BASE_URL, "
-        "CRM_USERNAME, CRM_PASSWORD."
+        "CRM_USERNAME, CRM_PASSWORD. Same backend as the Admin Upload UI."
     )
 
     def add_arguments(self, parser):
@@ -34,7 +32,13 @@ class Command(BaseCommand):
             "--bom-id",
             type=str,
             default=None,
-            help="CRM BoM id (Edit.aspx?id=...). Required unless --html-file/--json-file.",
+            help="CRM BoM id (Edit.aspx?id=...). Required unless --html-file/--json-file/--crm-url.",
+        )
+        parser.add_argument(
+            "--crm-url",
+            type=str,
+            default=None,
+            help="Optional CRM Shell/Edit URL; id is extracted when --bom-id is omitted.",
         )
         parser.add_argument(
             "--organization-id",
@@ -74,53 +78,18 @@ class Command(BaseCommand):
         except Organization.DoesNotExist as exc:
             raise CommandError(f"Organization id={org_id} not found.") from exc
 
-        html_file = options["html_file"]
-        json_file = options["json_file"]
-        bom_id = options["bom_id"]
-        dry_run = options["dry_run"]
-        parent_pn = options["parent_part"]
-
-        if not html_file and not json_file and not bom_id:
-            raise CommandError("Provide --bom-id, or --html-file / --json-file.")
-
-        parent_part = None
-        if parent_pn:
-            try:
-                parent_part = Part.from_part_number(parent_pn, organization)
-            except (Part.DoesNotExist, AttributeError) as exc:
-                raise CommandError(
-                    f"Parent part '{parent_pn}' not found in organization {org_id}."
-                ) from exc
-
         try:
-            if json_file:
-                content = Path(json_file).read_text(encoding="utf-8")
-                parsed = parse_bom_document(content, content_type="application/json")
-            elif html_file:
-                content = Path(html_file).read_text(encoding="utf-8")
-                parsed = parse_bom_document(content, content_type="text/html")
-            else:
-                client = SystemGroupClient()
-                body, ctype = client.fetch_bom(bom_id)
-                parsed = parse_bom_document(body, content_type=ctype)
-        except (SystemGroupClientError, SystemGroupParseError, OSError) as exc:
+            result = run_systemgroup_import(
+                organization,
+                bom_id=options["bom_id"],
+                crm_url=options["crm_url"],
+                parent_part_number=options["parent_part"],
+                html_path=options["html_file"],
+                json_path=options["json_file"],
+                dry_run=options["dry_run"],
+            )
+        except SystemGroupImportError as exc:
             raise CommandError(str(exc)) from exc
-
-        if bom_id and not parsed.bom_id:
-            parsed.bom_id = str(bom_id)
-
-        self.stdout.write(
-            f"Parsed BoM id={parsed.bom_id or '?'} source={parsed.source} "
-            f"lines={len(parsed.lines)} parent_crm={parsed.parent_part_number or '-'}"
-        )
-
-        result = import_parsed_bom(
-            organization,
-            parsed,
-            parent_part=parent_part,
-            parent_part_number=parent_pn,
-            dry_run=dry_run,
-        )
 
         for msg in result.successes:
             self.stdout.write(self.style.SUCCESS(msg))

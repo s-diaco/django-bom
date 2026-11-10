@@ -266,7 +266,7 @@ where `base.html` is your base template. `page_loading_delay_ms` controls how lo
 
 ### SystemGroup PAC Engineering BoM import
 
-Admin-runnable one-shot import from the on-LAN SystemGroup CRM into Lithium parts/revisions (same create/update semantics as **Add all subparts** / CSV BoM upload).
+Admin-runnable import from the on-LAN SystemGroup CRM into Lithium parts/revisions (same create/update semantics as **Add all subparts** / CSV BoM upload). **CLI and Admin GUI share one backend.**
 
 Set gitignored env vars (see `.env.example`):
 
@@ -275,6 +275,10 @@ CRM_BASE_URL=http://192.168.3.193/
 CRM_USERNAME=...
 CRM_PASSWORD=...
 ```
+
+**GUI (Admin only):** Upload → **Import SystemGroup BoM**, or a part’s BoM tab → **Import from SystemGroup CRM…**
+
+**CLI:**
 
 ```
 python manage.py import_systemgroup_bom --bom-id 39477 --organization-id 1

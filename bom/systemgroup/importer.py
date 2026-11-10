@@ -5,13 +5,15 @@ from __future__ import annotations
 import csv
 import io
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from bom.forms import BOMCSVForm
 from bom.models import Organization, Part
 
-from .parser import BomLine, ParsedBom
+from .client import SystemGroupClient, SystemGroupClientError, extract_bom_id_from_url
+from .parser import BomLine, ParsedBom, SystemGroupParseError, parse_bom_document
 
 
 CSV_COLUMNS = [
@@ -172,3 +174,75 @@ def import_parsed_bom(
             result.warnings.extend(form.warnings)
 
     return result
+
+
+class SystemGroupImportError(Exception):
+    """User-facing failure before/during SystemGroup import orchestration."""
+
+
+def run_systemgroup_import(
+    organization: Organization,
+    *,
+    bom_id: str | None = None,
+    crm_url: str | None = None,
+    parent_part_number: str | None = None,
+    html_content: str | None = None,
+    json_content: str | None = None,
+    html_path: str | Path | None = None,
+    json_path: str | Path | None = None,
+    dry_run: bool = False,
+    client: SystemGroupClient | None = None,
+) -> ImportResult:
+    """Shared entry used by the management command and Admin UI.
+
+    Source priority: json_content/path → html_content/path → live CRM fetch by
+    bom_id (or id extracted from crm_url). Credentials always come from CRM_* env
+    (or an injected ``client``).
+    """
+    resolved_bom_id = (bom_id or "").strip() or None
+    if not resolved_bom_id and crm_url:
+        resolved_bom_id = extract_bom_id_from_url(crm_url)
+
+    parent_pn = (parent_part_number or "").strip() or None
+    parent_part = None
+    if parent_pn:
+        try:
+            parent_part = Part.from_part_number(parent_pn, organization)
+        except (Part.DoesNotExist, AttributeError) as exc:
+            raise SystemGroupImportError(
+                f"Parent part '{parent_pn}' not found in this organization."
+            ) from exc
+
+    try:
+        if json_content is not None:
+            parsed = parse_bom_document(json_content, content_type="application/json")
+        elif json_path is not None:
+            content = Path(json_path).read_text(encoding="utf-8")
+            parsed = parse_bom_document(content, content_type="application/json")
+        elif html_content is not None:
+            parsed = parse_bom_document(html_content, content_type="text/html")
+        elif html_path is not None:
+            content = Path(html_path).read_text(encoding="utf-8")
+            parsed = parse_bom_document(content, content_type="text/html")
+        else:
+            if not resolved_bom_id:
+                raise SystemGroupImportError(
+                    "Provide a BoM id, a CRM Edit URL containing id=, "
+                    "or an HTML/JSON upload."
+                )
+            sg = client or SystemGroupClient()
+            body, ctype = sg.fetch_bom(resolved_bom_id)
+            parsed = parse_bom_document(body, content_type=ctype)
+    except (SystemGroupClientError, SystemGroupParseError, OSError) as exc:
+        raise SystemGroupImportError(str(exc)) from exc
+
+    if resolved_bom_id and not parsed.bom_id:
+        parsed.bom_id = str(resolved_bom_id)
+
+    return import_parsed_bom(
+        organization,
+        parsed,
+        parent_part=parent_part,
+        parent_part_number=parent_pn,
+        dry_run=dry_run,
+    )
