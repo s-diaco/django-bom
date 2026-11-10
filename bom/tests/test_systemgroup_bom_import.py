@@ -23,6 +23,10 @@ from bom.systemgroup.client import (
     bom_list_url,
     extract_bom_id_from_url,
 )
+from bom.systemgroup.access import (
+    user_can_import_systemgroup,
+    user_meta_has_systemgroup_credentials,
+)
 from bom.systemgroup.forms import SystemGroupBomImportForm
 from bom.systemgroup.importer import (
     AmbiguousBomMatch,
@@ -897,10 +901,38 @@ class SystemGroupListResolveImportTests(TestCase):
         self.assertEqual(session.get.call_count, 2)
 
 
+class SystemGroupAccessTests(TestCase):
+    def setUp(self):
+        self.user, self.organization = create_user_and_organization()
+        self.profile = self.user.bom_profile()
+
+    def test_requires_org_flag_and_credentials(self):
+        self.assertFalse(user_can_import_systemgroup(self.user))
+        self.organization.systemgroup_import_enabled = True
+        self.organization.save(update_fields=["systemgroup_import_enabled"])
+        self.assertFalse(user_can_import_systemgroup(self.user))
+        self.profile.systemgroup_username = "u"
+        self.profile.systemgroup_password = "p"
+        self.profile.save(
+            update_fields=["systemgroup_username", "systemgroup_password"]
+        )
+        self.assertTrue(user_meta_has_systemgroup_credentials(self.profile))
+        self.assertTrue(user_can_import_systemgroup(self.user))
+        self.assertTrue(self.profile.can_import_systemgroup())
+
+
 class SystemGroupAdminGuiTests(TestCase):
     def setUp(self):
         self.user, self.organization = create_user_and_organization()
         create_some_fake_parts(organization=self.organization)
+        self.organization.systemgroup_import_enabled = True
+        self.organization.save(update_fields=["systemgroup_import_enabled"])
+        profile = self.user.bom_profile()
+        profile.systemgroup_username = "crm-user"
+        profile.systemgroup_password = "crm-pass"
+        profile.save(
+            update_fields=["systemgroup_username", "systemgroup_password"]
+        )
         self.client = Client()
         self.client.login(username="kasper", password="ghostpassword")
         self.url = reverse("bom:import-systemgroup-bom")
@@ -912,6 +944,56 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertContains(response, "Part ID + Revision")
         self.assertContains(response, "Get the BoM")
         self.assertContains(response, "CRM_BASE_URL")
+
+    def test_import_disabled_without_user_credentials(self):
+        profile = self.user.bom_profile()
+        profile.systemgroup_username = ""
+        profile.systemgroup_password = ""
+        profile.save(
+            update_fields=["systemgroup_username", "systemgroup_password"]
+        )
+        response = self.client.get(self.url)
+        self.assertIn(response.status_code, (301, 302, 303, 307, 308))
+        self.assertEqual(
+            response.url, reverse("bom:settings", kwargs={"tab_anchor": "user"})
+        )
+
+    def test_import_disabled_when_org_flag_off(self):
+        self.organization.systemgroup_import_enabled = False
+        self.organization.save(update_fields=["systemgroup_import_enabled"])
+        response = self.client.get(self.url)
+        self.assertIn(response.status_code, (301, 302, 303, 307, 308))
+        self.assertEqual(
+            response.url, reverse("bom:settings", kwargs={"tab_anchor": "user"})
+        )
+
+    def test_home_hides_import_without_credentials(self):
+        profile = self.user.bom_profile()
+        profile.systemgroup_password = ""
+        profile.save(update_fields=["systemgroup_password"])
+        response = self.client.get(reverse("bom:home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Import material")
+
+    def test_settings_saves_systemgroup_credentials(self):
+        response = self.client.post(
+            reverse("bom:settings", kwargs={"tab_anchor": "user"}),
+            {
+                "submit-edit-user": "1",
+                "first_name": self.user.first_name,
+                "last_name": self.user.last_name,
+                "email": self.user.email,
+                "calendar": "J",
+                "language": "en",
+                "systemgroup_username": "new-crm",
+                "systemgroup_password": "new-secret",
+            },
+        )
+        self.assertIn(response.status_code, (200, 302))
+        profile = self.user.bom_profile()
+        profile.refresh_from_db()
+        self.assertEqual(profile.systemgroup_username, "new-crm")
+        self.assertEqual(profile.systemgroup_password, "new-secret")
 
     def test_viewer_denied(self):
         profile = self.user.bom_profile()

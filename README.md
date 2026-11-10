@@ -268,15 +268,17 @@ where `base.html` is your base template. `page_loading_delay_ms` controls how lo
 
 Admin-runnable import from the on-LAN SystemGroup CRM into Lithium parts/revisions (same create/update semantics as **Add all subparts** / CSV BoM upload). **CLI and Admin GUI share one backend.**
 
-Set gitignored env vars (see `.env.example`):
+Server env (see `.env.example`):
 
 ```
 CRM_BASE_URL=http://192.168.3.193/
-CRM_USERNAME=...
-CRM_PASSWORD=...
 ```
 
-**GUI (Admin only):** Home → **Import material** (next to New Material). Paste **Part ID + Revision** as `PN/rev` (CRM «کد BOM») and click **Get the BoM**. Missing Lithium parts/revisions are created; if the target revision already has a BoM tree, choose keep (append) or replace. CRM id/URL remain optional fallbacks; multiple list hits show a pick list.
+GUI login no longer reads `CRM_USERNAME` / `CRM_PASSWORD` from `.env.prod`. Each admin sets their own SystemGroup username/password under **Settings → User**. The organization owner must enable **Enable SystemGroup BoM import** under **Settings → Organization**. Import stays disabled for any admin who has not saved credentials.
+
+CLI still accepts optional `CRM_USERNAME` / `CRM_PASSWORD` for offline ops scripts.
+
+**GUI (Admin only, when org+user credentials allow):** Home → **Import material** (next to New Material). Paste **Part ID + Revision** as `PN/rev` (CRM «کد BOM») and click **Get the BoM**. Missing Lithium parts/revisions are created; if the target revision already has a BoM tree, choose keep (append) or replace. CRM id/URL remain optional fallbacks; multiple list hits show a pick list.
 
 **CLI:**
 

@@ -102,6 +102,13 @@ class Organization(models.Model):
         max_length=128, blank=True, default=None, null=True
     )
     currency = CurrencyField(max_length=3, choices=CURRENCY_CHOICES, default="USD")
+    systemgroup_import_enabled = models.BooleanField(
+        default=False,
+        help_text=(
+            "Allow organization admins who have saved SystemGroup credentials "
+            "to import BoMs from the CRM."
+        ),
+    )
 
     def number_cs(self):
         return "C" * self.number_class_code_len
@@ -240,6 +247,22 @@ class UserMeta(models.Model):
     language = models.CharField(
         max_length=10, choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE
     )
+    systemgroup_username = models.CharField(max_length=255, blank=True, default="")
+    systemgroup_password = models.CharField(max_length=255, blank=True, default="")
+
+    def has_systemgroup_credentials(self) -> bool:
+        return bool(
+            (self.systemgroup_username or "").strip() and self.systemgroup_password
+        )
+
+    def can_import_systemgroup(self) -> bool:
+        """Org must enable import; this user must have CRM username/password."""
+        if self.role != "A":
+            return False
+        org = self.organization
+        if org is None or not org.systemgroup_import_enabled:
+            return False
+        return self.has_systemgroup_credentials()
 
     def get_or_create_organization(self):
         if self.organization is None:

@@ -924,8 +924,35 @@ def bom_settings(request, tab_anchor=None):
                     profile.language = language
                     fields_to_update.append("language")
                     translation.activate(language)
+                if "systemgroup_username" in request.POST:
+                    profile.systemgroup_username = (
+                        request.POST.get("systemgroup_username") or ""
+                    ).strip()
+                    fields_to_update.append("systemgroup_username")
+                    if not profile.systemgroup_username:
+                        profile.systemgroup_password = ""
+                        fields_to_update.append("systemgroup_password")
+                # Blank password keeps the stored value; clear checkbox wipes it.
+                if request.POST.get("clear_systemgroup_password"):
+                    profile.systemgroup_password = ""
+                    fields_to_update.append("systemgroup_password")
+                elif (
+                    "systemgroup_password" in request.POST
+                    and profile.systemgroup_username
+                ):
+                    new_password = request.POST.get("systemgroup_password") or ""
+                    if new_password:
+                        profile.systemgroup_password = new_password
+                        fields_to_update.append("systemgroup_password")
                 if fields_to_update:
-                    profile.save(update_fields=fields_to_update)
+                    # Deduplicate while preserving order.
+                    seen = set()
+                    unique_fields = []
+                    for field in fields_to_update:
+                        if field not in seen:
+                            seen.add(field)
+                            unique_fields.append(field)
+                    profile.save(update_fields=unique_fields)
             else:
                 messages.error(request, user_form.errors)
 
@@ -2512,6 +2539,7 @@ def part_export_bom(
 @organization_admin
 def import_systemgroup_bom(request):
     """Admin UI for SystemGroup PAC Engineering BoM import (same backend as CLI)."""
+    from bom.systemgroup.access import user_can_import_systemgroup
     from bom.systemgroup.forms import SystemGroupBomImportForm
     from bom.systemgroup.importer import (
         AmbiguousBomMatch,
@@ -2524,6 +2552,27 @@ def import_systemgroup_bom(request):
     profile = user.bom_profile()
     organization = profile.organization
     title = _("Import SystemGroup BoM")
+    if not user_can_import_systemgroup(user):
+        if organization is None or not organization.systemgroup_import_enabled:
+            messages.error(
+                request,
+                _(
+                    "SystemGroup import is disabled for this organization. "
+                    "Ask the organization owner to enable it under Settings → Organization."
+                ),
+            )
+        else:
+            messages.error(
+                request,
+                _(
+                    "Set your SystemGroup username and password under "
+                    "Settings → User before importing."
+                ),
+            )
+        return HttpResponseRedirect(
+            reverse("bom:settings", kwargs={"tab_anchor": "user"})
+        )
+
     bom_candidates = None
     match_query = None
     existing_bom_conflict = None
@@ -2582,6 +2631,7 @@ def import_systemgroup_bom(request):
                 dry_run=bool(cleaned.get("dry_run")),
                 from_list=bool(cleaned.get("browse_list")),
                 existing_bom_action=cleaned.get("existing_bom_action"),
+                user_meta=profile,
             )
         except AmbiguousBomMatch as exc:
             bom_candidates = exc.matches

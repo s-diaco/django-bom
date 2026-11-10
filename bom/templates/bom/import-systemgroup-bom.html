@@ -22,8 +22,9 @@
                     {% trans "Pull a PAC Engineering BoM from the on-LAN SystemGroup CRM into Lithium. Missing parts and revisions are created; existing ones are reused." %}
                 </p>
                 <p class="mb-4 text-sm text-ink-muted">
-                    {% trans "Paste Part ID + Revision (PN/rev). Server credentials (never entered here):" %}
-                    <code>CRM_BASE_URL</code>, <code>CRM_USERNAME</code>, <code>CRM_PASSWORD</code>.
+                    {% trans "Paste Part ID + Revision (PN/rev). Live CRM login uses your SystemGroup username/password from Settings → User, and" %}
+                    <code>CRM_BASE_URL</code>
+                    {% trans "from the server environment." %}
                 </p>
 
                 {% if existing_bom_conflict %}

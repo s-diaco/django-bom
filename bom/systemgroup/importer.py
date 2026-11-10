@@ -411,6 +411,7 @@ def run_systemgroup_import(
     json_path: str | Path | None = None,
     dry_run: bool = False,
     client: SystemGroupClient | None = None,
+    user_meta=None,
     from_list: bool = False,
     list_html: str | None = None,
     list_json: str | None = None,
@@ -421,8 +422,10 @@ def run_systemgroup_import(
     """Shared entry used by the management command and Admin UI.
 
     Source priority: json_content/path → html_content/path → live CRM fetch by
-    bom_id (or id extracted from crm_url / resolved from BoM list). Credentials
-    always come from CRM_* env (or an injected ``client``).
+    bom_id (or id extracted from crm_url / resolved from BoM list).
+
+    Live credentials: injected ``client``, else ``user_meta`` (GUI per-user
+    username/password + ``CRM_BASE_URL``), else CRM_* env (CLI).
 
     When ``bom_id`` / ``crm_url`` are omitted and ``from_list`` is true (or a
     parent part number is set), the CRM BoM list is fetched and matched by
@@ -431,6 +434,8 @@ def run_systemgroup_import(
     revision already has a BoM tree, ``existing_bom_action`` must be
     ``keep`` or ``replace`` (else ``ExistingBomConflict``).
     """
+    from .access import client_for_user_meta
+
     resolved_bom_id = (bom_id or "").strip() or None
     if not resolved_bom_id and crm_url:
         resolved_bom_id = extract_bom_id_from_url(crm_url)
@@ -458,13 +463,25 @@ def run_systemgroup_import(
         explicit_list or (bool(parent_pn) and not offline_edit)
     )
 
+    def ensure_client() -> SystemGroupClient:
+        nonlocal client
+        if client is None:
+            if user_meta is not None:
+                client = client_for_user_meta(user_meta)
+            else:
+                client = SystemGroupClient()
+        return client
+
     list_entry: BomListEntry | None = None
     if should_resolve_list:
+        needs_live_list = (
+            list_html is None and list_json is None and list_path is None
+        )
         list_entry = resolve_bom_from_list(
             part_number=parent_pn,
             description=parent_desc if parent_pn else None,
             revision=parent_rev if parent_pn else None,
-            client=client,
+            client=ensure_client() if needs_live_list else client,
             list_html=list_html,
             list_json=list_json,
             list_path=list_path,
@@ -493,8 +510,7 @@ def run_systemgroup_import(
                     "Provide Part ID + Revision, a BoM id / Edit URL, "
                     "--from-list, or an HTML/JSON upload."
                 )
-            sg = client or SystemGroupClient()
-            body, ctype = sg.fetch_bom(resolved_bom_id)
+            body, ctype = ensure_client().fetch_bom(resolved_bom_id)
             parsed = parse_bom_document(body, content_type=ctype)
     except (SystemGroupClientError, SystemGroupParseError, OSError) as exc:
         raise SystemGroupImportError(str(exc)) from exc

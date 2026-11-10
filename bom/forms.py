@@ -336,7 +336,12 @@ class OrganizationForm(forms.ModelForm):
 class OrganizationFormEditSettings(OrganizationForm):
     def __init__(self, *args, **kwargs):
         super(OrganizationFormEditSettings, self).__init__(*args, **kwargs)
-        # user = kwargs.get("user", None)
+        if "systemgroup_import_enabled" in self.fields:
+            self.fields["systemgroup_import_enabled"].help_text = _(
+                "When enabled, organization admins who have saved their own "
+                "SystemGroup username/password under User settings can import "
+                "BoMs. Users without credentials cannot import."
+            )
 
     class Meta:
         model = Organization
@@ -352,6 +357,7 @@ class OrganizationFormEditSettings(OrganizationForm):
         ]
         labels = {
             "name": "Organization Name",
+            "systemgroup_import_enabled": _("Enable SystemGroup BoM import"),
         }
 
 
