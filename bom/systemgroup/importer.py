@@ -504,34 +504,38 @@ def run_systemgroup_import(
     def ensure_client() -> SystemGroupClient:
         nonlocal client
         if client is None:
-            if user_meta is not None:
-                client = client_for_user_meta(user_meta)
-            else:
-                client = SystemGroupClient()
+            try:
+                if user_meta is not None:
+                    client = client_for_user_meta(user_meta)
+                else:
+                    client = SystemGroupClient()
+            except SystemGroupClientError as exc:
+                # Surface as ImportError so GUI/CLI catch one exception type.
+                raise SystemGroupImportError(str(exc)) from exc
         return client
 
     list_entry: BomListEntry | None = None
-    if should_resolve_list:
-        needs_live_list = (
-            list_html is None and list_json is None and list_path is None
-        )
-        list_entry = resolve_bom_from_list(
-            part_number=parent_pn,
-            description=parent_desc if parent_pn else None,
-            revision=parent_rev if parent_pn else None,
-            client=ensure_client() if needs_live_list else client,
-            list_html=list_html,
-            list_json=list_json,
-            list_path=list_path,
-        )
-        resolved_bom_id = list_entry.bom_id
-        # Prefer list-row PN/rev when the user only typed a bare PN.
-        if not parent_pn and list_entry.part_number:
-            parent_pn = list_entry.part_number
-        if not parent_rev and list_entry.revision:
-            parent_rev = list_entry.revision
-
     try:
+        if should_resolve_list:
+            needs_live_list = (
+                list_html is None and list_json is None and list_path is None
+            )
+            list_entry = resolve_bom_from_list(
+                part_number=parent_pn,
+                description=parent_desc if parent_pn else None,
+                revision=parent_rev if parent_pn else None,
+                client=ensure_client() if needs_live_list else client,
+                list_html=list_html,
+                list_json=list_json,
+                list_path=list_path,
+            )
+            resolved_bom_id = list_entry.bom_id
+            # Prefer list-row PN/rev when the user only typed a bare PN.
+            if not parent_pn and list_entry.part_number:
+                parent_pn = list_entry.part_number
+            if not parent_rev and list_entry.revision:
+                parent_rev = list_entry.revision
+
         if json_content is not None:
             parsed = parse_bom_document(json_content, content_type="application/json")
         elif json_path is not None:

@@ -2698,7 +2698,7 @@ def import_systemgroup_bom(request):
                         "(append imported lines) or replace it."
                     ),
                 )
-            except SystemGroupImportError as exc:
+            except (SystemGroupImportError, SystemGroupClientError) as exc:
                 messages.error(request, str(exc))
             else:
                 request.session.pop(session_key, None)

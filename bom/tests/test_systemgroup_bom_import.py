@@ -1018,6 +1018,20 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Missing CRM_BASE_URL")
 
+    def test_get_the_bom_unreachable_crm_shows_error_not_500(self):
+        with mock.patch(
+            "bom.systemgroup.access.client_for_user_meta",
+            side_effect=SystemGroupClientError(
+                "Could not reach the SystemGroup CRM login page: Connection refused"
+            ),
+        ):
+            response = self.client.post(
+                self.url,
+                {"part_id_revision": "1155F229/A2"},
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Could not reach the SystemGroup CRM")
+
     def test_import_selected_revision_posts_bom_id_and_rev(self):
         html = (FIXTURES / "bom_edit.html").read_bytes()
         # Same payload shape as the revision-picker "Import this BoM" button.
