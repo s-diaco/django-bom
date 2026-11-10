@@ -4,7 +4,7 @@
 {% load bom_i18n %}
 {% load static %}
 
-{% block head-title %}{{ title }}{% endblock %}
+{% block head-title %}{% trans "Exchange Rates" %}{% endblock %}
 
 {% block main %}
 {% endblock %}
@@ -12,19 +12,30 @@
 {% block content %}
 <div class="container-app">
     {% if profile.role == 'A' %}
-        <div class="bom-panel-pad max-w-3xl">
-            <h2 class="mb-2 text-xl font-semibold text-ink">{% trans "Exchange Rates" %}</h2>
-            <p class="mb-4 text-sm text-ink-muted">
-                {% blocktrans with currency=organization.currency|currency_label %}
-                Enter how many {{ currency }} equal 1 unit of each foreign currency.
-                Used when imported materials are priced in a foreign currency.
-                {% endblocktrans %}
-            </p>
+        <div class="bom-panel-pad mx-auto max-w-2xl">
+            <header class="mb-6 border-b border-border-subtle pb-5">
+                <h1 class="mb-2 text-xl font-semibold text-ink">{% trans "Exchange Rates" %}</h1>
+                <p class="mb-0 text-sm text-ink-muted">
+                    {% blocktrans with currency=organization.currency|currency_label %}
+                    Enter how many {{ currency }} equal 1 unit of each foreign currency.
+                    Used when imported materials are priced in a foreign currency.
+                    {% endblocktrans %}
+                </p>
+                <p class="mb-0 mt-3 text-sm text-ink-muted">
+                    {% trans "Organization currency" %}:
+                    <strong class="font-semibold text-ink" dir="ltr">{{ organization.currency|currency_label }}</strong>
+                </p>
+            </header>
+
             <form name="exchange-rates" action="{% url 'bom:exchange-rates' %}" method="post">
                 {% csrf_token %}
-                {% include 'bom/components/exchange-rates-fields.html' with exchange_rates_form=exchange_rates_form %}
-                <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
-                    <a href="javascript:history.back()" class="bom-btn-ghost">{% trans "Cancel" %}</a>
+                <section class="mb-6">
+                    <h2 class="mb-4 text-base font-semibold text-ink">{% trans "Rates" %}</h2>
+                    {% include 'bom/components/exchange-rates-fields.html' with exchange_rates_form=exchange_rates_form %}
+                </section>
+
+                <div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border-subtle pt-5">
+                    <a href="{% url 'bom:home' %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
                     <button class="bom-btn-primary" type="submit" name="submit-exchange-rates">{% trans "Save" %}</button>
                 </div>
             </form>

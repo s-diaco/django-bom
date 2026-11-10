@@ -532,6 +532,22 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn("md:col-span-6", html)
         self.assertNotIn("lg:col-span-2", html)
 
+    def test_exchange_rates_uses_spaced_panel_layout(self):
+        user, organization = create_user_and_organization()
+        self.client.login(username="kasper", password="ghostpassword")
+        response = self.client.get(reverse("bom:exchange-rates"))
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        self.assertIn("bom-panel-pad", html)
+        self.assertIn("max-w-2xl", html)
+        self.assertIn("mx-auto", html)
+        self.assertIn("gap-y-5", html)
+        self.assertIn("md:col-span-6", html)
+        self.assertNotIn("md:col-span-4", html)
+        self.assertIn('name="submit-exchange-rates"', html)
+        self.assertIn("bom-btn-primary", html)
+        self.assertIn("border-border-subtle", html)
+
 
 class TestBomTabsUrlHash(SimpleTestCase):
     def test_tabs_js_syncs_address_bar_hash(self):
