@@ -17,13 +17,23 @@ from bom.systemgroup.client import (
     SystemGroupClient,
     SystemGroupClientError,
     bom_edit_url,
+    bom_list_url,
     extract_bom_id_from_url,
 )
 from bom.systemgroup.forms import SystemGroupBomImportForm
-from bom.systemgroup.importer import import_parsed_bom, parsed_bom_to_csv_bytes
+from bom.systemgroup.importer import (
+    AmbiguousBomMatch,
+    NoBomMatch,
+    import_parsed_bom,
+    parsed_bom_to_csv_bytes,
+    resolve_bom_from_list,
+    run_systemgroup_import,
+)
 from bom.systemgroup.parser import (
     SystemGroupParseError,
+    match_bom_list_entries,
     parse_bom_document,
+    parse_bom_list_document,
     parse_login_form,
 )
 
@@ -90,6 +100,80 @@ class SystemGroupBomParseTests(TestCase):
             parse_bom_document("   ")
 
 
+class SystemGroupBomListParseTests(TestCase):
+    def test_parse_list_html_fixture(self):
+        html = (FIXTURES / "bom_list.html").read_text(encoding="utf-8")
+        entries = parse_bom_list_document(html, content_type="text/html")
+        self.assertEqual(len(entries), 4)
+        self.assertEqual(entries[0].bom_id, "39477")
+        self.assertEqual(entries[0].part_number, "500-9001-00")
+        self.assertIn("Edit.aspx?id=39477", entries[0].edit_url)
+        self.assertEqual(entries[1].bom_id, "40001")
+        self.assertEqual(entries[2].part_number, "500-1111-00")
+
+    def test_parse_list_json_fixture(self):
+        raw = (FIXTURES / "bom_list.json").read_text(encoding="utf-8")
+        entries = parse_bom_list_document(raw, content_type="application/json")
+        self.assertEqual(len(entries), 4)
+        self.assertEqual(entries[3].bom_id, "42000")
+        self.assertEqual(entries[3].description, "Unique description match target")
+
+    def test_match_by_part_number_unique(self):
+        entries = parse_bom_list_document(
+            (FIXTURES / "bom_list.json").read_text(encoding="utf-8"),
+            content_type="application/json",
+        )
+        hits = match_bom_list_entries(entries, part_number="500-1111-00")
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0].bom_id, "41000")
+
+    def test_match_by_part_number_ambiguous(self):
+        entries = parse_bom_list_document(
+            (FIXTURES / "bom_list.html").read_text(encoding="utf-8")
+        )
+        hits = match_bom_list_entries(entries, part_number="500-9001-00")
+        self.assertEqual(len(hits), 2)
+        self.assertEqual({h.bom_id for h in hits}, {"39477", "40001"})
+
+    def test_match_by_description_fallback(self):
+        entries = parse_bom_list_document(
+            (FIXTURES / "bom_list.json").read_text(encoding="utf-8"),
+            content_type="application/json",
+        )
+        hits = match_bom_list_entries(
+            entries, description="Unique description match target"
+        )
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0].bom_id, "42000")
+
+    def test_match_narrows_ambiguous_pn_with_description(self):
+        entries = parse_bom_list_document(
+            (FIXTURES / "bom_list.html").read_text(encoding="utf-8")
+        )
+        hits = match_bom_list_entries(
+            entries,
+            part_number="500-9001-00",
+            description="Fixture assembly from SystemGroup",
+        )
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0].bom_id, "39477")
+
+    def test_resolve_no_match(self):
+        with self.assertRaises(NoBomMatch):
+            resolve_bom_from_list(
+                part_number="999-0000-00",
+                list_path=FIXTURES / "bom_list.json",
+            )
+
+    def test_resolve_ambiguous(self):
+        with self.assertRaises(AmbiguousBomMatch) as ctx:
+            resolve_bom_from_list(
+                part_number="500-9001-00",
+                list_path=FIXTURES / "bom_list.html",
+            )
+        self.assertEqual(len(ctx.exception.matches), 2)
+
+
 class SystemGroupClientTests(TestCase):
     def test_build_login_payload(self):
         html = (FIXTURES / "login.aspx.html").read_text(encoding="utf-8")
@@ -111,6 +195,13 @@ class SystemGroupClientTests(TestCase):
         self.assertIn("Edit.aspx", url)
         # page=...Edit.aspx?id=39477 is query-encoded
         self.assertIn("id%3D39477", url)
+
+    def test_bom_list_url(self):
+        url = bom_list_url("http://192.168.3.193/")
+        self.assertIn("Shell.aspx", url)
+        self.assertIn("List.aspx", url)
+        self.assertIn("EntityName%3DBom", url)
+        self.assertIn("SystemGroup.PAC.Engineering", url)
 
     def test_extract_bom_id_from_url(self):
         self.assertEqual(
@@ -305,6 +396,222 @@ class SystemGroupManagementCommandTests(TestCase):
             )
 
 
+class SystemGroupListResolveImportTests(TestCase):
+    def setUp(self):
+        self.user, self.organization = create_user_and_organization()
+        self.parts = create_some_fake_parts(organization=self.organization)
+        self.parent = self.parts[1]
+        if self.parent.latest().assembly is None:
+            from bom.helpers import create_a_fake_assembly
+
+            rev = self.parent.latest()
+            rev.assembly = create_a_fake_assembly()
+            rev.save()
+
+    def test_run_import_resolves_unique_pn_from_list_file(self):
+        # Parent PN won't match list; resolve unique list PN via description-less
+        # path by calling resolve then import with bom_id — exercise full helper:
+        entry = resolve_bom_from_list(
+            part_number="500-1111-00",
+            list_path=FIXTURES / "bom_list.json",
+        )
+        self.assertEqual(entry.bom_id, "41000")
+        result = run_systemgroup_import(
+            self.organization,
+            bom_id=entry.bom_id,
+            parent_part_number=self.parent.full_part_number(),
+            html_path=FIXTURES / "bom_edit.html",
+        )
+        self.assertTrue(result.ok, result.errors)
+        self.assertEqual(result.resolved_bom_id, "41000")
+
+    def test_run_import_list_file_and_html_with_unique_parent_pn(self):
+        # Create a Lithium part whose full PN matches unique list entry.
+        # Fake parts use 200-3333-00 / 500-.... Check numbering scheme.
+        pn = self.parent.full_part_number()
+        list_json = {
+            "rows": [
+                {
+                    "id": "39477",
+                    "part_number": pn,
+                    "description": "Matched parent",
+                    "revision": "1",
+                    "edit_url": f"Shell.aspx?page=PAC/Engineering/BomPages/Edit.aspx?id=39477",
+                }
+            ]
+        }
+        import json
+
+        result = run_systemgroup_import(
+            self.organization,
+            parent_part_number=pn,
+            from_list=True,
+            list_json=json.dumps(list_json),
+            html_path=FIXTURES / "bom_edit.html",
+            dry_run=True,
+        )
+        self.assertTrue(result.ok, result.errors)
+        self.assertEqual(result.resolved_bom_id, "39477")
+        self.assertTrue(
+            any("Resolved CRM BoM" in s for s in result.successes),
+            result.successes,
+        )
+
+    def test_run_import_ambiguous_raises(self):
+        import json
+
+        pn = self.parent.full_part_number()
+        list_json = json.dumps(
+            {
+                "rows": [
+                    {
+                        "id": "39477",
+                        "part_number": pn,
+                        "description": "A",
+                        "edit_url": "Edit.aspx?id=39477",
+                    },
+                    {
+                        "id": "40001",
+                        "part_number": pn,
+                        "description": "B",
+                        "edit_url": "Edit.aspx?id=40001",
+                    },
+                ]
+            }
+        )
+        with self.assertRaises(AmbiguousBomMatch) as ctx:
+            run_systemgroup_import(
+                self.organization,
+                parent_part_number=pn,
+                from_list=True,
+                list_json=list_json,
+                html_path=FIXTURES / "bom_edit.html",
+            )
+        self.assertEqual(len(ctx.exception.matches), 2)
+
+    def test_cli_from_list_browse_prints_rows(self):
+        from io import StringIO
+
+        out = StringIO()
+        call_command(
+            "import_systemgroup_bom",
+            organization_id=self.organization.id,
+            from_list=True,
+            list_file=str(FIXTURES / "bom_list.json"),
+            stdout=out,
+        )
+        text = out.getvalue()
+        self.assertIn("39477", text)
+        self.assertIn("500-9001-00", text)
+
+    def test_cli_ambiguous_exits(self):
+        import json
+        import tempfile
+        from io import StringIO
+
+        pn = self.parent.full_part_number()
+        payload = json.dumps(
+            {
+                "rows": [
+                    {
+                        "id": "1",
+                        "part_number": pn,
+                        "description": "A",
+                        "edit_url": "Edit.aspx?id=1",
+                    },
+                    {
+                        "id": "2",
+                        "part_number": pn,
+                        "description": "B",
+                        "edit_url": "Edit.aspx?id=2",
+                    },
+                ]
+            }
+        )
+        with tempfile.NamedTemporaryFile(
+            "w", suffix=".json", delete=False, encoding="utf-8"
+        ) as tmp:
+            tmp.write(payload)
+            list_path = tmp.name
+        err = StringIO()
+        with self.assertRaises(CommandError):
+            call_command(
+                "import_systemgroup_bom",
+                organization_id=self.organization.id,
+                parent_part=pn,
+                from_list=True,
+                list_file=list_path,
+                html_file=str(FIXTURES / "bom_edit.html"),
+                stderr=err,
+            )
+
+    def test_fetch_bom_list_with_session_mock(self):
+        login_html = (FIXTURES / "login.aspx.html").read_text(encoding="utf-8")
+        list_html = (FIXTURES / "bom_list.html").read_text(encoding="utf-8")
+        bom_html = (FIXTURES / "bom_edit.html").read_text(encoding="utf-8")
+
+        session = mock.Mock()
+        login_get = mock.Mock(
+            status_code=200, text=login_html, url="http://crm/Authentication/Login.aspx"
+        )
+        login_get.raise_for_status = mock.Mock()
+        login_post = mock.Mock(
+            status_code=200, text="<html>ok</html>", url="http://crm/Default.aspx"
+        )
+        login_post.raise_for_status = mock.Mock()
+        list_get = mock.Mock(
+            status_code=200,
+            text=list_html,
+            url="http://crm/Shell.aspx",
+            headers={"Content-Type": "text/html"},
+        )
+        list_get.raise_for_status = mock.Mock()
+        bom_get = mock.Mock(
+            status_code=200,
+            text=bom_html,
+            url="http://crm/Shell.aspx",
+            headers={"Content-Type": "text/html"},
+        )
+        bom_get.raise_for_status = mock.Mock()
+        session.get.side_effect = [login_get, list_get, bom_get]
+        session.post.return_value = login_post
+
+        client = SystemGroupClient(
+            base_url="http://crm/",
+            username="u",
+            password="p",
+            session=session,
+        )
+        # Unique match via synthetic list is already in fixture for 500-1111-00;
+        # parent must exist — use self.parent and inject matching list via path.
+        import json
+
+        list_payload = json.dumps(
+            {
+                "rows": [
+                    {
+                        "id": "39477",
+                        "part_number": self.parent.full_part_number(),
+                        "description": "x",
+                        "edit_url": "Edit.aspx?id=39477",
+                    }
+                ]
+            }
+        )
+        result = run_systemgroup_import(
+            self.organization,
+            parent_part_number=self.parent.full_part_number(),
+            client=client,
+            list_json=list_payload,
+            dry_run=True,
+        )
+        self.assertTrue(result.ok, result.errors)
+        self.assertEqual(result.resolved_bom_id, "39477")
+        # list_json path should not need network for list; dry_run still fetches edit
+        # because no html — session.get called for login+edit (and maybe list skipped)
+        self.assertGreaterEqual(session.get.call_count, 1)
+
+
 class SystemGroupAdminGuiTests(TestCase):
     def setUp(self):
         self.user, self.organization = create_user_and_organization()
@@ -335,6 +642,32 @@ class SystemGroupAdminGuiTests(TestCase):
         )
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.cleaned_data["bom_id"], "39477")
+
+    def test_form_allows_parent_part_without_bom_id(self):
+        form = SystemGroupBomImportForm(data={"parent_part_number": "500-9001-00"})
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_form_allows_browse_list_alone(self):
+        form = SystemGroupBomImportForm(data={"browse_list": True})
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_post_ambiguous_list_shows_pick_list(self):
+        list_json = (FIXTURES / "bom_list.json").read_text(encoding="utf-8")
+        parent = Part.objects.filter(organization=self.organization).first()
+        matches = parse_bom_list_document(list_json, content_type="application/json")[:2]
+        with mock.patch(
+            "bom.systemgroup.importer.run_systemgroup_import",
+            side_effect=AmbiguousBomMatch(matches, "500-9001-00"),
+        ) as mocked:
+            response = self.client.post(
+                self.url,
+                {"parent_part_number": parent.full_part_number()},
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "pick one")
+        self.assertContains(response, "39477")
+        self.assertContains(response, "40001")
+        mocked.assert_called()
 
     def test_post_html_upload_imports(self):
         parent = [

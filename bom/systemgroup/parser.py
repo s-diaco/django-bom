@@ -1,8 +1,8 @@
-"""Parse SystemGroup login forms and BoM Edit HTML/JSON.
+"""Parse SystemGroup login forms, BoM Edit, and BoM List HTML/JSON.
 
-FIXTURE SHAPE (scaffold): Live Edit.aspx markup was unreachable from the cloud
-VM. Fixtures under bom/test_files/systemgroup/ define the contract. Replace them
-with a saved authenticated BoM Edit HTML (or network JSON) from Diaco, then
+FIXTURE SHAPE (scaffold): Live Edit/List.aspx markup was unreachable from the
+cloud VM. Fixtures under bom/test_files/systemgroup/ define the contract.
+Replace them with saved authenticated HTML (or network JSON) from Diaco, then
 tighten selectors / keys — see docs/systemgroup-bom-importer.md.
 """
 
@@ -13,6 +13,7 @@ import re
 from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from typing import Any
+from urllib.parse import unquote, urlparse, parse_qs
 
 
 class SystemGroupParseError(ValueError):
@@ -28,6 +29,27 @@ class LoginFormFields:
     password_name: str
     submit_name: str | None = None
     submit_value: str | None = None
+
+
+@dataclass
+class BomListEntry:
+    """One row from the CRM BoM list (List.aspx EntityName=Bom)."""
+
+    bom_id: str
+    part_number: str = ""
+    description: str = ""
+    revision: str = ""
+    edit_url: str = ""
+
+    def label(self) -> str:
+        bits = [f"id={self.bom_id}"]
+        if self.part_number:
+            bits.append(self.part_number)
+        if self.revision:
+            bits.append(f"rev {self.revision}")
+        if self.description:
+            bits.append(self.description)
+        return " — ".join(bits)
 
 
 @dataclass
@@ -475,3 +497,356 @@ def parse_bom_document(content: str, content_type: str | None = None) -> ParsedB
             # fall through to HTML
 
     return _parse_bom_html(stripped)
+
+
+# --- BoM list -----------------------------------------------------------------
+
+_LIST_HEADER_ALIASES: dict[str, tuple[str, ...]] = {
+    "bom_id": ("id", "bom id", "bom_id", "bomid", "entity id", "شناسه"),
+    "part_number": (
+        "part_number",
+        "part number",
+        "part no",
+        "partno",
+        "code",
+        "item",
+        "item code",
+        "شماره قطعه",
+    ),
+    "description": ("description", "desc", "name", "title", "شرح", "توضیحات"),
+    "revision": ("revision", "rev", "rev.", "نسخه"),
+    "edit_url": ("edit", "url", "link", "edit url", "ویرایش"),
+}
+
+_BOM_ID_IN_HREF = re.compile(
+    r"(?:BomPages/Edit\.aspx\?id=|[?&]id=)(\d+)",
+    re.IGNORECASE,
+)
+
+
+def _normalize_list_header(raw: str) -> str | None:
+    key = re.sub(r"\s+", " ", (raw or "").strip().lower())
+    key = key.replace("-", " ").replace("_", " ")
+    compact = key.replace(" ", "")
+    for field_name, aliases in _LIST_HEADER_ALIASES.items():
+        for alias in aliases:
+            a = alias.lower().replace("_", " ")
+            if key == a or compact == a.replace(" ", ""):
+                return field_name
+    return None
+
+
+def _bom_id_from_href(href: str) -> str | None:
+    if not href:
+        return None
+    candidates = [href, unquote(href), unquote(unquote(href))]
+    for candidate in candidates:
+        match = _BOM_ID_IN_HREF.search(candidate)
+        if match:
+            return match.group(1)
+        parsed = urlparse(candidate)
+        qs = parse_qs(parsed.query)
+        if "id" in qs and qs["id"] and str(qs["id"][0]).isdigit():
+            return str(qs["id"][0])
+        if "page" in qs and qs["page"]:
+            match = _BOM_ID_IN_HREF.search(qs["page"][0])
+            if match:
+                return match.group(1)
+    return None
+
+
+class _BomListTableParser(HTMLParser):
+    """Collect list tables and anchor hrefs that look like BoM Edit links."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.tables: list[dict[str, Any]] = []
+        self.orphan_links: list[tuple[str, str]] = []  # (href, text)
+        self._in_table = False
+        self._in_tr = False
+        self._in_cell = False
+        self._cell_tag = ""
+        self._cell_text: list[str] = []
+        self._cell_href: str | None = None
+        self._row_cells: list[dict[str, str]] = []
+        self._row_attrs: dict[str, str] = {}
+        self._current_table: dict[str, Any] | None = None
+        self._in_a = False
+        self._a_href = ""
+        self._a_text: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        ad = {k.lower(): (v or "") for k, v in attrs}
+        if tag == "table":
+            self._in_table = True
+            self._current_table = {
+                "id": ad.get("id", ""),
+                "class": ad.get("class", ""),
+                "rows": [],
+            }
+        elif self._in_table and tag == "tr":
+            self._in_tr = True
+            self._row_cells = []
+            self._row_attrs = {
+                k: v for k, v in ad.items() if k.startswith("data-") or k == "id"
+            }
+        elif self._in_table and self._in_tr and tag in ("td", "th"):
+            self._in_cell = True
+            self._cell_tag = tag
+            self._cell_text = []
+            self._cell_href = None
+        elif tag == "a":
+            self._in_a = True
+            self._a_href = ad.get("href", "")
+            self._a_text = []
+            if self._in_cell and self._a_href:
+                self._cell_href = self._a_href
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "a" and self._in_a:
+            text = re.sub(r"\s+", " ", "".join(self._a_text)).strip()
+            if self._a_href and _bom_id_from_href(self._a_href):
+                if not self._in_table:
+                    self.orphan_links.append((self._a_href, text))
+            self._in_a = False
+        elif tag in ("td", "th") and self._in_cell:
+            text = re.sub(r"\s+", " ", "".join(self._cell_text)).strip()
+            self._row_cells.append(
+                {
+                    "tag": self._cell_tag,
+                    "text": text,
+                    "href": self._cell_href or "",
+                }
+            )
+            self._in_cell = False
+        elif tag == "tr" and self._in_tr:
+            if self._row_cells and self._current_table is not None:
+                self._current_table["rows"].append(
+                    {"attrs": dict(self._row_attrs), "cells": list(self._row_cells)}
+                )
+            self._in_tr = False
+        elif tag == "table" and self._in_table:
+            if self._current_table is not None:
+                self.tables.append(self._current_table)
+            self._current_table = None
+            self._in_table = False
+
+    def handle_data(self, data: str) -> None:
+        if self._in_cell:
+            self._cell_text.append(data)
+        if self._in_a:
+            self._a_text.append(data)
+
+
+def _score_list_table(table: dict[str, Any]) -> int:
+    score = 0
+    tid = (table.get("id") or "").lower()
+    tclass = (table.get("class") or "").lower()
+    if any(x in tid or x in tclass for x in ("bom", "list", "grid", "entity")):
+        score += 5
+    rows = table.get("rows") or []
+    if not rows:
+        return score
+    header_cells = [c["text"] for c in rows[0]["cells"]]
+    mapped = sum(1 for h in header_cells if _normalize_list_header(h))
+    score += mapped * 2
+    if mapped >= 2:
+        score += 3
+    # Prefer tables that contain Edit.aspx links
+    for row in rows[1:]:
+        for cell in row["cells"]:
+            if _bom_id_from_href(cell.get("href") or ""):
+                score += 2
+                break
+    score += min(len(rows), 30)
+    return score
+
+
+def _entry_from_list_mapping(data: dict[str, Any]) -> BomListEntry | None:
+    bom_id = str(data.get("bom_id") or data.get("id") or "").strip()
+    edit_url = str(data.get("edit_url") or data.get("url") or data.get("href") or "").strip()
+    if not bom_id and edit_url:
+        bom_id = _bom_id_from_href(edit_url) or ""
+    if not bom_id:
+        return None
+    return BomListEntry(
+        bom_id=bom_id,
+        part_number=str(
+            data.get("part_number")
+            or data.get("partNumber")
+            or data.get("code")
+            or ""
+        ).strip(),
+        description=str(
+            data.get("description") or data.get("name") or data.get("title") or ""
+        ).strip(),
+        revision=str(data.get("revision") or data.get("rev") or "").strip(),
+        edit_url=edit_url,
+    )
+
+
+def _parsed_bom_list_from_json(data: Any) -> list[BomListEntry]:
+    rows_raw: list[Any] = []
+    if isinstance(data, list):
+        rows_raw = data
+    elif isinstance(data, dict):
+        for key in ("rows", "items", "data", "BomList", "results"):
+            if isinstance(data.get(key), list):
+                rows_raw = data[key]
+                break
+        if not rows_raw and any(k in data for k in ("id", "bom_id", "part_number")):
+            rows_raw = [data]
+    entries: list[BomListEntry] = []
+    for item in rows_raw:
+        if not isinstance(item, dict):
+            continue
+        # Normalize alias keys through list header map where useful
+        mapped: dict[str, Any] = {}
+        for k, v in item.items():
+            field_name = _normalize_list_header(str(k))
+            if field_name:
+                mapped[field_name] = v
+            else:
+                mapped[str(k)] = v
+        entry = _entry_from_list_mapping({**item, **mapped})
+        if entry:
+            entries.append(entry)
+    if not entries:
+        raise SystemGroupParseError("BoM list JSON contained no usable rows.")
+    return entries
+
+
+def _parse_bom_list_html(html: str) -> list[BomListEntry]:
+    # Prefer embedded JSON blobs shaped like list payloads.
+    for pattern in _JSON_PATTERNS:
+        match = pattern.search(html)
+        if match:
+            try:
+                data = json.loads(match.group(1))
+                return _parsed_bom_list_from_json(data)
+            except (json.JSONDecodeError, SystemGroupParseError):
+                pass
+
+    parser = _BomListTableParser()
+    parser.feed(html)
+    entries: list[BomListEntry] = []
+
+    if parser.tables:
+        best = max(parser.tables, key=_score_list_table)
+        rows = best["rows"]
+        if len(rows) >= 2:
+            header_map: list[str | None] = [
+                _normalize_list_header(c["text"]) for c in rows[0]["cells"]
+            ]
+            for row in rows[1:]:
+                cells = row["cells"]
+                mapping: dict[str, str] = {}
+                edit_href = ""
+                for idx, field_name in enumerate(header_map):
+                    if idx >= len(cells):
+                        break
+                    cell = cells[idx]
+                    if field_name:
+                        mapping[field_name] = cell["text"]
+                    if cell.get("href") and _bom_id_from_href(cell["href"]):
+                        edit_href = cell["href"]
+                if not edit_href:
+                    for cell in cells:
+                        if cell.get("href") and _bom_id_from_href(cell["href"]):
+                            edit_href = cell["href"]
+                            break
+                if edit_href:
+                    mapping.setdefault("edit_url", edit_href)
+                    mapping.setdefault("bom_id", _bom_id_from_href(edit_href) or "")
+                # data-bom-id on <tr>
+                attrs = row.get("attrs") or {}
+                if attrs.get("data-bom-id"):
+                    mapping.setdefault("bom_id", attrs["data-bom-id"])
+                # First numeric cell as id fallback
+                if not mapping.get("bom_id"):
+                    for cell in cells:
+                        if re.fullmatch(r"\d+", cell["text"] or ""):
+                            mapping["bom_id"] = cell["text"]
+                            break
+                entry = _entry_from_list_mapping(mapping)
+                if entry:
+                    entries.append(entry)
+
+    if not entries and parser.orphan_links:
+        for href, text in parser.orphan_links:
+            bom_id = _bom_id_from_href(href)
+            if bom_id:
+                entries.append(
+                    BomListEntry(bom_id=bom_id, description=text, edit_url=href)
+                )
+
+    if not entries:
+        raise SystemGroupParseError(
+            "No BoM list rows found. Save List.aspx HTML (EntityName=Bom) and "
+            "update parse_bom_list_document()."
+        )
+    return entries
+
+
+def parse_bom_list_document(
+    content: str, content_type: str | None = None
+) -> list[BomListEntry]:
+    """Parse a CRM BoM list HTML page or JSON payload into BomListEntry rows."""
+    stripped = (content or "").strip()
+    if not stripped:
+        raise SystemGroupParseError("Empty BoM list document.")
+
+    ctype = (content_type or "").lower()
+    looks_json = stripped[0] in "{[" or "json" in ctype
+    if looks_json:
+        try:
+            return _parsed_bom_list_from_json(json.loads(stripped))
+        except json.JSONDecodeError:
+            if "json" in ctype:
+                raise SystemGroupParseError("Invalid BoM list JSON.") from None
+
+    return _parse_bom_list_html(stripped)
+
+
+def match_bom_list_entries(
+    entries: list[BomListEntry],
+    *,
+    part_number: str | None = None,
+    description: str | None = None,
+) -> list[BomListEntry]:
+    """Match list rows by parent part number and/or description.
+
+    Preference: exact part-number matches (case-insensitive). If none, fall
+    back to exact description matches. When both query fields are set and PN
+    matches exist, description is used only to narrow those PN matches when
+    more than one PN hit remains and descriptions differ.
+    """
+    pn = (part_number or "").strip().casefold()
+    desc = (description or "").strip().casefold()
+    if not pn and not desc:
+        return list(entries)
+
+    pn_hits = [
+        e
+        for e in entries
+        if pn and (e.part_number or "").strip().casefold() == pn
+    ]
+    if pn_hits:
+        if desc and len(pn_hits) > 1:
+            narrowed = [
+                e
+                for e in pn_hits
+                if (e.description or "").strip().casefold() == desc
+            ]
+            if narrowed:
+                return narrowed
+        return pn_hits
+
+    if desc:
+        return [
+            e
+            for e in entries
+            if (e.description or "").strip().casefold() == desc
+        ]
+    return []
+

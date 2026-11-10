@@ -17,6 +17,9 @@ class SystemGroupClientError(RuntimeError):
 
 DEFAULT_LOGIN_PATH = "/Authentication/Login.aspx"
 DEFAULT_BOM_EDIT_PAGE = "PAC/Engineering/BomPages/Edit.aspx"
+DEFAULT_BOM_LIST_PAGE = (
+    "List.aspx?ComponentName=SystemGroup.PAC.Engineering&EntityName=Bom"
+)
 
 _BOM_ID_IN_URL = re.compile(
     r"(?:[?&]id=|/id/)(\d+)",
@@ -82,6 +85,16 @@ def bom_edit_url(base_url: str, bom_id: str | int) -> str:
 
 def bom_edit_direct_url(base_url: str, bom_id: str | int) -> str:
     return urljoin(base_url, f"{DEFAULT_BOM_EDIT_PAGE}?id={bom_id}")
+
+
+def bom_list_url(base_url: str) -> str:
+    """Build Shell.aspx?page=List.aspx?ComponentName=…&EntityName=Bom."""
+    query = urlencode({"page": DEFAULT_BOM_LIST_PAGE})
+    return urljoin(base_url, f"Shell.aspx?{query}")
+
+
+def bom_list_direct_url(base_url: str) -> str:
+    return urljoin(base_url, DEFAULT_BOM_LIST_PAGE)
 
 
 class SystemGroupClient:
@@ -154,18 +167,7 @@ class SystemGroupClient:
             )
         self._logged_in = True
 
-    def fetch_bom(self, bom_id: str | int) -> tuple[str, str]:
-        """Return (body_text, content_type) for the BoM Edit page.
-
-        Tries Shell.aspx wrapper first, then the direct Edit.aspx URL.
-        """
-        if not self._logged_in:
-            self.login()
-
-        urls = [
-            bom_edit_url(self.base_url, bom_id),
-            bom_edit_direct_url(self.base_url, bom_id),
-        ]
+    def _fetch_first_ok(self, urls: list[str], label: str) -> tuple[str, str]:
         errors: list[str] = []
         for url in urls:
             try:
@@ -180,7 +182,39 @@ class SystemGroupClient:
             ctype = resp.headers.get("Content-Type", "text/html")
             return resp.text, ctype
         raise SystemGroupClientError(
-            "Could not fetch BoM Edit page. Tried:\n" + "\n".join(errors)
+            f"Could not fetch {label}. Tried:\n" + "\n".join(errors)
+        )
+
+    def fetch_bom(self, bom_id: str | int) -> tuple[str, str]:
+        """Return (body_text, content_type) for the BoM Edit page.
+
+        Tries Shell.aspx wrapper first, then the direct Edit.aspx URL.
+        """
+        if not self._logged_in:
+            self.login()
+
+        return self._fetch_first_ok(
+            [
+                bom_edit_url(self.base_url, bom_id),
+                bom_edit_direct_url(self.base_url, bom_id),
+            ],
+            "BoM Edit page",
+        )
+
+    def fetch_bom_list(self) -> tuple[str, str]:
+        """Return (body_text, content_type) for the BoM list page.
+
+        Tries Shell.aspx wrapper first, then the direct List.aspx URL.
+        """
+        if not self._logged_in:
+            self.login()
+
+        return self._fetch_first_ok(
+            [
+                bom_list_url(self.base_url),
+                bom_list_direct_url(self.base_url),
+            ],
+            "BoM list page",
         )
 
 

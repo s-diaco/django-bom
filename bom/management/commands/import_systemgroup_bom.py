@@ -7,6 +7,8 @@ Credentials (env only, never commit):
 
 Examples:
   python manage.py import_systemgroup_bom --bom-id 39477 --organization-id 1
+  python manage.py import_systemgroup_bom --parent-part 500-9001-00 --organization-id 1
+  python manage.py import_systemgroup_bom --from-list --parent-part 500-9001-00 --organization-id 1
   python manage.py import_systemgroup_bom --html-file ./bom-edit.html --organization-id 1 --parent-part 500-1234-00
 
 Admin UI: Upload → Import SystemGroup BoM (same backend).
@@ -17,14 +19,21 @@ from __future__ import annotations
 from django.core.management.base import BaseCommand, CommandError
 
 from bom.models import Organization
-from bom.systemgroup.importer import SystemGroupImportError, run_systemgroup_import
+from bom.systemgroup.importer import (
+    AmbiguousBomMatch,
+    SystemGroupImportError,
+    load_bom_list_entries,
+    run_systemgroup_import,
+)
 
 
 class Command(BaseCommand):
     help = (
         "Import a SystemGroup PAC Engineering BoM into Lithium parts/revisions "
         "(reuses CSV BoM / Add-all-subparts semantics). Credentials: CRM_BASE_URL, "
-        "CRM_USERNAME, CRM_PASSWORD. Same backend as the Admin Upload UI."
+        "CRM_USERNAME, CRM_PASSWORD. Same backend as the Admin Upload UI. "
+        "When --bom-id is omitted, resolves from the CRM BoM list via --parent-part "
+        "and/or --from-list."
     )
 
     def add_arguments(self, parser):
@@ -32,7 +41,8 @@ class Command(BaseCommand):
             "--bom-id",
             type=str,
             default=None,
-            help="CRM BoM id (Edit.aspx?id=...). Required unless --html-file/--json-file/--crm-url.",
+            help="CRM BoM id (Edit.aspx?id=...). Optional when --parent-part / "
+            "--from-list can resolve it from the BoM list.",
         )
         parser.add_argument(
             "--crm-url",
@@ -50,8 +60,21 @@ class Command(BaseCommand):
             "--parent-part",
             type=str,
             default=None,
-            help="Existing Lithium parent part number. If omitted, uses CRM header "
-            "parent PN (creates part+revision when missing).",
+            help="Existing Lithium parent part number. If --bom-id is omitted, "
+            "matches this PN (and description) on the CRM BoM list.",
+        )
+        parser.add_argument(
+            "--from-list",
+            action="store_true",
+            help="Resolve BoM id from the CRM BoM list (implied when --parent-part "
+            "is set and --bom-id/--crm-url/--html-file/--json-file are omitted). "
+            "Without --parent-part, prints matching candidates and exits.",
+        )
+        parser.add_argument(
+            "--list-file",
+            type=str,
+            default=None,
+            help="Offline: path to saved BoM list HTML/JSON (skips list network fetch).",
         )
         parser.add_argument(
             "--html-file",
@@ -78,6 +101,27 @@ class Command(BaseCommand):
         except Organization.DoesNotExist as exc:
             raise CommandError(f"Organization id={org_id} not found.") from exc
 
+        # Browse-only: --from-list without parent and without bom id → print list.
+        if (
+            options["from_list"]
+            and not options["parent_part"]
+            and not options["bom_id"]
+            and not options["crm_url"]
+            and not options["html_file"]
+            and not options["json_file"]
+        ):
+            try:
+                entries = load_bom_list_entries(list_path=options["list_file"])
+            except SystemGroupImportError as exc:
+                raise CommandError(str(exc)) from exc
+            self.stdout.write(f"{len(entries)} CRM BoM(s) on list:")
+            for entry in entries:
+                self.stdout.write(f"  {entry.label()}")
+            self.stdout.write(
+                "Re-run with --bom-id <id> or --parent-part <pn> to import."
+            )
+            return
+
         try:
             result = run_systemgroup_import(
                 organization,
@@ -87,7 +131,16 @@ class Command(BaseCommand):
                 html_path=options["html_file"],
                 json_path=options["json_file"],
                 dry_run=options["dry_run"],
+                from_list=bool(options["from_list"] or options["list_file"]),
+                list_path=options["list_file"],
             )
+        except AmbiguousBomMatch as exc:
+            self.stderr.write(self.style.ERROR(str(exc)))
+            for entry in exc.matches:
+                self.stdout.write(f"  {entry.label()}")
+            raise CommandError(
+                "Ambiguous CRM BoM match; pass --bom-id to disambiguate."
+            ) from exc
         except SystemGroupImportError as exc:
             raise CommandError(str(exc)) from exc
 
@@ -107,5 +160,9 @@ class Command(BaseCommand):
                     f"Parent part: {result.parent_part.full_part_number()} "
                     f"(id={result.parent_part.id})"
                 )
+            )
+        if result.resolved_bom_id:
+            self.stdout.write(
+                self.style.SUCCESS(f"CRM BoM id: {result.resolved_bom_id}")
             )
         self.stdout.write(self.style.SUCCESS("Done."))

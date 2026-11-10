@@ -2513,12 +2513,18 @@ def part_export_bom(
 def import_systemgroup_bom(request):
     """Admin UI for SystemGroup PAC Engineering BoM import (same backend as CLI)."""
     from bom.systemgroup.forms import SystemGroupBomImportForm
-    from bom.systemgroup.importer import SystemGroupImportError, run_systemgroup_import
+    from bom.systemgroup.importer import (
+        AmbiguousBomMatch,
+        SystemGroupImportError,
+        run_systemgroup_import,
+    )
 
     user = request.user
     profile = user.bom_profile()
     organization = profile.organization
     title = _("Import SystemGroup BoM")
+    bom_candidates = None
+    match_query = None
     form = SystemGroupBomImportForm(
         request.POST or None,
         request.FILES or None,
@@ -2554,6 +2560,14 @@ def import_systemgroup_bom(request):
                 html_content=html_content,
                 json_content=json_content,
                 dry_run=bool(cleaned.get("dry_run")),
+                from_list=bool(cleaned.get("browse_list")),
+            )
+        except AmbiguousBomMatch as exc:
+            bom_candidates = exc.matches
+            match_query = exc.query if exc.query != "(all)" else None
+            messages.info(
+                request,
+                _("Several CRM BoMs matched — pick one below, or enter an id/URL."),
             )
         except SystemGroupImportError as exc:
             messages.error(request, str(exc))

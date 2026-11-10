@@ -22,11 +22,58 @@
                     {% trans "Pull a PAC Engineering BoM from the on-LAN SystemGroup CRM into Lithium. Existing parts are filled; missing parts and revisions are created — same rules as CSV / Add all subparts." %}
                 </p>
                 <p class="mb-4 text-sm text-ink-muted">
-                    {% trans "Server credentials (never entered here):" %}
+                    {% trans "With a parent part number, CRM BoM id / URL are optional: after login the BoM list is matched automatically. Manual id/URL remain as fallback. Server credentials (never entered here):" %}
                     <code>CRM_BASE_URL</code>, <code>CRM_USERNAME</code>, <code>CRM_PASSWORD</code>.
                     {% trans "CLI equivalent:" %}
                     <code>python manage.py import_systemgroup_bom</code>.
                 </p>
+
+                {% if bom_candidates %}
+                    <div class="mb-6">
+                        <h2 class="mb-2 text-base font-semibold text-ink">
+                            {% if match_query %}
+                                {% blocktrans with q=match_query %}Multiple CRM BoMs matched “{{ q }}” — pick one{% endblocktrans %}
+                            {% else %}
+                                {% trans "Pick a CRM BoM from the list" %}
+                            {% endif %}
+                        </h2>
+                        <form action="{% url 'bom:import-systemgroup-bom' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="parent_part_number" value="{{ form.parent_part_number.value|default_if_none:'' }}">
+                            {% if form.dry_run.value %}<input type="hidden" name="dry_run" value="on">{% endif %}
+                            <div class="overflow-x-auto">
+                                <table class="bom-table w-full text-sm">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>{% trans "CRM id" %}</th>
+                                            <th>{% trans "Part number" %}</th>
+                                            <th>{% trans "Rev" %}</th>
+                                            <th>{% trans "Description" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for entry in bom_candidates %}
+                                            <tr>
+                                                <td>
+                                                    <input type="radio" name="bom_id" value="{{ entry.bom_id }}" id="bom_pick_{{ entry.bom_id }}" {% if forloop.first %}checked{% endif %}>
+                                                </td>
+                                                <td><label for="bom_pick_{{ entry.bom_id }}">{{ entry.bom_id }}</label></td>
+                                                <td>{{ entry.part_number }}</td>
+                                                <td>{{ entry.revision }}</td>
+                                                <td>{{ entry.description }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
+                                <a href="{% url 'bom:import-systemgroup-bom' %}{% if form.parent_part_number.value %}?parent_part={{ form.parent_part_number.value|urlencode }}{% endif %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
+                                <button class="bom-btn-primary" type="submit">{% trans "Import selected" %}</button>
+                            </div>
+                        </form>
+                    </div>
+                {% endif %}
 
                 <form action="{% url 'bom:import-systemgroup-bom' %}" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
@@ -35,14 +82,14 @@
                     {% endif %}
 
                     <div class="row items-end gap-y-3">
-                        {{ form.bom_id|bom_form:'m4 s12' }}
-                        {{ form.crm_url|bom_form:'m8 s12' }}
-                    </div>
-                    <div class="row items-end gap-y-3 mt-2">
                         {{ form.parent_part_number|bom_form:'m4 s12' }}
                         <div class="col m8 s12 text-sm text-ink-muted">
-                            <p class="bom-help">[{% trans "Optional" %}] {% trans "Lithium parent part number. Leave blank to use / create from the CRM header." %}</p>
+                            <p class="bom-help">[{% trans "Preferred" %}] {% trans "When set, CRM id/URL are usually not needed — list match runs after login." %}</p>
                         </div>
+                    </div>
+                    <div class="row items-end gap-y-3 mt-2">
+                        {{ form.bom_id|bom_form:'m4 s12' }}
+                        {{ form.crm_url|bom_form:'m8 s12' }}
                     </div>
                     <div class="mt-4 flex flex-wrap items-end gap-3">
                         <div>
@@ -53,6 +100,9 @@
                         </div>
                     </div>
                     <div class="mt-4">
+                        {{ form.browse_list|bom_form }}
+                    </div>
+                    <div class="mt-2">
                         {{ form.dry_run|bom_form }}
                     </div>
                     <div class="mt-6 flex flex-wrap items-center justify-between gap-2">

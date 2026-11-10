@@ -276,16 +276,18 @@ CRM_USERNAME=...
 CRM_PASSWORD=...
 ```
 
-**GUI (Admin only):** Upload → **Import SystemGroup BoM**, or a part’s BoM tab → **Import from SystemGroup CRM…**
+**GUI (Admin only):** Upload → **Import SystemGroup BoM**, or a part’s BoM tab → **Import from SystemGroup CRM…** (with `parent_part`, CRM id/URL are optional — the BoM list is matched automatically; multiple hits show a pick list).
 
 **CLI:**
 
 ```
+python manage.py import_systemgroup_bom --parent-part 500-1234-00 --organization-id 1
+python manage.py import_systemgroup_bom --from-list --organization-id 1
 python manage.py import_systemgroup_bom --bom-id 39477 --organization-id 1
 python manage.py import_systemgroup_bom --html-file ./saved-edit.html --organization-id 1 --parent-part 500-1234-00
 ```
 
-Parser fixtures live under `bom/test_files/systemgroup/` because the CRM is LAN-only. Replace them with a saved authenticated Edit HTML/JSON sample to lock production markup.
+Parser fixtures live under `bom/test_files/systemgroup/` (`bom_edit.*`, `bom_list.*`) because the CRM is LAN-only. Replace them with saved authenticated Edit/List HTML/JSON samples to lock production markup.
 
 ### FIXER
 Fixer.io is used to handle exchange rate calculations. This is helpful if you may be purchasing parts from another currency (especially via Mouser) and you still need to estimate your part costs.

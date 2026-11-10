@@ -13,7 +13,15 @@ from bom.forms import BOMCSVForm
 from bom.models import Organization, Part
 
 from .client import SystemGroupClient, SystemGroupClientError, extract_bom_id_from_url
-from .parser import BomLine, ParsedBom, SystemGroupParseError, parse_bom_document
+from .parser import (
+    BomListEntry,
+    BomLine,
+    ParsedBom,
+    SystemGroupParseError,
+    match_bom_list_entries,
+    parse_bom_document,
+    parse_bom_list_document,
+)
 
 
 CSV_COLUMNS = [
@@ -37,10 +45,41 @@ class ImportResult:
     parent_part: Part | None = None
     dry_run: bool = False
     row_count: int = 0
+    resolved_bom_id: str | None = None
+    candidates: list[BomListEntry] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
         return not self.errors
+
+
+class SystemGroupImportError(Exception):
+    """User-facing failure before/during SystemGroup import orchestration."""
+
+
+class AmbiguousBomMatch(SystemGroupImportError):
+    """Multiple CRM BoM list rows matched the parent query."""
+
+    def __init__(self, matches: list[BomListEntry], query: str):
+        self.matches = matches
+        self.query = query
+        labels = "; ".join(m.label() for m in matches[:20])
+        more = "" if len(matches) <= 20 else f" (+{len(matches) - 20} more)"
+        super().__init__(
+            f"Multiple CRM BoMs matched '{query}': {labels}{more}. "
+            "Pick one BoM id (GUI pick list, --bom-id, or CRM URL)."
+        )
+
+
+class NoBomMatch(SystemGroupImportError):
+    """No CRM BoM list row matched the parent query."""
+
+    def __init__(self, query: str):
+        self.query = query
+        super().__init__(
+            f"No CRM BoM on the list matched '{query}'. "
+            "Check the parent part number/description, or enter a CRM BoM id / Edit URL."
+        )
 
 
 def parsed_bom_to_csv_bytes(
@@ -176,8 +215,69 @@ def import_parsed_bom(
     return result
 
 
-class SystemGroupImportError(Exception):
-    """User-facing failure before/during SystemGroup import orchestration."""
+def load_bom_list_entries(
+    *,
+    client: SystemGroupClient | None = None,
+    list_html: str | None = None,
+    list_json: str | None = None,
+    list_path: str | Path | None = None,
+) -> list[BomListEntry]:
+    """Load BoM list rows from offline content/path or live CRM fetch."""
+    try:
+        if list_json is not None:
+            return parse_bom_list_document(list_json, content_type="application/json")
+        if list_html is not None:
+            return parse_bom_list_document(list_html, content_type="text/html")
+        if list_path is not None:
+            content = Path(list_path).read_text(encoding="utf-8")
+            ctype = (
+                "application/json"
+                if str(list_path).lower().endswith(".json")
+                or content.lstrip()[:1] in "{["
+                else "text/html"
+            )
+            return parse_bom_list_document(content, content_type=ctype)
+        sg = client or SystemGroupClient()
+        body, ctype = sg.fetch_bom_list()
+        return parse_bom_list_document(body, content_type=ctype)
+    except (SystemGroupClientError, SystemGroupParseError, OSError) as exc:
+        raise SystemGroupImportError(str(exc)) from exc
+
+
+def resolve_bom_from_list(
+    *,
+    part_number: str | None = None,
+    description: str | None = None,
+    client: SystemGroupClient | None = None,
+    list_html: str | None = None,
+    list_json: str | None = None,
+    list_path: str | Path | None = None,
+    entries: list[BomListEntry] | None = None,
+) -> BomListEntry:
+    """Fetch/parse the CRM BoM list and resolve a single match.
+
+    Raises ``NoBomMatch`` or ``AmbiguousBomMatch``. When neither part_number nor
+    description is set, returns AmbiguousBomMatch with the full list (browse).
+    """
+    rows = entries if entries is not None else load_bom_list_entries(
+        client=client,
+        list_html=list_html,
+        list_json=list_json,
+        list_path=list_path,
+    )
+    pn = (part_number or "").strip() or None
+    desc = (description or "").strip() or None
+    query = pn or desc or "(all)"
+
+    if not pn and not desc:
+        raise AmbiguousBomMatch(rows, query)
+
+    matches = match_bom_list_entries(rows, part_number=pn, description=desc)
+    if not matches:
+        raise NoBomMatch(query)
+    if len(matches) > 1:
+        raise AmbiguousBomMatch(matches, query)
+    return matches[0]
 
 
 def run_systemgroup_import(
@@ -192,12 +292,21 @@ def run_systemgroup_import(
     json_path: str | Path | None = None,
     dry_run: bool = False,
     client: SystemGroupClient | None = None,
+    from_list: bool = False,
+    list_html: str | None = None,
+    list_json: str | None = None,
+    list_path: str | Path | None = None,
+    parent_description: str | None = None,
 ) -> ImportResult:
     """Shared entry used by the management command and Admin UI.
 
     Source priority: json_content/path → html_content/path → live CRM fetch by
-    bom_id (or id extracted from crm_url). Credentials always come from CRM_* env
-    (or an injected ``client``).
+    bom_id (or id extracted from crm_url / resolved from BoM list). Credentials
+    always come from CRM_* env (or an injected ``client``).
+
+    When ``bom_id`` / ``crm_url`` are omitted and ``from_list`` is true (or a
+    parent part number is set), the CRM BoM list is fetched and matched by
+    parent part number and/or description.
     """
     resolved_bom_id = (bom_id or "").strip() or None
     if not resolved_bom_id and crm_url:
@@ -205,6 +314,7 @@ def run_systemgroup_import(
 
     parent_pn = (parent_part_number or "").strip() or None
     parent_part = None
+    parent_desc = (parent_description or "").strip() or None
     if parent_pn:
         try:
             parent_part = Part.from_part_number(parent_pn, organization)
@@ -212,6 +322,33 @@ def run_systemgroup_import(
             raise SystemGroupImportError(
                 f"Parent part '{parent_pn}' not found in this organization."
             ) from exc
+        if parent_desc is None and parent_part is not None:
+            latest = parent_part.latest()
+            if latest is not None and latest.description:
+                parent_desc = latest.description
+
+    offline_edit = any(
+        x is not None
+        for x in (json_content, json_path, html_content, html_path)
+    )
+    explicit_list = bool(from_list or list_html or list_json or list_path)
+    # Auto-resolve by parent when live-fetching; explicit --from-list / list
+    # fixtures also resolve even alongside offline Edit HTML/JSON.
+    should_resolve_list = not resolved_bom_id and (
+        explicit_list or (bool(parent_pn) and not offline_edit)
+    )
+
+    list_entry: BomListEntry | None = None
+    if should_resolve_list:
+        list_entry = resolve_bom_from_list(
+            part_number=parent_pn,
+            description=parent_desc if parent_pn else None,
+            client=client,
+            list_html=list_html,
+            list_json=list_json,
+            list_path=list_path,
+        )
+        resolved_bom_id = list_entry.bom_id
 
     try:
         if json_content is not None:
@@ -228,7 +365,8 @@ def run_systemgroup_import(
             if not resolved_bom_id:
                 raise SystemGroupImportError(
                     "Provide a BoM id, a CRM Edit URL containing id=, "
-                    "or an HTML/JSON upload."
+                    "a parent part (auto-resolve from CRM list), "
+                    "--from-list, or an HTML/JSON upload."
                 )
             sg = client or SystemGroupClient()
             body, ctype = sg.fetch_bom(resolved_bom_id)
@@ -239,10 +377,17 @@ def run_systemgroup_import(
     if resolved_bom_id and not parsed.bom_id:
         parsed.bom_id = str(resolved_bom_id)
 
-    return import_parsed_bom(
+    result = import_parsed_bom(
         organization,
         parsed,
         parent_part=parent_part,
         parent_part_number=parent_pn,
         dry_run=dry_run,
     )
+    result.resolved_bom_id = resolved_bom_id
+    if list_entry is not None:
+        result.successes.insert(
+            0,
+            f"Resolved CRM BoM {list_entry.label()} from list.",
+        )
+    return result
