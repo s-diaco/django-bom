@@ -22,7 +22,7 @@
                     {% trans "Pull a PAC Engineering BoM from the on-LAN SystemGroup CRM into Lithium. Missing parts and revisions are created; existing ones are reused." %}
                 </p>
                 <p class="mb-4 text-sm text-ink-muted">
-                    {% trans "Paste Part ID + Revision (PN/rev). Live CRM login uses your SystemGroup username/password from Settings → User, and" %}
+                    {% trans "Enter a Part ID, load its CRM revisions, pick one, and import. Live CRM login uses your SystemGroup username/password from Settings → User, and" %}
                     <code>CRM_BASE_URL</code>
                     {% trans "from the server environment." %}
                 </p>
@@ -37,6 +37,7 @@
                         </p>
                         <form action="{% url 'bom:import-systemgroup-bom' %}" method="post" enctype="multipart/form-data" class="flex flex-wrap gap-3">
                             {% csrf_token %}
+                            <input type="hidden" name="part_id" value="{{ form.part_id.value|default_if_none:'' }}">
                             <input type="hidden" name="part_id_revision" value="{{ form.part_id_revision.value|default_if_none:'' }}">
                             <input type="hidden" name="parent_part_number" value="{{ form.parent_part_number.value|default_if_none:'' }}">
                             <input type="hidden" name="parent_revision" value="{{ form.parent_revision.value|default_if_none:'' }}">
@@ -51,6 +52,54 @@
                     </div>
                 {% endif %}
 
+                {% if revision_candidates %}
+                    <div class="mb-6">
+                        <h2 class="mb-2 text-base font-semibold text-ink">
+                            {% blocktrans with q=revision_part_query %}CRM revisions for “{{ q }}”{% endblocktrans %}
+                        </h2>
+                        <p class="mb-3 text-sm text-ink-muted">
+                            {% trans "Pick a revision, then import that BoM into Lithium." %}
+                        </p>
+                        <div class="overflow-x-auto">
+                            <table class="bom-table w-full text-sm">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "Rev" %}</th>
+                                        <th>{% trans "CRM id" %}</th>
+                                        <th>{% trans "Part number" %}</th>
+                                        <th>{% trans "Description" %}</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for entry in revision_candidates %}
+                                        <tr>
+                                            <td>{{ entry.revision|default:"—" }}</td>
+                                            <td>{{ entry.bom_id }}</td>
+                                            <td>{{ entry.part_number }}</td>
+                                            <td>{{ entry.description }}</td>
+                                            <td class="text-right">
+                                                <form action="{% url 'bom:import-systemgroup-bom' %}" method="post" class="inline">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="part_id" value="{{ entry.part_number }}">
+                                                    <input type="hidden" name="parent_part_number" value="{{ entry.part_number }}">
+                                                    <input type="hidden" name="parent_revision" value="{{ entry.revision }}">
+                                                    <input type="hidden" name="bom_id" value="{{ entry.bom_id }}">
+                                                    {% if form.dry_run.value %}<input type="hidden" name="dry_run" value="on">{% endif %}
+                                                    <button class="bom-btn-primary" type="submit">{% trans "Import this BoM" %}</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-4">
+                            <a href="{% url 'bom:import-systemgroup-bom' %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
+                        </div>
+                    </div>
+                {% endif %}
+
                 {% if bom_candidates %}
                     <div class="mb-6">
                         <h2 class="mb-2 text-base font-semibold text-ink">
@@ -62,6 +111,7 @@
                         </h2>
                         <form action="{% url 'bom:import-systemgroup-bom' %}" method="post">
                             {% csrf_token %}
+                            <input type="hidden" name="part_id" value="{{ form.part_id.value|default_if_none:'' }}">
                             <input type="hidden" name="part_id_revision" value="{{ form.part_id_revision.value|default_if_none:'' }}">
                             <input type="hidden" name="parent_part_number" value="{{ form.parent_part_number.value|default_if_none:'' }}">
                             <input type="hidden" name="parent_revision" value="{{ form.parent_revision.value|default_if_none:'' }}">
@@ -81,7 +131,8 @@
                                         {% for entry in bom_candidates %}
                                             <tr>
                                                 <td>
-                                                    <input type="radio" name="bom_id" value="{{ entry.bom_id }}" id="bom_pick_{{ entry.bom_id }}" {% if forloop.first %}checked{% endif %}>
+                                                    <input type="radio" name="bom_id" value="{{ entry.bom_id }}" id="bom_pick_{{ entry.bom_id }}" {% if forloop.first %}checked{% endif %}
+                                                           data-part="{{ entry.part_number }}" data-rev="{{ entry.revision }}">
                                                 </td>
                                                 <td><label for="bom_pick_{{ entry.bom_id }}">{{ entry.bom_id }}</label></td>
                                                 <td>{{ entry.part_number }}</td>
@@ -107,9 +158,17 @@
                     {% endif %}
 
                     <div class="row items-end gap-y-3">
+                        {{ form.part_id|bom_form:'m8 s12' }}
+                        <div class="col m4 s12 flex flex-wrap items-end gap-2">
+                            <button class="bom-btn-primary" type="submit" name="load_revisions" value="1">{% trans "Load revisions" %}</button>
+                        </div>
+                    </div>
+                    <p class="bom-help mb-4">[{% trans "Preferred" %}] {% trans "Part ID only — load every CRM revision for that part, then import the one you select." %}</p>
+
+                    <div class="row items-end gap-y-3">
                         {{ form.part_id_revision|bom_form:'m8 s12' }}
                         <div class="col m4 s12 text-sm text-ink-muted">
-                            <p class="bom-help">[{% trans "Preferred" %}] {% trans "Format: part-id/revision (matches CRM «کد BOM»). Creates the Lithium part/revision if missing." %}</p>
+                            <p class="bom-help">{% trans "Shortcut: part-id/revision (matches CRM «کد BOM») with Get the BoM below." %}</p>
                         </div>
                     </div>
                     {{ form.parent_part_number }}

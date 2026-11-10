@@ -21,6 +21,7 @@ from .parser import (
     match_bom_list_entries,
     parse_bom_document,
     parse_bom_list_document,
+    split_bom_code,
 )
 
 
@@ -353,6 +354,43 @@ def load_bom_list_entries(
         return parse_bom_list_document(body, content_type=ctype)
     except (SystemGroupClientError, SystemGroupParseError, OSError) as exc:
         raise SystemGroupImportError(str(exc)) from exc
+
+
+def list_revisions_for_part(
+    part_number: str,
+    *,
+    client: SystemGroupClient | None = None,
+    list_html: str | None = None,
+    list_json: str | None = None,
+    list_path: str | Path | None = None,
+    entries: list[BomListEntry] | None = None,
+) -> list[BomListEntry]:
+    """Return all CRM BoM list rows for a part number (any revision).
+
+    Used by the GUI Part ID → pick-revision flow. Raises ``NoBomMatch`` when
+    nothing matches. Does not raise ``AmbiguousBomMatch`` — callers always get
+    the full revision set to display.
+    """
+    pn = (part_number or "").strip()
+    if not pn:
+        raise SystemGroupImportError("Part ID is required to load revisions.")
+    # Strip accidental /rev so we list every revision for the PN.
+    code_pn, _code_rev = split_bom_code(pn)
+    pn = code_pn or pn
+    rows = entries if entries is not None else load_bom_list_entries(
+        client=client,
+        list_html=list_html,
+        list_json=list_json,
+        list_path=list_path,
+    )
+    matches = match_bom_list_entries(rows, part_number=pn, revision=None)
+    if not matches:
+        raise NoBomMatch(pn)
+    # Stable order: revision then CRM id.
+    return sorted(
+        matches,
+        key=lambda e: ((e.revision or "").casefold(), e.bom_id),
+    )
 
 
 def resolve_bom_from_list(
