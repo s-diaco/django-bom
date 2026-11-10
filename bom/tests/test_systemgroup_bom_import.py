@@ -35,6 +35,7 @@ from bom.systemgroup.importer import (
 from bom.systemgroup.parser import (
     SystemGroupParseError,
     match_bom_list_entries,
+    normalize_crm_decimal,
     parse_bom_document,
     parse_bom_list_document,
     parse_login_form,
@@ -182,6 +183,35 @@ class SystemGroupBomParseTests(TestCase):
         bom = parse_bom_document(html)
         self.assertEqual(bom.source, "html-embedded-json")
         self.assertEqual(len(bom.lines), 1)
+
+    def test_parse_telerik_edit_html_eds_materials(self):
+        """Live Edit.aspx: lines from eds_BomMaterials_updatedData, not rgRow."""
+        html = (FIXTURES / "bom_edit_telerik.html").read_text(encoding="utf-8")
+        bom = parse_bom_document(html, content_type="text/html")
+        self.assertEqual(bom.source, "html-eds-materials")
+        self.assertEqual(bom.bom_id, "39485")
+        self.assertEqual(bom.parent_part_number, "1155F229")
+        self.assertEqual(bom.parent_revision, "A2*10-C")
+        self.assertIn("1155F229", bom.parent_description)
+        self.assertEqual(len(bom.lines), 3)
+        self.assertEqual(bom.lines[0].part_number, "003-00")
+        self.assertEqual(bom.lines[0].quantity, "70")
+        self.assertIn("براکس", bom.lines[0].description)
+        self.assertEqual(bom.lines[1].part_number, "008-11")
+        self.assertEqual(bom.lines[1].quantity, "10")
+
+    def test_parse_materials_json_fixture(self):
+        raw = (FIXTURES / "bom_edit_materials.json").read_text(encoding="utf-8")
+        bom = parse_bom_document(raw, content_type="application/json")
+        self.assertEqual(bom.bom_id, "39485")
+        self.assertEqual(len(bom.lines), 3)
+        self.assertEqual(bom.lines[0].part_number, "003-00")
+        self.assertEqual(bom.lines[0].quantity, "70")
+
+    def test_normalize_crm_decimal(self):
+        self.assertEqual(normalize_crm_decimal("70/000000000000000"), "70")
+        self.assertEqual(normalize_crm_decimal("10/500"), "10.5")
+        self.assertEqual(normalize_crm_decimal("‎12‏"), "12")
 
     def test_empty_document_raises(self):
         with self.assertRaises(SystemGroupParseError):

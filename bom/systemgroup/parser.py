@@ -1,9 +1,9 @@
 """Parse SystemGroup login forms, BoM Edit, and BoM List HTML/JSON.
 
-List parsing targets live List.aspx SgGridView/Telerik markup (static
-``MasterTableView_Header`` + ``rgRow``/``rgAltRow`` data). Fixtures:
-``bom_list.html`` (simple), ``bom_list_telerik.html`` / ``.json`` (trimmed
-live sample). See docs/systemgroup-bom-importer.md.
+Edit: prefer ``window.eds_BomMaterials_updatedData`` (PartCode/Quantity);
+rgRow cells are often empty. Header via ``nrgNumber`` / ``sltBomPart``.
+List: Telerik ``MasterTableView_Header`` + ``rgRow``. Fixtures:
+``bom_edit_telerik.html``, ``bom_edit_materials.json``, ``bom_list_telerik.*``.
 """
 
 from __future__ import annotations
@@ -264,15 +264,38 @@ _HEADER_ALIASES: dict[str, tuple[str, ...]] = {
         "part number",
         "part no",
         "partno",
+        "partcode",
+        "part_code",
         "code",
         "code_material",
         "item",
         "item code",
         "شماره قطعه",
+        "کد کالا",
+        "کدکالا",
     ),
-    "quantity": ("quantity", "qty", "count", "qty.", "تعداد"),
+    "quantity": (
+        "quantity",
+        "qty",
+        "count",
+        "qty.",
+        "تعداد",
+        "مصرف استاندارد",
+        "مصرفاستاندارد",
+    ),
     "revision": ("revision", "rev", "rev.", "نسخه"),
-    "description": ("description", "desc", "name", "name_material", "شرح", "توضیحات"),
+    "description": (
+        "description",
+        "desc",
+        "name",
+        "name_material",
+        "partname",
+        "part_name",
+        "عنوان کالا",
+        "عنوانکالا",
+        "شرح",
+        "توضیحات",
+    ),
     "reference": ("reference", "references", "designator", "designators", "ref", "مرجع"),
     "manufacturer_name": ("manufacturer", "manufacturer_name", "mfr", "mfg", "سازنده"),
     "manufacturer_part_number": (
@@ -285,6 +308,15 @@ _HEADER_ALIASES: dict[str, tuple[str, ...]] = {
     "dnp": ("dnp", "dnl", "do_not_load", "do not load", "do not populate"),
     "level": ("level", "lvl", "indent"),
 }
+
+# Live Edit.aspx embeds materials as: window.eds_BomMaterials_updatedData="[{\"PartCode\":...}]";
+_EDS_MATERIALS_UPDATED = re.compile(
+    r"window\.eds_BomMaterials_updatedData\s*=\s*\"((?:\\.|[^\"\\])*)\"",
+    re.DOTALL,
+)
+_CRM_DECIMAL = re.compile(r"^(\d+)/(\d+)$")
+_BIDI_AND_FMT = re.compile(r"[\u200e\u200f\u202a-\u202e\u2066-\u2069]")
+_THOUSAND_SEP = re.compile(r"[, ،]")
 
 
 def _normalize_header(raw: str) -> str | None:
@@ -299,12 +331,39 @@ def _normalize_header(raw: str) -> str | None:
     return None
 
 
+def normalize_crm_decimal(raw: str) -> str:
+    """Normalize CRM quantity text (Persian ``70/000`` decimal slash, bidi marks)."""
+    text = _BIDI_AND_FMT.sub("", raw or "").strip()
+    if not text:
+        return ""
+    match = _CRM_DECIMAL.fullmatch(text.replace(",", "").replace("،", ""))
+    if match:
+        whole, frac = match.group(1), match.group(2).rstrip("0")
+        return f"{whole}.{frac}" if frac else whole
+    return text
+
+
 def _line_from_mapping(data: dict[str, Any], default_level: int = 1) -> BomLine:
     normalized: dict[str, str] = {}
     for k, v in data.items():
         field_name = _normalize_header(str(k))
         if field_name:
             normalized[field_name] = "" if v is None else str(v).strip()
+    # Explicit CRM materials keys (eds_BomMaterials_updatedData).
+    if not normalized.get("part_number"):
+        for key in ("PartCode", "partCode", "Part_Code"):
+            if data.get(key) not in (None, ""):
+                normalized["part_number"] = str(data[key]).strip()
+                break
+    if not normalized.get("description"):
+        for key in ("PartName", "partName", "Title"):
+            if data.get(key) not in (None, ""):
+                normalized["description"] = str(data[key]).strip()
+                break
+    if not normalized.get("quantity") and data.get("Quantity") not in (None, ""):
+        normalized["quantity"] = str(data["Quantity"]).strip()
+    if normalized.get("quantity"):
+        normalized["quantity"] = normalize_crm_decimal(normalized["quantity"]) or "1"
     level_raw = normalized.get("level", "")
     try:
         level = int(float(level_raw)) if level_raw else default_level
@@ -422,6 +481,17 @@ def _parse_bom_json_blob(text: str) -> ParsedBom | None:
 
 
 def _parsed_bom_from_json(data: Any, source: str = "json") -> ParsedBom:
+    # Live CRM materials arrays use PartCode/PartName/Quantity (+ BomRef).
+    if (
+        isinstance(data, list)
+        and data
+        and isinstance(data[0], dict)
+        and any(k in data[0] for k in ("PartCode", "partCode", "PartName"))
+    ):
+        return _parsed_bom_from_materials(
+            [row for row in data if isinstance(row, dict)], source=source
+        )
+
     bom = ParsedBom(source=source)
     lines_raw: list[Any] = []
     if isinstance(data, list):
@@ -460,6 +530,8 @@ def _parsed_bom_from_json(data: Any, source: str = "json") -> ParsedBom:
         line = _line_from_mapping(item)
         if line.part_number or line.manufacturer_part_number:
             bom.lines.append(line)
+        if not bom.bom_id and item.get("BomRef") not in (None, ""):
+            bom.bom_id = normalize_crm_id(str(item["BomRef"]))
     if not bom.lines:
         raise SystemGroupParseError("JSON BoM contained no usable line items.")
     return bom
@@ -469,7 +541,11 @@ def _score_table(table: dict[str, Any]) -> int:
     score = 0
     tid = (table.get("id") or "").lower()
     tclass = (table.get("class") or "").lower()
-    if any(x in tid or x in tclass for x in ("bom", "grid", "lines", "items")):
+    if "header" in tid:
+        return -1
+    if "grdmaterials" in tid or "bommaterials" in tid:
+        score += 15
+    if any(x in tid or x in tclass for x in ("bom", "grid", "lines", "items", "material")):
         score += 5
     rows = table.get("rows") or []
     if not rows:
@@ -479,11 +555,104 @@ def _score_table(table: dict[str, Any]) -> int:
     score += mapped * 2
     if mapped >= 2:
         score += 3
+    # Prefer tables that actually have non-empty data cells.
+    dataish = 0
+    for row in rows[1:]:
+        if any((c[1] or "").strip() for c in row):
+            dataish += 1
+    score += min(dataish, 20)
     score += min(len(rows), 20)
     return score
 
 
+def _unescape_js_json_string(raw: str) -> Any:
+    """Decode a JS string literal that holds JSON (``\\\"`` → ``"``)."""
+    try:
+        return json.loads(f'"{raw}"')
+    except json.JSONDecodeError:
+        return raw.replace(r"\"", '"').replace(r"\/", "/").replace(r"\\", "\\")
+
+
+def _materials_from_eds_updated_data(html: str) -> list[dict[str, Any]] | None:
+    match = _EDS_MATERIALS_UPDATED.search(html or "")
+    if not match:
+        return None
+    decoded = _unescape_js_json_string(match.group(1))
+    if isinstance(decoded, str):
+        try:
+            decoded = json.loads(decoded)
+        except json.JSONDecodeError:
+            return None
+    if isinstance(decoded, list) and decoded:
+        return [row for row in decoded if isinstance(row, dict)]
+    return None
+
+
+def _form_field_map(html: str) -> dict[str, str]:
+    """Collect input name/id → value pairs (Edit header controls)."""
+    fields: dict[str, str] = {}
+    for m in re.finditer(
+        r"""<(?:input|textarea)\b([^>]*)>""",
+        html or "",
+        re.IGNORECASE,
+    ):
+        attrs = m.group(1)
+        name_m = re.search(r"""(?:name|id)\s*=\s*["']([^"']+)["']""", attrs, re.I)
+        val_m = re.search(r"""\bvalue\s*=\s*["']([^"']*)["']""", attrs, re.I)
+        if name_m and val_m:
+            fields[name_m.group(1)] = val_m.group(1)
+    return fields
+
+
+def _apply_edit_header_fields(bom: ParsedBom, html: str) -> None:
+    fields = _form_field_map(html)
+    part = (fields.get("sltBomPart") or "").strip()
+    number = (fields.get("nrgNumber") or "").strip()
+    title = (fields.get("txtTitle") or fields.get("txtBomPartName") or "").strip()
+    if part and not bom.parent_part_number:
+        bom.parent_part_number = part
+    if number:
+        code_pn, code_rev = split_bom_code(number)
+        if code_pn and not bom.parent_part_number:
+            bom.parent_part_number = code_pn
+        if code_rev and not bom.parent_revision:
+            bom.parent_revision = code_rev
+        # When Number is PN/rev, prefer PN from Number over bare selector if empty.
+        if code_pn and code_rev:
+            bom.parent_part_number = code_pn
+            bom.parent_revision = code_rev
+    if title and not bom.parent_description:
+        bom.parent_description = title
+    if not bom.bom_id:
+        # Prefer BomRef from materials blob later; id= in Edit URL as fallback.
+        id_m = re.search(r"[?&]id=(\d+)", html or "", re.I)
+        if id_m:
+            bom.bom_id = id_m.group(1)
+
+
+def _parsed_bom_from_materials(
+    rows: list[dict[str, Any]], *, source: str
+) -> ParsedBom:
+    bom = ParsedBom(source=source)
+    for item in rows:
+        line = _line_from_mapping(item)
+        if line.part_number or line.manufacturer_part_number:
+            bom.lines.append(line)
+        if not bom.bom_id and item.get("BomRef") not in (None, ""):
+            bom.bom_id = normalize_crm_id(str(item["BomRef"]))
+    if not bom.lines:
+        raise SystemGroupParseError("BoM materials JSON contained no usable line items.")
+    return bom
+
+
 def _parse_bom_html(html: str) -> ParsedBom:
+    # Prefer live CRM EntityDataSource materials JSON (grid rows are often empty).
+    materials = _materials_from_eds_updated_data(html)
+    if materials:
+        bom = _parsed_bom_from_materials(materials, source="html-eds-materials")
+        _apply_edit_header_fields(bom, html)
+        return bom
+
     # Prefer embedded JSON if present (common for ASP.NET grids / SPA shells).
     for pattern in _JSON_PATTERNS:
         match = pattern.search(html)
@@ -492,6 +661,7 @@ def _parse_bom_html(html: str) -> ParsedBom:
             parsed = _parse_bom_json_blob(blob)
             if parsed and parsed.lines:
                 parsed.source = "html-embedded-json"
+                _apply_edit_header_fields(parsed, html)
                 return parsed
 
     parser = _BomTableParser()
@@ -519,6 +689,7 @@ def _parse_bom_html(html: str) -> ParsedBom:
     bom.parent_part_number = parser.meta.get("parent_part_number", "")
     bom.parent_revision = parser.meta.get("parent_revision", "")
     bom.parent_description = parser.meta.get("parent_description", "")
+    _apply_edit_header_fields(bom, html)
 
     for row in rows[1:]:
         cells = [c[1] for c in row]
@@ -594,8 +765,6 @@ _LIST_HEADER_ALIASES: dict[str, tuple[str, ...]] = {
 }
 
 # Telerik/ASP.NET often wraps digits with LTR marks and thousand separators.
-_BIDI_AND_FMT = re.compile(r"[\u200e\u200f\u202a-\u202e\u2066-\u2069]")
-_THOUSAND_SEP = re.compile(r"[, ،]")
 _RG_HEADER_TH = re.compile(
     r"<th\b[^>]*\brgHeader\b[^>]*>(.*?)</th>",
     re.IGNORECASE | re.DOTALL,
