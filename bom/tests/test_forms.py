@@ -335,6 +335,46 @@ class TestForms(TestCase):
         self.assertEqual(edit.initial["customs_duty_percent"], Decimal("7.50"))
         self.assertEqual(SellerPart.objects.filter(pk=sp.pk).count(), 1)
 
+    def test_seller_part_edit_form_formats_two_decimal_places(self):
+        """Edit widgets must show 2dp even when Money amount scale is 4."""
+        from bom.constants import UNIT_COST_DECIMAL_PLACES
+        from bom.models import SellerPart
+
+        self.assertEqual(UNIT_COST_DECIMAL_PLACES, 2)
+        parts = create_some_fake_parts(organization=self.organization)
+        mp = parts[0].primary_manufacturer_part
+        seller = Seller.objects.filter(organization=self.organization)[0]
+        sp = SellerPart.objects.create(
+            manufacturer_part=mp,
+            seller=seller,
+            seller_part_number="DP-4",
+            unit_cost=Money(Decimal("12.34"), self.organization.currency),
+            shipping=Money(Decimal("1.25"), self.organization.currency),
+            customs_duty_percent=Decimal("7.50"),
+            nre_cost=Money(Decimal("0"), self.organization.currency),
+        )
+        # Simulate a numeric(19,4) read: amount keeps 4 fractional digits.
+        sp.unit_cost = Money(Decimal("12.3400"), self.organization.currency)
+        sp.shipping = Money(Decimal("1.2500"), self.organization.currency)
+        self.assertEqual(sp.unit_cost.amount, Decimal("12.3400"))
+        self.assertEqual(sp.shipping.amount, Decimal("1.2500"))
+
+        edit = SellerPartForm(instance=sp, organization=self.organization)
+        self.assertEqual(edit.initial["unit_cost"], Decimal("12.34"))
+        self.assertEqual(edit.initial["shipping"], Decimal("1.25"))
+        unit_html = str(edit["unit_cost"])
+        shipping_html = str(edit["shipping"])
+        self.assertIn('value="12.34"', unit_html)
+        self.assertIn('value="1.25"', shipping_html)
+        self.assertNotIn("12.3400", unit_html)
+        self.assertNotIn("1.2500", shipping_html)
+
+        field = GroupedDecimalField(
+            max_digits=19, decimal_places=UNIT_COST_DECIMAL_PLACES
+        )
+        self.assertEqual(field.prepare_value(Decimal("9.8765")), "9.88")
+        self.assertEqual(field.prepare_value(Decimal("10.0000")), "10.00")
+
     def test_grouped_decimal_field_to_python(self):
         field = GroupedDecimalField()
         self.assertEqual(field.clean("1,234,567"), Decimal("1234567"))
