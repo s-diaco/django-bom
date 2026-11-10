@@ -924,8 +924,35 @@ def bom_settings(request, tab_anchor=None):
                     profile.language = language
                     fields_to_update.append("language")
                     translation.activate(language)
+                if "systemgroup_username" in request.POST:
+                    profile.systemgroup_username = (
+                        request.POST.get("systemgroup_username") or ""
+                    ).strip()
+                    fields_to_update.append("systemgroup_username")
+                    if not profile.systemgroup_username:
+                        profile.systemgroup_password = ""
+                        fields_to_update.append("systemgroup_password")
+                # Blank password keeps the stored value; clear checkbox wipes it.
+                if request.POST.get("clear_systemgroup_password"):
+                    profile.systemgroup_password = ""
+                    fields_to_update.append("systemgroup_password")
+                elif (
+                    "systemgroup_password" in request.POST
+                    and profile.systemgroup_username
+                ):
+                    new_password = request.POST.get("systemgroup_password") or ""
+                    if new_password:
+                        profile.systemgroup_password = new_password
+                        fields_to_update.append("systemgroup_password")
                 if fields_to_update:
-                    profile.save(update_fields=fields_to_update)
+                    # Deduplicate while preserving order.
+                    seen = set()
+                    unique_fields = []
+                    for field in fields_to_update:
+                        if field not in seen:
+                            seen.add(field)
+                            unique_fields.append(field)
+                    profile.save(update_fields=unique_fields)
             else:
                 messages.error(request, user_form.errors)
 
@@ -2512,23 +2539,61 @@ def part_export_bom(
 @organization_admin
 def import_systemgroup_bom(request):
     """Admin UI for SystemGroup PAC Engineering BoM import (same backend as CLI)."""
+    from bom.systemgroup.access import user_can_import_systemgroup
     from bom.systemgroup.forms import SystemGroupBomImportForm
-    from bom.systemgroup.importer import SystemGroupImportError, run_systemgroup_import
+    from bom.systemgroup.importer import (
+        AmbiguousBomMatch,
+        ExistingBomConflict,
+        SystemGroupImportError,
+        run_systemgroup_import,
+    )
 
     user = request.user
     profile = user.bom_profile()
     organization = profile.organization
     title = _("Import SystemGroup BoM")
+    if not user_can_import_systemgroup(user):
+        if organization is None or not organization.systemgroup_import_enabled:
+            messages.error(
+                request,
+                _(
+                    "SystemGroup import is disabled for this organization. "
+                    "Ask the organization owner to enable it under Settings → Organization."
+                ),
+            )
+        else:
+            messages.error(
+                request,
+                _(
+                    "Set your SystemGroup username and password under "
+                    "Settings → User before importing."
+                ),
+            )
+        return HttpResponseRedirect(
+            reverse("bom:settings", kwargs={"tab_anchor": "user"})
+        )
+
+    bom_candidates = None
+    match_query = None
+    existing_bom_conflict = None
+    get_parent = request.GET.get("parent_part", "")
+    get_rev = request.GET.get("parent_revision", "")
+    initial_pir = ""
+    if get_parent:
+        initial_pir = f"{get_parent}/{get_rev}" if get_rev else get_parent
     form = SystemGroupBomImportForm(
         request.POST or None,
         request.FILES or None,
         initial={
-            "parent_part_number": request.GET.get("parent_part", ""),
+            "part_id_revision": request.GET.get("part_id_revision", initial_pir),
+            "parent_part_number": get_parent,
+            "parent_revision": get_rev,
             "bom_id": request.GET.get("bom_id", ""),
             "crm_url": request.GET.get("crm_url", ""),
         },
     )
 
+    session_key = "systemgroup_import_source"
     if request.method == "POST" and form.is_valid():
         cleaned = form.cleaned_data
         html_content = None
@@ -2543,21 +2608,51 @@ def import_systemgroup_bom(request):
             name = (getattr(source, "name", "") or "").lower()
             if name.endswith(".json") or text.lstrip()[:1] in "{[":
                 json_content = text
+                request.session[session_key] = {"kind": "json", "text": text}
             else:
                 html_content = text
+                request.session[session_key] = {"kind": "html", "text": text}
+        elif cleaned.get("existing_bom_action"):
+            # Keep/replace re-POST: reuse the prior offline upload if any.
+            cached = request.session.get(session_key) or {}
+            if cached.get("kind") == "json" and cached.get("text"):
+                json_content = cached["text"]
+            elif cached.get("kind") == "html" and cached.get("text"):
+                html_content = cached["text"]
         try:
             result = run_systemgroup_import(
                 organization,
                 bom_id=cleaned.get("bom_id"),
                 crm_url=cleaned.get("crm_url"),
                 parent_part_number=cleaned.get("parent_part_number") or None,
+                parent_revision=cleaned.get("parent_revision") or None,
                 html_content=html_content,
                 json_content=json_content,
                 dry_run=bool(cleaned.get("dry_run")),
+                from_list=bool(cleaned.get("browse_list")),
+                existing_bom_action=cleaned.get("existing_bom_action"),
+                user_meta=profile,
+            )
+        except AmbiguousBomMatch as exc:
+            bom_candidates = exc.matches
+            match_query = exc.query if exc.query != "(all)" else None
+            messages.info(
+                request,
+                _("Several CRM BoMs matched — pick one below, or enter an id/URL."),
+            )
+        except ExistingBomConflict as exc:
+            existing_bom_conflict = exc
+            messages.warning(
+                request,
+                _(
+                    "This part/revision already has a BoM. Keep the existing tree "
+                    "(append imported lines) or replace it."
+                ),
             )
         except SystemGroupImportError as exc:
             messages.error(request, str(exc))
         else:
+            request.session.pop(session_key, None)
             for msg in result.successes:
                 messages.info(request, msg)
             for msg in result.warnings:

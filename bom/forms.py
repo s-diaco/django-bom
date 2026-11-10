@@ -336,7 +336,12 @@ class OrganizationForm(forms.ModelForm):
 class OrganizationFormEditSettings(OrganizationForm):
     def __init__(self, *args, **kwargs):
         super(OrganizationFormEditSettings, self).__init__(*args, **kwargs)
-        # user = kwargs.get("user", None)
+        if "systemgroup_import_enabled" in self.fields:
+            self.fields["systemgroup_import_enabled"].help_text = _(
+                "When enabled, organization admins who have saved their own "
+                "SystemGroup username/password under User settings can import "
+                "BoMs. Users without credentials cannot import."
+            )
 
     class Meta:
         model = Organization
@@ -352,6 +357,7 @@ class OrganizationFormEditSettings(OrganizationForm):
         ]
         labels = {
             "name": "Organization Name",
+            "systemgroup_import_enabled": _("Enable SystemGroup BoM import"),
         }
 
 
@@ -2652,6 +2658,8 @@ class BOMCSVForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
         self.parent_part = kwargs.pop("parent_part", None)
+        # Optional: attach under a specific revision (not necessarily latest()).
+        self.parent_part_revision = kwargs.pop("parent_part_revision", None)
         super(BOMCSVForm, self).__init__(*args, **kwargs)
 
     def clean(self):
@@ -2712,9 +2720,9 @@ class BOMCSVForm(forms.Form):
                     code="invalid",
                 )
 
-            parent_part_revision = (
-                self.parent_part.latest() if self.parent_part else None
-            )
+            parent_part_revision = self.parent_part_revision
+            if parent_part_revision is None and self.parent_part is not None:
+                parent_part_revision = self.parent_part.latest()
 
             last_level = None
             last_part_revision = parent_part_revision
