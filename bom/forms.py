@@ -88,6 +88,28 @@ class GroupedDecimalField(forms.DecimalField):
 
     widget = forms.TextInput(attrs=_PRICE_INPUT_ATTRS)
 
+    def prepare_value(self, value):
+        """Render amounts at this field's decimal_places (never raw DB scale)."""
+        if value in (None, ""):
+            return value
+        if isinstance(value, str):
+            return value
+        try:
+            amount = Decimal(value)
+        except Exception:
+            return value
+        places = self.decimal_places
+        if places is None:
+            return value
+        quant = (
+            Decimal("1").scaleb(-places) if places else Decimal("1")
+        )
+        amount = amount.quantize(quant, rounding=ROUND_HALF_UP)
+        if places == 0:
+            return f"{int(amount)}"
+        # Plain digits; bom-price-input JS adds thousands separators.
+        return f"{amount:.{places}f}"
+
     def to_python(self, value):
         return super().to_python(normalize_grouped_number(value))
 
@@ -639,13 +661,20 @@ class SellerPartForm(forms.ModelForm):
         instance = kwargs.get("instance")
         if instance:
             initial = kwargs.get("initial", {})
-            initial["unit_cost"] = instance.unit_cost.amount
-            initial["shipping"] = (
-                instance.shipping.amount if instance.shipping is not None else 0
+            quant = Decimal("1").scaleb(-UNIT_COST_DECIMAL_PLACES)
+            unit_amount = instance.unit_cost.amount if instance.unit_cost is not None else Decimal(0)
+            shipping_amount = (
+                instance.shipping.amount if instance.shipping is not None else Decimal(0)
+            )
+            initial["unit_cost"] = unit_amount.quantize(quant, rounding=ROUND_HALF_UP)
+            initial["shipping"] = shipping_amount.quantize(
+                quant, rounding=ROUND_HALF_UP
             )
             initial["customs_duty_percent"] = instance.customs_duty_percent
             initial["currency"] = str(instance.unit_cost.currency)
-            initial["nre_cost"] = instance.nre_cost.amount
+            initial["nre_cost"] = (
+                instance.nre_cost.amount if instance.nre_cost is not None else Decimal(0)
+            )
             initial["seller_part_number"] = instance.seller_part_number
             kwargs["initial"] = initial
         super(SellerPartForm, self).__init__(*args, **kwargs)

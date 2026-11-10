@@ -29,11 +29,11 @@
                     <td><a href="{% url 'bom:part-info' part_id=seller_part.manufacturer_part.part_id %}">{{ seller_part.manufacturer_part.part }}</a></td>
                     <td>{% if seller_part.seller %}{{ seller_part.seller.name }}{% endif %}</td>
                     <td>{{ seller_part.seller_part_number }}</td>
-                    <td class="bom-num">{{ seller_part.unit_cost }}</td>
+                    <td class="bom-num">{{ seller_part.unit_cost|money_amount }}</td>
                     <td class="bom-num">{{ seller_part.unit_cost.currency|currency_label }}</td>
-                    <td class="bom-num">{{ seller_part.shipping }}</td>
+                    <td class="bom-num">{{ seller_part.shipping|money_amount }}</td>
                     <td class="bom-num">{{ seller_part.customs_duty_percent }}</td>
-                    <td class="bom-num">{{ seller_part.landed_unit_cost }}</td>
+                    <td class="bom-num">{{ seller_part.landed_unit_cost|money_amount }}</td>
                     <td>{% if profile.role == 'A' %}
                         <a href="{% url 'bom:sellerpart-edit' sellerpart_id=seller_part.id %}"><i
                             class="material-icons green-text text-lighten-1 right">edit</i></a>

@@ -1,5 +1,6 @@
 {# To include this widget, make sure to pass: `manufacturer_parts`, `profile`, (optional, for mouser) `part_revision` variables  #}
 {% load static %}
+{% load bom_i18n %}
 
 {% block head %}
     <link rel="stylesheet" type="text/css" href="{% static 'bom/css/treetable-theme.css' %}"/>
@@ -34,7 +35,7 @@
                 <td id="sourcing-mp-{{ manufacturer_part.id }}-pn">{{ manufacturer_part.optimal_seller.seller_part_number }}</td>
                 <td id="sourcing-mp-{{ manufacturer_part.id }}-moq">{{ manufacturer_part.optimal_seller.minimum_order_quantity }}</td>
                 <td id="sourcing-mp-{{ manufacturer_part.id }}-mpq">{{ manufacturer_part.optimal_seller.minimum_pack_quantity }}</td>
-                <td id="sourcing-mp-{{ manufacturer_part.id }}-cost">{{ manufacturer_part.optimal_seller.landed_unit_cost }}</td>
+                <td id="sourcing-mp-{{ manufacturer_part.id }}-cost">{{ manufacturer_part.optimal_seller.landed_unit_cost|money_amount }}</td>
                 <td id="sourcing-mp-{{ manufacturer_part.id }}-lt">{{ manufacturer_part.optimal_seller.lead_time_days }}</td>
                 <td id="sourcing-mp-{{ manufacturer_part.id }}-nre">{{ manufacturer_part.optimal_seller.nre_cost }}</td>
                 <td id="sourcing-mp-{{ manufacturer_part.id }}-ncnr">{{ manufacturer_part.optimal_seller.ncnr }}</td>
@@ -70,7 +71,7 @@
                     <td>{{ seller_part.seller_part_number }}</td>
                     <td>{{ seller_part.minimum_order_quantity }}</td>
                     <td>{{ seller_part.minimum_pack_quantity }}</td>
-                    <td>{{ seller_part.landed_unit_cost }}</td>
+                    <td>{{ seller_part.landed_unit_cost|money_amount }}</td>
                     <td>{{ seller_part.lead_time_days }}</td>
                     <td>{{ seller_part.nre_cost }}</td>
                     <td>{{ seller_part.ncnr }}</td>
@@ -133,7 +134,7 @@
                         const sourcingParts = mouserInfo['seller_parts'];
                         const stockParsed = mouserInfo['stock_parsed'];
                         const optimalSellerPart = flatBom['parts']['{{ part_revision.id }}']['seller_part'];
-                        specsUnitCost = parseFloat(flatBom['unit_cost']).toFixed(4);
+                        specsUnitCost = parseFloat(flatBom['unit_cost']).toFixed(2);
                         specsEstCostPerOrder = parseFloat(flatBom['out_of_pocket_cost']).toFixed(2);
                         specsMissingParts = flatBom['missing_item_costs'];
                         dataSheet = mouserInfo['data_sheet'];
@@ -170,7 +171,7 @@
                     const pn = sellerPart['seller_part_number'];
                     const moq = sellerPart['minimum_order_quantity'];
                     const mpq = sellerPart['minimum_pack_quantity'];
-                    const price = parseFloat(sellerPart['landed_unit_cost'] ?? sellerPart['unit_cost']).toFixed(4);
+                    const price = parseFloat(sellerPart['landed_unit_cost'] ?? sellerPart['unit_cost']).toFixed(2);
                     const leadTime = `${sellerPart['lead_time_days']}`;
                     const nre = parseFloat(sellerPart['nre_cost']).toFixed(4);
                     const ncnr = "True";
@@ -258,9 +259,9 @@
                 const sellerNameElement = $(sellerNameId);
                 if (unitCost && sourcingInfo && sellerLink) {
                     unitCostElement.text('');
-                    unitCostElement.html(`<a href="${sellerLink}" target="_blank">${unitCost.toFixed(4)}</a>`);
+                    unitCostElement.html(`<a href="${sellerLink}" target="_blank">${unitCost.toFixed(2)}</a>`);
                 } else if (unitCost && sourcingInfo) {
-                    unitCostElement.text(`${unitCost.toFixed(4)}`);
+                    unitCostElement.text(`${unitCost.toFixed(2)}`);
                 }
                 if (unitCost && sourcingInfo && bomParts[partRevId]['seller_part']['data_source'] === 'Mouser') unitCostElement.append(mouserImage);
                 if (isMouser && sellerName) sellerNameElement.text('Mouser');
