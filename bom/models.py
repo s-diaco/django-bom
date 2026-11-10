@@ -1536,21 +1536,27 @@ class SellerPart(models.Model, AsDictModel):
         from bom.exchange import (
             RATE_KIND_CUSTOMS,
             RATE_KIND_MARKET,
+            MissingExchangeRate,
             convert_to_org_currency,
         )
 
-        price_org = convert_to_org_currency(
-            self.unit_cost, org_currency, kind=RATE_KIND_MARKET
-        )
-        shipping_org = convert_to_org_currency(
-            shipping, org_currency, kind=RATE_KIND_MARKET
-        )
-        if duty:
-            duty_org = convert_to_org_currency(
-                duty_money, org_currency, kind=RATE_KIND_CUSTOMS
+        # Missing market/customs rates must not 500 list/BOM pages — treat as
+        # unknown cost (same as no seller). Forms still require rates on save.
+        try:
+            price_org = convert_to_org_currency(
+                self.unit_cost, org_currency, kind=RATE_KIND_MARKET
             )
-        else:
-            duty_org = Money(0, org_currency)
+            shipping_org = convert_to_org_currency(
+                shipping, org_currency, kind=RATE_KIND_MARKET
+            )
+            if duty:
+                duty_org = convert_to_org_currency(
+                    duty_money, org_currency, kind=RATE_KIND_CUSTOMS
+                )
+            else:
+                duty_org = Money(0, org_currency)
+        except MissingExchangeRate:
+            return None
         return price_org + duty_org + shipping_org
 
     def as_dict(self):

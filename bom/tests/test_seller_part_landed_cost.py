@@ -89,6 +89,36 @@ class SellerPartLandedUnitCostFXTest(TestCase):
             Money(4620000, "IRR"),
         )
 
+    def test_landed_unit_cost_missing_customs_rate_returns_none(self):
+        """Duty > 0 with only market rate set must not raise (materials 500)."""
+        set_org_per_unit_rate(
+            "USD", "IRR", Decimal("42000"), kind=RATE_KIND_MARKET
+        )
+        probe = SimpleNamespace(
+            unit_cost=Money(100, "USD"),
+            shipping=Money(10, "USD"),
+            customs_duty_percent=Decimal("20"),
+            manufacturer_part=SimpleNamespace(
+                part=SimpleNamespace(
+                    organization=SimpleNamespace(currency="IRR")
+                )
+            ),
+        )
+        self.assertIsNone(SellerPart.landed_unit_cost.fget(probe))
+
+    def test_landed_unit_cost_missing_market_rate_returns_none(self):
+        probe = SimpleNamespace(
+            unit_cost=Money(100, "USD"),
+            shipping=Money(0, "USD"),
+            customs_duty_percent=Decimal("0"),
+            manufacturer_part=SimpleNamespace(
+                part=SimpleNamespace(
+                    organization=SimpleNamespace(currency="IRR")
+                )
+            ),
+        )
+        self.assertIsNone(SellerPart.landed_unit_cost.fget(probe))
+
     def test_convert_to_org_currency_defaults_to_market(self):
         set_org_per_unit_rate(
             "EUR", "IRR", Decimal("45000"), kind=RATE_KIND_MARKET
