@@ -231,15 +231,16 @@ class SystemGroupClient:
     def fetch_bom_list(self) -> tuple[str, str]:
         """Return (body_text, content_type) for the BoM list page.
 
-        Tries Shell.aspx wrapper first, then the direct List.aspx URL.
+        Prefers direct List.aspx (has SgGridView/Telerik rows). Shell.aspx is
+        chrome-only on this CRM and yields no ``rgRow`` grid.
         """
         if not self._logged_in:
             self.login()
 
         return self._fetch_first_ok(
             [
-                bom_list_url(self.base_url),
                 bom_list_direct_url(self.base_url),
+                bom_list_url(self.base_url),
             ],
             "BoM list page",
         )

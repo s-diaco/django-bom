@@ -18,6 +18,7 @@ from bom.systemgroup.client import (
     SystemGroupClient,
     SystemGroupClientError,
     bom_edit_url,
+    bom_list_direct_url,
     bom_list_url,
     extract_bom_id_from_url,
 )
@@ -190,6 +191,9 @@ class SystemGroupBomListParseTests(TestCase):
     def test_split_bom_code(self):
         self.assertEqual(split_bom_code("500-9001-00/1"), ("500-9001-00", "1"))
         self.assertEqual(split_bom_code("500-9001-00/A"), ("500-9001-00", "A"))
+        self.assertEqual(split_bom_code("1155F229/A2*10-C"), ("1155F229", "A2*10-C"))
+        self.assertEqual(split_bom_code("CGM5883"), ("CGM5883", ""))
+        self.assertEqual(split_bom_code("2183S914*2-C"), ("2183S914*2-C", ""))
         self.assertEqual(split_bom_code("500-9001-00"), ("500-9001-00", ""))
         self.assertEqual(split_bom_code(""), ("", ""))
 
@@ -204,6 +208,45 @@ class SystemGroupBomListParseTests(TestCase):
         self.assertEqual(entries[1].bom_id, "40001")
         self.assertEqual(entries[1].revision, "A")
         self.assertEqual(entries[2].part_number, "500-1111-00")
+
+    def test_parse_telerik_list_html_fixture(self):
+        """Live-trimmed List.aspx: static header + rgRow, bidi/comma ids."""
+        html = (FIXTURES / "bom_list_telerik.html").read_text(encoding="utf-8")
+        entries = parse_bom_list_document(html, content_type="text/html")
+        self.assertEqual(len(entries), 4)
+        self.assertEqual(entries[0].bom_id, "39485")
+        self.assertEqual(entries[0].part_number, "1155F229")
+        self.assertEqual(entries[0].revision, "A2*10-C")
+        self.assertIn("1155F229", entries[0].description)
+        # Number without slash → whole value is PN, empty revision
+        self.assertEqual(entries[1].bom_id, "39484")
+        self.assertEqual(entries[1].part_number, "CGM5883")
+        self.assertEqual(entries[1].revision, "")
+        self.assertEqual(entries[3].part_number, "2183S914*2-C")
+
+    def test_parse_telerik_list_json_fixture(self):
+        raw = (FIXTURES / "bom_list_telerik.json").read_text(encoding="utf-8")
+        entries = parse_bom_list_document(raw, content_type="application/json")
+        self.assertEqual(len(entries), 4)
+        self.assertEqual(entries[0].bom_id, "39485")
+        self.assertEqual(entries[0].part_number, "1155F229")
+        self.assertEqual(entries[0].revision, "A2*10-C")
+        self.assertEqual(entries[1].part_number, "CGM5883")
+
+    def test_match_telerik_number_slash_and_bare(self):
+        entries = parse_bom_list_document(
+            (FIXTURES / "bom_list_telerik.json").read_text(encoding="utf-8"),
+            content_type="application/json",
+        )
+        hits = match_bom_list_entries(entries, part_number="1155F229")
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0].bom_id, "39485")
+        hits_full = match_bom_list_entries(
+            entries, part_number="1155F229/A2*10-C"
+        )
+        self.assertEqual([h.bom_id for h in hits_full], ["39485"])
+        hits_bare = match_bom_list_entries(entries, part_number="CGM5883")
+        self.assertEqual([h.bom_id for h in hits_bare], ["39484"])
 
     def test_parse_list_json_fixture(self):
         raw = (FIXTURES / "bom_list.json").read_text(encoding="utf-8")
@@ -320,6 +363,12 @@ class SystemGroupClientTests(TestCase):
         self.assertIn("List.aspx", url)
         self.assertIn("EntityName%3DBom", url)
         self.assertIn("SystemGroup.PAC.Engineering", url)
+
+    def test_bom_list_direct_url(self):
+        url = bom_list_direct_url("http://192.168.3.193/")
+        self.assertIn("List.aspx", url)
+        self.assertIn("EntityName=Bom", url)
+        self.assertNotIn("Shell.aspx", url)
 
     def test_extract_bom_id_from_url(self):
         self.assertEqual(

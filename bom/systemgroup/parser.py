@@ -1,9 +1,9 @@
 """Parse SystemGroup login forms, BoM Edit, and BoM List HTML/JSON.
 
-FIXTURE SHAPE (scaffold): Live Edit/List.aspx markup was unreachable from the
-cloud VM. Fixtures under bom/test_files/systemgroup/ define the contract.
-Replace them with saved authenticated HTML (or network JSON) from Diaco, then
-tighten selectors / keys — see docs/systemgroup-bom-importer.md.
+List parsing targets live List.aspx SgGridView/Telerik markup (static
+``MasterTableView_Header`` + ``rgRow``/``rgAltRow`` data). Fixtures:
+``bom_list.html`` (simple), ``bom_list_telerik.html`` / ``.json`` (trimmed
+live sample). See docs/systemgroup-bom-importer.md.
 """
 
 from __future__ import annotations
@@ -554,6 +554,7 @@ _LIST_HEADER_ALIASES: dict[str, tuple[str, ...]] = {
     "bom_code": (
         "bom code",
         "bom_code",
+        "number",  # clientDataKeyNames / JSON field for «کد BOM»
         "کد bom",
         "کدbom",
         "code bom",
@@ -568,10 +569,30 @@ _LIST_HEADER_ALIASES: dict[str, tuple[str, ...]] = {
         "item code",
         "شماره قطعه",
     ),
-    "description": ("description", "desc", "name", "title", "شرح", "توضیحات"),
+    # «عنوان BOM» is the list title; do not map bare «title» alone before this.
+    "description": (
+        "description",
+        "desc",
+        "name",
+        "title",
+        "bom title",
+        "عنوان bom",
+        "عنوانbom",
+        "شرح",
+        "توضیحات",
+    ),
     "revision": ("revision", "rev", "rev.", "نسخه"),
     "edit_url": ("edit", "url", "link", "edit url", "ویرایش"),
 }
+
+# Telerik/ASP.NET often wraps digits with LTR marks and thousand separators.
+_BIDI_AND_FMT = re.compile(r"[\u200e\u200f\u202a-\u202e\u2066-\u2069]")
+_THOUSAND_SEP = re.compile(r"[, ،]")
+_RG_HEADER_TH = re.compile(
+    r"<th\b[^>]*\brgHeader\b[^>]*>(.*?)</th>",
+    re.IGNORECASE | re.DOTALL,
+)
+_TAG_RE = re.compile(r"<[^>]+>")
 
 _BOM_ID_IN_HREF = re.compile(
     r"(?:BomPages/Edit\.aspx\?id=|[?&]id=)(\d+)",
@@ -589,6 +610,25 @@ def _normalize_list_header(raw: str) -> str | None:
             if key == a or compact == a.replace(" ", ""):
                 return field_name
     return None
+
+
+def normalize_crm_id(raw: str) -> str:
+    """Strip bidi marks / thousand separators from a CRM شناسه cell (e.g. ‎39,485‏)."""
+    text = _BIDI_AND_FMT.sub("", raw or "")
+    text = _THOUSAND_SEP.sub("", text)
+    return text.strip()
+
+
+def _strip_tags(html_fragment: str) -> str:
+    return re.sub(r"\s+", " ", _TAG_RE.sub("", html_fragment or "")).strip()
+
+
+def _headers_from_rg_header_ths(html: str) -> list[str | None]:
+    """Extract column map from Telerik ``th.rgHeader`` cells (static header table)."""
+    headers: list[str | None] = []
+    for match in _RG_HEADER_TH.finditer(html or ""):
+        headers.append(_normalize_list_header(_strip_tags(match.group(1))))
+    return headers
 
 
 def _bom_id_from_href(href: str) -> str | None:
@@ -611,41 +651,61 @@ def _bom_id_from_href(href: str) -> str | None:
 
 
 class _BomListTableParser(HTMLParser):
-    """Collect list tables and anchor hrefs that look like BoM Edit links."""
+    """Collect list tables and anchor hrefs that look like BoM Edit links.
+
+    Uses a stack so Telerik nested tables (static header + filter widgets)
+    are not dropped when an inner ``<table>`` opens.
+    """
 
     def __init__(self) -> None:
         super().__init__()
         self.tables: list[dict[str, Any]] = []
         self.orphan_links: list[tuple[str, str]] = []  # (href, text)
-        self._in_table = False
-        self._in_tr = False
+        self._table_stack: list[dict[str, Any]] = []
+        self._row_stack: list[dict[str, Any]] = []
         self._in_cell = False
         self._cell_tag = ""
         self._cell_text: list[str] = []
         self._cell_href: str | None = None
-        self._row_cells: list[dict[str, str]] = []
-        self._row_attrs: dict[str, str] = {}
-        self._current_table: dict[str, Any] | None = None
         self._in_a = False
         self._a_href = ""
         self._a_text: list[str] = []
 
+    @property
+    def _current_table(self) -> dict[str, Any] | None:
+        return self._table_stack[-1] if self._table_stack else None
+
+    @property
+    def _current_row(self) -> dict[str, Any] | None:
+        return self._row_stack[-1] if self._row_stack else None
+
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         ad = {k.lower(): (v or "") for k, v in attrs}
         if tag == "table":
-            self._in_table = True
-            self._current_table = {
-                "id": ad.get("id", ""),
-                "class": ad.get("class", ""),
-                "rows": [],
-            }
-        elif self._in_table and tag == "tr":
-            self._in_tr = True
-            self._row_cells = []
-            self._row_attrs = {
-                k: v for k, v in ad.items() if k.startswith("data-") or k == "id"
-            }
-        elif self._in_table and self._in_tr and tag in ("td", "th"):
+            self._table_stack.append(
+                {
+                    "id": ad.get("id", ""),
+                    "class": ad.get("class", ""),
+                    "rows": [],
+                }
+            )
+        elif tag == "tr" and self._current_table is not None:
+            self._row_stack.append(
+                {
+                    "attrs": {
+                        k: v
+                        for k, v in ad.items()
+                        if k.startswith("data-") or k in ("id", "class")
+                    },
+                    "cells": [],
+                }
+            )
+        elif (
+            tag in ("td", "th")
+            and self._current_table is not None
+            and self._current_row is not None
+            and not self._in_cell
+        ):
             self._in_cell = True
             self._cell_tag = tag
             self._cell_text = []
@@ -661,30 +721,31 @@ class _BomListTableParser(HTMLParser):
         if tag == "a" and self._in_a:
             text = re.sub(r"\s+", " ", "".join(self._a_text)).strip()
             if self._a_href and _bom_id_from_href(self._a_href):
-                if not self._in_table:
+                if not self._table_stack:
                     self.orphan_links.append((self._a_href, text))
             self._in_a = False
         elif tag in ("td", "th") and self._in_cell:
             text = re.sub(r"\s+", " ", "".join(self._cell_text)).strip()
-            self._row_cells.append(
-                {
-                    "tag": self._cell_tag,
-                    "text": text,
-                    "href": self._cell_href or "",
-                }
-            )
-            self._in_cell = False
-        elif tag == "tr" and self._in_tr:
-            if self._row_cells and self._current_table is not None:
-                self._current_table["rows"].append(
-                    {"attrs": dict(self._row_attrs), "cells": list(self._row_cells)}
+            row = self._current_row
+            if row is not None:
+                row["cells"].append(
+                    {
+                        "tag": self._cell_tag,
+                        "text": text,
+                        "href": self._cell_href or "",
+                    }
                 )
-            self._in_tr = False
-        elif tag == "table" and self._in_table:
-            if self._current_table is not None:
-                self.tables.append(self._current_table)
-            self._current_table = None
-            self._in_table = False
+            self._in_cell = False
+        elif tag == "tr" and self._row_stack:
+            row = self._row_stack.pop()
+            table = self._current_table
+            if table is not None and row["cells"]:
+                table["rows"].append(
+                    {"attrs": dict(row["attrs"]), "cells": list(row["cells"])}
+                )
+        elif tag == "table" and self._table_stack:
+            finished = self._table_stack.pop()
+            self.tables.append(finished)
 
     def handle_data(self, data: str) -> None:
         if self._in_cell:
@@ -693,15 +754,68 @@ class _BomListTableParser(HTMLParser):
             self._a_text.append(data)
 
 
+def _row_class(row: dict[str, Any]) -> str:
+    attrs = row.get("attrs") or {}
+    return (attrs.get("class") or "").lower()
+
+
+def _is_telerik_data_row(row: dict[str, Any]) -> bool:
+    cls = _row_class(row)
+    return "rgrow" in cls.replace(" ", "") or "rgaltrow" in cls.replace(" ", "")
+
+
+def _header_map_from_row(row: dict[str, Any]) -> list[str | None]:
+    return [_normalize_list_header(c["text"]) for c in row.get("cells") or []]
+
+
+def _best_header_map(
+    tables: list[dict[str, Any]], html: str, data_col_count: int
+) -> list[str | None]:
+    """Pick a column map for Telerik grids (static header table or rgHeader ths)."""
+    best: list[str | None] = []
+    best_mapped = 0
+    for table in tables:
+        tid = (table.get("id") or "").lower()
+        for row in table.get("rows") or []:
+            header_map = _header_map_from_row(row)
+            mapped = sum(1 for h in header_map if h)
+            if mapped < 2:
+                continue
+            # Prefer Header sibling / same width as the data table.
+            score = mapped
+            if "header" in tid:
+                score += 5
+            if data_col_count and len(header_map) == data_col_count:
+                score += 5
+            if score > best_mapped or (
+                score == best_mapped and len(header_map) > len(best)
+            ):
+                best_mapped = score
+                best = header_map
+    if best_mapped >= 2:
+        return best
+    rg_headers = _headers_from_rg_header_ths(html)
+    if sum(1 for h in rg_headers if h) >= 2:
+        return rg_headers
+    return best
+
+
 def _score_list_table(table: dict[str, Any]) -> int:
     score = 0
     tid = (table.get("id") or "").lower()
     tclass = (table.get("class") or "").lower()
-    if any(x in tid or x in tclass for x in ("bom", "list", "grid", "entity")):
+    if "header" in tid:
+        return -1  # never treat the static header table as the data grid
+    if any(x in tid or x in tclass for x in ("bom", "list", "grid", "entity", "master")):
         score += 5
+    if "mastertableview" in tid and "header" not in tid:
+        score += 10
     rows = table.get("rows") or []
     if not rows:
         return score
+    rg_rows = sum(1 for r in rows if _is_telerik_data_row(r))
+    if rg_rows:
+        score += 20 + min(rg_rows, 40)
     header_cells = [c["text"] for c in rows[0]["cells"]]
     mapped = sum(1 for h in header_cells if _normalize_list_header(h))
     score += mapped * 2
@@ -713,14 +827,24 @@ def _score_list_table(table: dict[str, Any]) -> int:
             if _bom_id_from_href(cell.get("href") or ""):
                 score += 2
                 break
+    # Prefer tables whose cells look like CRM ids (‎39,485‏)
+    idish = 0
+    for row in rows:
+        cells = row.get("cells") or []
+        if cells and re.fullmatch(r"\d+", normalize_crm_id(cells[0].get("text") or "")):
+            idish += 1
+    score += min(idish, 30)
     score += min(len(rows), 30)
     return score
 
 
 def split_bom_code(raw: str) -> tuple[str, str]:
-    """Split CRM «کد BOM» value ``parent_part_number/revision`` → (pn, rev).
+    """Split CRM «کد BOM» (field ``Number``) → (part_number, revision).
 
-    If there is no slash, the whole string is the part number and revision is empty.
+    When a ``/`` is present (e.g. ``1155F229/A2*10-C``), the left side is the
+    part number and the remainder is revision. Values without a slash
+    (e.g. ``CGM5883``, ``2183S914*2-C``) are the whole part number with an
+    empty revision.
     """
     text = (raw or "").strip()
     if not text:
@@ -732,12 +856,19 @@ def split_bom_code(raw: str) -> tuple[str, str]:
 
 
 def _entry_from_list_mapping(data: dict[str, Any]) -> BomListEntry | None:
-    bom_id = str(data.get("bom_id") or data.get("id") or "").strip()
+    bom_id = normalize_crm_id(
+        str(data.get("bom_id") or data.get("id") or data.get("ID") or "")
+    )
     edit_url = str(data.get("edit_url") or data.get("url") or data.get("href") or "").strip()
     if not bom_id and edit_url:
         bom_id = _bom_id_from_href(edit_url) or ""
     if not bom_id:
         return None
+    if not bom_id.isdigit():
+        # Reject non-id leftovers; CRM ids are numeric.
+        bom_id = normalize_crm_id(bom_id)
+        if not bom_id.isdigit():
+            return None
 
     part_number = str(
         data.get("part_number")
@@ -750,24 +881,33 @@ def _entry_from_list_mapping(data: dict[str, Any]) -> BomListEntry | None:
     bom_code = str(
         data.get("bom_code")
         or data.get("bomCode")
+        or data.get("Number")
         or data.get("کد BOM")
         or data.get("کد bom")
         or ""
     ).strip()
     if bom_code:
         code_pn, code_rev = split_bom_code(bom_code)
-        # «کد BOM» is the CRM canonical PN/rev; fill gaps from it.
-        if code_pn and not part_number:
+        # «کد BOM» / Number is the CRM canonical PN[/rev]; prefer it over PartCode.
+        if code_pn:
             part_number = code_pn
-        if code_rev and not revision:
+        if code_rev:
             revision = code_rev
+        elif not revision:
+            revision = ""
+
+    description = str(
+        data.get("description")
+        or data.get("name")
+        or data.get("title")
+        or data.get("Title")
+        or ""
+    ).strip()
 
     return BomListEntry(
         bom_id=bom_id,
         part_number=part_number,
-        description=str(
-            data.get("description") or data.get("name") or data.get("title") or ""
-        ).strip(),
+        description=description,
         revision=revision,
         edit_url=edit_url,
     )
@@ -804,6 +944,21 @@ def _parsed_bom_list_from_json(data: Any) -> list[BomListEntry]:
     return entries
 
 
+def _iter_list_data_rows(table: dict[str, Any]) -> list[dict[str, Any]]:
+    rows = table.get("rows") or []
+    telerik = [r for r in rows if _is_telerik_data_row(r)]
+    if telerik:
+        return telerik
+    # Simple fixture tables: skip the header row when it maps.
+    if len(rows) >= 2 and sum(1 for h in _header_map_from_row(rows[0]) if h) >= 1:
+        return rows[1:]
+    return [
+        r
+        for r in rows
+        if any(normalize_crm_id(c.get("text") or "").isdigit() for c in r.get("cells") or [])
+    ]
+
+
 def _parse_bom_list_html(html: str) -> list[BomListEntry]:
     # Prefer embedded JSON blobs shaped like list payloads.
     for pattern in _JSON_PATTERNS:
@@ -821,44 +976,45 @@ def _parse_bom_list_html(html: str) -> list[BomListEntry]:
 
     if parser.tables:
         best = max(parser.tables, key=_score_list_table)
-        rows = best["rows"]
-        if len(rows) >= 2:
-            header_map: list[str | None] = [
-                _normalize_list_header(c["text"]) for c in rows[0]["cells"]
-            ]
-            for row in rows[1:]:
-                cells = row["cells"]
-                mapping: dict[str, str] = {}
-                edit_href = ""
-                for idx, field_name in enumerate(header_map):
-                    if idx >= len(cells):
-                        break
-                    cell = cells[idx]
-                    if field_name:
-                        mapping[field_name] = cell["text"]
+        data_rows = _iter_list_data_rows(best)
+        sample_cols = len(data_rows[0]["cells"]) if data_rows else 0
+        header_map = _best_header_map(parser.tables, html, sample_cols)
+        if sum(1 for h in header_map if h) < 2 and best["rows"]:
+            # Fall back to first row of the chosen table (simple fixtures).
+            header_map = _header_map_from_row(best["rows"][0])
+
+        for row in data_rows:
+            cells = row["cells"]
+            mapping: dict[str, str] = {}
+            edit_href = ""
+            for idx, field_name in enumerate(header_map):
+                if idx >= len(cells):
+                    break
+                cell = cells[idx]
+                if field_name:
+                    mapping[field_name] = cell["text"]
+                if cell.get("href") and _bom_id_from_href(cell["href"]):
+                    edit_href = cell["href"]
+            if not edit_href:
+                for cell in cells:
                     if cell.get("href") and _bom_id_from_href(cell["href"]):
                         edit_href = cell["href"]
-                if not edit_href:
-                    for cell in cells:
-                        if cell.get("href") and _bom_id_from_href(cell["href"]):
-                            edit_href = cell["href"]
-                            break
-                if edit_href:
-                    mapping.setdefault("edit_url", edit_href)
-                    mapping.setdefault("bom_id", _bom_id_from_href(edit_href) or "")
-                # data-bom-id on <tr>
-                attrs = row.get("attrs") or {}
-                if attrs.get("data-bom-id"):
-                    mapping.setdefault("bom_id", attrs["data-bom-id"])
-                # First numeric cell as id fallback
-                if not mapping.get("bom_id"):
-                    for cell in cells:
-                        if re.fullmatch(r"\d+", cell["text"] or ""):
-                            mapping["bom_id"] = cell["text"]
-                            break
-                entry = _entry_from_list_mapping(mapping)
-                if entry:
-                    entries.append(entry)
+                        break
+            if edit_href:
+                mapping.setdefault("edit_url", edit_href)
+                mapping.setdefault("bom_id", _bom_id_from_href(edit_href) or "")
+            attrs = row.get("attrs") or {}
+            if attrs.get("data-bom-id"):
+                mapping.setdefault("bom_id", attrs["data-bom-id"])
+            if not mapping.get("bom_id"):
+                for cell in cells:
+                    cand = normalize_crm_id(cell.get("text") or "")
+                    if cand.isdigit():
+                        mapping["bom_id"] = cand
+                        break
+            entry = _entry_from_list_mapping(mapping)
+            if entry:
+                entries.append(entry)
 
     if not entries and parser.orphan_links:
         for href, text in parser.orphan_links:
@@ -903,19 +1059,29 @@ def match_bom_list_entries(
     description: str | None = None,
     revision: str | None = None,
 ) -> list[BomListEntry]:
-    """Match list rows by parent part number (from «کد BOM» or PN column).
+    """Match list rows by parent part number (from «کد BOM» / ``Number``).
 
     Preference:
-    1. Exact part-number matches (case-insensitive).
-    2. If multiple and ``revision`` is set, narrow by exact revision.
-    3. Else if multiple and ``description`` is set, narrow by exact description.
-    4. If no PN hits, fall back to exact description matches.
+    1. Exact part-number matches (case-insensitive) — the PN side of
+       ``Number`` when it contains ``/``, else the whole ``Number``.
+    2. If the query looks like a full ``Number`` (``PN/rev``), match that
+       exact PN+revision pair.
+    3. If multiple and ``revision`` is set, narrow by exact revision.
+    4. Else if multiple and ``description`` is set, narrow by exact description.
+    5. If no PN hits, fall back to exact description matches.
     """
-    pn = (part_number or "").strip().casefold()
+    raw_pn = (part_number or "").strip()
+    pn = raw_pn.casefold()
     desc = (description or "").strip().casefold()
     rev = (revision or "").strip().casefold()
     if not pn and not desc:
         return list(entries)
+
+    # Allow callers to pass a full «کد BOM» value (e.g. 1155F229/A2*10-C).
+    query_pn, query_rev = split_bom_code(raw_pn)
+    if query_rev and not rev:
+        pn = query_pn.casefold()
+        rev = query_rev.casefold()
 
     pn_hits = [
         e
