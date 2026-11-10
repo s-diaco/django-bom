@@ -194,8 +194,21 @@ class SystemGroupClient:
             )
         self._logged_in = True
 
-    def _fetch_first_ok(self, urls: list[str], label: str) -> tuple[str, str]:
+    def _fetch_first_ok(
+        self,
+        urls: list[str],
+        label: str,
+        *,
+        prefer_predicate=None,
+    ) -> tuple[str, str]:
+        """GET urls in order; return the first usable response.
+
+        If ``prefer_predicate(body, ctype)`` is set, keep scanning after a
+        successful GET that fails the predicate (e.g. Shell chrome with no
+        BoM grid) and only fall back to that body if nothing better is found.
+        """
         errors: list[str] = []
+        fallback: tuple[str, str] | None = None
         for url in urls:
             try:
                 resp = self.session.get(url, timeout=self.timeout, allow_redirects=True)
@@ -207,7 +220,15 @@ class SystemGroupClient:
                 errors.append(f"{url}: redirected to login")
                 continue
             ctype = resp.headers.get("Content-Type", "text/html")
-            return resp.text, ctype
+            body = resp.text
+            if prefer_predicate is not None and not prefer_predicate(body, ctype):
+                errors.append(f"{url}: response did not look like usable {label}")
+                if fallback is None:
+                    fallback = (body, ctype)
+                continue
+            return body, ctype
+        if fallback is not None:
+            return fallback
         raise SystemGroupClientError(
             f"Could not fetch {label}. Tried:\n" + "\n".join(errors)
         )
@@ -215,17 +236,31 @@ class SystemGroupClient:
     def fetch_bom(self, bom_id: str | int) -> tuple[str, str]:
         """Return (body_text, content_type) for the BoM Edit page.
 
-        Tries Shell.aspx wrapper first, then the direct Edit.aspx URL.
+        Prefers direct Edit.aspx. Shell.aspx is chrome-only on this CRM
+        (no BoM line tables) — same pattern as the BoM list.
         """
         if not self._logged_in:
             self.login()
 
+        def _looks_like_edit(body: str, _ctype: str) -> bool:
+            lower = (body or "").lower()
+            # Shell sets this; Edit pages contain grids / line markup.
+            if "_$isthisshellpage" in lower or "isthisshellpage" in lower:
+                return False
+            return (
+                "<table" in lower
+                or "rgrow" in lower
+                or "bomlines" in lower
+                or "mastertableview" in lower
+            )
+
         return self._fetch_first_ok(
             [
-                bom_edit_url(self.base_url, bom_id),
                 bom_edit_direct_url(self.base_url, bom_id),
+                bom_edit_url(self.base_url, bom_id),
             ],
             "BoM Edit page",
+            prefer_predicate=_looks_like_edit,
         )
 
     def fetch_bom_list(self) -> tuple[str, str]:
@@ -237,12 +272,19 @@ class SystemGroupClient:
         if not self._logged_in:
             self.login()
 
+        def _looks_like_list(body: str, _ctype: str) -> bool:
+            lower = (body or "").lower()
+            if "_$isthisshellpage" in lower or "isthisshellpage" in lower:
+                return False
+            return "rgrow" in lower or "mastertableview" in lower or "کد bom" in lower
+
         return self._fetch_first_ok(
             [
                 bom_list_direct_url(self.base_url),
                 bom_list_url(self.base_url),
             ],
             "BoM list page",
+            prefer_predicate=_looks_like_list,
         )
 
 

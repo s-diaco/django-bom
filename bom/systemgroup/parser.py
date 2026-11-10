@@ -324,35 +324,45 @@ def _line_from_mapping(data: dict[str, Any], default_level: int = 1) -> BomLine:
 
 
 class _BomTableParser(HTMLParser):
-    """Collect tables; caller picks the best BoM-looking one."""
+    """Collect tables; caller picks the best BoM-looking one.
+
+    Stacked tables so Telerik nested header/filter widgets are not dropped.
+    """
 
     def __init__(self) -> None:
         super().__init__()
         self.tables: list[dict[str, Any]] = []
         self.meta: dict[str, str] = {}
-        self._in_table = False
-        self._in_tr = False
+        self._table_stack: list[dict[str, Any]] = []
+        self._row_stack: list[list[tuple[str, str]]] = []
         self._in_cell = False
         self._cell_tag = ""
         self._cell_text: list[str] = []
-        self._row_cells: list[tuple[str, str]] = []  # (tag, text)
-        self._current_table: dict[str, Any] | None = None
         self._capture_meta_name: str | None = None
         self._meta_buf: list[str] = []
+
+    @property
+    def _current_table(self) -> dict[str, Any] | None:
+        return self._table_stack[-1] if self._table_stack else None
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         ad = {k.lower(): (v or "") for k, v in attrs}
         if tag == "table":
-            self._in_table = True
-            self._current_table = {
-                "id": ad.get("id", ""),
-                "class": ad.get("class", ""),
-                "rows": [],
-            }
-        elif self._in_table and tag == "tr":
-            self._in_tr = True
-            self._row_cells = []
-        elif self._in_table and self._in_tr and tag in ("td", "th"):
+            self._table_stack.append(
+                {
+                    "id": ad.get("id", ""),
+                    "class": ad.get("class", ""),
+                    "rows": [],
+                }
+            )
+        elif tag == "tr" and self._current_table is not None:
+            self._row_stack.append([])
+        elif (
+            tag in ("td", "th")
+            and self._current_table is not None
+            and self._row_stack
+            and not self._in_cell
+        ):
             self._in_cell = True
             self._cell_tag = tag
             self._cell_text = []
@@ -366,17 +376,15 @@ class _BomTableParser(HTMLParser):
     def handle_endtag(self, tag: str) -> None:
         if tag in ("td", "th") and self._in_cell:
             text = re.sub(r"\s+", " ", "".join(self._cell_text)).strip()
-            self._row_cells.append((self._cell_tag, text))
+            if self._row_stack:
+                self._row_stack[-1].append((self._cell_tag, text))
             self._in_cell = False
-        elif tag == "tr" and self._in_tr:
-            if self._row_cells and self._current_table is not None:
-                self._current_table["rows"].append(self._row_cells)
-            self._in_tr = False
-        elif tag == "table" and self._in_table:
-            if self._current_table is not None:
-                self.tables.append(self._current_table)
-            self._current_table = None
-            self._in_table = False
+        elif tag == "tr" and self._row_stack:
+            cells = self._row_stack.pop()
+            if cells and self._current_table is not None:
+                self._current_table["rows"].append(cells)
+        elif tag == "table" and self._table_stack:
+            self.tables.append(self._table_stack.pop())
         if self._capture_meta_name and tag in ("span", "div", "td"):
             self.meta[self._capture_meta_name] = re.sub(
                 r"\s+", " ", "".join(self._meta_buf)

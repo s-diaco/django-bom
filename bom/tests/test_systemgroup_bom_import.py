@@ -17,6 +17,7 @@ from bom.models import Part
 from bom.systemgroup.client import (
     SystemGroupClient,
     SystemGroupClientError,
+    bom_edit_direct_url,
     bom_edit_url,
     bom_list_direct_url,
     bom_list_url,
@@ -357,6 +358,12 @@ class SystemGroupClientTests(TestCase):
         # page=...Edit.aspx?id=39477 is query-encoded
         self.assertIn("id%3D39477", url)
 
+    def test_bom_edit_direct_url(self):
+        url = bom_edit_direct_url("http://192.168.3.193/", 39477)
+        self.assertIn("Edit.aspx", url)
+        self.assertIn("id=39477", url)
+        self.assertNotIn("Shell.aspx", url)
+
     def test_bom_list_url(self):
         url = bom_list_url("http://192.168.3.193/")
         self.assertIn("Shell.aspx", url)
@@ -369,6 +376,70 @@ class SystemGroupClientTests(TestCase):
         self.assertIn("List.aspx", url)
         self.assertIn("EntityName=Bom", url)
         self.assertNotIn("Shell.aspx", url)
+
+    def test_fetch_bom_skips_shell_chrome(self):
+        """Shell HTML has no tables; client must prefer direct Edit.aspx."""
+        login_html = (FIXTURES / "login.aspx.html").read_text(encoding="utf-8")
+        shell_html = (
+            "<!DOCTYPE html><html><head>"
+            "<script>var _$isThisShellPage = true;</script>"
+            "<title>Shell</title></head><body>chrome</body></html>"
+        )
+        edit_html = (FIXTURES / "bom_edit.html").read_text(encoding="utf-8")
+
+        session = mock.Mock()
+        login_get = mock.Mock(
+            status_code=200, text=login_html, url="http://crm/Authentication/Login.aspx"
+        )
+        login_get.raise_for_status = mock.Mock()
+        login_post = mock.Mock(
+            status_code=200, text="<html>ok</html>", url="http://crm/Default.aspx"
+        )
+        login_post.raise_for_status = mock.Mock()
+
+        def _resp(url: str, text: str) -> mock.Mock:
+            r = mock.Mock(
+                status_code=200,
+                text=text,
+                url=url,
+                headers={"Content-Type": "text/html"},
+            )
+            r.raise_for_status = mock.Mock()
+            return r
+
+        def get_side_effect(url, *args, **kwargs):
+            if "Login.aspx" in url:
+                return login_get
+            if "Shell.aspx" in url:
+                return _resp(url, shell_html)
+            if "Edit.aspx" in url:
+                return _resp(url, edit_html)
+            raise AssertionError(f"unexpected GET {url}")
+
+        session.get.side_effect = get_side_effect
+        session.post.return_value = login_post
+
+        client = SystemGroupClient(
+            base_url="http://crm/",
+            username="u",
+            password="p",
+            session=session,
+        )
+        body, ctype = client.fetch_bom(39477)
+        self.assertIn("BomLinesGrid", body)
+        self.assertIn("text/html", ctype)
+        self.assertNotIn("_$isThisShellPage", body)
+        # Prefer-predicate: if Shell is requested first, skip it for Edit.
+        body2, _ = client._fetch_first_ok(
+            [
+                bom_edit_url("http://crm/", 39477),
+                bom_edit_direct_url("http://crm/", 39477),
+            ],
+            "BoM Edit page",
+            prefer_predicate=lambda b, _c: "_$isthisshellpage" not in b.lower()
+            and "<table" in b.lower(),
+        )
+        self.assertIn("BomLinesGrid", body2)
 
     def test_extract_bom_id_from_url(self):
         self.assertEqual(
