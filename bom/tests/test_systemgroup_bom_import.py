@@ -34,6 +34,7 @@ from bom.systemgroup.importer import (
     ExistingBomConflict,
     NoBomMatch,
     import_parsed_bom,
+    list_revisions_for_part,
     parsed_bom_to_csv_bytes,
     resolve_bom_from_list,
     run_systemgroup_import,
@@ -701,6 +702,21 @@ class SystemGroupListResolveImportTests(TestCase):
         rev.assembly = create_a_fake_assembly()
         rev.save()
 
+    def test_list_revisions_for_part_returns_all_revs(self):
+        rows = list_revisions_for_part(
+            "500-9001-00",
+            list_path=FIXTURES / "bom_list.json",
+        )
+        self.assertEqual({r.bom_id for r in rows}, {"39477", "40001"})
+        self.assertEqual({r.revision for r in rows}, {"1", "A"})
+
+    def test_list_revisions_strips_accidental_rev_suffix(self):
+        rows = list_revisions_for_part(
+            "500-9001-00/1",
+            list_path=FIXTURES / "bom_list.json",
+        )
+        self.assertEqual(len(rows), 2)
+
     def test_run_import_resolves_unique_pn_from_list_file(self):
         # Parent PN won't match list; resolve unique list PN via description-less
         # path by calling resolve then import with bom_id — exercise full helper:
@@ -942,9 +958,60 @@ class SystemGroupAdminGuiTests(TestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Import SystemGroup BoM")
+        self.assertContains(response, "Part ID")
+        self.assertContains(response, "Load revisions")
         self.assertContains(response, "Part ID + Revision")
         self.assertContains(response, "Get the BoM")
         self.assertContains(response, "CRM_BASE_URL")
+
+    def test_load_revisions_shows_pick_list(self):
+        matches = parse_bom_list_document(
+            (FIXTURES / "bom_list.json").read_text(encoding="utf-8"),
+            content_type="application/json",
+        )
+        pn_matches = [m for m in matches if m.part_number == "500-9001-00"]
+        self.assertGreaterEqual(len(pn_matches), 2)
+        with mock.patch(
+            "bom.systemgroup.importer.list_revisions_for_part",
+            return_value=pn_matches,
+        ), mock.patch(
+            "bom.systemgroup.access.client_for_user_meta",
+            return_value=mock.Mock(),
+        ):
+            response = self.client.post(
+                self.url,
+                {"part_id": "500-9001-00", "load_revisions": "1"},
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "CRM revisions for")
+        self.assertContains(response, "Import this BoM")
+        self.assertContains(response, "39477")
+        self.assertContains(response, "40001")
+
+    def test_import_selected_revision_posts_bom_id_and_rev(self):
+        html = (FIXTURES / "bom_edit.html").read_bytes()
+        # Same payload shape as the revision-picker "Import this BoM" button.
+        response = self.client.post(
+            self.url,
+            {
+                "part_id": "500-1111-00",
+                "parent_part_number": "500-1111-00",
+                "parent_revision": "A1",
+                "bom_id": "41000",
+                "source_file": SimpleUploadedFile(
+                    "bom_edit.html", html, content_type="text/html"
+                ),
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        created = Part.from_part_number("500-1111-00", self.organization)
+        self.assertEqual(created.latest().revision, "A1")
+        pns = {
+            sp.part_revision.part.full_part_number()
+            for sp in created.latest().assembly.subparts.all()
+        }
+        self.assertIn("500-7777-00", pns)
 
     def test_import_disabled_without_user_credentials(self):
         profile = self.user.bom_profile()
@@ -1022,6 +1089,15 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.cleaned_data["parent_part_number"], "1155F229")
         self.assertEqual(form.cleaned_data["parent_revision"], "A2*10-C")
+
+    def test_form_part_id_with_load_revisions(self):
+        form = SystemGroupBomImportForm(
+            data={"part_id": "1155F229", "load_revisions": "1"}
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["part_id"], "1155F229")
+        self.assertEqual(form.cleaned_data["parent_part_number"], "1155F229")
+        self.assertTrue(form.cleaned_data["load_revisions"])
 
     def test_form_allows_browse_list_alone(self):
         form = SystemGroupBomImportForm(data={"browse_list": True})

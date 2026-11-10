@@ -278,7 +278,7 @@ GUI login no longer reads `CRM_USERNAME` / `CRM_PASSWORD` from `.env.prod`. Each
 
 CLI still accepts optional `CRM_USERNAME` / `CRM_PASSWORD` for offline ops scripts.
 
-**GUI (Admin only, when org+user credentials allow):** Home → **Import material** (next to New Material). Paste **Part ID + Revision** as `PN/rev` (CRM «کد BOM») and click **Get the BoM**. Missing Lithium parts/revisions are created; if the target revision already has a BoM tree, choose keep (append) or replace. CRM id/URL remain optional fallbacks; multiple list hits show a pick list.
+**GUI (Admin only, when org+user credentials allow):** Home → **Import material** (next to New Material). Preferred: enter **Part ID** → **Load revisions** → pick a CRM revision → **Import this BoM**. Shortcut: paste **Part ID + Revision** as `PN/rev` and **Get the BoM**. Missing Lithium parts/revisions are created; if the target revision already has a BoM tree, choose keep (append) or replace. CRM id/URL remain optional fallbacks.
 
 **CLI:**
 
