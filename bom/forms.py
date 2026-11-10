@@ -1,6 +1,6 @@
 import codecs
 import csv
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 import logging
 from typing import Any
 
@@ -715,6 +715,13 @@ class SellerPartForm(forms.ModelForm):
             self.cleaned_data["seller"] = None
 
 
+def _whole_exchange_rate(value):
+    """Quantize FX rates to whole units (no decimal places)."""
+    if value is None or value == "":
+        return value
+    return Decimal(value).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+
+
 class OrganizationExchangeRatesForm(forms.Form):
     """Edit manual FX rates: organization currency per 1 unit of foreign currency."""
 
@@ -734,8 +741,10 @@ class OrganizationExchangeRatesForm(forms.Form):
                     org=currency_label(org_currency),
                     code=currency_label(code),
                 ),
-                initial=existing,
-                min_value=Decimal("0.000001"),
+                initial=_whole_exchange_rate(existing),
+                min_value=Decimal("1"),
+                max_digits=19,
+                decimal_places=0,
             )
 
     def save(self):
@@ -746,7 +755,9 @@ class OrganizationExchangeRatesForm(forms.Form):
             if not name.startswith("rate_"):
                 continue
             code = name[len("rate_") :]
-            set_org_per_unit_rate(code, org_currency, value)
+            set_org_per_unit_rate(
+                code, org_currency, _whole_exchange_rate(value)
+            )
 
 
 class SingleExchangeRateForm(forms.Form):
@@ -755,8 +766,10 @@ class SingleExchangeRateForm(forms.Form):
     currency = forms.ChoiceField(label=_("Currency"))
     rate = GroupedDecimalField(
         label=_("Rate"),
-        min_value=Decimal("0.000001"),
+        min_value=Decimal("1"),
         required=True,
+        max_digits=19,
+        decimal_places=0,
     )
 
     def __init__(self, *args, organization=None, **kwargs):
@@ -779,7 +792,7 @@ class SingleExchangeRateForm(forms.Form):
         set_org_per_unit_rate(
             self.cleaned_data["currency"],
             self.organization.currency,
-            self.cleaned_data["rate"],
+            _whole_exchange_rate(self.cleaned_data["rate"]),
         )
 
 

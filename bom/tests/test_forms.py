@@ -368,3 +368,21 @@ class TestForms(TestCase):
             "bom-price-input",
             single.fields["rate"].widget.attrs.get("class", ""),
         )
+
+    def test_exchange_rate_forms_reject_decimals(self):
+        self.organization.currency = "IRR"
+        self.organization.save()
+
+        org_form = OrganizationExchangeRatesForm(
+            {"rate_USD": "42,000.5", "rate_EUR": "45,000"},
+            organization=self.organization,
+        )
+        self.assertFalse(org_form.is_valid())
+        self.assertIn("rate_USD", org_form.errors)
+
+        single = SingleExchangeRateForm(
+            {"currency": "USD", "rate": "12.34"},
+            organization=self.organization,
+        )
+        self.assertFalse(single.is_valid())
+        self.assertIn("rate", single.errors)
