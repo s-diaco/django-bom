@@ -205,14 +205,58 @@ msgstr ""
 "نرخ ارز برای {currency} تنظیم نشده است. آن را در تنظیمات ← شرکت تنظیم"
 "کنید."
 
+#: bom/forms.py
+#, python-brace-format
+msgid ""
+"No market exchange rate for {currency}. "
+"Set it under Settings → Exchange Rates."
+msgstr ""
+"نرخ ارز آزاد برای {currency} تنظیم نشده است. آن را در تنظیمات ← نرخ ارز "
+"تنظیم کنید."
+
+#: bom/forms.py
+#, python-brace-format
+msgid ""
+"No customs exchange rate for {currency}. "
+"Set it under Settings → Exchange Rates."
+msgstr ""
+"نرخ ارز دولتی برای {currency} تنظیم نشده است. آن را در تنظیمات ← نرخ ارز "
+"تنظیم کنید."
+
 #: bom/forms.py:577
 #, python-brace-format
 msgid "{org} per 1 {code}"
 msgstr "{org} به ازای ۱ {code}"
 
+#: bom/forms.py
+#, python-brace-format
+msgid "{code} — Market (Price & Shipping)"
+msgstr "{code} — آزاد (قیمت و هزینه حمل)"
+
+#: bom/forms.py
+#, python-brace-format
+msgid "{code} — Customs (Customs Duty)"
+msgstr "{code} — دولتی (عوارض گمرکی)"
+
 #: bom/forms.py:598
 msgid "Rate"
 msgstr "نرخ"
+
+#: bom/forms.py
+msgid "Market rate (Price & Shipping)"
+msgstr "نرخ آزاد (قیمت و هزینه حمل)"
+
+#: bom/forms.py
+msgid "Customs rate (Customs Duty)"
+msgstr "نرخ دولتی (عوارض گمرکی)"
+
+#: bom/forms.py
+msgid "Converted with the market exchange rate."
+msgstr "با نرخ ارز آزاد تبدیل می‌شود."
+
+#: bom/forms.py
+msgid "Converted with the customs exchange rate."
+msgstr "با نرخ ارز دولتی تبدیل می‌شود."
 
 #: bom/forms.py:611
 #, python-brace-format
@@ -839,6 +883,22 @@ msgstr "هیچ تأمین کننده‌ای مشخص نشده است."
 msgid "Current rate"
 msgstr "نرخ فعلی"
 
+#: bom/templates/bom/components/sellerpart-fx-hint.html
+msgid "Market rate"
+msgstr "نرخ آزاد"
+
+#: bom/templates/bom/components/sellerpart-fx-hint.html
+msgid "Price & Shipping"
+msgstr "قیمت و هزینه حمل"
+
+#: bom/templates/bom/components/sellerpart-fx-hint.html
+msgid "Customs rate"
+msgstr "نرخ دولتی"
+
+#: bom/templates/bom/components/sellerpart-fx-hint.html
+msgid "Customs Duty"
+msgstr "عوارض گمرکی"
+
 #: bom/templates/bom/components/sellerpart-fx-hint.html:10
 msgid "All rates"
 msgstr "همه نرخ‌ها"
@@ -847,9 +907,17 @@ msgstr "همه نرخ‌ها"
 msgid "Update this rate"
 msgstr "به‌روزرسانی این نرخ"
 
+#: bom/templates/bom/components/sellerpart-fx-hint.html
+msgid "Update these rates"
+msgstr "به‌روزرسانی این نرخ‌ها"
+
 #: bom/templates/bom/components/sellerpart-fx-modal.html:7
 msgid "Update exchange rate"
 msgstr "به‌روزرسانی نرخ ارز"
+
+#: bom/templates/bom/components/sellerpart-fx-modal.html
+msgid "Update exchange rates"
+msgstr "به‌روزرسانی نرخ‌های ارز"
 
 #: bom/templates/bom/components/sellerpart-fx-modal.html:9
 #, python-format
@@ -861,6 +929,22 @@ msgid ""
 msgstr ""
 "\n"
 "                چند %(currency)s برابر ۱ واحد از ارز انتخاب‌شده است.\n"
+"                "
+
+#: bom/templates/bom/components/sellerpart-fx-modal.html
+#, python-format
+msgid ""
+"\n"
+"                How many %(currency)s equal 1 unit of the selected "
+"currency.\n"
+"                Market applies to Price and Shipping; customs applies to "
+"Customs Duty only.\n"
+"                "
+msgstr ""
+"\n"
+"                چند %(currency)s برابر ۱ واحد از ارز انتخاب‌شده است.\n"
+"                نرخ آزاد برای قیمت و هزینه حمل؛ نرخ دولتی فقط برای عوارض "
+"گمرکی.\n"
 "                "
 
 #: bom/templates/bom/components/sellerpart-fx-modal.html:55
@@ -1138,6 +1222,35 @@ msgstr ""
 "                مشخص کنید چند %(currency)s برابر ۱ واحد از هر ارز خارجی است.\n"
 "                هنگام قیمت‌گذاری متریال‌های وارداتی به ارز خارجی استفاده می‌شود.\n"
 "                "
+
+#: bom/templates/bom/exchange-rates.html
+#, python-format
+msgid ""
+"\n"
+"                    Enter how many %(currency)s equal 1 unit of each foreign "
+"currency.\n"
+"                    Market rates convert Price and Shipping; customs rates "
+"convert Customs Duty only.\n"
+"                    "
+msgstr ""
+"\n"
+"                    مشخص کنید چند %(currency)s برابر ۱ واحد از هر ارز خارجی "
+"است.\n"
+"                    نرخ‌های آزاد قیمت و هزینه حمل را تبدیل می‌کنند؛ نرخ‌های "
+"دولتی فقط عوارض گمرکی را.\n"
+"                    "
+
+#: bom/templates/bom/exchange-rates.html
+msgid "Organization currency"
+msgstr "ارز سازمان"
+
+#: bom/templates/bom/exchange-rates.html
+msgid "Rates"
+msgstr "نرخ‌ها"
+
+#: bom/templates/bom/components/exchange-rates-fields.html
+msgid "No foreign currencies to configure for this organization currency."
+msgstr "هیچ ارز خارجی برای این ارز سازمان قابل پیکربندی نیست."
 
 #: bom/templates/bom/help.html:15
 msgid ""

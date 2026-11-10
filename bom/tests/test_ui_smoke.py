@@ -529,8 +529,15 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn("formatWholeRate", html)
         self.assertIn("bomPriceInput.formatWhole", html)
         self.assertIn("fx-customs-rate-value", html)
-        self.assertIn("Market rate", html)
-        self.assertIn("Customs rate", html)
+        # Profile language is fa-IR in tests; accept EN or FA dual-FX labels.
+        self.assertTrue(
+            "Market rate" in html or "نرخ آزاد" in html,
+            html,
+        )
+        self.assertTrue(
+            "Customs rate" in html or "نرخ دولتی" in html,
+            html,
+        )
         self.assertIn('name="customs_rate"', html)
         # Wider fields (m6) — not the old cramped l2 strip.
         self.assertIn("md:col-span-6", html)
@@ -552,8 +559,17 @@ class TestUiSmoke(TransactionTestCase):
         # Default org currency is USD — first foreign pair is IRR.
         self.assertIn('name="rate_IRR"', html)
         self.assertIn('name="customs_rate_IRR"', html)
-        self.assertIn("Market (Price &amp; Shipping)", html)
-        self.assertIn("Customs (Customs Duty)", html)
+        # Profile language is fa-IR in tests; accept EN or FA dual-FX labels.
+        self.assertTrue(
+            "Market (Price &amp; Shipping)" in html
+            or "آزاد (قیمت و هزینه حمل)" in html,
+            html,
+        )
+        self.assertTrue(
+            "Customs (Customs Duty)" in html
+            or "دولتی (عوارض گمرکی)" in html,
+            html,
+        )
         self.assertIn("bom-btn-primary", html)
         self.assertIn("border-border-subtle", html)
 
