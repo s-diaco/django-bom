@@ -36,6 +36,7 @@ from bom.systemgroup.parser import (
     parse_bom_document,
     parse_bom_list_document,
     parse_login_form,
+    split_bom_code,
 )
 from bom.systemgroup.rsa_login import (
     bi_to_hex,
@@ -186,21 +187,32 @@ class SystemGroupBomParseTests(TestCase):
 
 
 class SystemGroupBomListParseTests(TestCase):
+    def test_split_bom_code(self):
+        self.assertEqual(split_bom_code("500-9001-00/1"), ("500-9001-00", "1"))
+        self.assertEqual(split_bom_code("500-9001-00/A"), ("500-9001-00", "A"))
+        self.assertEqual(split_bom_code("500-9001-00"), ("500-9001-00", ""))
+        self.assertEqual(split_bom_code(""), ("", ""))
+
     def test_parse_list_html_fixture(self):
         html = (FIXTURES / "bom_list.html").read_text(encoding="utf-8")
         entries = parse_bom_list_document(html, content_type="text/html")
         self.assertEqual(len(entries), 4)
         self.assertEqual(entries[0].bom_id, "39477")
         self.assertEqual(entries[0].part_number, "500-9001-00")
+        self.assertEqual(entries[0].revision, "1")
         self.assertIn("Edit.aspx?id=39477", entries[0].edit_url)
         self.assertEqual(entries[1].bom_id, "40001")
+        self.assertEqual(entries[1].revision, "A")
         self.assertEqual(entries[2].part_number, "500-1111-00")
 
     def test_parse_list_json_fixture(self):
         raw = (FIXTURES / "bom_list.json").read_text(encoding="utf-8")
         entries = parse_bom_list_document(raw, content_type="application/json")
         self.assertEqual(len(entries), 4)
+        self.assertEqual(entries[0].part_number, "500-9001-00")
+        self.assertEqual(entries[0].revision, "1")
         self.assertEqual(entries[3].bom_id, "42000")
+        self.assertEqual(entries[3].revision, "2")
         self.assertEqual(entries[3].description, "Unique description match target")
 
     def test_match_by_part_number_unique(self):
@@ -219,6 +231,21 @@ class SystemGroupBomListParseTests(TestCase):
         hits = match_bom_list_entries(entries, part_number="500-9001-00")
         self.assertEqual(len(hits), 2)
         self.assertEqual({h.bom_id for h in hits}, {"39477", "40001"})
+
+    def test_match_narrows_ambiguous_pn_with_revision(self):
+        entries = parse_bom_list_document(
+            (FIXTURES / "bom_list.html").read_text(encoding="utf-8")
+        )
+        hits = match_bom_list_entries(
+            entries, part_number="500-9001-00", revision="1"
+        )
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0].bom_id, "39477")
+        hits_a = match_bom_list_entries(
+            entries, part_number="500-9001-00", revision="A"
+        )
+        self.assertEqual(len(hits_a), 1)
+        self.assertEqual(hits_a[0].bom_id, "40001")
 
     def test_match_by_description_fallback(self):
         entries = parse_bom_list_document(
@@ -638,7 +665,6 @@ class SystemGroupListResolveImportTests(TestCase):
 
     def test_fetch_bom_list_with_session_mock(self):
         login_html = (FIXTURES / "login.aspx.html").read_text(encoding="utf-8")
-        list_html = (FIXTURES / "bom_list.html").read_text(encoding="utf-8")
         bom_html = (FIXTURES / "bom_edit.html").read_text(encoding="utf-8")
 
         session = mock.Mock()
@@ -650,13 +676,6 @@ class SystemGroupListResolveImportTests(TestCase):
             status_code=200, text="<html>ok</html>", url="http://crm/Default.aspx"
         )
         login_post.raise_for_status = mock.Mock()
-        list_get = mock.Mock(
-            status_code=200,
-            text=list_html,
-            url="http://crm/Shell.aspx",
-            headers={"Content-Type": "text/html"},
-        )
-        list_get.raise_for_status = mock.Mock()
         bom_get = mock.Mock(
             status_code=200,
             text=bom_html,
@@ -664,7 +683,8 @@ class SystemGroupListResolveImportTests(TestCase):
             headers={"Content-Type": "text/html"},
         )
         bom_get.raise_for_status = mock.Mock()
-        session.get.side_effect = [login_get, list_get, bom_get]
+        # list_json resolves offline — only login GET + Edit GET hit the network.
+        session.get.side_effect = [login_get, bom_get]
         session.post.return_value = login_post
 
         client = SystemGroupClient(
@@ -673,16 +693,15 @@ class SystemGroupListResolveImportTests(TestCase):
             password="p",
             session=session,
         )
-        # Unique match via synthetic list is already in fixture for 500-1111-00;
-        # parent must exist — use self.parent and inject matching list via path.
         import json
 
+        rev = self.parent.latest().revision if self.parent.latest() else "1"
         list_payload = json.dumps(
             {
                 "rows": [
                     {
                         "id": "39477",
-                        "part_number": self.parent.full_part_number(),
+                        "bom_code": f"{self.parent.full_part_number()}/{rev}",
                         "description": "x",
                         "edit_url": "Edit.aspx?id=39477",
                     }
@@ -698,9 +717,7 @@ class SystemGroupListResolveImportTests(TestCase):
         )
         self.assertTrue(result.ok, result.errors)
         self.assertEqual(result.resolved_bom_id, "39477")
-        # list_json path should not need network for list; dry_run still fetches edit
-        # because no html — session.get called for login+edit (and maybe list skipped)
-        self.assertGreaterEqual(session.get.call_count, 1)
+        self.assertEqual(session.get.call_count, 2)
 
 
 class SystemGroupAdminGuiTests(TestCase):

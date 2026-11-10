@@ -248,6 +248,7 @@ def resolve_bom_from_list(
     *,
     part_number: str | None = None,
     description: str | None = None,
+    revision: str | None = None,
     client: SystemGroupClient | None = None,
     list_html: str | None = None,
     list_json: str | None = None,
@@ -256,6 +257,7 @@ def resolve_bom_from_list(
 ) -> BomListEntry:
     """Fetch/parse the CRM BoM list and resolve a single match.
 
+    List rows often expose parent as «کد BOM» = ``part_number/revision``.
     Raises ``NoBomMatch`` or ``AmbiguousBomMatch``. When neither part_number nor
     description is set, returns AmbiguousBomMatch with the full list (browse).
     """
@@ -267,12 +269,17 @@ def resolve_bom_from_list(
     )
     pn = (part_number or "").strip() or None
     desc = (description or "").strip() or None
+    rev = (revision or "").strip() or None
     query = pn or desc or "(all)"
+    if pn and rev:
+        query = f"{pn}/{rev}"
 
     if not pn and not desc:
         raise AmbiguousBomMatch(rows, query)
 
-    matches = match_bom_list_entries(rows, part_number=pn, description=desc)
+    matches = match_bom_list_entries(
+        rows, part_number=pn, description=desc, revision=rev
+    )
     if not matches:
         raise NoBomMatch(query)
     if len(matches) > 1:
@@ -315,6 +322,7 @@ def run_systemgroup_import(
     parent_pn = (parent_part_number or "").strip() or None
     parent_part = None
     parent_desc = (parent_description or "").strip() or None
+    parent_rev = None
     if parent_pn:
         try:
             parent_part = Part.from_part_number(parent_pn, organization)
@@ -322,10 +330,13 @@ def run_systemgroup_import(
             raise SystemGroupImportError(
                 f"Parent part '{parent_pn}' not found in this organization."
             ) from exc
-        if parent_desc is None and parent_part is not None:
+        if parent_part is not None:
             latest = parent_part.latest()
-            if latest is not None and latest.description:
-                parent_desc = latest.description
+            if latest is not None:
+                if parent_desc is None and latest.description:
+                    parent_desc = latest.description
+                if latest.revision:
+                    parent_rev = str(latest.revision).strip() or None
 
     offline_edit = any(
         x is not None
@@ -343,6 +354,7 @@ def run_systemgroup_import(
         list_entry = resolve_bom_from_list(
             part_number=parent_pn,
             description=parent_desc if parent_pn else None,
+            revision=parent_rev if parent_pn else None,
             client=client,
             list_html=list_html,
             list_json=list_json,

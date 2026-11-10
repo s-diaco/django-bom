@@ -550,6 +550,14 @@ def parse_bom_document(content: str, content_type: str | None = None) -> ParsedB
 
 _LIST_HEADER_ALIASES: dict[str, tuple[str, ...]] = {
     "bom_id": ("id", "bom id", "bom_id", "bomid", "entity id", "شناسه"),
+    # CRM list column «کد BOM» holds parent_part_number/revision (e.g. 500-9001-00/1).
+    "bom_code": (
+        "bom code",
+        "bom_code",
+        "کد bom",
+        "کدbom",
+        "code bom",
+    ),
     "part_number": (
         "part_number",
         "part number",
@@ -709,6 +717,20 @@ def _score_list_table(table: dict[str, Any]) -> int:
     return score
 
 
+def split_bom_code(raw: str) -> tuple[str, str]:
+    """Split CRM «کد BOM» value ``parent_part_number/revision`` → (pn, rev).
+
+    If there is no slash, the whole string is the part number and revision is empty.
+    """
+    text = (raw or "").strip()
+    if not text:
+        return "", ""
+    if "/" not in text:
+        return text, ""
+    pn, rev = text.split("/", 1)
+    return pn.strip(), rev.strip()
+
+
 def _entry_from_list_mapping(data: dict[str, Any]) -> BomListEntry | None:
     bom_id = str(data.get("bom_id") or data.get("id") or "").strip()
     edit_url = str(data.get("edit_url") or data.get("url") or data.get("href") or "").strip()
@@ -716,18 +738,37 @@ def _entry_from_list_mapping(data: dict[str, Any]) -> BomListEntry | None:
         bom_id = _bom_id_from_href(edit_url) or ""
     if not bom_id:
         return None
+
+    part_number = str(
+        data.get("part_number")
+        or data.get("partNumber")
+        or data.get("code")
+        or ""
+    ).strip()
+    revision = str(data.get("revision") or data.get("rev") or "").strip()
+
+    bom_code = str(
+        data.get("bom_code")
+        or data.get("bomCode")
+        or data.get("کد BOM")
+        or data.get("کد bom")
+        or ""
+    ).strip()
+    if bom_code:
+        code_pn, code_rev = split_bom_code(bom_code)
+        # «کد BOM» is the CRM canonical PN/rev; fill gaps from it.
+        if code_pn and not part_number:
+            part_number = code_pn
+        if code_rev and not revision:
+            revision = code_rev
+
     return BomListEntry(
         bom_id=bom_id,
-        part_number=str(
-            data.get("part_number")
-            or data.get("partNumber")
-            or data.get("code")
-            or ""
-        ).strip(),
+        part_number=part_number,
         description=str(
             data.get("description") or data.get("name") or data.get("title") or ""
         ).strip(),
-        revision=str(data.get("revision") or data.get("rev") or "").strip(),
+        revision=revision,
         edit_url=edit_url,
     )
 
@@ -860,16 +901,19 @@ def match_bom_list_entries(
     *,
     part_number: str | None = None,
     description: str | None = None,
+    revision: str | None = None,
 ) -> list[BomListEntry]:
-    """Match list rows by parent part number and/or description.
+    """Match list rows by parent part number (from «کد BOM» or PN column).
 
-    Preference: exact part-number matches (case-insensitive). If none, fall
-    back to exact description matches. When both query fields are set and PN
-    matches exist, description is used only to narrow those PN matches when
-    more than one PN hit remains and descriptions differ.
+    Preference:
+    1. Exact part-number matches (case-insensitive).
+    2. If multiple and ``revision`` is set, narrow by exact revision.
+    3. Else if multiple and ``description`` is set, narrow by exact description.
+    4. If no PN hits, fall back to exact description matches.
     """
     pn = (part_number or "").strip().casefold()
     desc = (description or "").strip().casefold()
+    rev = (revision or "").strip().casefold()
     if not pn and not desc:
         return list(entries)
 
@@ -879,6 +923,14 @@ def match_bom_list_entries(
         if pn and (e.part_number or "").strip().casefold() == pn
     ]
     if pn_hits:
+        if rev and len(pn_hits) > 1:
+            by_rev = [
+                e
+                for e in pn_hits
+                if (e.revision or "").strip().casefold() == rev
+            ]
+            if by_rev:
+                return by_rev
         if desc and len(pn_hits) > 1:
             narrowed = [
                 e
