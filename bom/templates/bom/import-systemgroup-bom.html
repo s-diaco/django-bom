@@ -40,6 +40,7 @@
                         <form action="{% url 'bom:import-systemgroup-bom' %}" method="post">
                             {% csrf_token %}
                             <input type="hidden" name="parent_part_number" value="{{ form.parent_part_number.value|default_if_none:'' }}">
+                            <input type="hidden" name="parent_revision" value="{{ form.parent_revision.value|default_if_none:'' }}">
                             {% if form.dry_run.value %}<input type="hidden" name="dry_run" value="on">{% endif %}
                             <div class="overflow-x-auto">
                                 <table class="bom-table w-full text-sm">
@@ -68,7 +69,7 @@
                                 </table>
                             </div>
                             <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
-                                <a href="{% url 'bom:import-systemgroup-bom' %}{% if form.parent_part_number.value %}?parent_part={{ form.parent_part_number.value|urlencode }}{% endif %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
+                                <a href="{% url 'bom:import-systemgroup-bom' %}{% if form.parent_part_number.value %}?parent_part={{ form.parent_part_number.value|urlencode }}{% if form.parent_revision.value %}&amp;parent_revision={{ form.parent_revision.value|urlencode }}{% endif %}{% endif %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
                                 <button class="bom-btn-primary" type="submit">{% trans "Import selected" %}</button>
                             </div>
                         </form>
@@ -83,8 +84,9 @@
 
                     <div class="row items-end gap-y-3">
                         {{ form.parent_part_number|bom_form:'m4 s12' }}
-                        <div class="col m8 s12 text-sm text-ink-muted">
-                            <p class="bom-help">[{% trans "Preferred" %}] {% trans "When set, CRM id/URL are usually not needed — list match runs after login." %}</p>
+                        {{ form.parent_revision|bom_form:'m2 s12' }}
+                        <div class="col m6 s12 text-sm text-ink-muted">
+                            <p class="bom-help">[{% trans "Preferred" %}] {% trans "Part + selected revision match CRM «کد BOM» (PN/rev). Prefills from the part BoM tab." %}</p>
                         </div>
                     </div>
                     <div class="row items-end gap-y-3 mt-2">

@@ -61,7 +61,14 @@ class Command(BaseCommand):
             type=str,
             default=None,
             help="Existing Lithium parent part number. If --bom-id is omitted, "
-            "matches this PN (and description) on the CRM BoM list.",
+            "matches this PN on the CRM BoM list («کد BOM»).",
+        )
+        parser.add_argument(
+            "--parent-revision",
+            type=str,
+            default=None,
+            help="Selected Lithium revision string to match CRM «کد BOM» suffix "
+            "(PN/rev). Never inferred from latest — pass the revision you mean.",
         )
         parser.add_argument(
             "--from-list",
@@ -128,6 +135,7 @@ class Command(BaseCommand):
                 bom_id=options["bom_id"],
                 crm_url=options["crm_url"],
                 parent_part_number=options["parent_part"],
+                parent_revision=options["parent_revision"],
                 html_path=options["html_file"],
                 json_path=options["json_file"],
                 dry_run=options["dry_run"],

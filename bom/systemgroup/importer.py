@@ -293,6 +293,7 @@ def run_systemgroup_import(
     bom_id: str | None = None,
     crm_url: str | None = None,
     parent_part_number: str | None = None,
+    parent_revision: str | None = None,
     html_content: str | None = None,
     json_content: str | None = None,
     html_path: str | Path | None = None,
@@ -313,16 +314,18 @@ def run_systemgroup_import(
 
     When ``bom_id`` / ``crm_url`` are omitted and ``from_list`` is true (or a
     parent part number is set), the CRM BoM list is fetched and matched by
-    parent part number and/or description.
+    parent part number and optional selected ``parent_revision`` (CRM «کد BOM»
+    suffix). Revision is never inferred from latest().
     """
     resolved_bom_id = (bom_id or "").strip() or None
     if not resolved_bom_id and crm_url:
         resolved_bom_id = extract_bom_id_from_url(crm_url)
 
     parent_pn = (parent_part_number or "").strip() or None
+    # Explicit selected revision only (e.g. from part/…/rev/…/#bom) — never latest().
+    parent_rev = (parent_revision or "").strip() or None
     parent_part = None
     parent_desc = (parent_description or "").strip() or None
-    parent_rev = None
     if parent_pn:
         try:
             parent_part = Part.from_part_number(parent_pn, organization)
@@ -330,13 +333,12 @@ def run_systemgroup_import(
             raise SystemGroupImportError(
                 f"Parent part '{parent_pn}' not found in this organization."
             ) from exc
-        if parent_part is not None:
-            latest = parent_part.latest()
-            if latest is not None:
-                if parent_desc is None and latest.description:
+        if parent_desc is None and parent_part is not None:
+            # Description fallback only when no revision disambiguation was provided.
+            if parent_rev is None:
+                latest = parent_part.latest()
+                if latest is not None and latest.description:
                     parent_desc = latest.description
-                if latest.revision:
-                    parent_rev = str(latest.revision).strip() or None
 
     offline_edit = any(
         x is not None

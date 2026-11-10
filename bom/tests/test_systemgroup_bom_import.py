@@ -704,13 +704,20 @@ class SystemGroupListResolveImportTests(TestCase):
                         "bom_code": f"{self.parent.full_part_number()}/{rev}",
                         "description": "x",
                         "edit_url": "Edit.aspx?id=39477",
-                    }
+                    },
+                    {
+                        "id": "39999",
+                        "bom_code": f"{self.parent.full_part_number()}/OTHER",
+                        "description": "wrong rev",
+                        "edit_url": "Edit.aspx?id=39999",
+                    },
                 ]
             }
         )
         result = run_systemgroup_import(
             self.organization,
             parent_part_number=self.parent.full_part_number(),
+            parent_revision=str(rev),
             client=client,
             list_json=list_payload,
             dry_run=True,
@@ -833,9 +840,11 @@ class SystemGroupAdminGuiTests(TestCase):
             reverse("bom:part-info", kwargs={"part_id": part.id}) + "?tab_anchor=bom"
         )
         self.assertEqual(response.status_code, 200)
+        rev = part.latest().revision
         expected = (
             reverse("bom:import-systemgroup-bom")
             + f"?parent_part={part.full_part_number()}"
+            + f"&amp;parent_revision={rev}"
         )
         self.assertContains(response, "Import from SystemGroup CRM")
         self.assertContains(response, expected)

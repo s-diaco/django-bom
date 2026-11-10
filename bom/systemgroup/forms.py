@@ -38,9 +38,18 @@ class SystemGroupBomImportForm(forms.Form):
         label=_("Parent part number"),
         help_text=_(
             "Lithium parent. When set without a BoM id, the CRM list is searched "
-            "by this part number (and description). Leave blank to browse the "
-            "list or enter an id/URL manually."
+            "by this part number (and optional revision from the part BoM tab). "
+            "Leave blank to browse the list or enter an id/URL manually."
         ),
+    )
+    parent_revision = forms.CharField(
+        required=False,
+        label=_("Parent revision"),
+        help_text=_(
+            "Selected Lithium revision (from part/…/rev/…). Matches CRM «کد BOM» "
+            "suffix after the slash. Not filled from latest automatically."
+        ),
+        widget=forms.TextInput(attrs={"placeholder": "1", "autocomplete": "off"}),
     )
     source_file = forms.FileField(
         required=False,
@@ -70,6 +79,7 @@ class SystemGroupBomImportForm(forms.Form):
         crm_url = (cleaned.get("crm_url") or "").strip()
         source_file = cleaned.get("source_file")
         parent_pn = (cleaned.get("parent_part_number") or "").strip()
+        parent_rev = (cleaned.get("parent_revision") or "").strip()
         browse_list = bool(cleaned.get("browse_list"))
 
         extracted = extract_bom_id_from_url(crm_url) if crm_url else None
@@ -89,4 +99,5 @@ class SystemGroupBomImportForm(forms.Form):
         cleaned["bom_id"] = bom_id or None
         cleaned["crm_url"] = crm_url or None
         cleaned["parent_part_number"] = parent_pn or None
+        cleaned["parent_revision"] = parent_rev or None
         return cleaned

@@ -2530,6 +2530,7 @@ def import_systemgroup_bom(request):
         request.FILES or None,
         initial={
             "parent_part_number": request.GET.get("parent_part", ""),
+            "parent_revision": request.GET.get("parent_revision", ""),
             "bom_id": request.GET.get("bom_id", ""),
             "crm_url": request.GET.get("crm_url", ""),
         },
@@ -2557,6 +2558,7 @@ def import_systemgroup_bom(request):
                 bom_id=cleaned.get("bom_id"),
                 crm_url=cleaned.get("crm_url"),
                 parent_part_number=cleaned.get("parent_part_number") or None,
+                parent_revision=cleaned.get("parent_revision") or None,
                 html_content=html_content,
                 json_content=json_content,
                 dry_run=bool(cleaned.get("dry_run")),
