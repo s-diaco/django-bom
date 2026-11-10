@@ -19,6 +19,7 @@
                 {% if profile.role == 'A' %}
                     <a class="bom-btn-secondary" href="{% url 'bom:customers' %}">{% trans "customers" %}</a>
                     <a class="bom-btn-secondary" href="{% url 'bom:create-part' %}">{% trans "New Material" %}</a>
+                    <a class="bom-btn-secondary" href="{% url 'bom:import-systemgroup-bom' %}">{% trans "Import material" %}</a>
                 {% endif %}
                 <a class="bom-btn-ghost" href="{% url 'bom:report' %}">{% trans "Reports" %}</a>
                 <a class="bom-btn-ghost" href="{% url 'bom:settings' tab_anchor='user' %}">{% trans "settings" %}</a>

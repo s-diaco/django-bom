@@ -2652,6 +2652,8 @@ class BOMCSVForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
         self.parent_part = kwargs.pop("parent_part", None)
+        # Optional: attach under a specific revision (not necessarily latest()).
+        self.parent_part_revision = kwargs.pop("parent_part_revision", None)
         super(BOMCSVForm, self).__init__(*args, **kwargs)
 
     def clean(self):
@@ -2712,9 +2714,9 @@ class BOMCSVForm(forms.Form):
                     code="invalid",
                 )
 
-            parent_part_revision = (
-                self.parent_part.latest() if self.parent_part else None
-            )
+            parent_part_revision = self.parent_part_revision
+            if parent_part_revision is None and self.parent_part is not None:
+                parent_part_revision = self.parent_part.latest()
 
             last_level = None
             last_part_revision = parent_part_revision

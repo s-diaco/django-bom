@@ -11,7 +11,7 @@ Examples:
   python manage.py import_systemgroup_bom --from-list --parent-part 500-9001-00 --organization-id 1
   python manage.py import_systemgroup_bom --html-file ./bom-edit.html --organization-id 1 --parent-part 500-1234-00
 
-Admin UI: Upload → Import SystemGroup BoM (same backend).
+Admin UI: Home → Import material (same backend).
 """
 
 from __future__ import annotations
@@ -21,6 +21,7 @@ from django.core.management.base import BaseCommand, CommandError
 from bom.models import Organization
 from bom.systemgroup.importer import (
     AmbiguousBomMatch,
+    ExistingBomConflict,
     SystemGroupImportError,
     load_bom_list_entries,
     run_systemgroup_import,
@@ -100,6 +101,15 @@ class Command(BaseCommand):
             action="store_true",
             help="Parse and map only; do not write to the database.",
         )
+        parser.add_argument(
+            "--existing-bom-action",
+            type=str,
+            choices=("keep", "replace"),
+            default=None,
+            help="When the target Lithium revision already has a BoM tree: "
+            "'keep' appends imported lines; 'replace' clears then imports. "
+            "Required in that case (GUI prompts instead).",
+        )
 
     def handle(self, *args, **options):
         org_id = options["organization_id"]
@@ -141,6 +151,7 @@ class Command(BaseCommand):
                 dry_run=options["dry_run"],
                 from_list=bool(options["from_list"] or options["list_file"]),
                 list_path=options["list_file"],
+                existing_bom_action=options["existing_bom_action"],
             )
         except AmbiguousBomMatch as exc:
             self.stderr.write(self.style.ERROR(str(exc)))
@@ -148,6 +159,10 @@ class Command(BaseCommand):
                 self.stdout.write(f"  {entry.label()}")
             raise CommandError(
                 "Ambiguous CRM BoM match; pass --bom-id to disambiguate."
+            ) from exc
+        except ExistingBomConflict as exc:
+            raise CommandError(
+                f"{exc} Pass --existing-bom-action keep|replace."
             ) from exc
         except SystemGroupImportError as exc:
             raise CommandError(str(exc)) from exc

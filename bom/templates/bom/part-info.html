@@ -233,11 +233,6 @@
                             </div>
                             <button class="bom-btn-primary" type="submit">{% trans "Upload" %}</button>
                         </form>
-                        {% if profile.role == 'A' %}
-                        <p class="mt-3 text-sm text-ink-muted">
-                            <a href="{% url 'bom:import-systemgroup-bom' %}?parent_part={{ part.full_part_number|urlencode }}{% if part_revision %}&amp;parent_revision={{ part_revision.revision|urlencode }}{% endif %}">{% trans "Import from SystemGroup CRM…" %}</a>
-                        </p>
-                        {% endif %}
                     </div>
                     {% endif %}
                 </div>

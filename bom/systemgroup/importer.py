@@ -10,7 +10,7 @@ from pathlib import Path
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from bom.forms import BOMCSVForm
-from bom.models import Organization, Part
+from bom.models import Assembly, Organization, Part, PartRevision
 
 from .client import SystemGroupClient, SystemGroupClientError, extract_bom_id_from_url
 from .parser import (
@@ -82,6 +82,21 @@ class NoBomMatch(SystemGroupImportError):
         )
 
 
+class ExistingBomConflict(SystemGroupImportError):
+    """Target Lithium revision already has a BoM tree; user must keep or replace."""
+
+    def __init__(self, part: Part, part_revision: PartRevision, subpart_count: int):
+        self.part = part
+        self.part_revision = part_revision
+        self.subpart_count = subpart_count
+        pn = part.full_part_number()
+        rev = part_revision.revision
+        super().__init__(
+            f"Part {pn} revision {rev} already has {subpart_count} BoM line(s). "
+            "Choose keep (append) or replace."
+        )
+
+
 def parsed_bom_to_csv_bytes(
     parsed: ParsedBom,
     *,
@@ -134,21 +149,52 @@ def resolve_parent_part(
         return None
 
 
+def _revision_subpart_count(part_revision: PartRevision | None) -> int:
+    if part_revision is None or part_revision.assembly_id is None:
+        return 0
+    return part_revision.assembly.subparts.count()
+
+
+def ensure_parent_revision(
+    organization: Organization,
+    *,
+    part: Part,
+    revision: str,
+    description: str = "",
+) -> PartRevision:
+    """Return existing PartRevision or create one (with empty assembly)."""
+    rev = (revision or "").strip() or "1"
+    existing = PartRevision.objects.filter(part=part, revision=rev).first()
+    if existing is not None:
+        return existing
+    assembly = Assembly.objects.create()
+    return PartRevision.objects.create(
+        part=part,
+        revision=rev,
+        description=(description or "").strip() or part.full_part_number(),
+        assembly=assembly,
+    )
+
+
 def import_parsed_bom(
     organization: Organization,
     parsed: ParsedBom,
     *,
     parent_part: Part | None = None,
     parent_part_number: str | None = None,
+    parent_revision: str | None = None,
+    existing_bom_action: str | None = None,
     dry_run: bool = False,
 ) -> ImportResult:
     """Import ParsedBom using BOMCSVForm (same semantics as part-upload-bom).
 
     Resolution order for parent:
-    1. Explicit ``parent_part`` instance
+    1. Explicit ``parent_part`` instance (+ optional ``parent_revision``)
     2. ``parent_part_number`` / ``parsed.parent_part_number`` looked up in Lithium
-    3. If still missing but CRM header has a parent PN, emit level-0 CSV row so
-       BOMCSVForm creates part+revision, then attaches children under it
+    3. If part exists but revision does not, create the revision
+    4. If part is missing, emit level-0 CSV so BOMCSVForm creates part+revision
+    5. If the target revision already has a BoM tree and ``existing_bom_action``
+       is unset, raise ``ExistingBomConflict`` (keep vs replace)
     """
     result = ImportResult(dry_run=dry_run)
     if not parsed.lines:
@@ -156,25 +202,89 @@ def import_parsed_bom(
         return result
 
     resolved = parent_part
-    pn = parent_part_number or parsed.parent_part_number or None
+    # Explicit UI/CLI parent wins over CRM header values.
+    explicit_pn = (parent_part_number or "").strip() or None
+    explicit_rev = (parent_revision or "").strip() or None
+    pn = explicit_pn or (parsed.parent_part_number or "").strip() or None
+    rev = explicit_rev or (parsed.parent_revision or "").strip() or None
+    if explicit_pn:
+        parsed.parent_part_number = explicit_pn
+    elif pn and not parsed.parent_part_number:
+        parsed.parent_part_number = pn
+    if explicit_rev:
+        parsed.parent_revision = explicit_rev
+    elif rev and not parsed.parent_revision:
+        parsed.parent_revision = rev
     if resolved is None and pn:
         resolved = resolve_parent_part(organization, pn)
 
-    include_parent_row = resolved is None and bool(parsed.parent_part_number)
-    if resolved is None and not include_parent_row:
-        result.errors.append(
-            "No parent part: pass --parent-part, or ensure the CRM BoM header "
-            "includes a parent part number so one can be created."
+    parent_part_revision: PartRevision | None = None
+    include_parent_row = False
+    action = (existing_bom_action or "").strip().lower() or None
+
+    if resolved is not None:
+        # Part exists — use/create the requested revision (default latest or "1").
+        target_rev = rev or (
+            resolved.latest().revision if resolved.latest() is not None else "1"
         )
-        return result
+        parent_part_revision = ensure_parent_revision(
+            organization,
+            part=resolved,
+            revision=target_rev,
+            description=parsed.parent_description or "",
+        )
+        count = _revision_subpart_count(parent_part_revision)
+        if count > 0 and action not in ("keep", "replace"):
+            if dry_run:
+                result.warnings.append(
+                    f"Dry run: {resolved.full_part_number()} rev "
+                    f"{parent_part_revision.revision} already has {count} "
+                    "BoM line(s); a real import would ask keep vs replace."
+                )
+            else:
+                raise ExistingBomConflict(resolved, parent_part_revision, count)
+        if (
+            not dry_run
+            and action == "replace"
+            and parent_part_revision.assembly_id
+        ):
+            parent_part_revision.assembly.subparts.all().delete()
+            parent_part_revision.clear_bom_unit_cost_cache()
+            result.warnings.append(
+                f"Replaced existing BoM on {resolved.full_part_number()} "
+                f"rev {parent_part_revision.revision}."
+            )
+        elif action == "keep" and count > 0:
+            result.warnings.append(
+                f"Keeping existing BoM on {resolved.full_part_number()} "
+                f"rev {parent_part_revision.revision}; new lines will append."
+            )
+    else:
+        # Missing part — BOMCSVForm creates from a level-0 parent row.
+        if not parsed.parent_part_number:
+            result.errors.append(
+                "No parent part: enter Part ID + Revision, or ensure the CRM BoM "
+                "header includes a parent part number so one can be created."
+            )
+            return result
+        if not parsed.parent_revision:
+            parsed.parent_revision = rev or "1"
+        include_parent_row = True
 
     csv_bytes = parsed_bom_to_csv_bytes(parsed, include_parent_row=include_parent_row)
     result.row_count = len(parsed.lines) + (1 if include_parent_row else 0)
 
     if dry_run:
+        where = (
+            f"create parent {parsed.parent_part_number}/{parsed.parent_revision}"
+            if include_parent_row
+            else (
+                f"under {resolved.full_part_number()} "
+                f"rev {parent_part_revision.revision if parent_part_revision else '?'}"
+            )
+        )
         result.successes.append(
-            f"Dry run: would import {len(parsed.lines)} line(s) "
-            f"({'create parent ' + parsed.parent_part_number if include_parent_row else 'under ' + (resolved.full_part_number() if resolved else '?')})."
+            f"Dry run: would import {len(parsed.lines)} line(s) ({where})."
         )
         result.parent_part = resolved
         return result
@@ -183,7 +293,8 @@ def import_parsed_bom(
     form = BOMCSVForm(
         data={},
         files={"file": upload},
-        parent_part=resolved,
+        parent_part=resolved if not include_parent_row else None,
+        parent_part_revision=parent_part_revision if not include_parent_row else None,
         organization=organization,
     )
     if form.is_valid():
@@ -305,6 +416,7 @@ def run_systemgroup_import(
     list_json: str | None = None,
     list_path: str | Path | None = None,
     parent_description: str | None = None,
+    existing_bom_action: str | None = None,
 ) -> ImportResult:
     """Shared entry used by the management command and Admin UI.
 
@@ -315,30 +427,25 @@ def run_systemgroup_import(
     When ``bom_id`` / ``crm_url`` are omitted and ``from_list`` is true (or a
     parent part number is set), the CRM BoM list is fetched and matched by
     parent part number and optional selected ``parent_revision`` (CRM «کد BOM»
-    suffix). Revision is never inferred from latest().
+    suffix). Missing Lithium parts/revisions are created. If the target
+    revision already has a BoM tree, ``existing_bom_action`` must be
+    ``keep`` or ``replace`` (else ``ExistingBomConflict``).
     """
     resolved_bom_id = (bom_id or "").strip() or None
     if not resolved_bom_id and crm_url:
         resolved_bom_id = extract_bom_id_from_url(crm_url)
 
     parent_pn = (parent_part_number or "").strip() or None
-    # Explicit selected revision only (e.g. from part/…/rev/…/#bom) — never latest().
+    # Explicit selected revision only — never latest() for CRM list matching.
     parent_rev = (parent_revision or "").strip() or None
     parent_part = None
     parent_desc = (parent_description or "").strip() or None
     if parent_pn:
-        try:
-            parent_part = Part.from_part_number(parent_pn, organization)
-        except (Part.DoesNotExist, AttributeError) as exc:
-            raise SystemGroupImportError(
-                f"Parent part '{parent_pn}' not found in this organization."
-            ) from exc
-        if parent_desc is None and parent_part is not None:
-            # Description fallback only when no revision disambiguation was provided.
-            if parent_rev is None:
-                latest = parent_part.latest()
-                if latest is not None and latest.description:
-                    parent_desc = latest.description
+        parent_part = resolve_parent_part(organization, parent_pn)
+        if parent_desc is None and parent_part is not None and parent_rev is None:
+            latest = parent_part.latest()
+            if latest is not None and latest.description:
+                parent_desc = latest.description
 
     offline_edit = any(
         x is not None
@@ -363,6 +470,11 @@ def run_systemgroup_import(
             list_path=list_path,
         )
         resolved_bom_id = list_entry.bom_id
+        # Prefer list-row PN/rev when the user only typed a bare PN.
+        if not parent_pn and list_entry.part_number:
+            parent_pn = list_entry.part_number
+        if not parent_rev and list_entry.revision:
+            parent_rev = list_entry.revision
 
     try:
         if json_content is not None:
@@ -378,8 +490,7 @@ def run_systemgroup_import(
         else:
             if not resolved_bom_id:
                 raise SystemGroupImportError(
-                    "Provide a BoM id, a CRM Edit URL containing id=, "
-                    "a parent part (auto-resolve from CRM list), "
+                    "Provide Part ID + Revision, a BoM id / Edit URL, "
                     "--from-list, or an HTML/JSON upload."
                 )
             sg = client or SystemGroupClient()
@@ -390,12 +501,18 @@ def run_systemgroup_import(
 
     if resolved_bom_id and not parsed.bom_id:
         parsed.bom_id = str(resolved_bom_id)
+    if parent_pn and not parsed.parent_part_number:
+        parsed.parent_part_number = parent_pn
+    if parent_rev and not parsed.parent_revision:
+        parsed.parent_revision = parent_rev
 
     result = import_parsed_bom(
         organization,
         parsed,
         parent_part=parent_part,
         parent_part_number=parent_pn,
+        parent_revision=parent_rev,
+        existing_bom_action=existing_bom_action,
         dry_run=dry_run,
     )
     result.resolved_bom_id = resolved_bom_id

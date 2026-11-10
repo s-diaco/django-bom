@@ -26,6 +26,7 @@ from bom.systemgroup.client import (
 from bom.systemgroup.forms import SystemGroupBomImportForm
 from bom.systemgroup.importer import (
     AmbiguousBomMatch,
+    ExistingBomConflict,
     NoBomMatch,
     import_parsed_bom,
     parsed_bom_to_csv_bytes,
@@ -559,11 +560,12 @@ class SystemGroupImportSemanticsTests(TestCase):
         bom = parse_bom_document(
             (FIXTURES / "bom_edit.html").read_text(encoding="utf-8")
         )
-        # Force attach under existing parent; skip CRM parent create
+        # Parent already has a BoM tree from fixtures — append (keep).
         result = import_parsed_bom(
             self.organization,
             bom,
             parent_part=self.parent,
+            existing_bom_action="keep",
         )
         self.assertTrue(result.ok, result.errors)
         self.assertTrue(result.successes)
@@ -617,13 +619,28 @@ class SystemGroupImportSemanticsTests(TestCase):
             content_type="application/json",
         )
         result = import_parsed_bom(
-            self.organization, bom, parent_part=self.parent, dry_run=True
+            self.organization,
+            bom,
+            parent_part=self.parent,
+            existing_bom_action="keep",
+            dry_run=True,
         )
         self.assertTrue(result.ok)
         self.assertTrue(result.dry_run)
         self.assertEqual(
             Part.objects.filter(organization=self.organization).count(), before
         )
+
+    def test_existing_bom_raises_without_action(self):
+        bom = parse_bom_document(
+            (FIXTURES / "bom_edit.html").read_text(encoding="utf-8")
+        )
+        with self.assertRaises(ExistingBomConflict):
+            import_parsed_bom(
+                self.organization,
+                bom,
+                parent_part=self.parent,
+            )
 
 
 class SystemGroupManagementCommandTests(TestCase):
@@ -632,15 +649,18 @@ class SystemGroupManagementCommandTests(TestCase):
         create_some_fake_parts(organization=self.organization)
 
     def test_import_from_html_file(self):
+        from bom.helpers import create_a_fake_assembly
+
         parts = Part.objects.filter(organization=self.organization).order_by("id")
         # Use a part that is not a line item in the fixture (avoid self-as-child).
-        parent = [p for p in parts if p.full_part_number() != "200-3333-00"][0]
-        if parent.latest().assembly is None:
-            from bom.helpers import create_a_fake_assembly
-
-            rev = parent.latest()
-            rev.assembly = create_a_fake_assembly()
-            rev.save()
+        parent = [
+            p
+            for p in parts
+            if p.full_part_number() != "200-3333-00" and p.latest() is not None
+        ][0]
+        rev = parent.latest()
+        rev.assembly = create_a_fake_assembly()
+        rev.save()
 
         call_command(
             "import_systemgroup_bom",
@@ -666,15 +686,15 @@ class SystemGroupManagementCommandTests(TestCase):
 
 class SystemGroupListResolveImportTests(TestCase):
     def setUp(self):
+        from bom.helpers import create_a_fake_assembly
+
         self.user, self.organization = create_user_and_organization()
         self.parts = create_some_fake_parts(organization=self.organization)
         self.parent = self.parts[1]
-        if self.parent.latest().assembly is None:
-            from bom.helpers import create_a_fake_assembly
-
-            rev = self.parent.latest()
-            rev.assembly = create_a_fake_assembly()
-            rev.save()
+        # Start from an empty BoM so imports do not need keep/replace.
+        rev = self.parent.latest()
+        rev.assembly = create_a_fake_assembly()
+        rev.save()
 
     def test_run_import_resolves_unique_pn_from_list_file(self):
         # Parent PN won't match list; resolve unique list PN via description-less
@@ -889,6 +909,8 @@ class SystemGroupAdminGuiTests(TestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Import SystemGroup BoM")
+        self.assertContains(response, "Part ID + Revision")
+        self.assertContains(response, "Get the BoM")
         self.assertContains(response, "CRM_BASE_URL")
 
     def test_viewer_denied(self):
@@ -911,6 +933,12 @@ class SystemGroupAdminGuiTests(TestCase):
     def test_form_allows_parent_part_without_bom_id(self):
         form = SystemGroupBomImportForm(data={"parent_part_number": "500-9001-00"})
         self.assertTrue(form.is_valid(), form.errors)
+
+    def test_form_part_id_revision_splits_pn_rev(self):
+        form = SystemGroupBomImportForm(data={"part_id_revision": "1155F229/A2*10-C"})
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["parent_part_number"], "1155F229")
+        self.assertEqual(form.cleaned_data["parent_revision"], "A2*10-C")
 
     def test_form_allows_browse_list_alone(self):
         form = SystemGroupBomImportForm(data={"browse_list": True})
@@ -935,23 +963,23 @@ class SystemGroupAdminGuiTests(TestCase):
         mocked.assert_called()
 
     def test_post_html_upload_imports(self):
+        from bom.helpers import create_a_fake_assembly
+
         parent = [
             p
             for p in Part.objects.filter(organization=self.organization)
-            if p.full_part_number() != "200-3333-00"
+            if p.full_part_number() != "200-3333-00" and p.latest() is not None
         ][0]
-        if parent.latest().assembly is None:
-            from bom.helpers import create_a_fake_assembly
-
-            rev = parent.latest()
-            rev.assembly = create_a_fake_assembly()
-            rev.save()
+        rev = parent.latest()
+        # Empty BoM so import does not hit keep/replace conflict.
+        rev.assembly = create_a_fake_assembly()
+        rev.save()
 
         html = (FIXTURES / "bom_edit.html").read_bytes()
         response = self.client.post(
             self.url,
             {
-                "parent_part_number": parent.full_part_number(),
+                "part_id_revision": f"{parent.full_part_number()}/{rev.revision}",
                 "source_file": SimpleUploadedFile(
                     "bom_edit.html", html, content_type="text/html"
                 ),
@@ -959,10 +987,10 @@ class SystemGroupAdminGuiTests(TestCase):
             follow=True,
         )
         self.assertEqual(response.status_code, 200)
-        parent.refresh_from_db()
+        rev.refresh_from_db()
         pns = {
             sp.part_revision.part.full_part_number()
-            for sp in parent.latest().assembly.subparts.all()
+            for sp in rev.assembly.subparts.all()
         }
         self.assertIn("500-7777-00", pns)
 
@@ -972,7 +1000,13 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertContains(response, reverse("bom:import-systemgroup-bom"))
         self.assertContains(response, "Import SystemGroup BoM")
 
-    def test_part_bom_tab_deep_link(self):
+    def test_home_has_import_material_button(self):
+        response = self.client.get(reverse("bom:home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse("bom:import-systemgroup-bom"))
+        self.assertContains(response, "Import material")
+
+    def test_part_bom_tab_has_no_systemgroup_link(self):
         # BoM tab only renders for product revisions (has_bom material type).
         part = [
             p
@@ -990,11 +1024,115 @@ class SystemGroupAdminGuiTests(TestCase):
             reverse("bom:part-info", kwargs={"part_id": part.id}) + "?tab_anchor=bom"
         )
         self.assertEqual(response.status_code, 200)
-        rev = part.latest().revision
-        expected = (
-            reverse("bom:import-systemgroup-bom")
-            + f"?parent_part={part.full_part_number()}"
-            + f"&amp;parent_revision={rev}"
+        self.assertNotContains(response, "Import from SystemGroup CRM")
+        self.assertContains(response, "Add all subparts")
+
+    def _parent_with_existing_bom(self):
+        from bom.helpers import create_a_fake_assembly_with_subpart
+
+        parts = [
+            p
+            for p in Part.objects.filter(organization=self.organization)
+            if p.latest() is not None
+        ]
+        parent = next(p for p in parts if p.full_part_number() != "200-3333-00")
+        other = next(p for p in parts if p.id != parent.id)
+        rev = parent.latest()
+        rev.assembly = create_a_fake_assembly_with_subpart(other.latest())
+        rev.save()
+        self.assertGreater(rev.assembly.subparts.count(), 0)
+        return parent, rev
+
+    def test_existing_bom_prompts_keep_or_replace(self):
+        parent, rev = self._parent_with_existing_bom()
+        html = (FIXTURES / "bom_edit.html").read_bytes()
+        response = self.client.post(
+            self.url,
+            {
+                "part_id_revision": f"{parent.full_part_number()}/{rev.revision}",
+                "source_file": SimpleUploadedFile(
+                    "bom_edit.html", html, content_type="text/html"
+                ),
+            },
         )
-        self.assertContains(response, "Import from SystemGroup CRM")
-        self.assertContains(response, expected)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Existing BoM found")
+        self.assertContains(response, "Keep existing BoM")
+        self.assertContains(response, "Replace with imported BoM")
+
+    def test_replace_existing_bom_clears_then_imports(self):
+        parent, rev = self._parent_with_existing_bom()
+        html = (FIXTURES / "bom_edit.html").read_bytes()
+        response = self.client.post(
+            self.url,
+            {
+                "part_id_revision": f"{parent.full_part_number()}/{rev.revision}",
+                "existing_bom_action": "replace",
+                "source_file": SimpleUploadedFile(
+                    "bom_edit.html", html, content_type="text/html"
+                ),
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        rev.refresh_from_db()
+        pns = {
+            sp.part_revision.part.full_part_number()
+            for sp in rev.assembly.subparts.all()
+        }
+        self.assertIn("500-7777-00", pns)
+
+    def test_keep_existing_bom_appends(self):
+        parent, rev = self._parent_with_existing_bom()
+        before = set(
+            sp.part_revision.part.full_part_number()
+            for sp in rev.assembly.subparts.all()
+        )
+        html = (FIXTURES / "bom_edit.html").read_bytes()
+        response = self.client.post(
+            self.url,
+            {
+                "part_id_revision": f"{parent.full_part_number()}/{rev.revision}",
+                "existing_bom_action": "keep",
+                "source_file": SimpleUploadedFile(
+                    "bom_edit.html", html, content_type="text/html"
+                ),
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        rev.refresh_from_db()
+        after = {
+            sp.part_revision.part.full_part_number()
+            for sp in rev.assembly.subparts.all()
+        }
+        self.assertTrue(before.issubset(after))
+        self.assertIn("500-7777-00", after)
+
+    def test_creates_missing_part_and_revision(self):
+        html = (FIXTURES / "bom_edit.html").read_bytes()
+        # Class 500 exists from fixtures; item 9001 does not.
+        self.assertFalse(
+            Part.objects.filter(
+                organization=self.organization, number_item="9001"
+            ).exists()
+        )
+        response = self.client.post(
+            self.url,
+            {
+                "part_id_revision": "500-9001-00/A1",
+                "source_file": SimpleUploadedFile(
+                    "bom_edit.html", html, content_type="text/html"
+                ),
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        created = Part.from_part_number("500-9001-00", self.organization)
+        self.assertIsNotNone(created.latest())
+        self.assertEqual(created.latest().revision, "A1")
+        pns = {
+            sp.part_revision.part.full_part_number()
+            for sp in created.latest().assembly.subparts.all()
+        }
+        self.assertIn("500-7777-00", pns)

@@ -2515,6 +2515,7 @@ def import_systemgroup_bom(request):
     from bom.systemgroup.forms import SystemGroupBomImportForm
     from bom.systemgroup.importer import (
         AmbiguousBomMatch,
+        ExistingBomConflict,
         SystemGroupImportError,
         run_systemgroup_import,
     )
@@ -2525,17 +2526,25 @@ def import_systemgroup_bom(request):
     title = _("Import SystemGroup BoM")
     bom_candidates = None
     match_query = None
+    existing_bom_conflict = None
+    get_parent = request.GET.get("parent_part", "")
+    get_rev = request.GET.get("parent_revision", "")
+    initial_pir = ""
+    if get_parent:
+        initial_pir = f"{get_parent}/{get_rev}" if get_rev else get_parent
     form = SystemGroupBomImportForm(
         request.POST or None,
         request.FILES or None,
         initial={
-            "parent_part_number": request.GET.get("parent_part", ""),
-            "parent_revision": request.GET.get("parent_revision", ""),
+            "part_id_revision": request.GET.get("part_id_revision", initial_pir),
+            "parent_part_number": get_parent,
+            "parent_revision": get_rev,
             "bom_id": request.GET.get("bom_id", ""),
             "crm_url": request.GET.get("crm_url", ""),
         },
     )
 
+    session_key = "systemgroup_import_source"
     if request.method == "POST" and form.is_valid():
         cleaned = form.cleaned_data
         html_content = None
@@ -2550,8 +2559,17 @@ def import_systemgroup_bom(request):
             name = (getattr(source, "name", "") or "").lower()
             if name.endswith(".json") or text.lstrip()[:1] in "{[":
                 json_content = text
+                request.session[session_key] = {"kind": "json", "text": text}
             else:
                 html_content = text
+                request.session[session_key] = {"kind": "html", "text": text}
+        elif cleaned.get("existing_bom_action"):
+            # Keep/replace re-POST: reuse the prior offline upload if any.
+            cached = request.session.get(session_key) or {}
+            if cached.get("kind") == "json" and cached.get("text"):
+                json_content = cached["text"]
+            elif cached.get("kind") == "html" and cached.get("text"):
+                html_content = cached["text"]
         try:
             result = run_systemgroup_import(
                 organization,
@@ -2563,6 +2581,7 @@ def import_systemgroup_bom(request):
                 json_content=json_content,
                 dry_run=bool(cleaned.get("dry_run")),
                 from_list=bool(cleaned.get("browse_list")),
+                existing_bom_action=cleaned.get("existing_bom_action"),
             )
         except AmbiguousBomMatch as exc:
             bom_candidates = exc.matches
@@ -2571,9 +2590,19 @@ def import_systemgroup_bom(request):
                 request,
                 _("Several CRM BoMs matched — pick one below, or enter an id/URL."),
             )
+        except ExistingBomConflict as exc:
+            existing_bom_conflict = exc
+            messages.warning(
+                request,
+                _(
+                    "This part/revision already has a BoM. Keep the existing tree "
+                    "(append imported lines) or replace it."
+                ),
+            )
         except SystemGroupImportError as exc:
             messages.error(request, str(exc))
         else:
+            request.session.pop(session_key, None)
             for msg in result.successes:
                 messages.info(request, msg)
             for msg in result.warnings:

@@ -276,7 +276,7 @@ CRM_USERNAME=...
 CRM_PASSWORD=...
 ```
 
-**GUI (Admin only):** Upload → **Import SystemGroup BoM**, or a part’s BoM tab → **Import from SystemGroup CRM…** (with `parent_part`, CRM id/URL are optional — the BoM list is matched automatically; multiple hits show a pick list).
+**GUI (Admin only):** Home → **Import material** (next to New Material). Paste **Part ID + Revision** as `PN/rev` (CRM «کد BOM») and click **Get the BoM**. Missing Lithium parts/revisions are created; if the target revision already has a BoM tree, choose keep (append) or replace. CRM id/URL remain optional fallbacks; multiple list hits show a pick list.
 
 **CLI:**
 
