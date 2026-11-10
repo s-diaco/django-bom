@@ -11,6 +11,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from django.utils.translation import gettext as _
 
 from bom.helpers import create_some_fake_parts, create_user_and_organization
 from bom.models import Part
@@ -1107,7 +1108,12 @@ class SystemGroupAdminGuiTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, "Import from SystemGroup CRM")
-        self.assertContains(response, "Add all subparts")
+        # Locale-aware: CI compiles fa-IR catalogs (gettext), so English msgid
+        # alone fails when the active language translates this heading.
+        self.assertContains(response, _("Add all subparts"))
+        self.assertContains(
+            response, reverse("bom:part-upload-bom", kwargs={"part_id": part.id})
+        )
 
     def _parent_with_existing_bom(self):
         from bom.helpers import create_a_fake_assembly_with_subpart
