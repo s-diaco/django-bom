@@ -69,7 +69,9 @@
                 ? "{% trans "not set" %}"
                 : formatWholeRate(rate);
         if (modalCurrency) modalCurrency.value = code;
-        if (modalRate && rate != null && rate !== "") modalRate.value = rate;
+        if (modalRate && rate != null && rate !== "") {
+            modalRate.value = formatWholeRate(rate);
+        }
     }
 
     if (currencySelect) {
