@@ -1510,8 +1510,9 @@ class SellerPart(models.Model, AsDictModel):
     def landed_unit_cost(self):
         """Landed unit cost in organization currency.
 
-        Quote currency: unit_cost * (1 + duty%) + shipping, converted via the
-        manual org FX table when the quote currency differs.
+        Price and Shipping convert with the market FX rate. Customs Duty
+        (unit_cost * duty%) converts with the customs/official rate only.
+        Same-currency quotes skip FX: unit_cost * (1 + duty%) + shipping.
         """
         if self.unit_cost is None:
             return None
@@ -1521,7 +1522,7 @@ class SellerPart(models.Model, AsDictModel):
             self.shipping.amount if self.shipping is not None else Decimal(0)
         )
         shipping = Money(shipping_amount, self.unit_cost.currency)
-        landed = self.unit_cost * (Decimal("1") + duty) + shipping
+        duty_money = self.unit_cost * duty
 
         org_currency = None
         try:
@@ -1529,12 +1530,34 @@ class SellerPart(models.Model, AsDictModel):
         except AttributeError:
             pass
 
-        if org_currency is None or str(landed.currency) == str(org_currency):
-            return landed
+        if org_currency is None or str(self.unit_cost.currency) == str(org_currency):
+            return self.unit_cost + duty_money + shipping
 
-        from bom.exchange import convert_to_org_currency
+        from bom.exchange import (
+            RATE_KIND_CUSTOMS,
+            RATE_KIND_MARKET,
+            MissingExchangeRate,
+            convert_to_org_currency,
+        )
 
-        return convert_to_org_currency(landed, org_currency)
+        # Missing market/customs rates must not 500 list/BOM pages — treat as
+        # unknown cost (same as no seller). Forms still require rates on save.
+        try:
+            price_org = convert_to_org_currency(
+                self.unit_cost, org_currency, kind=RATE_KIND_MARKET
+            )
+            shipping_org = convert_to_org_currency(
+                shipping, org_currency, kind=RATE_KIND_MARKET
+            )
+            if duty:
+                duty_org = convert_to_org_currency(
+                    duty_money, org_currency, kind=RATE_KIND_CUSTOMS
+                )
+            else:
+                duty_org = Money(0, org_currency)
+        except MissingExchangeRate:
+            return None
+        return price_org + duty_org + shipping_org
 
     def as_dict(self):
         d = super().as_dict()

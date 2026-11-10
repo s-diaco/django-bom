@@ -347,23 +347,38 @@ class TestForms(TestCase):
         self.organization.save()
 
         org_form = OrganizationExchangeRatesForm(
-            {"rate_USD": "42,000", "rate_EUR": "45,000"},
+            {
+                "rate_USD": "42,000",
+                "customs_rate_USD": "28,000",
+                "rate_EUR": "45,000",
+                "customs_rate_EUR": "30,000",
+            },
             organization=self.organization,
         )
         self.assertTrue(org_form.is_valid(), org_form.errors)
         self.assertEqual(org_form.cleaned_data["rate_USD"], Decimal("42000"))
+        self.assertEqual(
+            org_form.cleaned_data["customs_rate_USD"], Decimal("28000")
+        )
         self.assertEqual(org_form.cleaned_data["rate_EUR"], Decimal("45000"))
         self.assertIn(
             "bom-price-input",
             org_form.fields["rate_USD"].widget.attrs.get("class", ""),
         )
+        self.assertEqual(len(org_form.currency_pairs), 6)
+        self.assertEqual(org_form.currency_pairs[0]["code"], "USD")
 
         single = SingleExchangeRateForm(
-            {"currency": "USD", "rate": "42,000"},
+            {
+                "currency": "USD",
+                "rate": "42,000",
+                "customs_rate": "28,000",
+            },
             organization=self.organization,
         )
         self.assertTrue(single.is_valid(), single.errors)
         self.assertEqual(single.cleaned_data["rate"], Decimal("42000"))
+        self.assertEqual(single.cleaned_data["customs_rate"], Decimal("28000"))
         self.assertIn(
             "bom-price-input",
             single.fields["rate"].widget.attrs.get("class", ""),
@@ -374,11 +389,26 @@ class TestForms(TestCase):
         self.organization.save()
 
         org_form = OrganizationExchangeRatesForm(
-            {"rate_USD": "42,000.5", "rate_EUR": "45,000"},
+            {
+                "rate_USD": "42,000.5",
+                "customs_rate_USD": "28,000",
+                "rate_EUR": "45,000",
+                "customs_rate_EUR": "30,000",
+            },
             organization=self.organization,
         )
         self.assertFalse(org_form.is_valid())
         self.assertIn("rate_USD", org_form.errors)
+
+        org_customs = OrganizationExchangeRatesForm(
+            {
+                "rate_USD": "42,000",
+                "customs_rate_USD": "28,000.5",
+            },
+            organization=self.organization,
+        )
+        self.assertFalse(org_customs.is_valid())
+        self.assertIn("customs_rate_USD", org_customs.errors)
 
         single = SingleExchangeRateForm(
             {"currency": "USD", "rate": "12.34"},
@@ -386,3 +416,50 @@ class TestForms(TestCase):
         )
         self.assertFalse(single.is_valid())
         self.assertIn("rate", single.errors)
+
+    def test_exchange_rate_forms_persist_dual_rates(self):
+        from bom.exchange import (
+            RATE_KIND_CUSTOMS,
+            RATE_KIND_MARKET,
+            get_org_per_unit_rate,
+        )
+
+        self.organization.currency = "IRR"
+        self.organization.save()
+
+        org_form = OrganizationExchangeRatesForm(
+            {
+                "rate_USD": "42,000",
+                "customs_rate_USD": "28,000",
+            },
+            organization=self.organization,
+        )
+        self.assertTrue(org_form.is_valid(), org_form.errors)
+        org_form.save()
+        self.assertEqual(
+            get_org_per_unit_rate("USD", "IRR", kind=RATE_KIND_MARKET),
+            Decimal("42000"),
+        )
+        self.assertEqual(
+            get_org_per_unit_rate("USD", "IRR", kind=RATE_KIND_CUSTOMS),
+            Decimal("28000"),
+        )
+
+        single = SingleExchangeRateForm(
+            {
+                "currency": "EUR",
+                "rate": "45,000",
+                "customs_rate": "30,000",
+            },
+            organization=self.organization,
+        )
+        self.assertTrue(single.is_valid(), single.errors)
+        single.save()
+        self.assertEqual(
+            get_org_per_unit_rate("EUR", "IRR", kind=RATE_KIND_MARKET),
+            Decimal("45000"),
+        )
+        self.assertEqual(
+            get_org_per_unit_rate("EUR", "IRR", kind=RATE_KIND_CUSTOMS),
+            Decimal("30000"),
+        )

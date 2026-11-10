@@ -6,8 +6,10 @@ from unittest.mock import patch
 from django.db import connection
 from django.test import TestCase
 from django.test.utils import CaptureQueriesContext
+from django.urls import reverse
 from djmoney.money import Money
 
+from bom.exchange import RATE_KIND_MARKET, set_org_per_unit_rate
 from bom.helpers import (
     create_a_fake_seller_part,
     create_some_fake_manufacturers,
@@ -186,3 +188,39 @@ class ListUnitCostPrefetchTests(TestCase):
         attach_list_unit_costs(page)
         fresh = PartRevision.objects.get(pk=prod_rev.pk)
         self.assertEqual(list(page)[0].list_unit_cost, fresh.bom_unit_cost)
+
+    def test_materials_search_survives_foreign_sellerpart_missing_customs_rate(self):
+        """Regression: dual FX must not 500 materials search for non-org quotes.
+
+        Pre-fix: USD sellerpart with duty% and only a market rate set raised
+        MissingExchangeRate while attach_list_unit_costs computed landed cost.
+        """
+        self.organization.currency = "IRR"
+        self.organization.save()
+        set_org_per_unit_rate("USD", "IRR", Decimal("42000"), kind=RATE_KIND_MARKET)
+
+        part, rev = self._make_part("8601", "no_bom")
+        mp = part.primary_manufacturer_part
+        sp = create_a_fake_seller_part(
+            self.seller,
+            mp,
+            1,
+            1,
+            Money(12, "USD"),
+            1,
+            Money(0, "USD"),
+        )
+        sp.shipping = Money(1, "USD")
+        sp.customs_duty_percent = Decimal("10")
+        sp.save()
+
+        page = self._prepare([rev])
+        attached = list(page)[0]
+        self.assertIsNone(attached.list_unit_cost)
+
+        self.client.login(username="kasper", password="ghostpassword")
+        response = self.client.get(
+            reverse("bom:materials"),
+            {"q": "860", "action": ""},
+        )
+        self.assertEqual(response.status_code, 200)

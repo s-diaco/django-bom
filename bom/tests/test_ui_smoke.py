@@ -528,6 +528,10 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn('id="fx-rate-panel"', html)
         self.assertIn("formatWholeRate", html)
         self.assertIn("bomPriceInput.formatWhole", html)
+        self.assertIn("fx-customs-rate-value", html)
+        self.assertIn("Market rate", html)
+        self.assertIn("Customs rate", html)
+        self.assertIn('name="customs_rate"', html)
         # Wider fields (m6) — not the old cramped l2 strip.
         self.assertIn("md:col-span-6", html)
         self.assertNotIn("lg:col-span-2", html)
@@ -545,6 +549,11 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn("md:col-span-6", html)
         self.assertNotIn("md:col-span-4", html)
         self.assertIn('name="submit-exchange-rates"', html)
+        # Default org currency is USD — first foreign pair is IRR.
+        self.assertIn('name="rate_IRR"', html)
+        self.assertIn('name="customs_rate_IRR"', html)
+        self.assertIn("Market (Price &amp; Shipping)", html)
+        self.assertIn("Customs (Customs Duty)", html)
         self.assertIn("bom-btn-primary", html)
         self.assertIn("border-border-subtle", html)
 

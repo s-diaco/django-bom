@@ -2705,12 +2705,9 @@ def create_part(request):
 
     title = _("Create new part")
 
-    from bom.exchange import get_all_org_per_unit_rates
+    from bom.exchange import dual_rates_json_ready
 
-    fx_rates = get_all_org_per_unit_rates(organization.currency)
-    exchange_rates_json = dumps(
-        {k: (str(v) if v is not None else None) for k, v in fx_rates.items()}
-    )
+    exchange_rates_json = dumps(dual_rates_json_ready(organization.currency))
     single_exchange_rate_form = SingleExchangeRateForm(organization=organization)
     fx_next_url = reverse("bom:create-part")
 
@@ -3196,12 +3193,9 @@ def add_sellerpart(request, manufacturer_part_id):
             readonly_name=seller_locked,
         )
 
-    from bom.exchange import get_all_org_per_unit_rates
+    from bom.exchange import dual_rates_json_ready
 
-    fx_rates = get_all_org_per_unit_rates(organization.currency)
-    exchange_rates_json = dumps(
-        {k: (str(v) if v is not None else None) for k, v in fx_rates.items()}
-    )
+    exchange_rates_json = dumps(dual_rates_json_ready(organization.currency))
     single_exchange_rate_form = SingleExchangeRateForm(organization=organization)
     fx_next_url = request.build_absolute_uri()
 
@@ -3426,12 +3420,9 @@ def sellerpart_edit(request, sellerpart_id):
             organization=organization,
         )
 
-    from bom.exchange import get_all_org_per_unit_rates
+    from bom.exchange import dual_rates_json_ready
 
-    fx_rates = get_all_org_per_unit_rates(organization.currency)
-    exchange_rates_json = dumps(
-        {k: (str(v) if v is not None else None) for k, v in fx_rates.items()}
-    )
+    exchange_rates_json = dumps(dual_rates_json_ready(organization.currency))
     single_exchange_rate_form = SingleExchangeRateForm(organization=organization)
     fx_next_url = request.build_absolute_uri()
 

@@ -1,10 +1,18 @@
 {% load bom_forms %}
+{% load bom_i18n %}
 
 {% if exchange_rates_form.non_field_errors %}
     {{ exchange_rates_form.non_field_errors }}
 {% endif %}
-<div class="row gap-y-5">
-    {% for field in exchange_rates_form %}
-        {{ field|bom_form:'s12 m6' }}
+<div class="space-y-5">
+    {% for pair in exchange_rates_form.currency_pairs %}
+        <div class="row gap-y-5">
+            {{ pair.market|bom_form:'s12 m6' }}
+            {{ pair.customs|bom_form:'s12 m6' }}
+        </div>
+    {% empty %}
+        <p class="mb-0 text-sm text-ink-muted">
+            {% trans "No foreign currencies to configure for this organization currency." %}
+        </p>
     {% endfor %}
 </div>

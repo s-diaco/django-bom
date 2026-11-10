@@ -1,17 +1,29 @@
 {% load bom_forms %}
 {% load bom_i18n %}
 
-{# Rate hint shown when quote currency differs from org currency. #}
+{# Dual rate hint when quote currency differs from org currency. #}
 <div id="fx-rate-panel" class="col s12 hidden">
-    <p class="mb-0 rounded-md border border-border-subtle bg-surface-muted px-3 py-3 text-sm text-ink">
-        {% trans "Current rate" %}:
-        <strong id="fx-rate-value" class="font-semibold tabular-nums" dir="ltr">—</strong>
-        <span class="text-ink-muted">
-            (<span dir="ltr">{{ organization.currency|currency_label }} / <span id="fx-rate-currency"></span></span>)
-        </span>
-        <span class="text-ink-subtle">—</span>
-        <a href="{% url 'bom:exchange-rates' %}">{% trans "All rates" %}</a>
-        <span class="text-ink-subtle">|</span>
-        <a class="modal-trigger" href="#modal-update-fx">{% trans "Update this rate" %}</a>
-    </p>
+    <div class="rounded-md border border-border-subtle bg-surface-muted px-3 py-3 text-sm text-ink">
+        <p class="mb-2">
+            {% trans "Market rate" %}
+            <span class="text-ink-muted">({% trans "Price & Shipping" %})</span>:
+            <strong id="fx-rate-value" class="font-semibold tabular-nums" dir="ltr">—</strong>
+            <span class="text-ink-muted">
+                (<span dir="ltr">{{ organization.currency|currency_label }} / <span id="fx-rate-currency"></span></span>)
+            </span>
+        </p>
+        <p class="mb-2">
+            {% trans "Customs rate" %}
+            <span class="text-ink-muted">({% trans "Customs Duty" %})</span>:
+            <strong id="fx-customs-rate-value" class="font-semibold tabular-nums" dir="ltr">—</strong>
+            <span class="text-ink-muted">
+                (<span dir="ltr">{{ organization.currency|currency_label }} / <span id="fx-customs-rate-currency"></span></span>)
+            </span>
+        </p>
+        <p class="mb-0 text-ink-subtle">
+            <a href="{% url 'bom:exchange-rates' %}">{% trans "All rates" %}</a>
+            <span class="text-ink-subtle">|</span>
+            <a class="modal-trigger" href="#modal-update-fx">{% trans "Update these rates" %}</a>
+        </p>
+    </div>
 </div>
