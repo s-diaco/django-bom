@@ -615,6 +615,7 @@ class SellerPartForm(forms.ModelForm):
             max_digits=19,
             decimal_places=UNIT_COST_DECIMAL_PLACES,
             min_value=0,
+            help_text=_("Converted with the market exchange rate."),
         )
         self.base_fields["shipping"] = GroupedDecimalField(
             required=False,
@@ -623,6 +624,7 @@ class SellerPartForm(forms.ModelForm):
             max_digits=19,
             decimal_places=UNIT_COST_DECIMAL_PLACES,
             min_value=0,
+            help_text=_("Converted with the market exchange rate."),
         )
         self.base_fields["customs_duty_percent"] = GroupedDecimalField(
             required=False,
@@ -631,6 +633,7 @@ class SellerPartForm(forms.ModelForm):
             max_digits=6,
             decimal_places=2,
             min_value=0,
+            help_text=_("Converted with the customs exchange rate."),
         )
 
         instance = kwargs.get("instance")
@@ -680,13 +683,29 @@ class SellerPartForm(forms.ModelForm):
 
         org_currency = self.organization.currency if self.organization else currency
         if str(currency) != str(org_currency):
-            from bom.exchange import get_org_per_unit_rate
+            from bom.exchange import (
+                RATE_KIND_CUSTOMS,
+                RATE_KIND_MARKET,
+                get_org_per_unit_rate,
+            )
 
-            if get_org_per_unit_rate(currency, org_currency) is None:
+            if get_org_per_unit_rate(
+                currency, org_currency, kind=RATE_KIND_MARKET
+            ) is None:
                 raise forms.ValidationError(
                     _(
-                        "No exchange rate for {currency}. "
-                        "Set it under Settings → Organization."
+                        "No market exchange rate for {currency}. "
+                        "Set it under Settings → Exchange Rates."
+                    ).format(currency=currency_label(currency)),
+                    code="invalid",
+                )
+            if customs_duty_percent and get_org_per_unit_rate(
+                currency, org_currency, kind=RATE_KIND_CUSTOMS
+            ) is None:
+                raise forms.ValidationError(
+                    _(
+                        "No customs exchange rate for {currency}. "
+                        "Set it under Settings → Exchange Rates."
                     ).format(currency=currency_label(currency)),
                     code="invalid",
                 )
@@ -723,51 +742,103 @@ def _whole_exchange_rate(value):
 
 
 class OrganizationExchangeRatesForm(forms.Form):
-    """Edit manual FX rates: organization currency per 1 unit of foreign currency."""
+    """Edit market + customs FX rates (org currency per 1 foreign unit)."""
+
+    # Currency field pairs for the template (market | customs side by side).
+    currency_pairs = None
 
     def __init__(self, *args, organization=None, **kwargs):
         self.organization = organization
         super().__init__(*args, **kwargs)
+        from bom.exchange import RATE_KIND_CUSTOMS, RATE_KIND_MARKET, get_org_per_unit_rate
+
         org_currency = organization.currency if organization else "USD"
+        pairs = []
         for code in IMPORT_CURRENCY_CODES:
             if code == org_currency:
                 continue
-            from bom.exchange import get_org_per_unit_rate
-
-            existing = get_org_per_unit_rate(code, org_currency)
-            self.fields[f"rate_{code}"] = GroupedDecimalField(
+            market_name = f"rate_{code}"
+            customs_name = f"customs_rate_{code}"
+            market = get_org_per_unit_rate(
+                code, org_currency, kind=RATE_KIND_MARKET
+            )
+            customs = get_org_per_unit_rate(
+                code, org_currency, kind=RATE_KIND_CUSTOMS
+            )
+            self.fields[market_name] = GroupedDecimalField(
                 required=False,
-                label=_("{org} per 1 {code}").format(
-                    org=currency_label(org_currency),
+                label=_("{code} — Market (Price & Shipping)").format(
                     code=currency_label(code),
                 ),
-                initial=_whole_exchange_rate(existing),
+                initial=_whole_exchange_rate(market),
                 min_value=Decimal("1"),
                 max_digits=19,
                 decimal_places=0,
+                help_text=_("{org} per 1 {code}").format(
+                    org=currency_label(org_currency),
+                    code=currency_label(code),
+                ),
             )
+            self.fields[customs_name] = GroupedDecimalField(
+                required=False,
+                label=_("{code} — Customs (Customs Duty)").format(
+                    code=currency_label(code),
+                ),
+                initial=_whole_exchange_rate(customs),
+                min_value=Decimal("1"),
+                max_digits=19,
+                decimal_places=0,
+                help_text=_("{org} per 1 {code}").format(
+                    org=currency_label(org_currency),
+                    code=currency_label(code),
+                ),
+            )
+            pairs.append(
+                {
+                    "code": code,
+                    "market": self[market_name],
+                    "customs": self[customs_name],
+                }
+            )
+        self.currency_pairs = pairs
 
     def save(self):
-        from bom.exchange import set_org_per_unit_rate
+        from bom.exchange import (
+            RATE_KIND_CUSTOMS,
+            RATE_KIND_MARKET,
+            set_org_per_unit_rate,
+        )
 
         org_currency = self.organization.currency
         for name, value in self.cleaned_data.items():
-            if not name.startswith("rate_"):
+            if name.startswith("customs_rate_"):
+                code = name[len("customs_rate_") :]
+                kind = RATE_KIND_CUSTOMS
+            elif name.startswith("rate_"):
+                code = name[len("rate_") :]
+                kind = RATE_KIND_MARKET
+            else:
                 continue
-            code = name[len("rate_") :]
             set_org_per_unit_rate(
-                code, org_currency, _whole_exchange_rate(value)
+                code, org_currency, _whole_exchange_rate(value), kind=kind
             )
 
 
 class SingleExchangeRateForm(forms.Form):
-    """Update one foreign currency rate (org currency per 1 foreign unit)."""
+    """Update market + customs rates for one foreign currency."""
 
     currency = forms.ChoiceField(label=_("Currency"))
     rate = GroupedDecimalField(
-        label=_("Rate"),
+        label=_("Market rate (Price & Shipping)"),
         min_value=Decimal("1"),
         required=True,
+        max_digits=19,
+        decimal_places=0,
+    )
+    customs_rate = GroupedDecimalField(
+        label=_("Customs rate (Customs Duty)"),
+        min_value=Decimal("1"),
+        required=False,
         max_digits=19,
         decimal_places=0,
     )
@@ -782,18 +853,36 @@ class SingleExchangeRateForm(forms.Form):
             if code != org_currency
         ]
         self.fields["currency"].choices = choices
-        self.fields["rate"].label = _("{org} per 1 foreign unit").format(
+        per_unit = _("{org} per 1 foreign unit").format(
             org=currency_label(org_currency)
         )
+        self.fields["rate"].help_text = per_unit
+        self.fields["customs_rate"].help_text = per_unit
 
     def save(self):
-        from bom.exchange import set_org_per_unit_rate
-
-        set_org_per_unit_rate(
-            self.cleaned_data["currency"],
-            self.organization.currency,
-            _whole_exchange_rate(self.cleaned_data["rate"]),
+        from bom.exchange import (
+            RATE_KIND_CUSTOMS,
+            RATE_KIND_MARKET,
+            set_org_per_unit_rate,
         )
+
+        code = self.cleaned_data["currency"]
+        org_currency = self.organization.currency
+        set_org_per_unit_rate(
+            code,
+            org_currency,
+            _whole_exchange_rate(self.cleaned_data["rate"]),
+            kind=RATE_KIND_MARKET,
+        )
+        customs = self.cleaned_data.get("customs_rate")
+        if customs is not None and customs != "":
+            set_org_per_unit_rate(
+                code,
+                org_currency,
+                _whole_exchange_rate(customs),
+                kind=RATE_KIND_CUSTOMS,
+            )
+
 
 
 class CustomerForm(forms.ModelForm):
