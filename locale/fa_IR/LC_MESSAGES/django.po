@@ -360,7 +360,7 @@ msgid "Subpart part number"
 msgstr "کد زیرشاخه"
 
 msgid "Parent part number"
-msgstr "کد قطعه والد"
+msgstr "کد متریال والد"
 
 
 #, python-brace-format
@@ -376,16 +376,16 @@ msgid " added to tree {part}"
 msgstr " به درخت {part} افزوده شد"
 
 msgid "Part ID"
-msgstr "شناسه قطعه"
+msgstr "شناسه متریال"
 
 msgid ""
 "Enter the CRM part number (left side of «کد BOM»). Use Load revisions to "
 "list every CRM BoM revision for that part, then import the one you pick."
-msgstr "شماره قطعه CRM را وارد کنید (سمت چپ «کد BOM»). با «بارگذاری ورژن‌ها» همه ورژن‌های CRM آن قطعه را ببینید و یکی را دریافت متریال کنید."
+msgstr "شماره متریال CRM را وارد کنید (سمت چپ «کد BOM»). با «بارگذاری ورژن‌ها» همه ورژن‌های CRM آن متریال را ببینید و یکی را دریافت متریال کنید."
 
 
 msgid "Part ID + Revision"
-msgstr "شناسه قطعه + ورژن"
+msgstr "شناسه متریال + ورژن"
 
 msgid ""
 "Optional shortcut: paste PN/rev (e.g. 1155F229/A2*10-C) to skip the revision "
@@ -398,7 +398,7 @@ msgstr "شناسه BoM در CRM"
 msgid ""
 "Optional when Part ID / Part ID + Revision is set. Still accepted as a "
 "manual fallback."
-msgstr "در صورت پر بودن شناسه قطعه / شناسه+ورژن اختیاری است. همچنان به‌عنوان پشتیبان دستی پذیرفته می‌شود."
+msgstr "در صورت پر بودن شناسه متریال / شناسه+ورژن اختیاری است. همچنان به‌عنوان پشتیبان دستی پذیرفته می‌شود."
 
 msgid "CRM BoM URL"
 msgstr "آدرس BoM در CRM"
@@ -409,7 +409,7 @@ msgid ""
 msgstr "پشتیبان اختیاری. آدرس Shell/Edit را بچسبانید؛ اگر شناسه خالی باشد از آدرس استخراج می‌شود."
 
 msgid "Filled from Part ID / Part ID + Revision / revision pick."
-msgstr "از شناسه قطعه / شناسه+ورژن / انتخاب ورژن پر می‌شود."
+msgstr "از شناسه متریال / شناسه+ورژن / انتخاب ورژن پر می‌شود."
 
 
 msgid "Parent revision"
@@ -431,22 +431,22 @@ msgstr "مرور فهرست BoMهای CRM"
 
 msgid ""
 "Load the CRM BoM list so you can pick a row (useful without a parent part)."
-msgstr "فهرست BoMهای CRM را بارگذاری کنید تا یک ردیف انتخاب کنید (مفید وقتی قطعه والد ندارید)."
+msgstr "فهرست BoMهای CRM را بارگذاری کنید تا یک ردیف انتخاب کنید (مفید وقتی متریال والد ندارید)."
 
 msgid "Dry run (parse only, no database writes)"
 msgstr "اجرای آزمایشی (فقط تجزیه، بدون نوشتن در پایگاه داده)"
 
 msgid "Part ID + Revision must include a part number."
-msgstr "شناسه قطعه + ورژن باید شامل شماره قطعه باشد."
+msgstr "شناسه متریال + ورژن باید شامل شماره متریال باشد."
 
 msgid "Enter a Part ID to load CRM revisions."
-msgstr "برای بارگذاری ورژن‌های CRM یک شناسه قطعه وارد کنید."
+msgstr "برای بارگذاری ورژن‌های CRM یک شناسه متریال وارد کنید."
 
 msgid ""
 "Enter a Part ID (then Load revisions), Part ID + Revision (e.g. 1155F229/"
 "A2*10-C), a CRM BoM id / Edit URL, upload a saved HTML/JSON file, or browse "
 "the CRM BoM list."
-msgstr "شناسه قطعه وارد کنید (سپس بارگذاری ورژن‌ها)، یا شناسه+ورژن (مثلاً 1155F229/A2*10-C)، یا شناسه/آدرس BoM در CRM، یا فایل HTML/JSON ذخیره‌شده، یا فهرست CRM را مرور کنید."
+msgstr "شناسه متریال وارد کنید (سپس بارگذاری ورژن‌ها)، یا شناسه+ورژن (مثلاً 1155F229/A2*10-C)، یا شناسه/آدرس BoM در CRM، یا فایل HTML/JSON ذخیره‌شده، یا فهرست CRM را مرور کنید."
 
 msgid "Cancel"
 msgstr "انصراف"
@@ -925,13 +925,13 @@ msgstr ""
 msgid ""
 "Pull a PAC Engineering BoM from the on-LAN SystemGroup CRM into Lithium. "
 "Missing parts and revisions are created; existing ones are reused."
-msgstr "یک BoM مهندسی PAC را از CRM سیستم‌گروپ در شبکه داخلی به لیتیوم بیاورید. قطعات و ورژن‌های موجود بازاستفاده می‌شوند؛ موارد نبوده ایجاد می‌شوند."
+msgstr "یک BoM مهندسی PAC را از CRM سیستم‌گروپ در شبکه داخلی به لیتیوم بیاورید. متریال‌ها و ورژن‌های موجود بازاستفاده می‌شوند؛ موارد نبوده ایجاد می‌شوند."
 
 msgid ""
 "Enter a Part ID, load its CRM revisions, pick one, and import. Live CRM "
 "login uses your SystemGroup username/password from Settings → User, and the "
 "CRM base URL from Settings → Organization."
-msgstr "شناسه قطعه را وارد کنید، ورژن‌های CRM را بارگذاری کنید، یکی را انتخاب و دریافت متریال کنید. ورود زنده CRM با نام کاربری/رمز SystemGroup در تنظیمات کاربر و آدرس پایه CRM در تنظیمات سازمان انجام می‌شود."
+msgstr "شناسه متریال را وارد کنید، ورژن‌های CRM را بارگذاری کنید، یکی را انتخاب و دریافت متریال کنید. ورود زنده CRM با نام کاربری/رمز SystemGroup در تنظیمات کاربر و آدرس پایه CRM در تنظیمات سازمان انجام می‌شود."
 
 msgid "Existing BoM found"
 msgstr "BoM موجود پیدا شد"
@@ -995,7 +995,7 @@ msgstr "ترجیحی"
 msgid ""
 "Part ID only — load every CRM revision for that part, then import the one "
 "you select."
-msgstr "فقط شناسه قطعه — همه ورژن‌های CRM آن قطعه را بارگذاری کنید، سپس یکی را دریافت متریال کنید."
+msgstr "فقط شناسه متریال — همه ورژن‌های CRM آن متریال را بارگذاری کنید، سپس یکی را دریافت متریال کنید."
 
 msgid ""
 "Shortcut: part-id/revision (matches CRM «کد BOM») with Get the BoM below."
@@ -1012,8 +1012,8 @@ msgid ""
 "Used for the parent part when it is created. New child parts use the first "
 "raw-material type (has BoM off). Existing parts keep their current type."
 msgstr ""
-"برای قطعهٔ والد هنگام ایجاد استفاده می‌شود. قطعات فرزند جدید از اولین نوع "
-"مواد اولیه (بدون BoM) استفاده می‌کنند. قطعات موجود نوع فعلی خود را حفظ "
+"برای متریال والد هنگام ایجاد استفاده می‌شود. متریال‌های فرزند جدید از اولین نوع "
+"مواد اولیه (بدون BoM) استفاده می‌کنند. متریال‌های موجود نوع فعلی خود را حفظ "
 "می‌کنند."
 
 msgid "Select a Material Type."
@@ -1202,7 +1202,7 @@ msgid "Add price for %(name)s"
 msgstr "افزودن قیمت برای %(name)s"
 
 msgid "No customer prices for this part yet."
-msgstr "هنوز قیمت مشتری برای این قطعه ثبت نشده است."
+msgstr "هنوز قیمت مشتری برای این متریال ثبت نشده است."
 
 msgid "Edit the material specifications, or"
 msgstr "ویرایش مشخصات متریال، یا"
@@ -1646,7 +1646,7 @@ msgstr "چند BoM در CRM مطابقت داشت — ورژنی را پایین
 msgid ""
 "This part/revision already has a BoM. Keep the existing tree (append "
 "imported lines) or replace it."
-msgstr "این قطعه/ورژن از قبل BoM دارد. درخت موجود را نگه دارید (خطوط جدید اضافه شود) یا جایگزین کنید."
+msgstr "این متریال/ورژن از قبل BoM دارد. درخت موجود را نگه دارید (خطوط جدید اضافه شود) یا جایگزین کنید."
 
 msgid "Dry run completed; nothing was written."
 msgstr "اجرای آزمایشی تمام شد؛ چیزی نوشته نشد."
