@@ -567,7 +567,7 @@ msgstr "خانه"
 
 #: bom/templates/bom/home.html:23
 msgid "Import material"
-msgstr "وارد کردن متریال"
+msgstr "دریافت متریال"
 
 #: bom/templates/bom/home.html:26
 msgid "Jump to part"
