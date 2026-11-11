@@ -158,6 +158,13 @@
                         <div class="mb-4 text-sm text-red-700">{{ form.non_field_errors }}</div>
                     {% endif %}
 
+                    <div class="mb-1">
+                        <label class="bom-label" for="{{ form.material.id_for_label }}">{{ form.material.label }}</label>
+                        {{ form.material }}
+                        {% if form.material.errors %}<p class="bom-error">{{ form.material.errors.0 }}</p>{% endif %}
+                    </div>
+                    <p class="bom-help mb-4">{{ form.material.help_text }}</p>
+
                     {# Part ID + Load revisions: button lines up with the input, not the help text #}
                     <div class="mb-1 flex flex-wrap items-end gap-3">
                         <div class="min-w-0 flex-1 basis-64">
@@ -180,13 +187,6 @@
                     <p class="bom-help mb-4">
                         {% trans "Shortcut: part-id/revision (matches CRM «کد BOM») with Get the BoM below." %}
                     </p>
-
-                    <div class="mb-1">
-                        <label class="bom-label" for="{{ form.material.id_for_label }}">{{ form.material.label }}</label>
-                        {{ form.material }}
-                        {% if form.material.errors %}<p class="bom-error">{{ form.material.errors.0 }}</p>{% endif %}
-                    </div>
-                    <p class="bom-help mb-4">{{ form.material.help_text }}</p>
 
                     {{ form.parent_part_number }}
                     {{ form.parent_revision }}
