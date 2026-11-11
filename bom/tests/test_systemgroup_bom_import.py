@@ -984,8 +984,14 @@ class SystemGroupAdminGuiTests(TestCase):
         profile = self.user.bom_profile()
         profile.systemgroup_username = "crm-user"
         profile.systemgroup_password = "crm-pass"
+        # Keep assertions in English; default LANGUAGE_CODE is fa-IR.
+        profile.language = "en"
         profile.save(
-            update_fields=["systemgroup_username", "systemgroup_password"]
+            update_fields=[
+                "systemgroup_username",
+                "systemgroup_password",
+                "language",
+            ]
         )
         self.client = Client()
         self.client.login(username="kasper", password="ghostpassword")
@@ -999,7 +1005,10 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertContains(response, "Load revisions")
         self.assertContains(response, "Part ID + Revision")
         self.assertContains(response, "Get the BoM")
+        self.assertContains(response, "More options")
+        self.assertContains(response, "CRM BoM id")
         self.assertContains(response, "Settings → Organization")
+        self.assertContains(response, "<details")
 
     def test_load_revisions_shows_pick_list(self):
         matches = parse_bom_list_document(
