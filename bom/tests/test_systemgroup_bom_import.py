@@ -620,6 +620,40 @@ class SystemGroupImportSemanticsTests(TestCase):
         self.assertIsNotNone(parent.latest())
         self.assertGreaterEqual(parent.latest().assembly.subparts.count(), 1)
 
+    def test_import_applies_material_to_new_revisions_only(self):
+        self.organization.ensure_default_product_types()
+        product_code = next(
+            pt.code for pt in self.organization.product_types.all() if pt.has_bom
+        )
+        raw_code = next(
+            pt.code
+            for pt in self.organization.product_types.all()
+            if not pt.has_bom
+        )
+        # Existing child keeps its material; new child gets the import default.
+        existing = Part.from_part_number("200-3333-00", self.organization)
+        existing_rev = existing.latest()
+        existing_rev.material = raw_code
+        existing_rev.save(update_fields=["material"])
+
+        bom = parse_bom_document(
+            (FIXTURES / "bom_edit.html").read_text(encoding="utf-8")
+        )
+        result = import_parsed_bom(
+            self.organization,
+            bom,
+            parent_part=self.parent,
+            existing_bom_action="keep",
+            material=product_code,
+        )
+        self.assertTrue(result.ok, result.errors)
+
+        existing_rev.refresh_from_db()
+        self.assertEqual(existing_rev.material, raw_code)
+
+        new_part = Part.from_part_number("500-7777-00", self.organization)
+        self.assertEqual(new_part.latest().material, product_code)
+
     def test_dry_run_does_not_write(self):
         before = Part.objects.filter(organization=self.organization).count()
         bom = parse_bom_document(
@@ -1197,24 +1231,32 @@ class SystemGroupAdminGuiTests(TestCase):
         form = SystemGroupBomImportForm(
             data={
                 "crm_url": "http://192.168.3.193/Shell.aspx?page=PAC/Engineering/BomPages/Edit.aspx?id=39477",
-            }
+            },
+            organization=self.organization,
         )
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.cleaned_data["bom_id"], "39477")
 
     def test_form_allows_parent_part_without_bom_id(self):
-        form = SystemGroupBomImportForm(data={"parent_part_number": "500-9001-00"})
+        form = SystemGroupBomImportForm(
+            data={"parent_part_number": "500-9001-00"},
+            organization=self.organization,
+        )
         self.assertTrue(form.is_valid(), form.errors)
 
     def test_form_part_id_revision_splits_pn_rev(self):
-        form = SystemGroupBomImportForm(data={"part_id_revision": "1155F229/A2*10-C"})
+        form = SystemGroupBomImportForm(
+            data={"part_id_revision": "1155F229/A2*10-C"},
+            organization=self.organization,
+        )
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.cleaned_data["parent_part_number"], "1155F229")
         self.assertEqual(form.cleaned_data["parent_revision"], "A2*10-C")
 
     def test_form_part_id_with_load_revisions(self):
         form = SystemGroupBomImportForm(
-            data={"part_id": "1155F229", "load_revisions": "1"}
+            data={"part_id": "1155F229", "load_revisions": "1"},
+            organization=self.organization,
         )
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.cleaned_data["part_id"], "1155F229")
@@ -1222,8 +1264,30 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertTrue(form.cleaned_data["load_revisions"])
 
     def test_form_allows_browse_list_alone(self):
-        form = SystemGroupBomImportForm(data={"browse_list": True})
+        form = SystemGroupBomImportForm(
+            data={"browse_list": True},
+            organization=self.organization,
+        )
         self.assertTrue(form.is_valid(), form.errors)
+
+    def test_form_defaults_material_to_first_has_bom_type(self):
+        self.organization.ensure_default_product_types()
+        expected = next(
+            pt.code for pt in self.organization.product_types.all() if pt.has_bom
+        )
+        form = SystemGroupBomImportForm(
+            data={"part_id_revision": "1155F229/A2"},
+            organization=self.organization,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["material"], expected)
+        self.assertEqual(form.fields["material"].initial, expected)
+
+    def test_get_shows_material_type_dropdown(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Material Type")
+        self.assertContains(response, 'name="material"')
 
     def test_post_ambiguous_list_shows_pick_list(self):
         list_json = (FIXTURES / "bom_list.json").read_text(encoding="utf-8")

@@ -1008,6 +1008,16 @@ msgstr "دریافت BoM"
 msgid "More options"
 msgstr "گزینه‌های بیشتر"
 
+msgid ""
+"Applied to newly created materials and revisions. Existing ones keep their "
+"current type."
+msgstr ""
+"روی مواد و ورژن‌های تازه‌ساخته‌شده اعمال می‌شود. موارد موجود نوع فعلی خود را "
+"حفظ می‌کنند."
+
+msgid "Select a Material Type."
+msgstr "یک نوع متریال انتخاب کنید."
+
 
 #, python-format
 msgid "Manufacturer / %(name)s"

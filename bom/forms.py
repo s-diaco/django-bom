@@ -2674,6 +2674,8 @@ class BOMCSVForm(forms.Form):
         self.parent_part = kwargs.pop("parent_part", None)
         # Optional: attach under a specific revision (not necessarily latest()).
         self.parent_part_revision = kwargs.pop("parent_part_revision", None)
+        # Applied only when creating a new PartRevision (not when updating).
+        self.default_material = kwargs.pop("default_material", None)
         super(BOMCSVForm, self).__init__(*args, **kwargs)
 
     def clean(self):
@@ -2979,6 +2981,12 @@ class BOMCSVForm(forms.Form):
 
                 if not part_dict["revision"]:
                     part_dict["revision"] = 1
+                # CSV rarely includes material. Preserve existing; default only for new.
+                if not part_dict.get("material"):
+                    if existing_part_revision is not None:
+                        part_dict["material"] = existing_part_revision.material or ""
+                    elif self.default_material:
+                        part_dict["material"] = self.default_material
                 part_revision_form = PartRevisionForm(
                     part_dict,
                     instance=existing_part_revision,

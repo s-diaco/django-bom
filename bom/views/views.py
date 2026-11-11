@@ -2602,6 +2602,7 @@ def import_systemgroup_bom(request):
     form = SystemGroupBomImportForm(
         request.POST or None,
         request.FILES or None,
+        organization=organization,
         initial={
             "part_id": request.GET.get("part_id", get_parent),
             "part_id_revision": request.GET.get("part_id_revision", initial_pir),
@@ -2609,6 +2610,7 @@ def import_systemgroup_bom(request):
             "parent_revision": get_rev,
             "bom_id": request.GET.get("bom_id", ""),
             "crm_url": request.GET.get("crm_url", ""),
+            "material": request.GET.get("material", ""),
         },
     )
 
@@ -2679,6 +2681,7 @@ def import_systemgroup_bom(request):
                     dry_run=bool(cleaned.get("dry_run")),
                     from_list=bool(cleaned.get("browse_list")),
                     existing_bom_action=cleaned.get("existing_bom_action"),
+                    material=cleaned.get("material") or None,
                     user_meta=profile,
                 )
             except AmbiguousBomMatch as exc:
