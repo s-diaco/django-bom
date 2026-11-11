@@ -96,15 +96,15 @@ msgid ""
 "When enabled, organization admins who have saved their own SystemGroup "
 "username/password under User settings can import BoMs. Users without "
 "credentials cannot import. Also set the CRM base URL below."
-msgstr "با فعال‌سازی، مدیران سازمانی که نام کاربری/رمز SystemGroup را در تنظیمات کاربر ذخیره کرده‌اند می‌توانند BoM درون‌ریزی کنند. بدون اعتبارنامه امکان درون‌ریزی نیست. آدرس پایه CRM را نیز پایین تنظیم کنید."
+msgstr "با فعال‌سازی، مدیران سازمانی که نام کاربری/رمز SystemGroup را در تنظیمات کاربر ذخیره کرده‌اند می‌توانند BoM دریافت متریال کنند. بدون اعتبارنامه امکان دریافت متریال نیست. آدرس پایه CRM را نیز پایین تنظیم کنید."
 
 msgid ""
 "On-LAN SystemGroup CRM host, e.g. http://192.168.3.193/. Required for live "
 "BoM import when import is enabled."
-msgstr "میزبان CRM سیستم‌گروپ در شبکه داخلی، مثلاً http://192.168.3.193/. برای درون‌ریزی زنده هنگام فعال بودن درون‌ریزی لازم است."
+msgstr "میزبان CRM سیستم‌گروپ در شبکه داخلی، مثلاً http://192.168.3.193/. برای دریافت متریال زنده هنگام فعال بودن دریافت متریال لازم است."
 
 msgid "Enable SystemGroup BoM import"
-msgstr "فعال‌سازی درون‌ریزی BoM از SystemGroup"
+msgstr "فعال‌سازی دریافت متریال BoM از SystemGroup"
 
 msgid "SystemGroup CRM base URL"
 msgstr "آدرس پایه CRM سیستم‌گروپ"
@@ -381,7 +381,7 @@ msgstr "شناسه قطعه"
 msgid ""
 "Enter the CRM part number (left side of «کد BOM»). Use Load revisions to "
 "list every CRM BoM revision for that part, then import the one you pick."
-msgstr "شماره قطعه CRM را وارد کنید (سمت چپ «کد BOM»). با «بارگذاری ورژن‌ها» همه ورژن‌های CRM آن قطعه را ببینید و یکی را درون‌ریزی کنید."
+msgstr "شماره قطعه CRM را وارد کنید (سمت چپ «کد BOM»). با «بارگذاری ورژن‌ها» همه ورژن‌های CRM آن قطعه را ببینید و یکی را دریافت متریال کنید."
 
 
 msgid "Part ID + Revision"
@@ -424,7 +424,7 @@ msgstr "فایل ذخیره‌شده Edit (HTML/JSON)"
 msgid ""
 "Optional offline import. Skips CRM network when provided. Live fetch uses "
 "your Settings → User credentials and the organization CRM base URL."
-msgstr "درون‌ریزی آفلاین اختیاری. در صورت ارائه، به شبکه CRM وصل نمی‌شود. دریافت زنده از اعتبارنامه تنظیمات کاربر و آدرس پایه CRM سازمان استفاده می‌کند."
+msgstr "دریافت متریال آفلاین اختیاری. در صورت ارائه، به شبکه CRM وصل نمی‌شود. دریافت زنده از اعتبارنامه تنظیمات کاربر و آدرس پایه CRM سازمان استفاده می‌کند."
 
 msgid "Browse CRM BoM list"
 msgstr "مرور فهرست BoMهای CRM"
@@ -827,7 +827,7 @@ msgid "Upload bill of materials CSV (BOM)"
 msgstr "آپلود فایل CSV درخت محصول (BOM)"
 
 msgid "Import SystemGroup BoM"
-msgstr "درون‌ریزی BoM از SystemGroup"
+msgstr "دریافت متریال BoM از SystemGroup"
 
 
 #, python-format
@@ -931,7 +931,7 @@ msgid ""
 "Enter a Part ID, load its CRM revisions, pick one, and import. Live CRM "
 "login uses your SystemGroup username/password from Settings → User, and the "
 "CRM base URL from Settings → Organization."
-msgstr "شناسه قطعه را وارد کنید، ورژن‌های CRM را بارگذاری کنید، یکی را انتخاب و درون‌ریزی کنید. ورود زنده CRM با نام کاربری/رمز SystemGroup در تنظیمات کاربر و آدرس پایه CRM در تنظیمات سازمان انجام می‌شود."
+msgstr "شناسه قطعه را وارد کنید، ورژن‌های CRM را بارگذاری کنید، یکی را انتخاب و دریافت متریال کنید. ورود زنده CRM با نام کاربری/رمز SystemGroup در تنظیمات کاربر و آدرس پایه CRM در تنظیمات سازمان انجام می‌شود."
 
 msgid "Existing BoM found"
 msgstr "BoM موجود پیدا شد"
@@ -946,14 +946,14 @@ msgid ""
 "                            "
 msgstr ""
 "\n"
-"                            %(pn)s ورژن %(rev)s هم‌اکنون %(n)s ردیف دارد. درخت فعلی را نگه دارید و درون‌ریزی را اضافه کنید، یا با BoM از CRM جایگزین کنید.\n"
+"                            %(pn)s ورژن %(rev)s هم‌اکنون %(n)s ردیف دارد. درخت فعلی را نگه دارید و دریافت متریال را اضافه کنید، یا با BoM از CRM جایگزین کنید.\n"
 "                            "
 
 msgid "Keep existing BoM"
 msgstr "نگه‌داشتن BoM موجود"
 
 msgid "Replace with imported BoM"
-msgstr "جایگزینی با BoM درون‌ریزی‌شده"
+msgstr "جایگزینی با BoM دریافت متریال‌شده"
 
 
 #, python-format
@@ -961,7 +961,7 @@ msgid "CRM revisions for “%(q)s”"
 msgstr "ورژن‌های CRM برای «%(q)s»"
 
 msgid "Pick a revision, then import that BoM into Lithium."
-msgstr "یک ورژن انتخاب کنید و آن BoM را به لیتیوم درون‌ریزی کنید."
+msgstr "یک ورژن انتخاب کنید و آن BoM را به لیتیوم دریافت متریال کنید."
 
 msgid "Rev"
 msgstr "ورژن"
@@ -971,7 +971,7 @@ msgstr "شناسه CRM"
 
 
 msgid "Import this BoM"
-msgstr "درون‌ریزی این BoM"
+msgstr "دریافت متریال این BoM"
 
 
 #, python-format
@@ -983,7 +983,7 @@ msgstr "یک BoM از فهرست CRM انتخاب کنید"
 
 
 msgid "Import selected"
-msgstr "درون‌ریزی مورد انتخاب‌شده"
+msgstr "دریافت متریال مورد انتخاب‌شده"
 
 
 msgid "Load revisions"
@@ -995,7 +995,7 @@ msgstr "ترجیحی"
 msgid ""
 "Part ID only — load every CRM revision for that part, then import the one "
 "you select."
-msgstr "فقط شناسه قطعه — همه ورژن‌های CRM آن قطعه را بارگذاری کنید، سپس یکی را درون‌ریزی کنید."
+msgstr "فقط شناسه قطعه — همه ورژن‌های CRM آن قطعه را بارگذاری کنید، سپس یکی را دریافت متریال کنید."
 
 msgid ""
 "Shortcut: part-id/revision (matches CRM «کد BOM») with Get the BoM below."
@@ -1326,11 +1326,11 @@ msgid ""
 "Your personal CRM login for BoM import. Required even when the organization "
 "owner has enabled SystemGroup import. Leave the password blank to keep the "
 "saved value."
-msgstr "ورود شخصی شما به CRM برای درون‌ریزی BoM. حتی وقتی مالک سازمان درون‌ریزی SystemGroup را فعال کرده باشد لازم است. برای نگه داشتن رمز ذخیره‌شده، فیلد رمز را خالی بگذارید."
+msgstr "ورود شخصی شما به CRM برای دریافت متریال BoM. حتی وقتی مالک سازمان دریافت متریال SystemGroup را فعال کرده باشد لازم است. برای نگه داشتن رمز ذخیره‌شده، فیلد رمز را خالی بگذارید."
 
 
 msgid "Organization import is enabled."
-msgstr "درون‌ریزی سازمانی فعال است."
+msgstr "دریافت متریال سازمانی فعال است."
 
 msgid ""
 "Ask the organization owner to set the SystemGroup CRM base URL under "
@@ -1338,15 +1338,15 @@ msgid ""
 msgstr "از مالک سازمان بخواهید آدرس پایه CRM سیستم‌گروپ را در تنظیمات سازمان تنظیم کند."
 
 msgid "Your credentials are set — Import material is available."
-msgstr "اعتبارنامه شما تنظیم شده — «درون‌ریزی متریال» در دسترس است."
+msgstr "اعتبارنامه شما تنظیم شده — «دریافت متریال» در دسترس است."
 
 msgid "Add a username and password below to unlock Import material."
-msgstr "برای فعال شدن «درون‌ریزی متریال»، نام کاربری و رمز را پایین وارد کنید."
+msgstr "برای فعال شدن «دریافت متریال»، نام کاربری و رمز را پایین وارد کنید."
 
 msgid ""
 "Organization import is currently disabled. Ask the organization owner to "
 "enable it under Organization settings."
-msgstr "درون‌ریزی سازمانی فعلاً غیرفعال است. از مالک سازمان بخواهید آن را در تنظیمات سازمان فعال کند."
+msgstr "دریافت متریال سازمانی فعلاً غیرفعال است. از مالک سازمان بخواهید آن را در تنظیمات سازمان فعال کند."
 
 msgid "SystemGroup username"
 msgstr "نام کاربری SystemGroup"
@@ -1620,17 +1620,17 @@ msgstr "دستی"
 msgid ""
 "SystemGroup import is disabled for this organization. Ask the organization "
 "owner to enable it under Settings → Organization."
-msgstr "درون‌ریزی SystemGroup برای این سازمان غیرفعال است. از مالک سازمان بخواهید آن را در تنظیمات ← سازمان فعال کند."
+msgstr "دریافت متریال SystemGroup برای این سازمان غیرفعال است. از مالک سازمان بخواهید آن را در تنظیمات ← سازمان فعال کند."
 
 msgid ""
 "Set the SystemGroup CRM base URL under Settings → Organization before "
 "importing."
-msgstr "پیش از درون‌ریزی، آدرس پایه CRM سیستم‌گروپ را در تنظیمات ← سازمان تنظیم کنید."
+msgstr "پیش از دریافت متریال، آدرس پایه CRM سیستم‌گروپ را در تنظیمات ← سازمان تنظیم کنید."
 
 msgid ""
 "Set your SystemGroup username and password under Settings → User before "
 "importing."
-msgstr "پیش از درون‌ریزی، نام کاربری و رمز SystemGroup را در تنظیمات ← کاربر تنظیم کنید."
+msgstr "پیش از دریافت متریال، نام کاربری و رمز SystemGroup را در تنظیمات ← کاربر تنظیم کنید."
 
 
 #, python-format
@@ -1638,7 +1638,7 @@ msgid "Could not reach the SystemGroup CRM to load revisions: %(error)s"
 msgstr "دسترسی به CRM سیستم‌گروپ برای بارگذاری ورژن‌ها ممکن نشد: %(error)s"
 
 msgid "Select a CRM revision below, then import that BoM."
-msgstr "یک ورژن CRM را پایین انتخاب کنید و آن BoM را درون‌ریزی کنید."
+msgstr "یک ورژن CRM را پایین انتخاب کنید و آن BoM را دریافت متریال کنید."
 
 msgid "Several CRM BoMs matched — pick a revision below, or enter an id/URL."
 msgstr "چند BoM در CRM مطابقت داشت — ورژنی را پایین انتخاب کنید یا شناسه/آدرس وارد کنید."
