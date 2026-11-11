@@ -2599,19 +2599,22 @@ def import_systemgroup_bom(request):
     initial_pir = ""
     if get_parent:
         initial_pir = f"{get_parent}/{get_rev}" if get_rev else get_parent
+    form_initial = {
+        "part_id": request.GET.get("part_id", get_parent),
+        "part_id_revision": request.GET.get("part_id_revision", initial_pir),
+        "parent_part_number": get_parent,
+        "parent_revision": get_rev,
+        "bom_id": request.GET.get("bom_id", ""),
+        "crm_url": request.GET.get("crm_url", ""),
+    }
+    # Only override the form's has_bom default when the query string sets it.
+    if request.GET.get("material"):
+        form_initial["material"] = request.GET.get("material")
     form = SystemGroupBomImportForm(
         request.POST or None,
         request.FILES or None,
         organization=organization,
-        initial={
-            "part_id": request.GET.get("part_id", get_parent),
-            "part_id_revision": request.GET.get("part_id_revision", initial_pir),
-            "parent_part_number": get_parent,
-            "parent_revision": get_rev,
-            "bom_id": request.GET.get("bom_id", ""),
-            "crm_url": request.GET.get("crm_url", ""),
-            "material": request.GET.get("material", ""),
-        },
+        initial=form_initial,
     )
 
     session_key = "systemgroup_import_source"

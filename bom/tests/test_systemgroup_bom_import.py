@@ -1284,10 +1284,17 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertEqual(form.fields["material"].initial, expected)
 
     def test_get_shows_material_type_dropdown(self):
+        self.organization.ensure_default_product_types()
+        expected = next(
+            pt.code for pt in self.organization.product_types.all() if pt.has_bom
+        )
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Material Type")
         self.assertContains(response, 'name="material"')
+        self.assertContains(
+            response, f'<option value="{expected}" selected>', html=False
+        )
 
     def test_post_ambiguous_list_shows_pick_list(self):
         list_json = (FIXTURES / "bom_list.json").read_text(encoding="utf-8")
