@@ -25,6 +25,8 @@ from bom.systemgroup.client import (
     extract_bom_id_from_url,
 )
 from bom.systemgroup.access import (
+    client_for_user_meta,
+    crm_base_url_from_organization,
     user_can_import_systemgroup,
     user_meta_has_systemgroup_credentials,
 )
@@ -923,7 +925,7 @@ class SystemGroupAccessTests(TestCase):
         self.user, self.organization = create_user_and_organization()
         self.profile = self.user.bom_profile()
 
-    def test_requires_org_flag_and_credentials(self):
+    def test_requires_org_flag_url_and_credentials(self):
         self.assertFalse(user_can_import_systemgroup(self.user))
         self.organization.systemgroup_import_enabled = True
         self.organization.save(update_fields=["systemgroup_import_enabled"])
@@ -934,8 +936,37 @@ class SystemGroupAccessTests(TestCase):
             update_fields=["systemgroup_username", "systemgroup_password"]
         )
         self.assertTrue(user_meta_has_systemgroup_credentials(self.profile))
+        self.assertFalse(user_can_import_systemgroup(self.user))
+        self.organization.systemgroup_crm_base_url = "http://crm.example/"
+        self.organization.save(update_fields=["systemgroup_crm_base_url"])
         self.assertTrue(user_can_import_systemgroup(self.user))
         self.assertTrue(self.profile.can_import_systemgroup())
+
+    def test_client_uses_organization_crm_base_url(self):
+        self.organization.systemgroup_crm_base_url = "http://crm.example"
+        self.organization.save(update_fields=["systemgroup_crm_base_url"])
+        self.profile.systemgroup_username = "u"
+        self.profile.systemgroup_password = "p"
+        self.profile.save(
+            update_fields=["systemgroup_username", "systemgroup_password"]
+        )
+        self.assertEqual(
+            crm_base_url_from_organization(self.organization),
+            "http://crm.example/",
+        )
+        client = client_for_user_meta(self.profile)
+        self.assertEqual(client.base_url, "http://crm.example/")
+        self.assertEqual(client.username, "u")
+
+    def test_client_missing_org_url_raises(self):
+        self.profile.systemgroup_username = "u"
+        self.profile.systemgroup_password = "p"
+        self.profile.save(
+            update_fields=["systemgroup_username", "systemgroup_password"]
+        )
+        with self.assertRaises(SystemGroupClientError) as ctx:
+            client_for_user_meta(self.profile)
+        self.assertIn("Settings → Organization", str(ctx.exception))
 
 
 class SystemGroupAdminGuiTests(TestCase):
@@ -943,7 +974,13 @@ class SystemGroupAdminGuiTests(TestCase):
         self.user, self.organization = create_user_and_organization()
         create_some_fake_parts(organization=self.organization)
         self.organization.systemgroup_import_enabled = True
-        self.organization.save(update_fields=["systemgroup_import_enabled"])
+        self.organization.systemgroup_crm_base_url = "http://192.168.3.193/"
+        self.organization.save(
+            update_fields=[
+                "systemgroup_import_enabled",
+                "systemgroup_crm_base_url",
+            ]
+        )
         profile = self.user.bom_profile()
         profile.systemgroup_username = "crm-user"
         profile.systemgroup_password = "crm-pass"
@@ -962,7 +999,7 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertContains(response, "Load revisions")
         self.assertContains(response, "Part ID + Revision")
         self.assertContains(response, "Get the BoM")
-        self.assertContains(response, "CRM_BASE_URL")
+        self.assertContains(response, "Settings → Organization")
 
     def test_load_revisions_shows_pick_list(self):
         matches = parse_bom_list_document(
@@ -1007,8 +1044,8 @@ class SystemGroupAdminGuiTests(TestCase):
         with mock.patch(
             "bom.systemgroup.access.client_for_user_meta",
             side_effect=SystemGroupClientError(
-                "Missing CRM_BASE_URL. Set it in the server environment "
-                "(e.g. .env.prod); never commit secrets."
+                "Missing SystemGroup CRM base URL. Set it under "
+                "Settings → Organization."
             ),
         ):
             response = self.client.post(
@@ -1016,7 +1053,7 @@ class SystemGroupAdminGuiTests(TestCase):
                 {"part_id": "1155F229", "load_revisions": "1"},
             )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Missing CRM_BASE_URL")
+        self.assertContains(response, "Missing SystemGroup CRM base URL")
 
     def test_get_the_bom_unreachable_crm_shows_error_not_500(self):
         with mock.patch(
@@ -1076,7 +1113,18 @@ class SystemGroupAdminGuiTests(TestCase):
         response = self.client.get(self.url)
         self.assertIn(response.status_code, (301, 302, 303, 307, 308))
         self.assertEqual(
-            response.url, reverse("bom:settings", kwargs={"tab_anchor": "user"})
+            response.url,
+            reverse("bom:settings", kwargs={"tab_anchor": "organization"}),
+        )
+
+    def test_import_disabled_without_org_crm_base_url(self):
+        self.organization.systemgroup_crm_base_url = ""
+        self.organization.save(update_fields=["systemgroup_crm_base_url"])
+        response = self.client.get(self.url)
+        self.assertIn(response.status_code, (301, 302, 303, 307, 308))
+        self.assertEqual(
+            response.url,
+            reverse("bom:settings", kwargs={"tab_anchor": "organization"}),
         )
 
     def test_home_hides_import_without_credentials(self):
@@ -1106,6 +1154,27 @@ class SystemGroupAdminGuiTests(TestCase):
         profile.refresh_from_db()
         self.assertEqual(profile.systemgroup_username, "new-crm")
         self.assertEqual(profile.systemgroup_password, "new-secret")
+
+    def test_settings_saves_organization_crm_base_url(self):
+        response = self.client.post(
+            reverse("bom:settings", kwargs={"tab_anchor": "organization"}),
+            {
+                "submit-edit-organization": "1",
+                "name": self.organization.name,
+                "currency": self.organization.currency.code
+                if hasattr(self.organization.currency, "code")
+                else self.organization.currency,
+                "owner": self.user.id,
+                "systemgroup_import_enabled": "on",
+                "systemgroup_crm_base_url": "http://10.0.0.5",
+            },
+        )
+        self.assertIn(response.status_code, (200, 302))
+        self.organization.refresh_from_db()
+        self.assertTrue(self.organization.systemgroup_import_enabled)
+        self.assertEqual(
+            self.organization.systemgroup_crm_base_url, "http://10.0.0.5"
+        )
 
     def test_viewer_denied(self):
         profile = self.user.bom_profile()

@@ -463,7 +463,7 @@ def run_systemgroup_import(
     bom_id (or id extracted from crm_url / resolved from BoM list).
 
     Live credentials: injected ``client``, else ``user_meta`` (GUI per-user
-    username/password + ``CRM_BASE_URL``), else CRM_* env (CLI).
+    username/password + organization CRM base URL), else CRM_* env (CLI).
 
     When ``bom_id`` / ``crm_url`` are omitted and ``from_list`` is true (or a
     parent part number is set), the CRM BoM list is fetched and matched by

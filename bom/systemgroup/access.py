@@ -1,22 +1,34 @@
-"""Who may use SystemGroup BoM import (org flag + per-user CRM credentials)."""
+"""Who may use SystemGroup BoM import (org flag + CRM URL + per-user credentials)."""
 
 from __future__ import annotations
-
-import os
 
 from .client import SystemGroupClient, SystemGroupClientError
 
 
-def crm_base_url_from_env() -> str:
-    """CRM host still comes from the server env (not a per-user secret)."""
-    base = (os.environ.get("CRM_BASE_URL") or "").strip()
+def normalize_crm_base_url(raw: str) -> str:
+    base = (raw or "").strip()
     if not base:
-        raise SystemGroupClientError(
-            "Missing CRM_BASE_URL. Set it in the server environment "
-            "(e.g. .env.prod); never commit secrets."
-        )
+        return ""
     if not base.endswith("/"):
         base += "/"
+    return base
+
+
+def crm_base_url_from_organization(organization) -> str:
+    """CRM host comes from Organization settings (not server env)."""
+    if organization is None:
+        raise SystemGroupClientError(
+            "Missing SystemGroup CRM base URL. Set it under "
+            "Settings → Organization."
+        )
+    base = normalize_crm_base_url(
+        getattr(organization, "systemgroup_crm_base_url", None) or ""
+    )
+    if not base:
+        raise SystemGroupClientError(
+            "Missing SystemGroup CRM base URL. Set it under "
+            "Settings → Organization."
+        )
     return base
 
 
@@ -35,27 +47,40 @@ def organization_systemgroup_import_enabled(organization) -> bool:
     )
 
 
+def organization_has_systemgroup_crm_base_url(organization) -> bool:
+    return bool(
+        organization is not None
+        and normalize_crm_base_url(
+            getattr(organization, "systemgroup_crm_base_url", None) or ""
+        )
+    )
+
+
 def user_can_import_systemgroup(user) -> bool:
-    """True when org enables import, user is admin, and CRM user/pass are set."""
+    """True when org enables import, CRM URL is set, and CRM user/pass are set."""
     if user is None or not getattr(user, "is_authenticated", False):
         return False
     profile = user.bom_profile()
     if profile.role != "A":
         return False
-    if not organization_systemgroup_import_enabled(profile.organization):
+    org = profile.organization
+    if not organization_systemgroup_import_enabled(org):
+        return False
+    if not organization_has_systemgroup_crm_base_url(org):
         return False
     return user_meta_has_systemgroup_credentials(profile)
 
 
 def client_for_user_meta(user_meta, session=None) -> SystemGroupClient:
-    """Build a CRM client using the user's saved credentials + CRM_BASE_URL."""
+    """Build a CRM client using the user's credentials + org CRM base URL."""
     if not user_meta_has_systemgroup_credentials(user_meta):
         raise SystemGroupClientError(
             "Set your SystemGroup username and password under Settings → User "
             "before importing."
         )
+    organization = getattr(user_meta, "organization", None)
     return SystemGroupClient(
-        base_url=crm_base_url_from_env(),
+        base_url=crm_base_url_from_organization(organization),
         username=(user_meta.systemgroup_username or "").strip(),
         password=user_meta.systemgroup_password or "",
         session=session,

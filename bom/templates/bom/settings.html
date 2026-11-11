@@ -60,7 +60,9 @@
                         </p>
                         {% if organization.systemgroup_import_enabled %}
                             <p class="mb-3 text-sm text-ink-muted">{% trans "Organization import is enabled." %}
-                                {% if profile.has_systemgroup_credentials %}
+                                {% if not organization.systemgroup_crm_base_url %}
+                                    {% trans "Ask the organization owner to set the SystemGroup CRM base URL under Organization settings." %}
+                                {% elif profile.has_systemgroup_credentials %}
                                     {% trans "Your credentials are set — Import material is available." %}
                                 {% else %}
                                     {% trans "Add a username and password below to unlock Import material." %}

@@ -2563,14 +2563,27 @@ def import_systemgroup_bom(request):
                     "Ask the organization owner to enable it under Settings → Organization."
                 ),
             )
-        else:
+            return HttpResponseRedirect(
+                reverse("bom:settings", kwargs={"tab_anchor": "organization"})
+            )
+        if not (organization.systemgroup_crm_base_url or "").strip():
             messages.error(
                 request,
                 _(
-                    "Set your SystemGroup username and password under "
-                    "Settings → User before importing."
+                    "Set the SystemGroup CRM base URL under "
+                    "Settings → Organization before importing."
                 ),
             )
+            return HttpResponseRedirect(
+                reverse("bom:settings", kwargs={"tab_anchor": "organization"})
+            )
+        messages.error(
+            request,
+            _(
+                "Set your SystemGroup username and password under "
+                "Settings → User before importing."
+            ),
+        )
         return HttpResponseRedirect(
             reverse("bom:settings", kwargs={"tab_anchor": "user"})
         )

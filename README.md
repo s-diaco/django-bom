@@ -268,15 +268,9 @@ where `base.html` is your base template. `page_loading_delay_ms` controls how lo
 
 Admin-runnable import from the on-LAN SystemGroup CRM into Lithium parts/revisions (same create/update semantics as **Add all subparts** / CSV BoM upload). **CLI and Admin GUI share one backend.**
 
-Server env (see `.env.example`):
+GUI no longer reads `CRM_BASE_URL` / `CRM_USERNAME` / `CRM_PASSWORD` from `.env.prod`. The organization owner sets the SystemGroup **CRM base URL** and enables **Enable SystemGroup BoM import** under **Settings → Organization**. Each admin sets their own SystemGroup username/password under **Settings → User**. Import stays disabled until the org URL is set and the admin has saved credentials.
 
-```
-CRM_BASE_URL=http://192.168.3.193/
-```
-
-GUI login no longer reads `CRM_USERNAME` / `CRM_PASSWORD` from `.env.prod`. Each admin sets their own SystemGroup username/password under **Settings → User**. The organization owner must enable **Enable SystemGroup BoM import** under **Settings → Organization**. Import stays disabled for any admin who has not saved credentials.
-
-CLI still accepts optional `CRM_USERNAME` / `CRM_PASSWORD` for offline ops scripts.
+CLI still accepts optional `CRM_BASE_URL` / `CRM_USERNAME` / `CRM_PASSWORD` (see `.env.example`) for offline ops scripts.
 
 **GUI (Admin only, when org+user credentials allow):** Home → **Import material** (next to New Material). Preferred: enter **Part ID** → **Load revisions** → pick a CRM revision → **Import this BoM**. Shortcut: paste **Part ID + Revision** as `PN/rev` and **Get the BoM**. Missing Lithium parts/revisions are created; if the target revision already has a BoM tree, choose keep (append) or replace. CRM id/URL remain optional fallbacks.
 

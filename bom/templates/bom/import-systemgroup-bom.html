@@ -22,9 +22,7 @@
                     {% trans "Pull a PAC Engineering BoM from the on-LAN SystemGroup CRM into Lithium. Missing parts and revisions are created; existing ones are reused." %}
                 </p>
                 <p class="mb-4 text-sm text-ink-muted">
-                    {% trans "Enter a Part ID, load its CRM revisions, pick one, and import. Live CRM login uses your SystemGroup username/password from Settings → User, and" %}
-                    <code>CRM_BASE_URL</code>
-                    {% trans "from the server environment." %}
+                    {% trans "Enter a Part ID, load its CRM revisions, pick one, and import. Live CRM login uses your SystemGroup username/password from Settings → User, and the CRM base URL from Settings → Organization." %}
                 </p>
 
                 {% if existing_bom_conflict %}

@@ -109,6 +109,15 @@ class Organization(models.Model):
             "to import BoMs from the CRM."
         ),
     )
+    systemgroup_crm_base_url = models.CharField(
+        max_length=512,
+        blank=True,
+        default="",
+        help_text=(
+            "Base URL of the on-LAN SystemGroup CRM "
+            "(e.g. http://192.168.3.193/). Required for live import."
+        ),
+    )
 
     def number_cs(self):
         return "C" * self.number_class_code_len
@@ -256,11 +265,13 @@ class UserMeta(models.Model):
         )
 
     def can_import_systemgroup(self) -> bool:
-        """Org must enable import; this user must have CRM username/password."""
+        """Org must enable import + CRM URL; this user must have credentials."""
         if self.role != "A":
             return False
         org = self.organization
         if org is None or not org.systemgroup_import_enabled:
+            return False
+        if not (org.systemgroup_crm_base_url or "").strip():
             return False
         return self.has_systemgroup_credentials()
 

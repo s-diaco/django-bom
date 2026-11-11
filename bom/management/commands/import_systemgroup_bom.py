@@ -1,9 +1,12 @@
 """Import a SystemGroup PAC Engineering BoM into Lithium.
 
-Credentials (env only, never commit):
+CLI credentials (env only, never commit):
   CRM_BASE_URL   e.g. http://192.168.3.193/
   CRM_USERNAME
   CRM_PASSWORD
+
+The Admin GUI reads the CRM base URL from Organization settings and
+per-user credentials from User settings instead of these env vars.
 
 Examples:
   python manage.py import_systemgroup_bom --bom-id 39477 --organization-id 1

@@ -340,7 +340,20 @@ class OrganizationFormEditSettings(OrganizationForm):
             self.fields["systemgroup_import_enabled"].help_text = _(
                 "When enabled, organization admins who have saved their own "
                 "SystemGroup username/password under User settings can import "
-                "BoMs. Users without credentials cannot import."
+                "BoMs. Users without credentials cannot import. Also set the "
+                "CRM base URL below."
+            )
+        if "systemgroup_crm_base_url" in self.fields:
+            self.fields["systemgroup_crm_base_url"].help_text = _(
+                "On-LAN SystemGroup CRM host, e.g. http://192.168.3.193/. "
+                "Required for live BoM import when import is enabled."
+            )
+            self.fields["systemgroup_crm_base_url"].widget.attrs.update(
+                {
+                    "placeholder": "http://192.168.3.193/",
+                    "dir": "ltr",
+                    "autocomplete": "off",
+                }
             )
 
     class Meta:
@@ -358,6 +371,7 @@ class OrganizationFormEditSettings(OrganizationForm):
         labels = {
             "name": "Organization Name",
             "systemgroup_import_enabled": _("Enable SystemGroup BoM import"),
+            "systemgroup_crm_base_url": _("SystemGroup CRM base URL"),
         }
 
 

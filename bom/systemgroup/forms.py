@@ -82,7 +82,8 @@ class SystemGroupBomImportForm(forms.Form):
         label=_("Saved Edit HTML/JSON"),
         help_text=_(
             "Optional offline import. Skips CRM network when provided. "
-            "Live fetch uses your Settings → User credentials and CRM_BASE_URL."
+            "Live fetch uses your Settings → User credentials and the "
+            "organization CRM base URL."
         ),
     )
     browse_list = forms.BooleanField(
