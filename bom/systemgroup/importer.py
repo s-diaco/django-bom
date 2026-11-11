@@ -135,12 +135,22 @@ def _revision_subpart_count(part_revision: PartRevision | None) -> int:
     return part_revision.assembly.subparts.count()
 
 
+def first_product_type_code(organization: Organization, *, has_bom: bool) -> str | None:
+    """Return the first org product-type code with the given has_bom flag."""
+    organization.ensure_default_product_types()
+    for pt in organization.product_types.all():
+        if pt.has_bom is has_bom:
+            return pt.code
+    return None
+
+
 def ensure_parent_revision(
     organization: Organization,
     *,
     part: Part,
     revision: str,
     description: str = "",
+    material: str | None = None,
 ) -> PartRevision:
     """Return existing PartRevision or create one (with empty assembly)."""
     rev = (revision or "").strip() or "1"
@@ -148,12 +158,15 @@ def ensure_parent_revision(
     if existing is not None:
         return existing
     assembly = Assembly.objects.create()
-    return PartRevision.objects.create(
-        part=part,
-        revision=rev,
-        description=(description or "").strip() or part.full_part_number(),
-        assembly=assembly,
-    )
+    kwargs = {
+        "part": part,
+        "revision": rev,
+        "description": (description or "").strip() or part.full_part_number(),
+        "assembly": assembly,
+    }
+    if material:
+        kwargs["material"] = material
+    return PartRevision.objects.create(**kwargs)
 
 
 def import_parsed_bom(
@@ -164,6 +177,7 @@ def import_parsed_bom(
     parent_part_number: str | None = None,
     parent_revision: str | None = None,
     existing_bom_action: str | None = None,
+    material: str | None = None,
     dry_run: bool = False,
 ) -> ImportResult:
     """Import ParsedBom using BOMCSVForm (same semantics as part-upload-bom).
@@ -201,6 +215,9 @@ def import_parsed_bom(
     parent_part_revision: PartRevision | None = None
     include_parent_row = False
     action = (existing_bom_action or "").strip().lower() or None
+    # Dropdown material is for the parent only; new children use first raw type.
+    parent_material = (material or "").strip() or None
+    child_material = first_product_type_code(organization, has_bom=False)
 
     if resolved is not None:
         # Part exists — use/create the requested revision (default latest or "1").
@@ -212,6 +229,7 @@ def import_parsed_bom(
             part=resolved,
             revision=target_rev,
             description=parsed.parent_description or "",
+            material=parent_material,
         )
         count = _revision_subpart_count(parent_part_revision)
         if count > 0 and action not in ("keep", "replace"):
@@ -276,6 +294,8 @@ def import_parsed_bom(
         parent_part=resolved if not include_parent_row else None,
         parent_part_revision=parent_part_revision if not include_parent_row else None,
         organization=organization,
+        parent_material=parent_material if include_parent_row else None,
+        default_material=child_material,
     )
     if form.is_valid():
         result.successes.extend(form.successes)
@@ -326,6 +346,7 @@ def run_systemgroup_import(
     list_path: str | Path | None = None,
     parent_description: str | None = None,
     existing_bom_action: str | None = None,
+    material: str | None = None,
 ) -> ImportResult:
     """Shared entry used by the management command and Admin UI.
 
@@ -441,6 +462,7 @@ def run_systemgroup_import(
         parent_part_number=parent_pn,
         parent_revision=parent_rev,
         existing_bom_action=existing_bom_action,
+        material=material,
         dry_run=dry_run,
     )
     result.resolved_bom_id = resolved_bom_id

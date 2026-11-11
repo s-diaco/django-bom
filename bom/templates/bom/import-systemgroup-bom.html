@@ -43,6 +43,7 @@
                             <input type="hidden" name="crm_url" value="{{ form.crm_url.value|default_if_none:'' }}">
                             {% if form.browse_list.value %}<input type="hidden" name="browse_list" value="on">{% endif %}
                             {% if form.dry_run.value %}<input type="hidden" name="dry_run" value="on">{% endif %}
+                            <input type="hidden" name="material" value="{{ form.material.value|default_if_none:'' }}">
                             <button class="bom-btn-secondary" type="submit" name="existing_bom_action" value="keep">{% trans "Keep existing BoM" %}</button>
                             <button class="bom-btn-primary" type="submit" name="existing_bom_action" value="replace">{% trans "Replace with imported BoM" %}</button>
                             <a href="{% url 'bom:import-systemgroup-bom' %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
@@ -84,6 +85,7 @@
                                                     <input type="hidden" name="parent_revision" value="{{ entry.revision }}">
                                                     <input type="hidden" name="bom_id" value="{{ entry.bom_id }}">
                                                     {% if form.dry_run.value %}<input type="hidden" name="dry_run" value="on">{% endif %}
+                                                    <input type="hidden" name="material" value="{{ form.material.value|default_if_none:'' }}">
                                                     <button class="bom-btn-primary" type="submit">{% trans "Import this BoM" %}</button>
                                                 </form>
                                             </td>
@@ -114,6 +116,7 @@
                             <input type="hidden" name="parent_part_number" value="{{ form.parent_part_number.value|default_if_none:'' }}">
                             <input type="hidden" name="parent_revision" value="{{ form.parent_revision.value|default_if_none:'' }}">
                             {% if form.dry_run.value %}<input type="hidden" name="dry_run" value="on">{% endif %}
+                            <input type="hidden" name="material" value="{{ form.material.value|default_if_none:'' }}">
                             <div class="overflow-x-auto">
                                 <table class="bom-table w-full text-sm">
                                     <thead>
@@ -154,6 +157,13 @@
                     {% if form.non_field_errors %}
                         <div class="mb-4 text-sm text-red-700">{{ form.non_field_errors }}</div>
                     {% endif %}
+
+                    <div class="mb-1">
+                        <label class="bom-label" for="{{ form.material.id_for_label }}">{{ form.material.label }}</label>
+                        {{ form.material }}
+                        {% if form.material.errors %}<p class="bom-error">{{ form.material.errors.0 }}</p>{% endif %}
+                    </div>
+                    <p class="bom-help mb-4">{{ form.material.help_text }}</p>
 
                     {# Part ID + Load revisions: button lines up with the input, not the help text #}
                     <div class="mb-1 flex flex-wrap items-end gap-3">

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from django import forms
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext, gettext_lazy as _
 
 from .client import extract_bom_id_from_url
 from .parser import split_bom_code
@@ -108,6 +108,37 @@ class SystemGroupBomImportForm(forms.Form):
         ),
         widget=forms.HiddenInput(),
     )
+    material = forms.ChoiceField(
+        required=False,
+        label=_("Material Type"),
+        help_text=_(
+            "Used for the parent part when it is created. "
+            "New child parts use the first raw-material type "
+            "(has BoM off). Existing parts keep their current type."
+        ),
+        widget=forms.Select(attrs={"class": "bom-input w-full"}),
+    )
+
+    def __init__(self, *args, organization=None, **kwargs):
+        self.organization = organization
+        super().__init__(*args, **kwargs)
+        types = []
+        default_code = ""
+        if organization is not None:
+            organization.ensure_default_product_types()
+            types = list(organization.product_types.all())
+            for pt in types:
+                if pt.has_bom:
+                    default_code = pt.code
+                    break
+            if not default_code and types:
+                default_code = types[0].code
+        self.fields["material"].choices = [
+            (pt.code, gettext(pt.name)) for pt in types
+        ]
+        if default_code:
+            self.fields["material"].initial = default_code
+        self._default_material = default_code
 
     def clean(self):
         cleaned = super().clean()
@@ -120,10 +151,22 @@ class SystemGroupBomImportForm(forms.Form):
         part_id_rev = (cleaned.get("part_id_revision") or "").strip()
         browse_list = bool(cleaned.get("browse_list"))
         existing_bom_action = (cleaned.get("existing_bom_action") or "").strip()
+        material = (cleaned.get("material") or "").strip()
         # Submit button names are not form fields; read from data.
         load_revisions = bool(
             self.data.get("load_revisions") if hasattr(self, "data") else False
         )
+
+        valid_codes = {c for c, _ in self.fields["material"].choices}
+        if material and valid_codes and material not in valid_codes:
+            raise forms.ValidationError(_("Unknown material."), code="invalid")
+        if not material:
+            material = self._default_material or None
+        if not material and valid_codes and not load_revisions:
+            raise forms.ValidationError(
+                _("Select a Material Type."),
+                code="required",
+            )
 
         if part_id_rev:
             code_pn, code_rev = split_bom_code(part_id_rev)
@@ -173,5 +216,6 @@ class SystemGroupBomImportForm(forms.Form):
         cleaned["parent_part_number"] = parent_pn or None
         cleaned["parent_revision"] = parent_rev or None
         cleaned["existing_bom_action"] = existing_bom_action or None
+        cleaned["material"] = material
         cleaned["load_revisions"] = load_revisions
         return cleaned

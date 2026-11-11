@@ -1008,6 +1008,17 @@ msgstr "دریافت BoM"
 msgid "More options"
 msgstr "گزینه‌های بیشتر"
 
+msgid ""
+"Used for the parent part when it is created. New child parts use the first "
+"raw-material type (has BoM off). Existing parts keep their current type."
+msgstr ""
+"برای قطعهٔ والد هنگام ایجاد استفاده می‌شود. قطعات فرزند جدید از اولین نوع "
+"مواد اولیه (بدون BoM) استفاده می‌کنند. قطعات موجود نوع فعلی خود را حفظ "
+"می‌کنند."
+
+msgid "Select a Material Type."
+msgstr "یک نوع متریال انتخاب کنید."
+
 
 #, python-format
 msgid "Manufacturer / %(name)s"
