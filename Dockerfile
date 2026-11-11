@@ -26,6 +26,13 @@ ENV UV_PYTHON_INSTALL_DIR=/python
 ENV UV_PYTHON_PREFERENCE=only-managed
 ENV UV_PYTHON=3.14
 
+# Git is required for uv to fetch git dependencies (e.g. lithium-systemgroup).
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends git ca-certificates
+
 # Install Python before the project for caching
 RUN uv python install 3.14
 

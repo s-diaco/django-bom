@@ -1,9 +1,12 @@
 """Import a SystemGroup PAC Engineering BoM into Lithium.
 
-Credentials (env only, never commit):
+CLI credentials (env only, never commit):
   CRM_BASE_URL   e.g. http://192.168.3.193/
   CRM_USERNAME
   CRM_PASSWORD
+
+The Admin GUI reads the CRM base URL from Organization settings and
+per-user credentials from User settings instead of these env vars.
 
 Examples:
   python manage.py import_systemgroup_bom --bom-id 39477 --organization-id 1
@@ -22,6 +25,7 @@ from bom.models import Organization
 from bom.systemgroup.importer import (
     AmbiguousBomMatch,
     ExistingBomConflict,
+    SystemGroupError,
     SystemGroupImportError,
     load_bom_list_entries,
     run_systemgroup_import,
@@ -129,7 +133,7 @@ class Command(BaseCommand):
         ):
             try:
                 entries = load_bom_list_entries(list_path=options["list_file"])
-            except SystemGroupImportError as exc:
+            except SystemGroupError as exc:
                 raise CommandError(str(exc)) from exc
             self.stdout.write(f"{len(entries)} CRM BoM(s) on list:")
             for entry in entries:
@@ -164,7 +168,7 @@ class Command(BaseCommand):
             raise CommandError(
                 f"{exc} Pass --existing-bom-action keep|replace."
             ) from exc
-        except SystemGroupImportError as exc:
+        except SystemGroupError as exc:
             raise CommandError(str(exc)) from exc
 
         for msg in result.successes:

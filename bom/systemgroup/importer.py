@@ -12,17 +12,22 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from bom.forms import BOMCSVForm
 from bom.models import Assembly, Organization, Part, PartRevision
 
-from .client import SystemGroupClient, SystemGroupClientError, extract_bom_id_from_url
-from .parser import (
+from lithium_systemgroup import (
+    AmbiguousBomMatch,
     BomListEntry,
     BomLine,
+    NoBomMatch,
     ParsedBom,
+    SystemGroupClient,
+    SystemGroupClientError,
+    SystemGroupError,
     SystemGroupParseError,
-    match_bom_list_entries,
+    extract_bom_id_from_url,
+    list_revisions_for_part,
+    load_bom_list_entries,
     parse_bom_document,
-    parse_bom_list_document,
+    resolve_bom_from_list,
 )
-
 
 CSV_COLUMNS = [
     "level",
@@ -53,33 +58,8 @@ class ImportResult:
         return not self.errors
 
 
-class SystemGroupImportError(Exception):
+class SystemGroupImportError(SystemGroupError):
     """User-facing failure before/during SystemGroup import orchestration."""
-
-
-class AmbiguousBomMatch(SystemGroupImportError):
-    """Multiple CRM BoM list rows matched the parent query."""
-
-    def __init__(self, matches: list[BomListEntry], query: str):
-        self.matches = matches
-        self.query = query
-        labels = "; ".join(m.label() for m in matches[:20])
-        more = "" if len(matches) <= 20 else f" (+{len(matches) - 20} more)"
-        super().__init__(
-            f"Multiple CRM BoMs matched '{query}': {labels}{more}. "
-            "Pick one BoM id (GUI pick list, --bom-id, or CRM URL)."
-        )
-
-
-class NoBomMatch(SystemGroupImportError):
-    """No CRM BoM list row matched the parent query."""
-
-    def __init__(self, query: str):
-        self.query = query
-        super().__init__(
-            f"No CRM BoM on the list matched '{query}'. "
-            "Check the parent part number/description, or enter a CRM BoM id / Edit URL."
-        )
 
 
 class ExistingBomConflict(SystemGroupImportError):
@@ -326,78 +306,6 @@ def import_parsed_bom(
     return result
 
 
-def load_bom_list_entries(
-    *,
-    client: SystemGroupClient | None = None,
-    list_html: str | None = None,
-    list_json: str | None = None,
-    list_path: str | Path | None = None,
-) -> list[BomListEntry]:
-    """Load BoM list rows from offline content/path or live CRM fetch."""
-    try:
-        if list_json is not None:
-            return parse_bom_list_document(list_json, content_type="application/json")
-        if list_html is not None:
-            return parse_bom_list_document(list_html, content_type="text/html")
-        if list_path is not None:
-            content = Path(list_path).read_text(encoding="utf-8")
-            ctype = (
-                "application/json"
-                if str(list_path).lower().endswith(".json")
-                or content.lstrip()[:1] in "{["
-                else "text/html"
-            )
-            return parse_bom_list_document(content, content_type=ctype)
-        sg = client or SystemGroupClient()
-        body, ctype = sg.fetch_bom_list()
-        return parse_bom_list_document(body, content_type=ctype)
-    except (SystemGroupClientError, SystemGroupParseError, OSError) as exc:
-        raise SystemGroupImportError(str(exc)) from exc
-
-
-def resolve_bom_from_list(
-    *,
-    part_number: str | None = None,
-    description: str | None = None,
-    revision: str | None = None,
-    client: SystemGroupClient | None = None,
-    list_html: str | None = None,
-    list_json: str | None = None,
-    list_path: str | Path | None = None,
-    entries: list[BomListEntry] | None = None,
-) -> BomListEntry:
-    """Fetch/parse the CRM BoM list and resolve a single match.
-
-    List rows often expose parent as «کد BOM» = ``part_number/revision``.
-    Raises ``NoBomMatch`` or ``AmbiguousBomMatch``. When neither part_number nor
-    description is set, returns AmbiguousBomMatch with the full list (browse).
-    """
-    rows = entries if entries is not None else load_bom_list_entries(
-        client=client,
-        list_html=list_html,
-        list_json=list_json,
-        list_path=list_path,
-    )
-    pn = (part_number or "").strip() or None
-    desc = (description or "").strip() or None
-    rev = (revision or "").strip() or None
-    query = pn or desc or "(all)"
-    if pn and rev:
-        query = f"{pn}/{rev}"
-
-    if not pn and not desc:
-        raise AmbiguousBomMatch(rows, query)
-
-    matches = match_bom_list_entries(
-        rows, part_number=pn, description=desc, revision=rev
-    )
-    if not matches:
-        raise NoBomMatch(query)
-    if len(matches) > 1:
-        raise AmbiguousBomMatch(matches, query)
-    return matches[0]
-
-
 def run_systemgroup_import(
     organization: Organization,
     *,
@@ -425,7 +333,7 @@ def run_systemgroup_import(
     bom_id (or id extracted from crm_url / resolved from BoM list).
 
     Live credentials: injected ``client``, else ``user_meta`` (GUI per-user
-    username/password + ``CRM_BASE_URL``), else CRM_* env (CLI).
+    username/password + organization CRM base URL), else CRM_* env (CLI).
 
     When ``bom_id`` / ``crm_url`` are omitted and ``from_list`` is true (or a
     parent part number is set), the CRM BoM list is fetched and matched by
@@ -466,34 +374,38 @@ def run_systemgroup_import(
     def ensure_client() -> SystemGroupClient:
         nonlocal client
         if client is None:
-            if user_meta is not None:
-                client = client_for_user_meta(user_meta)
-            else:
-                client = SystemGroupClient()
+            try:
+                if user_meta is not None:
+                    client = client_for_user_meta(user_meta)
+                else:
+                    client = SystemGroupClient()
+            except SystemGroupClientError as exc:
+                # Surface as ImportError so GUI/CLI catch one exception type.
+                raise SystemGroupImportError(str(exc)) from exc
         return client
 
     list_entry: BomListEntry | None = None
-    if should_resolve_list:
-        needs_live_list = (
-            list_html is None and list_json is None and list_path is None
-        )
-        list_entry = resolve_bom_from_list(
-            part_number=parent_pn,
-            description=parent_desc if parent_pn else None,
-            revision=parent_rev if parent_pn else None,
-            client=ensure_client() if needs_live_list else client,
-            list_html=list_html,
-            list_json=list_json,
-            list_path=list_path,
-        )
-        resolved_bom_id = list_entry.bom_id
-        # Prefer list-row PN/rev when the user only typed a bare PN.
-        if not parent_pn and list_entry.part_number:
-            parent_pn = list_entry.part_number
-        if not parent_rev and list_entry.revision:
-            parent_rev = list_entry.revision
-
     try:
+        if should_resolve_list:
+            needs_live_list = (
+                list_html is None and list_json is None and list_path is None
+            )
+            list_entry = resolve_bom_from_list(
+                part_number=parent_pn,
+                description=parent_desc if parent_pn else None,
+                revision=parent_rev if parent_pn else None,
+                client=ensure_client() if needs_live_list else client,
+                list_html=list_html,
+                list_json=list_json,
+                list_path=list_path,
+            )
+            resolved_bom_id = list_entry.bom_id
+            # Prefer list-row PN/rev when the user only typed a bare PN.
+            if not parent_pn and list_entry.part_number:
+                parent_pn = list_entry.part_number
+            if not parent_rev and list_entry.revision:
+                parent_rev = list_entry.revision
+
         if json_content is not None:
             parsed = parse_bom_document(json_content, content_type="application/json")
         elif json_path is not None:

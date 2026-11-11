@@ -2539,12 +2539,15 @@ def part_export_bom(
 @organization_admin
 def import_systemgroup_bom(request):
     """Admin UI for SystemGroup PAC Engineering BoM import (same backend as CLI)."""
-    from bom.systemgroup.access import user_can_import_systemgroup
+    from bom.systemgroup.access import client_for_user_meta, user_can_import_systemgroup
+    from bom.systemgroup.client import SystemGroupClientError
     from bom.systemgroup.forms import SystemGroupBomImportForm
     from bom.systemgroup.importer import (
         AmbiguousBomMatch,
         ExistingBomConflict,
+        SystemGroupError,
         SystemGroupImportError,
+        list_revisions_for_part,
         run_systemgroup_import,
     )
 
@@ -2561,19 +2564,34 @@ def import_systemgroup_bom(request):
                     "Ask the organization owner to enable it under Settings → Organization."
                 ),
             )
-        else:
+            return HttpResponseRedirect(
+                reverse("bom:settings", kwargs={"tab_anchor": "organization"})
+            )
+        if not (organization.systemgroup_crm_base_url or "").strip():
             messages.error(
                 request,
                 _(
-                    "Set your SystemGroup username and password under "
-                    "Settings → User before importing."
+                    "Set the SystemGroup CRM base URL under "
+                    "Settings → Organization before importing."
                 ),
             )
+            return HttpResponseRedirect(
+                reverse("bom:settings", kwargs={"tab_anchor": "organization"})
+            )
+        messages.error(
+            request,
+            _(
+                "Set your SystemGroup username and password under "
+                "Settings → User before importing."
+            ),
+        )
         return HttpResponseRedirect(
             reverse("bom:settings", kwargs={"tab_anchor": "user"})
         )
 
     bom_candidates = None
+    revision_candidates = None
+    revision_part_query = None
     match_query = None
     existing_bom_conflict = None
     get_parent = request.GET.get("parent_part", "")
@@ -2585,6 +2603,7 @@ def import_systemgroup_bom(request):
         request.POST or None,
         request.FILES or None,
         initial={
+            "part_id": request.GET.get("part_id", get_parent),
             "part_id_revision": request.GET.get("part_id_revision", initial_pir),
             "parent_part_number": get_parent,
             "parent_revision": get_rev,
@@ -2596,78 +2615,124 @@ def import_systemgroup_bom(request):
     session_key = "systemgroup_import_source"
     if request.method == "POST" and form.is_valid():
         cleaned = form.cleaned_data
-        html_content = None
-        json_content = None
-        source = cleaned.get("source_file")
-        if source is not None:
-            raw = source.read()
-            if isinstance(raw, bytes):
-                text = raw.decode("utf-8-sig", errors="replace")
-            else:
-                text = str(raw)
-            name = (getattr(source, "name", "") or "").lower()
-            if name.endswith(".json") or text.lstrip()[:1] in "{[":
-                json_content = text
-                request.session[session_key] = {"kind": "json", "text": text}
-            else:
-                html_content = text
-                request.session[session_key] = {"kind": "html", "text": text}
-        elif cleaned.get("existing_bom_action"):
-            # Keep/replace re-POST: reuse the prior offline upload if any.
-            cached = request.session.get(session_key) or {}
-            if cached.get("kind") == "json" and cached.get("text"):
-                json_content = cached["text"]
-            elif cached.get("kind") == "html" and cached.get("text"):
-                html_content = cached["text"]
-        try:
-            result = run_systemgroup_import(
-                organization,
-                bom_id=cleaned.get("bom_id"),
-                crm_url=cleaned.get("crm_url"),
-                parent_part_number=cleaned.get("parent_part_number") or None,
-                parent_revision=cleaned.get("parent_revision") or None,
-                html_content=html_content,
-                json_content=json_content,
-                dry_run=bool(cleaned.get("dry_run")),
-                from_list=bool(cleaned.get("browse_list")),
-                existing_bom_action=cleaned.get("existing_bom_action"),
-                user_meta=profile,
-            )
-        except AmbiguousBomMatch as exc:
-            bom_candidates = exc.matches
-            match_query = exc.query if exc.query != "(all)" else None
-            messages.info(
-                request,
-                _("Several CRM BoMs matched — pick one below, or enter an id/URL."),
-            )
-        except ExistingBomConflict as exc:
-            existing_bom_conflict = exc
-            messages.warning(
-                request,
-                _(
-                    "This part/revision already has a BoM. Keep the existing tree "
-                    "(append imported lines) or replace it."
-                ),
-            )
-        except SystemGroupImportError as exc:
-            messages.error(request, str(exc))
-        else:
-            request.session.pop(session_key, None)
-            for msg in result.successes:
-                messages.info(request, msg)
-            for msg in result.warnings:
-                messages.warning(request, msg)
-            for msg in result.errors:
-                messages.error(request, msg)
-            if result.ok and result.parent_part is not None and not result.dry_run:
-                return HttpResponseRedirect(
-                    reverse(
-                        "bom:part-info",
-                        kwargs={"part_id": result.parent_part.id},
-                    )
+        if cleaned.get("load_revisions"):
+            pn = cleaned.get("part_id") or cleaned.get("parent_part_number")
+            try:
+                # Build the client inside the try: missing CRM_BASE_URL / bad
+                # credentials raise SystemGroupClientError before list fetch.
+                revision_candidates = list_revisions_for_part(
+                    pn,
+                    client=client_for_user_meta(profile),
                 )
-            if result.ok and result.dry_run:
-                messages.info(request, _("Dry run completed; nothing was written."))
+            except (SystemGroupError, SystemGroupClientError) as exc:
+                messages.error(request, str(exc))
+            except Exception as exc:  # noqa: BLE001 — surface CRM outages as UI errors
+                messages.error(
+                    request,
+                    _(
+                        "Could not reach the SystemGroup CRM to load revisions: "
+                        "%(error)s"
+                    )
+                    % {"error": exc},
+                )
+            else:
+                revision_part_query = pn
+                messages.info(
+                    request,
+                    _(
+                        "Select a CRM revision below, then import that BoM."
+                    ),
+                )
+        else:
+            html_content = None
+            json_content = None
+            source = cleaned.get("source_file")
+            if source is not None:
+                raw = source.read()
+                if isinstance(raw, bytes):
+                    text = raw.decode("utf-8-sig", errors="replace")
+                else:
+                    text = str(raw)
+                name = (getattr(source, "name", "") or "").lower()
+                if name.endswith(".json") or text.lstrip()[:1] in "{[":
+                    json_content = text
+                    request.session[session_key] = {"kind": "json", "text": text}
+                else:
+                    html_content = text
+                    request.session[session_key] = {"kind": "html", "text": text}
+            elif cleaned.get("existing_bom_action"):
+                # Keep/replace re-POST: reuse the prior offline upload if any.
+                cached = request.session.get(session_key) or {}
+                if cached.get("kind") == "json" and cached.get("text"):
+                    json_content = cached["text"]
+                elif cached.get("kind") == "html" and cached.get("text"):
+                    html_content = cached["text"]
+            try:
+                result = run_systemgroup_import(
+                    organization,
+                    bom_id=cleaned.get("bom_id"),
+                    crm_url=cleaned.get("crm_url"),
+                    parent_part_number=cleaned.get("parent_part_number") or None,
+                    parent_revision=cleaned.get("parent_revision") or None,
+                    html_content=html_content,
+                    json_content=json_content,
+                    dry_run=bool(cleaned.get("dry_run")),
+                    from_list=bool(cleaned.get("browse_list")),
+                    existing_bom_action=cleaned.get("existing_bom_action"),
+                    user_meta=profile,
+                )
+            except AmbiguousBomMatch as exc:
+                bom_candidates = exc.matches
+                match_query = exc.query if exc.query != "(all)" else None
+                # Prefer the dedicated revision picker when the query is a bare PN.
+                if (
+                    match_query
+                    and "/" not in match_query
+                    and match_query != "(all)"
+                ):
+                    revision_candidates = sorted(
+                        exc.matches,
+                        key=lambda e: ((e.revision or "").casefold(), e.bom_id),
+                    )
+                    revision_part_query = match_query
+                    bom_candidates = None
+                messages.info(
+                    request,
+                    _(
+                        "Several CRM BoMs matched — pick a revision below, "
+                        "or enter an id/URL."
+                    ),
+                )
+            except ExistingBomConflict as exc:
+                existing_bom_conflict = exc
+                messages.warning(
+                    request,
+                    _(
+                        "This part/revision already has a BoM. Keep the existing tree "
+                        "(append imported lines) or replace it."
+                    ),
+                )
+            except (SystemGroupError, SystemGroupClientError) as exc:
+                messages.error(request, str(exc))
+            else:
+                request.session.pop(session_key, None)
+                for msg in result.successes:
+                    messages.info(request, msg)
+                for msg in result.warnings:
+                    messages.warning(request, msg)
+                for msg in result.errors:
+                    messages.error(request, msg)
+                if result.ok and result.parent_part is not None and not result.dry_run:
+                    return HttpResponseRedirect(
+                        reverse(
+                            "bom:part-info",
+                            kwargs={"part_id": result.parent_part.id},
+                        )
+                    )
+                if result.ok and result.dry_run:
+                    messages.info(
+                        request, _("Dry run completed; nothing was written.")
+                    )
 
     return TemplateResponse(request, "bom/import-systemgroup-bom.html", locals())
 
