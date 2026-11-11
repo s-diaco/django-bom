@@ -565,6 +565,10 @@ msgstr "لیتیوم"
 msgid "Home"
 msgstr "خانه"
 
+#: bom/templates/bom/home.html:23
+msgid "Import material"
+msgstr "وارد کردن متریال"
+
 #: bom/templates/bom/home.html:26
 msgid "Jump to part"
 msgstr "پرش به متریال"
