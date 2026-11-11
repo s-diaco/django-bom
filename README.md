@@ -268,6 +268,8 @@ where `base.html` is your base template. `page_loading_delay_ms` controls how lo
 
 Admin-runnable import from the on-LAN SystemGroup CRM into Lithium parts/revisions (same create/update semantics as **Add all subparts** / CSV BoM upload). **CLI and Admin GUI share one backend.**
 
+CRM login/list/edit fetch and HTML/JSON parsing live in the standalone package [`lithium-systemgroup`](https://github.com/s-diaco/lithium-systemgroup) (no Lithium models). This app depends on that package and only handles Lithium part/revision writes plus settings/UI.
+
 GUI no longer reads `CRM_BASE_URL` / `CRM_USERNAME` / `CRM_PASSWORD` from `.env.prod`. The organization owner sets the SystemGroup **CRM base URL** and enables **Enable SystemGroup BoM import** under **Settings → Organization**. Each admin sets their own SystemGroup username/password under **Settings → User**. Import stays disabled until the org URL is set and the admin has saved credentials.
 
 CLI still accepts optional `CRM_BASE_URL` / `CRM_USERNAME` / `CRM_PASSWORD` (see `.env.example`) for offline ops scripts.

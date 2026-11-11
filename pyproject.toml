@@ -14,6 +14,7 @@ dependencies = [
     "openpyxl>=3.1.5",
     "pandas>=2.3.2",
     "requests>=2.32.0",
+    "lithium-systemgroup",
 ]
 readme = "README.md"
 requires-python = ">= 3.14"
@@ -25,6 +26,9 @@ build-backend = "hatchling.build"
 [tool.uv]
 package = false
 managed = true
+
+[tool.uv.sources]
+lithium-systemgroup = { git = "https://github.com/s-diaco/lithium-systemgroup.git", rev = "1f617d46a193ea5ab496c0d545ded6632ff20938" }
 [dependency-groups]
 dev = [
     "pytest>=8.3.5",

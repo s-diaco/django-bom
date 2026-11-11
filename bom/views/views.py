@@ -2545,6 +2545,7 @@ def import_systemgroup_bom(request):
     from bom.systemgroup.importer import (
         AmbiguousBomMatch,
         ExistingBomConflict,
+        SystemGroupError,
         SystemGroupImportError,
         list_revisions_for_part,
         run_systemgroup_import,
@@ -2623,7 +2624,7 @@ def import_systemgroup_bom(request):
                     pn,
                     client=client_for_user_meta(profile),
                 )
-            except (SystemGroupImportError, SystemGroupClientError) as exc:
+            except (SystemGroupError, SystemGroupClientError) as exc:
                 messages.error(request, str(exc))
             except Exception as exc:  # noqa: BLE001 — surface CRM outages as UI errors
                 messages.error(
@@ -2711,7 +2712,7 @@ def import_systemgroup_bom(request):
                         "(append imported lines) or replace it."
                     ),
                 )
-            except (SystemGroupImportError, SystemGroupClientError) as exc:
+            except (SystemGroupError, SystemGroupClientError) as exc:
                 messages.error(request, str(exc))
             else:
                 request.session.pop(session_key, None)
