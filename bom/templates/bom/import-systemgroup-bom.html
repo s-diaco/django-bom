@@ -182,12 +182,7 @@
                     {{ form.parent_revision }}
                     {{ form.existing_bom_action }}
 
-                    <div class="mt-6 flex flex-wrap items-center justify-between gap-2">
-                        <a href="{% url 'bom:home' %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
-                        <button class="bom-btn-primary" type="submit">{% trans "Get the BoM" %}</button>
-                    </div>
-
-                    <details class="mt-8 border-t border-ink/10 pt-4"
+                    <details class="mt-6 border-t border-ink/10 pt-4"
                              {% if form.bom_id.value or form.crm_url.value or form.browse_list.value or form.dry_run.value or form.bom_id.errors or form.crm_url.errors or form.source_file.errors or form.browse_list.errors or form.dry_run.errors %}open{% endif %}>
                         <summary class="cursor-pointer select-none text-sm font-medium text-ink">
                             {% trans "More options" %}
@@ -211,6 +206,11 @@
                             </div>
                         </div>
                     </details>
+
+                    <div class="mt-6 flex flex-wrap items-center justify-between gap-2">
+                        <a href="{% url 'bom:home' %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
+                        <button class="bom-btn-primary" type="submit">{% trans "Get the BoM" %}</button>
+                    </div>
                 </form>
             </div>
         {% else %}

@@ -375,8 +375,6 @@ msgstr " با رفرنس {reference}"
 msgid " added to tree {part}"
 msgstr " به درخت {part} افزوده شد"
 
-#, fuzzy
-#| msgid "Part"
 msgid "Part ID"
 msgstr "شناسه قطعه"
 
@@ -386,8 +384,6 @@ msgid ""
 msgstr "شماره قطعه CRM را وارد کنید (سمت چپ «کد BOM»). با «بارگذاری ورژن‌ها» همه ورژن‌های CRM آن قطعه را ببینید و یکی را درون‌ریزی کنید."
 
 
-#, fuzzy
-#| msgid "Revision"
 msgid "Part ID + Revision"
 msgstr "شناسه قطعه + ورژن"
 
@@ -416,8 +412,6 @@ msgid "Filled from Part ID / Part ID + Revision / revision pick."
 msgstr "از شناسه قطعه / شناسه+ورژن / انتخاب ورژن پر می‌شود."
 
 
-#, fuzzy
-#| msgid "New revision"
 msgid "Parent revision"
 msgstr "ورژن والد"
 
@@ -905,8 +899,6 @@ msgid ""
 msgstr ""
 "این صفحه در حال حاضر به‌روز نیست و محتوای آن با تغییرات سیستم هماهنگ نشده است."
 
-#, fuzzy
-#| msgid "Upload materials"
 msgid "Import material"
 msgstr "درون‌ریزی متریال"
 
@@ -964,8 +956,6 @@ msgid "CRM id"
 msgstr "شناسه CRM"
 
 
-#, fuzzy
-#| msgid "Cost in BoM"
 msgid "Import this BoM"
 msgstr "درون‌ریزی این BoM"
 
@@ -978,14 +968,10 @@ msgid "Pick a CRM BoM from the list"
 msgstr "یک BoM از فهرست CRM انتخاب کنید"
 
 
-#, fuzzy
-#| msgid "Remove selected user"
 msgid "Import selected"
 msgstr "درون‌ریزی مورد انتخاب‌شده"
 
 
-#, fuzzy
-#| msgid "Add revision"
 msgid "Load revisions"
 msgstr "بارگذاری ورژن‌ها"
 
@@ -1005,8 +991,6 @@ msgid "Get the BoM"
 msgstr "دریافت BoM"
 
 
-#, fuzzy
-#| msgid "Options"
 msgid "More options"
 msgstr "گزینه‌های بیشتر"
 
@@ -1320,8 +1304,6 @@ msgid ""
 msgstr "ورود شخصی شما به CRM برای درون‌ریزی BoM. حتی وقتی مالک سازمان درون‌ریزی SystemGroup را فعال کرده باشد لازم است. برای نگه داشتن رمز ذخیره‌شده، فیلد رمز را خالی بگذارید."
 
 
-#, fuzzy
-#| msgid "Organization currency"
 msgid "Organization import is enabled."
 msgstr "درون‌ریزی سازمانی فعال است."
 
@@ -1345,16 +1327,12 @@ msgid "SystemGroup username"
 msgstr "نام کاربری SystemGroup"
 
 
-#, fuzzy
-#| msgid "Show password"
 msgid "SystemGroup password"
 msgstr "رمز عبور SystemGroup"
 
 msgid "•••••••• (saved)"
 msgstr ""
 
-#, fuzzy
-#| msgid "Reset Password"
 msgid "Clear saved password"
 msgstr "پاک کردن رمز ذخیره‌شده"
 
