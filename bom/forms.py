@@ -2675,6 +2675,9 @@ class BOMCSVForm(forms.Form):
         # Optional: attach under a specific revision (not necessarily latest()).
         self.parent_part_revision = kwargs.pop("parent_part_revision", None)
         # Applied only when creating a new PartRevision (not when updating).
+        # parent_material: root / level-0 row when no parent is in the tree yet.
+        # default_material: all other newly created child revisions.
+        self.parent_material = kwargs.pop("parent_material", None)
         self.default_material = kwargs.pop("default_material", None)
         super(BOMCSVForm, self).__init__(*args, **kwargs)
 
@@ -2985,6 +2988,9 @@ class BOMCSVForm(forms.Form):
                 if not part_dict.get("material"):
                     if existing_part_revision is not None:
                         part_dict["material"] = existing_part_revision.material or ""
+                    elif parent_part_revision is None and self.parent_material:
+                        # Root / level-0 row (creating the parent assembly).
+                        part_dict["material"] = self.parent_material
                     elif self.default_material:
                         part_dict["material"] = self.default_material
                 part_revision_form = PartRevisionForm(

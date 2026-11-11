@@ -630,7 +630,7 @@ class SystemGroupImportSemanticsTests(TestCase):
             for pt in self.organization.product_types.all()
             if not pt.has_bom
         )
-        # Existing child keeps its material; new child gets the import default.
+        # Existing child keeps its material; new child gets first has_bom=False.
         existing = Part.from_part_number("200-3333-00", self.organization)
         existing_rev = existing.latest()
         existing_rev.material = raw_code
@@ -652,7 +652,30 @@ class SystemGroupImportSemanticsTests(TestCase):
         self.assertEqual(existing_rev.material, raw_code)
 
         new_part = Part.from_part_number("500-7777-00", self.organization)
-        self.assertEqual(new_part.latest().material, product_code)
+        self.assertEqual(new_part.latest().material, raw_code)
+
+    def test_import_dropdown_material_applies_to_new_parent_only(self):
+        self.organization.ensure_default_product_types()
+        product_code = next(
+            pt.code for pt in self.organization.product_types.all() if pt.has_bom
+        )
+        raw_code = next(
+            pt.code
+            for pt in self.organization.product_types.all()
+            if not pt.has_bom
+        )
+        bom = parse_bom_document(
+            (FIXTURES / "bom_edit.json").read_text(encoding="utf-8"),
+            content_type="application/json",
+        )
+        result = import_parsed_bom(
+            self.organization, bom, material=product_code
+        )
+        self.assertTrue(result.ok, result.errors)
+        parent = Part.from_part_number("500-9001-00", self.organization)
+        self.assertEqual(parent.latest().material, product_code)
+        child = Part.from_part_number("500-7777-00", self.organization)
+        self.assertEqual(child.latest().material, raw_code)
 
     def test_dry_run_does_not_write(self):
         before = Part.objects.filter(organization=self.organization).count()

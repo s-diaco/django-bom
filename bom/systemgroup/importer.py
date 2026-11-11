@@ -135,6 +135,15 @@ def _revision_subpart_count(part_revision: PartRevision | None) -> int:
     return part_revision.assembly.subparts.count()
 
 
+def first_product_type_code(organization: Organization, *, has_bom: bool) -> str | None:
+    """Return the first org product-type code with the given has_bom flag."""
+    organization.ensure_default_product_types()
+    for pt in organization.product_types.all():
+        if pt.has_bom is has_bom:
+            return pt.code
+    return None
+
+
 def ensure_parent_revision(
     organization: Organization,
     *,
@@ -206,6 +215,9 @@ def import_parsed_bom(
     parent_part_revision: PartRevision | None = None
     include_parent_row = False
     action = (existing_bom_action or "").strip().lower() or None
+    # Dropdown material is for the parent only; new children use first raw type.
+    parent_material = (material or "").strip() or None
+    child_material = first_product_type_code(organization, has_bom=False)
 
     if resolved is not None:
         # Part exists — use/create the requested revision (default latest or "1").
@@ -217,7 +229,7 @@ def import_parsed_bom(
             part=resolved,
             revision=target_rev,
             description=parsed.parent_description or "",
-            material=material,
+            material=parent_material,
         )
         count = _revision_subpart_count(parent_part_revision)
         if count > 0 and action not in ("keep", "replace"):
@@ -282,7 +294,8 @@ def import_parsed_bom(
         parent_part=resolved if not include_parent_row else None,
         parent_part_revision=parent_part_revision if not include_parent_row else None,
         organization=organization,
-        default_material=material,
+        parent_material=parent_material if include_parent_row else None,
+        default_material=child_material,
     )
     if form.is_valid():
         result.successes.extend(form.successes)
