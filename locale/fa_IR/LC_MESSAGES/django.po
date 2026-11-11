@@ -484,6 +484,29 @@ msgstr "لیتیوم"
 msgid "Home"
 msgstr "خانه"
 
+#: bom/templates/bom/home.html:23
+msgid "Import material"
+msgstr "دریافت متریال"
+
+#: bom/templates/bom/home.html:26
+msgid "Jump to part"
+msgstr "پرش به متریال"
+
+#: bom/templates/bom/home.html:29
+msgid "Go"
+msgstr "برو"
+
+#: bom/views/views.py:170
+#, python-brace-format
+msgid "Multiple parts match \"{q}\". Enter a fuller part number."
+msgstr "چند متریال با «{q}» مطابقت دارند. کد متریال کامل‌تری وارد کنید."
+
+#: bom/views/views.py:176
+#, python-brace-format
+msgid "No part found for \"{q}\"."
+msgstr "متریالی برای «{q}» پیدا نشد."
+
+#: bom/templates/bom/base.html:35 bom/templates/bom/ui/navbar.html:14
 msgid "Menu"
 msgstr "منو"
 
@@ -898,15 +921,6 @@ msgid ""
 "match system changes."
 msgstr ""
 "این صفحه در حال حاضر به‌روز نیست و محتوای آن با تغییرات سیستم هماهنگ نشده است."
-
-msgid "Import material"
-msgstr "درون‌ریزی متریال"
-
-msgid "Jump to part"
-msgstr "پرش به متریال"
-
-msgid "Go"
-msgstr "برو"
 
 msgid ""
 "Pull a PAC Engineering BoM from the on-LAN SystemGroup CRM into Lithium. "
@@ -1502,14 +1516,6 @@ msgstr "پودر"
 #, python-format
 msgid "%(value)s is not a valid pct"
 msgstr "%(value)s درصد معتبر نیست."
-
-#, python-brace-format
-msgid "Multiple parts match \"{q}\". Enter a fuller part number."
-msgstr "چند متریال با «{q}» مطابقت دارند. کد متریال کامل‌تری وارد کنید."
-
-#, python-brace-format
-msgid "No part found for \"{q}\"."
-msgstr "متریالی برای «{q}» پیدا نشد."
 
 msgid "Search Results - "
 msgstr " - نتایج جستجو"

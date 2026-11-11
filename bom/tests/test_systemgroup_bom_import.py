@@ -1142,7 +1142,7 @@ class SystemGroupAdminGuiTests(TestCase):
         profile.save(update_fields=["systemgroup_password"])
         response = self.client.get(reverse("bom:home"))
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, "Import material")
+        self.assertNotContains(response, _("Import material"))
 
     def test_settings_saves_systemgroup_credentials(self):
         response = self.client.post(
@@ -1285,7 +1285,7 @@ class SystemGroupAdminGuiTests(TestCase):
         response = self.client.get(reverse("bom:home"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, reverse("bom:import-systemgroup-bom"))
-        self.assertContains(response, "Import material")
+        self.assertContains(response, _("Import material"))
 
     def test_part_bom_tab_has_no_systemgroup_link(self):
         # BoM tab only renders for product revisions (has_bom material type).
