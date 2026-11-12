@@ -132,6 +132,14 @@ class RevisionsTestsMixin:
         self.assertEqual(response.status_code, 302)
 
     def test_displayable_synopsis_uses_material_display_label(self):
+        import importlib
+
+        from bom.models import PartRevision
+
+        refresh_mod = importlib.import_module(
+            "bom.migrations.0067_refresh_partrevision_synopses_material_display"
+        )
+
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
         rev = p1.latest()
         rev.material = "with_loi"
@@ -146,3 +154,15 @@ class RevisionsTestsMixin:
         # Searchable synopsis keeps the raw choice code (same idea as package).
         self.assertIn("with_loi", rev.searchable_synopsis)
         self.assertNotIn(material_label, rev.searchable_synopsis)
+
+        # Stale cached displayable (pre-fix) is refreshed by the data migration.
+        PartRevision.objects.filter(pk=rev.pk).update(
+            displayable_synopsis=f"{rev.description or ''} with_loi "
+        )
+        rev.refresh_from_db()
+        self.assertIn("with_loi", rev.displayable_synopsis)
+        refresh_mod.refresh_part_revision_synopses(None, None)
+        rev.refresh_from_db()
+        self.assertIn(material_label, rev.displayable_synopsis)
+        self.assertNotIn("with_loi", rev.displayable_synopsis)
+        self.assertEqual(rev.synopsis(), rev.displayable_synopsis)
