@@ -106,7 +106,6 @@ from bom.utils import (
     customer_price_preview_from_form,
     customer_price_preview_context,
     get_session_part_quantity,
-    listify_string,
     set_session_part_quantity,
 )
 
@@ -3326,10 +3325,9 @@ def edit_subpart(request, part_id, part_revision_id, subpart_id):
             instance=subpart,
             organization=organization,
             part_id=subpart.part_revision.part.id,
+            edit_subpart_ui=True,
         )
         if form.is_valid():
-            reference_list = listify_string(form.cleaned_data["reference"])
-            count = form.cleaned_data["count"]
             form.save()
             subpart.part_revision.clear_bom_unit_cost_cache()
             return HttpResponseRedirect(part_info_tab_url(part, part_revision))
@@ -3341,6 +3339,7 @@ def edit_subpart(request, part_id, part_revision_id, subpart_id):
             instance=subpart,
             organization=organization,
             part_id=subpart.part_revision.part.id,
+            edit_subpart_ui=True,
         )
 
     return TemplateResponse(request, "bom/bom-form.html", locals())

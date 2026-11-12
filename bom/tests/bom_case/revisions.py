@@ -130,3 +130,12 @@ class RevisionsTestsMixin:
         )
 
         self.assertEqual(response.status_code, 302)
+
+    def test_displayable_synopsis_omits_material(self):
+        (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+        rev = p1.latest()
+        rev.material = "with_loi"
+        rev.save()
+        rev.refresh_from_db()
+        self.assertNotIn("with_loi", rev.displayable_synopsis or "")
+        self.assertIn("with_loi", rev.searchable_synopsis or "")

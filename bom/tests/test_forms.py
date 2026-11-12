@@ -16,6 +16,7 @@ from bom.forms import (
     PartRevisionForm,
     SellerPartForm,
     SingleExchangeRateForm,
+    SubpartForm,
 )
 from bom.helpers import (
     create_a_fake_organization,
@@ -115,6 +116,54 @@ class TestForms(TestCase):
             organization=self.organization, data=form_data, part_id=p2.id
         )
         self.assertTrue(form.is_valid())
+
+    def test_subpart_form_edit_ui_quantity_hides_reference_fields(self):
+        (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+        parent_rev = p2.latest()
+        subpart = parent_rev.assembly.subparts.first()
+        self.assertIsNotNone(subpart)
+        original_reference = subpart.reference
+        original_dnl = subpart.do_not_load
+
+        form = SubpartForm(
+            instance=subpart,
+            organization=self.organization,
+            part_id=subpart.part_revision.part.id,
+            edit_subpart_ui=True,
+        )
+        self.assertEqual(form.fields["count"].label, "Quantity")
+        self.assertIn("part_revision", form.fields)
+        self.assertNotIn("reference", form.fields)
+        self.assertNotIn("do_not_load", form.fields)
+        self.assertNotIn("material", form.fields)
+
+        translation.activate("fa-IR")
+        if gettext("Quantity") == "مقدار":
+            form_fa = SubpartForm(
+                instance=subpart,
+                organization=self.organization,
+                part_id=subpart.part_revision.part.id,
+                edit_subpart_ui=True,
+            )
+            self.assertEqual(form_fa.fields["count"].label, "مقدار")
+        translation.activate("en-US")
+
+        form_data = {
+            "part_revision": subpart.part_revision_id,
+            "count": 7,
+        }
+        post_form = SubpartForm(
+            form_data,
+            instance=subpart,
+            organization=self.organization,
+            part_id=subpart.part_revision.part.id,
+            edit_subpart_ui=True,
+        )
+        self.assertTrue(post_form.is_valid())
+        saved = post_form.save()
+        self.assertEqual(saved.count, 7)
+        self.assertEqual(saved.reference, original_reference)
+        self.assertEqual(saved.do_not_load, original_dnl)
 
     def test_add_subpart_form_blank(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
