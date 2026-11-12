@@ -1060,7 +1060,9 @@ class PartRevision(models.Model):
             ),
             post="rating",
         )
-        s += verbosify(self.material)
+        s += verbosify(
+            self.material if make_searchable else self.get_material_display()
+        )
         s += verbosify(self.color)
         s += verbosify(self.finish)
         s += verbosify(

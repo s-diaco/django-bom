@@ -130,3 +130,18 @@ class RevisionsTestsMixin:
         )
 
         self.assertEqual(response.status_code, 302)
+
+    def test_displayable_synopsis_uses_material_display_label(self):
+        (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+        rev = p1.latest()
+        rev.material = "with_loi"
+        rev.save()
+        rev.refresh_from_db()
+
+        material_label = str(rev.get_material_display())
+        self.assertEqual(material_label, "With loss (LOI) (Frit)")
+        self.assertIn(material_label, rev.displayable_synopsis)
+        self.assertNotIn("with_loi", rev.displayable_synopsis)
+        # Searchable synopsis keeps the raw choice code (same idea as package).
+        self.assertIn("with_loi", rev.searchable_synopsis)
+        self.assertNotIn(material_label, rev.searchable_synopsis)
