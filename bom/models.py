@@ -10,7 +10,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Max, Prefetch, Subquery
 from django.forms import ValidationError
-from django.utils import timezone
+from django.utils import timezone, translation
 from django.utils.functional import cached_property
 from django.utils.translation import gettext
 from djmoney.models.fields import CURRENCY_CHOICES, CurrencyField, MoneyField
@@ -955,6 +955,15 @@ class PartRevision(models.Model):
     )
 
     def generate_synopsis(self, make_searchable=False):
+        # Displayable synopsis is cached on save/migrate; always resolve gettext
+        # under settings.LANGUAGE_CODE so ProductType names (and other displays)
+        # are not frozen in English from a bare migrate / default thread locale.
+        if not make_searchable:
+            with translation.override(settings.LANGUAGE_CODE):
+                return self._generate_synopsis_content(False)
+        return self._generate_synopsis_content(True)
+
+    def _generate_synopsis_content(self, make_searchable=False):
         def verbosify(
             val,
             units=None,
@@ -1124,9 +1133,27 @@ class PartRevision(models.Model):
         #     previous_configuration = PartRevision.objects.get(id=self.id).configuration
         #     if self.configuration != previous_configuration:
         #         self.timestamp = timezone.now()
+        self.apply_generated_synopses()
+        super(PartRevision, self).save(*args, **kwargs)
+
+    def apply_generated_synopses(self):
+        """Set searchable + displayable synopsis fields (displayable uses LANGUAGE_CODE)."""
         self.searchable_synopsis = self.generate_synopsis(True)
         self.displayable_synopsis = self.generate_synopsis(False)
-        super(PartRevision, self).save(*args, **kwargs)
+
+    @classmethod
+    def refresh_all_cached_synopses(cls):
+        """Bulk-recompute cached synopses (used by data migrations)."""
+        batch = []
+        fields = ["searchable_synopsis", "displayable_synopsis"]
+        for pr in cls.objects.all().iterator(chunk_size=500):
+            pr.apply_generated_synopses()
+            batch.append(pr)
+            if len(batch) >= 500:
+                cls.objects.bulk_update(batch, fields)
+                batch.clear()
+        if batch:
+            cls.objects.bulk_update(batch, fields)
 
     @property
     def product_type(self):
