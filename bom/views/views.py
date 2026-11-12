@@ -505,7 +505,7 @@ def materials(request):
     return TemplateResponse(request, "bom/dashboard.html", locals())
 
 
-MATERIALS_PN_SUGGEST_MIN_LEN = 3
+MATERIALS_PN_SUGGEST_MIN_LEN = 1
 MATERIALS_PN_SUGGEST_DEFAULT_LIMIT = 15
 MATERIALS_PN_SUGGEST_MAX_LIMIT = 50
 

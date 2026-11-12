@@ -50,16 +50,24 @@ class MaterialsPartNumberSuggestTests(TransactionTestCase):
             self.assertNotIn("Acme", item)
             self.assertNotIn("┆", item)
 
-    def test_short_query_returns_empty(self):
+    def test_empty_query_returns_empty(self):
         self.client.login(username="kasper", password="ghostpassword")
-        response = self.client.get(self.url, {"q": "20"})
+        response = self.client.get(self.url, {"q": ""})
         self.assertEqual(response.status_code, 200)
         payload = json.loads(response.content.decode("utf-8"))
         self.assertEqual(payload["results"], [])
 
+    def test_single_char_query_allowed(self):
+        self.client.login(username="kasper", password="ghostpassword")
+        response = self.client.get(self.url, {"q": "2"})
+        self.assertEqual(response.status_code, 200)
+        payload = json.loads(response.content.decode("utf-8"))
+        self.assertIsInstance(payload["results"], list)
+        # Semi-intelligent fixtures include class 200…
+        self.assertTrue(any("2" in pn for pn in payload["results"]))
+
     def test_respects_limit(self):
         self.client.login(username="kasper", password="ghostpassword")
-        # Class 200 / 500 / 50A — "00" is under min length; use a broad PN fragment.
         response = self.client.get(self.url, {"q": "000", "limit": 1})
         self.assertEqual(response.status_code, 200)
         payload = json.loads(response.content.decode("utf-8"))
@@ -100,7 +108,7 @@ class MaterialsPartNumberSuggestTests(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         html = response.content.decode("utf-8")
         self.assertIn(self.url, html)
-        self.assertIn("minLength: 3", html)
+        self.assertIn("minLength: 1", html)
         self.assertIn("debounce: 200", html)
         # Search input uses remote source — no embedded materials catalog dict.
         search_script_start = html.index("$('input.autocomplete').autocomplete({")
