@@ -573,6 +573,44 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn("bom-btn-primary", html)
         self.assertIn("border-border-subtle", html)
 
+    def test_help_page_documents_current_features(self):
+        user, organization = create_user_and_organization()
+        profile = user.bom_profile(organization=organization)
+        profile.role = "A"
+        profile.save()
+        self.client.login(username="kasper", password="ghostpassword")
+
+        response = self.client.get(reverse("bom:help"))
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        self.assertNotIn("out of date", html.lower())
+        self.assertNotIn("به‌روز نیست", html)
+        self.assertIn('id="part-numbering"', html)
+        self.assertIn('id="uploading-parts"', html)
+        self.assertIn('id="bill-of-materials"', html)
+        self.assertIn('id="systemgroup-import"', html)
+        # English msgids or fa_IR msgstrs (compiled .mo may be absent locally)
+        self.assertTrue(
+            "Import SystemGroup BoM" in html
+            or "دریافت متریال BoM از SystemGroup" in html
+            or "SystemGroup" in html
+        )
+        self.assertTrue(
+            "Load revisions" in html or "بارگذاری ورژن" in html
+        )
+        self.assertTrue(
+            "Material Type" in html or "نوع متریال" in html
+        )
+        self.assertTrue(
+            "Quantity" in html or "مقدار" in html
+        )
+        self.assertTrue(
+            "Do Not Load" in html or "بارگذاری نشود" in html
+        )
+        self.assertTrue(
+            "CRM base URL" in html or "آدرس پایه CRM" in html
+        )
+
 
 class TestBomTabsUrlHash(SimpleTestCase):
     def test_tabs_js_syncs_address_bar_hash(self):

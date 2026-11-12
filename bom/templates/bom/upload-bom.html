@@ -18,7 +18,7 @@
             <div class="bom-panel-pad">
                 <h1 class="mb-2 text-lg font-semibold text-ink">{% trans "Upload bill of materials (BOM)" %}</h1>
                 <p class="mb-2 text-sm text-ink-muted">{% trans "Click" %} <a href="{% static 'bom/doc/test_bom_5_intelligent.csv' %}">{% trans "a sample file for uploading a bill of materials" %}</a> {% trans "to view it. When the material or revision already exists it will be updated; if it is" %} <b>{% trans "not" %}</b> {% trans "defined it will be created." %}</p>
-                <p class="mb-4 text-sm text-ink-muted">{% trans "See CSV file requirements in the documentation" %} <a href="{% url 'bom:help' %}#uploading-parts" target="_blank">{% trans "here" %}<i class="material-icons text-base">open_in_new</i></a>.</p>
+                <p class="mb-4 text-sm text-ink-muted">{% trans "See CSV file requirements in the documentation" %} <a href="{% url 'bom:help' %}#bill-of-materials" target="_blank">{% trans "here" %}<i class="material-icons text-base">open_in_new</i></a>.</p>
 
                 <form action="{% url 'bom:upload-bom' %}" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
