@@ -3325,7 +3325,7 @@ def edit_subpart(request, part_id, part_revision_id, subpart_id):
             instance=subpart,
             organization=organization,
             part_id=subpart.part_revision.part.id,
-            show_reference_fields=False,
+            edit_subpart_ui=True,
         )
         if form.is_valid():
             form.save()
@@ -3339,7 +3339,7 @@ def edit_subpart(request, part_id, part_revision_id, subpart_id):
             instance=subpart,
             organization=organization,
             part_id=subpart.part_revision.part.id,
-            show_reference_fields=False,
+            edit_subpart_ui=True,
         )
 
     return TemplateResponse(request, "bom/bom-form.html", locals())

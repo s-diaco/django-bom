@@ -2412,8 +2412,8 @@ class SubpartForm(forms.ModelForm):
         self.organization = kwargs.pop("organization", None)
         self.part_id = kwargs.pop("part_id", None)
         self.ignore_part_revision = kwargs.pop("ignore_part_revision", False)
-        # Edit-subpart UI: keep model values, omit Reference / Do Not Load from the form.
-        show_reference_fields = kwargs.pop("show_reference_fields", True)
+        # Edit-subpart UI: Quantity only; leave part_revision / reference / do_not_load intact.
+        edit_subpart_ui = kwargs.pop("edit_subpart_ui", False)
         super(SubpartForm, self).__init__(*args, **kwargs)
         if self.part_id is None:
             self.Meta.exclude = ["part_revision"]
@@ -2424,9 +2424,9 @@ class SubpartForm(forms.ModelForm):
         if self.ignore_part_revision:
             self.fields.get("part_revision").required = False
 
-        if not show_reference_fields:
-            self.fields.pop("reference", None)
-            self.fields.pop("do_not_load", None)
+        if edit_subpart_ui:
+            for name in ("part_revision", "reference", "do_not_load"):
+                self.fields.pop(name, None)
 
         if self.part_id:
             part = Part.objects.get(id=self.part_id)
