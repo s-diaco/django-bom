@@ -9,6 +9,11 @@ bom_patterns = [
     # BoM urls
     path("", views.home, name="home"),
     path("materials/", views.materials, name="materials"),
+    path(
+        "materials/part-number-suggest/",
+        views.materials_part_number_suggest,
+        name="materials-part-number-suggest",
+    ),
     path("report/", views.report, name="report"),
     path("create-organization/", views.organization_create, name="organization-create"),
     path("password-reset/", views.password_reset, name="password_reset"),
