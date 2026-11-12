@@ -16,7 +16,7 @@ from django.db.models import (
 )
 from django.db.models.aggregates import Max
 from django.forms import ValidationError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
@@ -90,7 +90,11 @@ from bom.models import (
     User,
     UserMeta,
 )
-from bom.helpers import build_part_search_q, resolve_home_part_jump
+from bom.helpers import (
+    build_part_search_q,
+    resolve_home_part_jump,
+    suggest_part_numbers,
+)
 from bom.list_queries import (
     latest_part_revision_ids,
     paginate_part_revs,
@@ -274,27 +278,8 @@ def materials(request):
         part_revs = part_revs.filter(
             material__in=organization.product_type_codes(has_bom=False)
         )
-    autocomplete_dict = {}
-    enable_autocomplete = settings.BOM_CONFIG.get("admin_dashboard", {}).get(
-        "enable_autocomplete", False
-    )
-    if enable_autocomplete:
-        prefetch_related_objects(part_revs, "part")
-        manufacturer_parts = ManufacturerPart.objects.filter(part__in=parts)
-
-        for pr in part_revs:
-            autocomplete_dict.update({pr.searchable_synopsis.replace('"', ""): None})
-            autocomplete_dict.update({pr.part.full_part_number(): None})
-
-        for mpn in manufacturer_parts:
-            if mpn.manufacturer_part_number:
-                autocomplete_dict.update(
-                    {mpn.manufacturer_part_number.replace('"', ""): None}
-                )
-            if mpn.manufacturer is not None and mpn.manufacturer.name:
-                autocomplete_dict.update({mpn.manufacturer.name.replace('"', ""): None})
-
-    autocomplete = dumps(autocomplete_dict)
+    # Materials typeahead uses GET materials-part-number-suggest (part numbers
+    # only). Do not embed the full-catalog enable_autocomplete dict here.
 
     if query:
         query_stripped = query.strip()
@@ -518,6 +503,34 @@ def materials(request):
     part_revs = paginate_part_revs(request, part_revs)
 
     return TemplateResponse(request, "bom/dashboard.html", locals())
+
+
+MATERIALS_PN_SUGGEST_MIN_LEN = 1
+MATERIALS_PN_SUGGEST_DEFAULT_LIMIT = 15
+MATERIALS_PN_SUGGEST_MAX_LIMIT = 50
+
+
+@login_required(login_url=BOM_LOGIN_URL)
+def materials_part_number_suggest(request):
+    """JSON typeahead for materials search: part numbers only, org-scoped."""
+    profile = request.user.bom_profile()
+    organization = profile.organization
+    if not organization:
+        return JsonResponse({"results": []}, status=400)
+
+    query = (request.GET.get("q") or "").strip()
+    if len(query) < MATERIALS_PN_SUGGEST_MIN_LEN:
+        return JsonResponse({"results": []})
+
+    try:
+        limit = int(request.GET.get("limit") or MATERIALS_PN_SUGGEST_DEFAULT_LIMIT)
+    except (TypeError, ValueError):
+        limit = MATERIALS_PN_SUGGEST_DEFAULT_LIMIT
+    limit = max(1, min(limit, MATERIALS_PN_SUGGEST_MAX_LIMIT))
+
+    return JsonResponse(
+        {"results": suggest_part_numbers(organization, query, limit=limit)}
+    )
 
 
 @login_required(login_url=BOM_LOGIN_URL)

@@ -153,10 +153,9 @@
 
 {% block bom-script %}
     <script>
-        var data = JSON.parse('{{ autocomplete|safe }}');
         $(document).ready(function () {
             $('input.autocomplete').autocomplete({
-                data: data,
+                source: '{% url "bom:materials-part-number-suggest" %}',
                 onAutocomplete: function (val) {
                     var form = document.getElementById("searchForm");
                     var input = document.getElementById("autocomplete-input");
@@ -164,6 +163,8 @@
                     form.submit();
                 },
                 minLength: 1,
+                debounce: 200,
+                limit: 15,
             });
         });
     </script>

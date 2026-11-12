@@ -77,6 +77,35 @@ def build_part_search_q(search_terms, organization):
     )
 
 
+def suggest_part_numbers(organization, query, limit=15):
+    """Return org-scoped part numbers matching ``query`` (part-number fields only).
+
+    Does not match synopsis, MPN, or manufacturer names. Callers should enforce
+    min length before hitting the DB; empty/short queries return [].
+    """
+    query = (query or "").strip()
+    if not query or limit <= 0:
+        return []
+
+    # Over-fetch a little so post-filter on the display string still fills limit.
+    fetch_cap = min(max(limit * 3, limit), 100)
+    parts = (
+        Part.objects.filter(organization=organization)
+        .filter(_part_number_partial_q(query, organization))
+        .select_related("organization", "number_class")
+        .order_by("number_class__code", "number_item", "number_variation")[:fetch_cap]
+    )
+    needle = query.lower()
+    results = []
+    for part in parts:
+        pn = part.full_part_number()
+        if needle in pn.lower():
+            results.append(pn)
+            if len(results) >= limit:
+                break
+    return results
+
+
 def resolve_home_part_jump(query, organization):
     """Resolve a Home hub jump-to query to a Part.
 
