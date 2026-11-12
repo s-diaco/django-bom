@@ -1060,7 +1060,9 @@ class PartRevision(models.Model):
             ),
             post="rating",
         )
-        s += verbosify(self.material)
+        # Displayable synopsis omits material (codes / ProductType labels clutter UI).
+        if make_searchable:
+            s += verbosify(self.material)
         s += verbosify(self.color)
         s += verbosify(self.finish)
         s += verbosify(
