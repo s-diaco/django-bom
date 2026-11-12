@@ -12,6 +12,7 @@ from django.db.models import Max, Prefetch, Subquery
 from django.forms import ValidationError
 from django.utils import timezone
 from django.utils.functional import cached_property
+from django.utils.translation import gettext
 from djmoney.models.fields import CURRENCY_CHOICES, CurrencyField, MoneyField
 from djmoney.money import Money
 
@@ -1060,9 +1061,7 @@ class PartRevision(models.Model):
             ),
             post="rating",
         )
-        s += verbosify(
-            self.material if make_searchable else self.get_material_display()
-        )
+        s += verbosify(self._material_for_synopsis(make_searchable))
         s += verbosify(self.color)
         s += verbosify(self.finish)
         s += verbosify(
@@ -1099,6 +1098,16 @@ class PartRevision(models.Model):
             ),
         )
         return s[:255]
+
+    def _material_for_synopsis(self, make_searchable):
+        """Searchable: raw material code. Displayable: org ProductType name."""
+        if make_searchable:
+            return self.material
+        pt = self.product_type
+        if pt is None or not pt.name:
+            return ""
+        # Match PartRevisionForm choices: gettext(pt.name).
+        return gettext(pt.name)
 
     def synopsis(self, return_displayable=True):
         return (
