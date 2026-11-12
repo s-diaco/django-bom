@@ -2,7 +2,7 @@
 
 {% load static %}
 
-{% block head-title %}Help{% endblock %}
+{% block head-title %}{% trans "Help" %}{% endblock %}
 
 {% block main %}
 {% endblock %}
@@ -12,8 +12,150 @@
 
 {% block content %}
     <div class="container" style="font-size: 16px;">
-        <h1 class="text-center">{% trans "This page is currently out of date and its content has not been updated to match system changes." %}</h1>
+        <h1 class="text-center">{% trans "Lithium Help" %}</h1>
         <div class="row">
+            <article class="col s12 m8 offset-m1 xl7 offset-xl1">
+                <div class="section scrollspy">
+                    <h2>{% trans "Quick start" %}</h2>
+                    <ol>
+                        <li>
+                            {% trans "As an organization Admin (or owner), open" %}
+                            <a href="{% url 'bom:settings' %}" target="_blank">{% trans "Settings" %}</a>.
+                            <ul class="browser-default">
+                                <li>{% trans "On the Lithium / numbering tab, set item-number digits (you can increase later, not decrease) and define part classes if you use semi-intelligent numbers." %}</li>
+                                <li>{% trans "On Organization, review product types (Material Type) and, if you use SystemGroup import, enable it and set the CRM base URL." %}</li>
+                                <li>{% trans "On User, set your language and — for SystemGroup import — your personal CRM username and password." %}</li>
+                            </ul>
+                        </li>
+                        <li>
+                            {% trans "Create or upload materials, then build product trees (BoMs) for assemblies." %}
+                            <ul class="browser-default">
+                                <li>{% trans "Use New Material and Upload materials from Home or the materials list." %}</li>
+                                <li>{% trans "Open a product, open the Bill of Materials tab, and add subparts (or upload a CSV / Import material from SystemGroup)." %}</li>
+                            </ul>
+                        </li>
+                    </ol>
+                    <div class="divider"></div>
+                </div>
+
+                <div class="section scrollspy">
+                    <h2>{% trans "Concepts" %}</h2>
+                    <p>{% trans "Lithium keeps your organization’s catalog of materials and how they assemble into products." %}</p>
+                    <ul class="browser-default">
+                        <li>{% trans "A material (part) has a part number, description, and one or more revisions." %}</li>
+                        <li>{% trans "Material Type (product type) classifies a revision. Types with “Has BoM” are products that can have a bill of materials; types with Has BoM off are raw materials." %}</li>
+                        <li>{% trans "A Bill of Materials (BoM) lists the child materials (subparts) and quantity needed for a product revision." %}</li>
+                        <li>{% trans "Working revisions can be edited; Released revisions are locked until reverted to Working." %}</li>
+                    </ul>
+                </div>
+
+                <div class="section scrollspy">
+                    <h3>{% trans "Users and roles" %}</h3>
+                    <p>{% trans "Each user belongs to one organization. Viewers can search and view. Admins can create, edit, upload, and delete. The organization owner manages users, organization settings, and SystemGroup import enablement." %}</p>
+                    <a class="anchor" id="part-numbering"></a>
+                </div>
+
+                <div class="section scrollspy">
+                    <h3>{% trans "Part numbers" %}</h3>
+                    <p>{% trans "Choose a numbering scheme when you create the organization. Changing later is difficult once materials exist." %}</p>
+                    <h4>{% trans "Semi-intelligent (recommended)" %}</h4>
+                    <p>{% trans "Part numbers look like CCC-NNNNNN-VV: a part class code, an item number (3–10 digits, set in Settings), and a variation. Lithium can assign the next item number when you omit it." %}</p>
+                    <p>{% trans "Define part classes in Settings (form or CSV). Sample file:" %}
+                        <a href="{% static 'bom/doc/sample_part_classes.csv' %}">{% trans "sample part classes CSV" %}</a>.
+                    </p>
+                    <h4>{% trans "Intelligent" %}</h4>
+                    <p>{% trans "You assign any part number string yourself. More flexible for legacy schemes; less automatic assignment." %}</p>
+                </div>
+
+                <div class="section scrollspy">
+                    <h3>{% trans "Settings" %}</h3>
+                    <ul class="browser-default">
+                        <li><b>{% trans "User" %}</b> — {% trans "Profile, language, and personal SystemGroup CRM username/password for BoM import." %}</li>
+                        <li><b>{% trans "Lithium / numbering" %}</b> — {% trans "Part classes and item-number length (admins)." %}</li>
+                        <li><b>{% trans "Organization" %}</b> — {% trans "Name, product types, users (owner), Enable SystemGroup BoM import, and SystemGroup CRM base URL (for example http://192.168.x.x/)." %}</li>
+                    </ul>
+                    <p>{% trans "Live SystemGroup import needs all three: import enabled on the organization, a CRM base URL, and your own saved CRM credentials." %}</p>
+                </div>
+
+                <div class="section scrollspy">
+                    <h3>{% trans "Home and materials" %}</h3>
+                    <p>{% trans "After login, Home lets you jump to a part number or open the materials list. Search by part number, description, manufacturer, or MPN. Admins can create materials, upload CSV lists, and (when permitted) import from SystemGroup." %}</p>
+                    <p>{% trans "Open a material to see revisions, specifications, BoM (for products), where-used, sourcing, and customer pricing (admins)." %}</p>
+                </div>
+
+                <div class="section scrollspy">
+                    <h3>{% trans "Searching" %}</h3>
+                    <p>{% trans "Free-form search matches part number, synopsis/description, manufacturer name, and MPN. Multiple terms are OR’d. Put multi-word phrases in quotes. Do not put a space between a value and its unit (use 10uF, not 10 uF)." %}</p>
+                    <p>{% trans "More detail:" %} <a href="{% url 'bom:search-help' %}" target="_blank">{% trans "Search help" %}</a>.</p>
+                    <div class="divider"></div>
+                    <a class="anchor" id="uploading-parts"></a>
+                </div>
+
+                <div class="section scrollspy">
+                    <h2>{% trans "Uploading materials" %}</h2>
+                    <p>{% trans "Admins can upload a CSV of materials. Required columns depend on your numbering scheme; typically part_number (or part_class for semi-intelligent), revision, and description and/or value + value_units. Existing part numbers are skipped on conflict; other rows continue." %}</p>
+                    <p>
+                        <a href="{% static 'bom/doc/test_new_parts.csv' %}">{% trans "Sample semi-intelligent CSV" %}</a>
+                        ·
+                        <a href="{% static 'bom/doc/test_new_parts_5_intelligent.csv' %}">{% trans "Sample intelligent CSV" %}</a>
+                        ·
+                        <a href="{% url 'bom:upload-parts-help' %}" target="_blank">{% trans "Full upload field list" %}</a>
+                    </p>
+                    <div class="divider"></div>
+                    <a class="anchor" id="bill-of-materials"></a>
+                </div>
+
+                <div class="section scrollspy">
+                    <h2>{% trans "Bill of materials" %}</h2>
+                    <p>{% trans "On a product revision’s BoM tab you see the indented tree: level, code, quantity, description, revision, LoI, and price. Nested products expand to show their children." %}</p>
+
+                    <h3>{% trans "Add or edit a subpart" %}</h3>
+                    <p>{% trans "Admins add a subpart with the material’s part number and Quantity (weight / amount for that line). Edit subpart uses the same Quantity field." %}</p>
+                    <p>{% trans "Reference and Do Not Load are not shown in the add/edit subpart UI. Existing values stay unchanged when you save from that form. Those fields remain available via CSV upload if your process needs them." %}</p>
+
+                    <h3>{% trans "Upload a BoM CSV" %}</h3>
+                    <p>{% trans "From the BoM tab (Add all subparts) or Upload bill of materials, send a CSV. Each row needs part_number or manufacturer_part_number, plus quantity (empty defaults to 1). Optional: reference / designator, do_not_load / dnl (Y/X), revision, description." %}</p>
+                    <p>
+                        <a href="{% static 'bom/doc/test_full_bom.csv' %}">{% trans "Sample semi-intelligent BoM CSV" %}</a>
+                        ·
+                        <a href="{% static 'bom/doc/test_bom_5_intelligent.csv' %}">{% trans "Sample intelligent BoM CSV" %}</a>
+                    </p>
+                    <a class="anchor" id="systemgroup-import"></a>
+                </div>
+
+                <div class="section scrollspy">
+                    <h2>{% trans "Import SystemGroup BoM" %}</h2>
+                    <p>{% trans "Pull a PAC Engineering BoM from the on-LAN SystemGroup CRM into Lithium. Missing parts and revisions are created; existing ones are reused." %}</p>
+
+                    <h3>{% trans "Before you import" %}</h3>
+                    <ol>
+                        <li>{% trans "Organization owner: Settings → Organization → enable SystemGroup BoM import and set the CRM base URL." %}</li>
+                        <li>{% trans "Each admin who imports: Settings → User → SystemGroup username and password (leave password blank to keep a saved value)." %}</li>
+                        <li>{% trans "Open Import material from Home, or Import SystemGroup BoM from the upload menu." %}</li>
+                    </ol>
+
+                    <h3>{% trans "Preferred flow" %}</h3>
+                    <ol>
+                        <li>{% trans "Choose Material Type for a newly created parent product. New child materials get the first product type with Has BoM off. Existing materials keep their current type." %}</li>
+                        <li>{% trans "Enter the CRM Part ID (left side of «کد BOM»)." %}</li>
+                        <li>{% trans "Click Load revisions, pick the revision, then Import this BoM." %}</li>
+                    </ol>
+                    <p>{% trans "Shortcut: enter Part ID + Revision (for example 1155F229/A2*10-C, matching CRM «کد BOM») and click Get the BoM." %}</p>
+
+                    <h3>{% trans "If a BoM already exists" %}</h3>
+                    <p>{% trans "You can keep the current tree and append the import, or replace it with the CRM BoM." %}</p>
+
+                    <h3>{% trans "More options" %}</h3>
+                    <p>{% trans "Under More options you can paste a CRM BoM id or Edit URL, upload saved Edit HTML/JSON for offline import, browse the CRM BoM list, or run a dry run (parse only)." %}</p>
+                    <div class="divider"></div>
+                </div>
+
+                <div class="section scrollspy">
+                    <h2>{% trans "Downloads" %}</h2>
+                    <p>{% trans "From search results or a material’s BoM tab, download indented or flat BoM CSVs for manufacturing and review." %}</p>
+                </div>
+            </article>
+
             <div class="col hide-on-small-only m3 xl3 offset-xl1">
                 <ul id="toc" class="section table-of-contents">
                     {% include 'bom/table_of_contents.html' %}
@@ -22,7 +164,7 @@
         </div>
     </div>
     <div class="fixed bottom-6 end-6 z-40 printer-hide" id="toTop">
-        <a class="bom-btn-primary inline-flex size-12 items-center justify-center rounded-full shadow-lg" href="#" aria-label="Back to top">
+        <a class="bom-btn-primary inline-flex size-12 items-center justify-center rounded-full shadow-lg" href="#" aria-label="{% trans "Back to top" %}">
             <i class="material-icons">arrow_upward</i>
         </a>
     </div>
@@ -31,15 +173,7 @@
 {% block script %}
     <script>
         $("#toTop").click(function () {
-            //1 second of animation time
-            //html works for FFX but not Chrome
-            //body works for Chrome but not FFX
-            //This strange selector seems to work universally
             $("html, body").animate({scrollTop: 0}, 500);
-        });
-
-        $(document).ready(function () {
-            $('.fixed-action-btn').floatingActionButton();
         });
     </script>
 {% endblock %}

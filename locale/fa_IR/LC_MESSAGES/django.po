@@ -1695,6 +1695,279 @@ msgstr "رمز عبورهای جدید یکسان نیستند."
 msgid "Your password has been successfully reset."
 msgstr "رمز عبور شما با موفقیت عوض شد."
 
+# Help page (LI-61)
+
+msgid "Help"
+msgstr "راهنما"
+
+msgid "Lithium Help"
+msgstr "راهنمای لیتیوم"
+
+msgid "Quick start"
+msgstr "شروع سریع"
+
+msgid "As an organization Admin (or owner), open"
+msgstr "اگر نقش شما مدیر (یا مالک) سازمان است، باز کنید"
+
+msgid ""
+"On the Lithium / numbering tab, set item-number digits (you can increase later, not decrease) and define part classes if you use semi-intelligent numbers."
+msgstr ""
+"در زبانه لیتیوم / شماره‌گذاری، تعداد ارقام شماره آیتم را تنظیم کنید (بعداً می‌توانید افزایش دهید، نه کاهش) و در صورت استفاده از شماره‌گذاری نیمه‌هوشمند، کلاس‌های متریال را تعریف کنید."
+
+msgid ""
+"On Organization, review product types (Material Type) and, if you use SystemGroup import, enable it and set the CRM base URL."
+msgstr ""
+"در زبانه شرکت، نوع‌های محصول (نوع متریال) را بررسی کنید و اگر از دریافت متریال SystemGroup استفاده می‌کنید، آن را فعال کرده و آدرس پایه CRM را تنظیم کنید."
+
+msgid ""
+"On User, set your language and — for SystemGroup import — your personal CRM username and password."
+msgstr ""
+"در زبانه کاربر، زبان را تنظیم کنید و — برای دریافت متریال SystemGroup — نام کاربری و گذرواژه شخصی CRM خود را وارد کنید."
+
+msgid ""
+"Create or upload materials, then build product trees (BoMs) for assemblies."
+msgstr ""
+"متریال‌ها را ایجاد یا آپلود کنید، سپس درخت محصول (BoM) مونتاژها را بسازید."
+
+msgid ""
+"Use New Material and Upload materials from Home or the materials list."
+msgstr ""
+"از خانه یا فهرست متریال‌ها، «متریال جدید» و «آپلود متریال» را استفاده کنید."
+
+msgid ""
+"Open a product, open the Bill of Materials tab, and add subparts (or upload a CSV / Import material from SystemGroup)."
+msgstr ""
+"یک محصول را باز کنید، زبانه درخت محصول را انتخاب کنید و زیرمتریال اضافه کنید (یا CSV آپلود کنید / از SystemGroup دریافت متریال کنید)."
+
+msgid "Concepts"
+msgstr "مفاهیم"
+
+msgid ""
+"Lithium keeps your organization’s catalog of materials and how they assemble into products."
+msgstr ""
+"لیتیوم کاتالوگ متریال‌های سازمان و نحوه مونتاژ آن‌ها در محصولات را نگه می‌دارد."
+
+msgid ""
+"A material (part) has a part number, description, and one or more revisions."
+msgstr ""
+"هر متریال یک کد، توضیح، و یک یا چند ورژن دارد."
+
+msgid ""
+"Material Type (product type) classifies a revision. Types with “Has BoM” are products that can have a bill of materials; types with Has BoM off are raw materials."
+msgstr ""
+"نوع متریال (نوع محصول) ورژن را دسته‌بندی می‌کند. نوع‌هایی با «دارای BoM» محصول‌هایی هستند که می‌توانند درخت محصول داشته باشند؛ نوع‌هایی بدون BoM متریال خام‌اند."
+
+msgid ""
+"A Bill of Materials (BoM) lists the child materials (subparts) and quantity needed for a product revision."
+msgstr ""
+"درخت محصول (BoM) متریال‌های فرزند (زیرمتریال) و مقدار لازم برای یک ورژن محصول را فهرست می‌کند."
+
+msgid ""
+"Working revisions can be edited; Released revisions are locked until reverted to Working."
+msgstr ""
+"ورژن‌های در حال کار قابل ویرایش‌اند؛ ورژن‌های منتشرشده قفل می‌شوند تا دوباره به در حال کار برگردند."
+
+msgid "Users and roles"
+msgstr "کاربران و نقش‌ها"
+
+msgid ""
+"Each user belongs to one organization. Viewers can search and view. Admins can create, edit, upload, and delete. The organization owner manages users, organization settings, and SystemGroup import enablement."
+msgstr ""
+"هر کاربر به یک سازمان تعلق دارد. بیننده‌ها می‌توانند جستجو و مشاهده کنند. مدیران می‌توانند ایجاد، ویرایش، آپلود و حذف کنند. مالک سازمان کاربران، تنظیمات شرکت، و فعال‌سازی دریافت متریال SystemGroup را مدیریت می‌کند."
+
+msgid "Part numbers"
+msgstr "شماره متریال"
+
+msgid ""
+"Choose a numbering scheme when you create the organization. Changing later is difficult once materials exist."
+msgstr ""
+"هنگام ایجاد سازمان یک طرح شماره‌گذاری انتخاب کنید. پس از وجود متریال، تغییر آن دشوار است."
+
+msgid "Semi-intelligent (recommended)"
+msgstr "نیمه‌هوشمند (پیشنهادی)"
+
+msgid ""
+"Part numbers look like CCC-NNNNNN-VV: a part class code, an item number (3–10 digits, set in Settings), and a variation. Lithium can assign the next item number when you omit it."
+msgstr ""
+"شماره متریال به شکل CCC-NNNNNN-VV است: کد کلاس، شماره آیتم (۳ تا ۱۰ رقم، در تنظیمات)، و واریاسیون. اگر شماره آیتم را خالی بگذارید لیتیوم بعدی را اختصاص می‌دهد."
+
+msgid "Define part classes in Settings (form or CSV). Sample file:"
+msgstr "کلاس‌های متریال را در تنظیمات (فرم یا CSV) تعریف کنید. فایل نمونه:"
+
+msgid "sample part classes CSV"
+msgstr "CSV نمونه کلاس‌های متریال"
+
+msgid "Intelligent"
+msgstr "هوشمند"
+
+msgid ""
+"You assign any part number string yourself. More flexible for legacy schemes; less automatic assignment."
+msgstr ""
+"خودتان هر رشته شماره متریال را تعیین می‌کنید. برای طرح‌های قدیمی منعطف‌تر است؛ تخصیص خودکار کمتر."
+
+msgid ""
+"Profile, language, and personal SystemGroup CRM username/password for BoM import."
+msgstr ""
+"نمایه، زبان، و نام کاربری/گذرواژه شخصی CRM SystemGroup برای دریافت BoM."
+
+msgid "Lithium / numbering"
+msgstr "لیتیوم / شماره‌گذاری"
+
+msgid "Part classes and item-number length (admins)."
+msgstr "کلاس‌های متریال و طول شماره آیتم (مدیران)."
+
+msgid ""
+"Name, product types, users (owner), Enable SystemGroup BoM import, and SystemGroup CRM base URL (for example http://192.168.x.x/)."
+msgstr ""
+"نام، نوع‌های محصول، کاربران (مالک)، فعال‌سازی دریافت BoM از SystemGroup، و آدرس پایه CRM (مثلاً http://192.168.x.x/)."
+
+msgid ""
+"Live SystemGroup import needs all three: import enabled on the organization, a CRM base URL, and your own saved CRM credentials."
+msgstr ""
+"دریافت زنده از SystemGroup هر سه مورد را لازم دارد: فعال بودن دریافت در سازمان، آدرس پایه CRM، و اعتبارنامه ذخیره‌شده خودتان."
+
+msgid "Home and materials"
+msgstr "خانه و متریال‌ها"
+
+msgid ""
+"After login, Home lets you jump to a part number or open the materials list. Search by part number, description, manufacturer, or MPN. Admins can create materials, upload CSV lists, and (when permitted) import from SystemGroup."
+msgstr ""
+"پس از ورود، خانه امکان پرش به کد متریال یا باز کردن فهرست متریال‌ها را می‌دهد. با کد، توضیح، تولیدکننده یا MPN جستجو کنید. مدیران می‌توانند متریال بسازند، CSV آپلود کنند و (در صورت مجوز) از SystemGroup دریافت کنند."
+
+msgid ""
+"Open a material to see revisions, specifications, BoM (for products), where-used, sourcing, and customer pricing (admins)."
+msgstr ""
+"یک متریال را باز کنید تا ورژن‌ها، مشخصات، درخت محصول (برای محصولات)، محل مصرف، تأمین، و قیمت مشتری (مدیران) را ببینید."
+
+msgid "Searching"
+msgstr "جستجو"
+
+msgid ""
+"Free-form search matches part number, synopsis/description, manufacturer name, and MPN. Multiple terms are OR’d. Put multi-word phrases in quotes. Do not put a space between a value and its unit (use 10uF, not 10 uF)."
+msgstr ""
+"جستجوی آزاد با کد متریال، خلاصه/توضیح، نام تولیدکننده و MPN مطابقت دارد. چند عبارت با OR ترکیب می‌شوند. عبارات چندکلمه‌ای را در گیومه بگذارید. بین مقدار و واحد فاصله نگذارید (۱۰uF، نه ۱۰ uF)."
+
+msgid "More detail:"
+msgstr "جزئیات بیشتر:"
+
+msgid "Search help"
+msgstr "راهنمای جستجو"
+
+msgid "Uploading materials"
+msgstr "آپلود متریال‌ها"
+
+msgid ""
+"Admins can upload a CSV of materials. Required columns depend on your numbering scheme; typically part_number (or part_class for semi-intelligent), revision, and description and/or value + value_units. Existing part numbers are skipped on conflict; other rows continue."
+msgstr ""
+"مدیران می‌توانند CSV متریال آپلود کنند. ستون‌های الزامی به طرح شماره‌گذاری بستگی دارد؛ معمولاً part_number (یا part_class برای نیمه‌هوشمند)، revision، و description و/یا value به‌همراه value_units. در تداخل کد موجود، آن ردیف رد می‌شود و بقیه ادامه می‌یابد."
+
+msgid "Sample semi-intelligent CSV"
+msgstr "CSV نمونه نیمه‌هوشمند"
+
+msgid "Sample intelligent CSV"
+msgstr "CSV نمونه هوشمند"
+
+msgid "Full upload field list"
+msgstr "فهرست کامل فیلدهای آپلود"
+
+msgid "Bill of materials"
+msgstr "درخت محصول"
+
+msgid ""
+"On a product revision’s BoM tab you see the indented tree: level, code, quantity, description, revision, LoI, and price. Nested products expand to show their children."
+msgstr ""
+"در زبانه درخت محصول یک ورژن محصول، درخت تورفته را می‌بینید: سطح، کد، مقدار، توضیح، ورژن، پرت، و قیمت. محصولات تودرتو برای نمایش فرزندان باز می‌شوند."
+
+msgid "Add or edit a subpart"
+msgstr "افزودن یا ویرایش زیرمتریال"
+
+msgid ""
+"Admins add a subpart with the material’s part number and Quantity (weight / amount for that line). Edit subpart uses the same Quantity field."
+msgstr ""
+"مدیران زیرمتریال را با کد متریال و مقدار (وزن / میزان آن ردیف) اضافه می‌کنند. ویرایش زیرمتریال همان فیلد مقدار را دارد."
+
+msgid ""
+"Reference and Do Not Load are not shown in the add/edit subpart UI. Existing values stay unchanged when you save from that form. Those fields remain available via CSV upload if your process needs them."
+msgstr ""
+"رفرنس و «بارگذاری نشود» در رابط افزودن/ویرایش زیرمتریال نمایش داده نمی‌شوند. هنگام ذخیره از آن فرم، مقادیر موجود تغییر نمی‌کنند. در صورت نیاز، این فیلدها از طریق آپلود CSV در دسترس‌اند."
+
+msgid "Upload a BoM CSV"
+msgstr "آپلود CSV درخت محصول"
+
+msgid ""
+"From the BoM tab (Add all subparts) or Upload bill of materials, send a CSV. Each row needs part_number or manufacturer_part_number, plus quantity (empty defaults to 1). Optional: reference / designator, do_not_load / dnl (Y/X), revision, description."
+msgstr ""
+"از زبانه درخت محصول (افزودن همه زیرمتریال‌ها) یا آپلود درخت محصول، یک CSV بفرستید. هر ردیف به part_number یا manufacturer_part_number و quantity نیاز دارد (خالی یعنی ۱). اختیاری: reference / designator، do_not_load / dnl (Y/X)، revision، description."
+
+msgid "Sample semi-intelligent BoM CSV"
+msgstr "CSV نمونه درخت محصول نیمه‌هوشمند"
+
+msgid "Sample intelligent BoM CSV"
+msgstr "CSV نمونه درخت محصول هوشمند"
+
+msgid "Before you import"
+msgstr "پیش از دریافت متریال"
+
+msgid ""
+"Organization owner: Settings → Organization → enable SystemGroup BoM import and set the CRM base URL."
+msgstr ""
+"مالک سازمان: تنظیمات ← شرکت ← دریافت BoM از SystemGroup را فعال کنید و آدرس پایه CRM را تنظیم کنید."
+
+msgid ""
+"Each admin who imports: Settings → User → SystemGroup username and password (leave password blank to keep a saved value)."
+msgstr ""
+"هر مدیری که دریافت می‌کند: تنظیمات ← کاربر ← نام کاربری و گذرواژه SystemGroup (برای نگه‌داشتن مقدار ذخیره‌شده، گذرواژه را خالی بگذارید)."
+
+msgid ""
+"Open Import material from Home, or Import SystemGroup BoM from the upload menu."
+msgstr ""
+"از خانه «دریافت متریال» را باز کنید، یا از منوی آپلود «دریافت BoM از SystemGroup» را انتخاب کنید."
+
+msgid "Preferred flow"
+msgstr "جریان پیشنهادی"
+
+msgid ""
+"Choose Material Type for a newly created parent product. New child materials get the first product type with Has BoM off. Existing materials keep their current type."
+msgstr ""
+"نوع متریال را برای محصول والد تازه‌ایجادشده انتخاب کنید. متریال‌های فرزند جدید اولین نوع محصول بدون BoM را می‌گیرند. متریال‌های موجود نوع فعلی خود را حفظ می‌کنند."
+
+msgid "Enter the CRM Part ID (left side of «کد BOM»)."
+msgstr "کد متریال CRM را وارد کنید (سمت چپ «کد BOM»)."
+
+msgid ""
+"Click Load revisions, pick the revision, then Import this BoM."
+msgstr ""
+"«بارگذاری ورژن‌ها» را بزنید، ورژن را انتخاب کنید، سپس «دریافت متریال این BoM» را بزنید."
+
+msgid ""
+"Shortcut: enter Part ID + Revision (for example 1155F229/A2*10-C, matching CRM «کد BOM») and click Get the BoM."
+msgstr ""
+"میان‌بر: Part ID + Revision را وارد کنید (مثلاً 1155F229/A2*10-C مطابق «کد BOM» در CRM) و «دریافت BoM» را بزنید."
+
+msgid "If a BoM already exists"
+msgstr "اگر BoM از قبل وجود دارد"
+
+msgid ""
+"You can keep the current tree and append the import, or replace it with the CRM BoM."
+msgstr ""
+"می‌توانید درخت فعلی را نگه دارید و دریافت را اضافه کنید، یا با BoM از CRM جایگزین کنید."
+
+msgid ""
+"Under More options you can paste a CRM BoM id or Edit URL, upload saved Edit HTML/JSON for offline import, browse the CRM BoM list, or run a dry run (parse only)."
+msgstr ""
+"در گزینه‌های بیشتر می‌توانید شناسه یا URL ویرایش CRM را بچسبانید، HTML/JSON ذخیره‌شده را برای دریافت آفلاین آپلود کنید، فهرست BoMهای CRM را ببینید، یا اجرای آزمایشی (فقط تجزیه) انجام دهید."
+
+msgid "Downloads"
+msgstr "دانلودها"
+
+msgid ""
+"From search results or a material’s BoM tab, download indented or flat BoM CSVs for manufacturing and review."
+msgstr ""
+"از نتایج جستجو یا زبانه درخت محصول یک متریال، CSV تورفته یا تخت را برای ساخت و بررسی دانلود کنید."
+
+msgid "Back to top"
+msgstr "بازگشت به بالا"
+
 #~ msgid "Overload Cost"
 #~ msgstr "هزینه سربار"
 
