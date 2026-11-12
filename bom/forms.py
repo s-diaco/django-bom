@@ -2404,11 +2404,16 @@ class SubpartForm(forms.ModelForm):
     class Meta:
         model = Subpart
         fields = ["part_revision", "reference", "count", "do_not_load"]
+        labels = {
+            "count": _("Quantity"),
+        }
 
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
         self.part_id = kwargs.pop("part_id", None)
         self.ignore_part_revision = kwargs.pop("ignore_part_revision", False)
+        # Edit-subpart UI: keep model values, omit Reference / Do Not Load from the form.
+        show_reference_fields = kwargs.pop("show_reference_fields", True)
         super(SubpartForm, self).__init__(*args, **kwargs)
         if self.part_id is None:
             self.Meta.exclude = ["part_revision"]
@@ -2418,6 +2423,10 @@ class SubpartForm(forms.ModelForm):
             ).order_by("-timestamp")
         if self.ignore_part_revision:
             self.fields.get("part_revision").required = False
+
+        if not show_reference_fields:
+            self.fields.pop("reference", None)
+            self.fields.pop("do_not_load", None)
 
         if self.part_id:
             part = Part.objects.get(id=self.part_id)
