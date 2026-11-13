@@ -1367,12 +1367,7 @@ msgstr "به‌عنوان %(username)s وارد همکاران سیستم هست
 
 msgid ""
 "Log in with your SystemGroup CRM username and password to import BoMs."
-msgstr "برای دریافت متریال BoM با نام کاربری و رمز CRM همکاران سیستم وارد شوید."
-
-msgid ""
-"Log in with your SystemGroup CRM username and password to import BoMs. "
-"Credentials are saved on your Lithium user account."
-msgstr "برای دریافت متریال BoM با نام کاربری و رمز CRM همکاران سیستم وارد شوید. اعتبارنامه روی حساب کاربری لیتیوم شما ذخیره می‌شود."
+msgstr "برای دریافت خودکار اطلاعات، با اکانت راهکاران دارای دسترسی کافی وارد شوید."
 
 msgid "SystemGroup import is not available for this account."
 msgstr "دریافت متریال همکاران سیستم برای این حساب در دسترس نیست."
