@@ -9,6 +9,31 @@ from .client import extract_bom_id_from_url
 from .parser import split_bom_code
 
 
+class SystemGroupLoginForm(forms.Form):
+    """CRM username/password for SystemGroup login (stored on UserMeta)."""
+
+    systemgroup_username = forms.CharField(
+        required=True,
+        label=_("SystemGroup username"),
+        widget=forms.TextInput(
+            attrs={
+                "autocomplete": "username",
+                "class": "bom-input w-full",
+            }
+        ),
+    )
+    systemgroup_password = forms.CharField(
+        required=True,
+        label=_("SystemGroup password"),
+        widget=forms.PasswordInput(
+            attrs={
+                "autocomplete": "current-password",
+                "class": "bom-input w-full",
+            }
+        ),
+    )
+
+
 class SystemGroupBomImportForm(forms.Form):
     part_id = forms.CharField(
         required=False,
@@ -82,7 +107,7 @@ class SystemGroupBomImportForm(forms.Form):
         label=_("Saved Edit HTML/JSON"),
         help_text=_(
             "Optional offline import. Skips CRM network when provided. "
-            "Live fetch uses your Settings → User credentials and the "
+            "Live fetch uses your SystemGroup login and the "
             "organization CRM base URL."
         ),
     )

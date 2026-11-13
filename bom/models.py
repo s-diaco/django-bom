@@ -265,7 +265,7 @@ class UserMeta(models.Model):
         )
 
     def can_import_systemgroup(self) -> bool:
-        """Org must enable import + CRM URL; this user must have credentials."""
+        """Org must enable import + CRM URL (credentials optional; login on import)."""
         if self.role != "A":
             return False
         org = self.organization
@@ -273,7 +273,7 @@ class UserMeta(models.Model):
             return False
         if not (org.systemgroup_crm_base_url or "").strip():
             return False
-        return self.has_systemgroup_credentials()
+        return True
 
     def get_or_create_organization(self):
         if self.organization is None:

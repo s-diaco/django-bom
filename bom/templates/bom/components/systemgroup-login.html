@@ -1,0 +1,50 @@
+{% load i18n %}
+{# Shared SystemGroup CRM login / logout controls (credentials on UserMeta). #}
+{# Expects: profile, form_action (url), optional next_url, optional login_form #}
+<div class="systemgroup-credential-ux">
+    {% if profile.has_systemgroup_credentials %}
+        <p class="mb-3 text-sm text-ink">
+            {% blocktrans with username=profile.systemgroup_username %}Logged in to SystemGroup as {{ username }}.{% endblocktrans %}
+        </p>
+        <form action="{{ form_action }}" method="post" class="flex flex-wrap items-center gap-3">
+            {% csrf_token %}
+            {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+            <button class="bom-btn-secondary" type="submit" name="submit-systemgroup-logout" value="1">
+                {% trans "Log out of SystemGroup" %}
+            </button>
+        </form>
+    {% else %}
+        <p class="mb-3 text-sm text-ink-muted">
+            {% trans "Log in with your SystemGroup CRM username and password to import BoMs." %}
+        </p>
+        <form action="{{ form_action }}" method="post" class="space-y-3 max-w-md">
+            {% csrf_token %}
+            {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+            <div>
+                <label class="bom-label" for="id_systemgroup_username">{% trans "SystemGroup username" %}</label>
+                <input class="bom-input w-full" type="text" name="systemgroup_username" id="id_systemgroup_username"
+                       value="{% if login_form %}{{ login_form.systemgroup_username.value|default_if_none:'' }}{% endif %}"
+                       autocomplete="username" required>
+                {% if login_form and login_form.systemgroup_username.errors %}
+                    <p class="bom-error">{{ login_form.systemgroup_username.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="bom-label" for="id_systemgroup_password">{% trans "SystemGroup password" %}</label>
+                <input class="bom-input w-full" type="password" name="systemgroup_password" id="id_systemgroup_password"
+                       autocomplete="current-password" required>
+                {% if login_form and login_form.systemgroup_password.errors %}
+                    <p class="bom-error">{{ login_form.systemgroup_password.errors.0 }}</p>
+                {% endif %}
+            </div>
+            {% if login_form and login_form.non_field_errors %}
+                <div class="text-sm text-red-700">{{ login_form.non_field_errors }}</div>
+            {% endif %}
+            <div class="pt-1">
+                <button class="bom-btn-primary" type="submit" name="submit-systemgroup-login" value="1">
+                    {% trans "Log in to SystemGroup" %}
+                </button>
+            </div>
+        </form>
+    {% endif %}
+</div>

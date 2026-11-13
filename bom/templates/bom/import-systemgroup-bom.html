@@ -22,8 +22,27 @@
                     {% trans "Pull a PAC Engineering BoM from the on-LAN SystemGroup CRM into Lithium. Missing parts and revisions are created; existing ones are reused." %}
                 </p>
                 <p class="mb-4 text-sm text-ink-muted">
-                    {% trans "Enter a Part ID, load its CRM revisions, pick one, and import. Live CRM login uses your SystemGroup username/password from Settings → User, and the CRM base URL from Settings → Organization." %}
+                    {% trans "Enter a Part ID, load its CRM revisions, pick one, and import. Live CRM uses your SystemGroup login and the CRM base URL from Settings → Organization." %}
                 </p>
+
+                {% if not profile.has_systemgroup_credentials %}
+                    <div class="mb-6 bom-panel-pad border border-ink/10">
+                        <h2 class="mb-2 text-base font-semibold text-ink">{% trans "SystemGroup login" %}</h2>
+                        {% url 'bom:import-systemgroup-bom' as systemgroup_form_action %}
+                        {% include 'bom/components/systemgroup-login.html' with form_action=systemgroup_form_action login_form=systemgroup_login_form %}
+                    </div>
+                {% else %}
+                <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+                    <p class="text-sm text-ink-muted">
+                        {% blocktrans with username=profile.systemgroup_username %}Logged in to SystemGroup as {{ username }}.{% endblocktrans %}
+                    </p>
+                    <form action="{% url 'bom:import-systemgroup-bom' %}" method="post" class="inline">
+                        {% csrf_token %}
+                        <button class="bom-btn-ghost" type="submit" name="submit-systemgroup-logout" value="1">
+                            {% trans "Log out of SystemGroup" %}
+                        </button>
+                    </form>
+                </div>
 
                 {% if existing_bom_conflict %}
                     <div class="mb-6 bom-panel-pad border border-amber-300 bg-amber-50">
@@ -221,6 +240,7 @@
                         <button class="bom-btn-primary" type="submit">{% trans "Get the BoM" %}</button>
                     </div>
                 </form>
+                {% endif %}
             </div>
         {% else %}
             {% include 'bom/nothing-to-see.html' with required_privilege='Admin' %}
