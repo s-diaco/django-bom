@@ -96,18 +96,18 @@ msgid ""
 "When enabled, organization admins who have saved their own SystemGroup "
 "username/password under User settings can import BoMs. Users without "
 "credentials cannot import. Also set the CRM base URL below."
-msgstr "با فعال‌سازی، مدیران سازمانی که نام کاربری/رمز SystemGroup را در تنظیمات کاربر ذخیره کرده‌اند می‌توانند BoM دریافت متریال کنند. بدون اعتبارنامه امکان دریافت متریال نیست. آدرس پایه CRM را نیز پایین تنظیم کنید."
+msgstr "با فعال‌سازی، مدیران سازمانی که نام کاربری/رمز همکاران سیستم را در تنظیمات کاربر ذخیره کرده‌اند می‌توانند BoM دریافت متریال کنند. بدون اعتبارنامه امکان دریافت متریال نیست. آدرس پایه CRM را نیز پایین تنظیم کنید."
 
 msgid ""
 "On-LAN SystemGroup CRM host, e.g. http://192.168.3.193/. Required for live "
 "BoM import when import is enabled."
-msgstr "میزبان CRM سیستم‌گروپ در شبکه داخلی، مثلاً http://192.168.3.193/. برای دریافت متریال زنده هنگام فعال بودن دریافت متریال لازم است."
+msgstr "میزبان CRM همکاران سیستم در شبکه داخلی، مثلاً http://192.168.3.193/. برای دریافت متریال زنده هنگام فعال بودن دریافت متریال لازم است."
 
 msgid "Enable SystemGroup BoM import"
-msgstr "فعال‌سازی دریافت متریال BoM از SystemGroup"
+msgstr "فعال‌سازی دریافت متریال BoM از همکاران سیستم"
 
 msgid "SystemGroup CRM base URL"
-msgstr "آدرس پایه CRM سیستم‌گروپ"
+msgstr "آدرس پایه CRM همکاران سیستم"
 
 msgid "Overhead"
 msgstr "سربار"
@@ -827,7 +827,7 @@ msgid "Upload bill of materials CSV (BOM)"
 msgstr "آپلود فایل CSV درخت محصول (BOM)"
 
 msgid "Import SystemGroup BoM"
-msgstr "دریافت متریال BoM از SystemGroup"
+msgstr "دریافت متریال BoM از همکاران سیستم"
 
 
 #, python-format
@@ -931,7 +931,7 @@ msgid ""
 "Enter a Part ID, load its CRM revisions, pick one, and import. Live CRM "
 "uses your SystemGroup login and the CRM base URL from Settings → "
 "Organization."
-msgstr "کد متریال را وارد کنید و بعد از انتخاب ورژن، BoM آن را بارگزاری کنید. دریافت زنده از ورود SystemGroup شما و آدرس پایه CRM در تنظیمات ← سازمان استفاده می‌کند."
+msgstr "کد متریال را وارد کنید و بعد از انتخاب ورژن، BoM آن را بارگزاری کنید. دریافت زنده از ورود همکاران سیستم شما و آدرس پایه CRM در تنظیمات ← سازمان استفاده می‌کند."
 
 msgid "Existing BoM found"
 msgstr "BoM موجود پیدا شد"
@@ -1311,7 +1311,7 @@ msgid "English"
 msgstr "انگلیسی"
 
 msgid "SystemGroup CRM"
-msgstr "CRM سیستم‌گروپ"
+msgstr "CRM همکاران سیستم"
 
 msgid "Your personal CRM login for BoM import."
 msgstr "ورود شخصی شما به CRM برای دریافت متریال BoM."
@@ -1323,7 +1323,7 @@ msgstr "دریافت متریال سازمانی فعال است."
 msgid ""
 "Ask the organization owner to set the SystemGroup CRM base URL under "
 "Organization settings."
-msgstr "از مالک سازمان بخواهید آدرس پایه CRM سیستم‌گروپ را در تنظیمات سازمان تنظیم کند."
+msgstr "از مالک سازمان بخواهید آدرس پایه CRM همکاران سیستم را در تنظیمات سازمان تنظیم کند."
 
 msgid "Import material is available."
 msgstr "«دریافت متریال» در دسترس است."
@@ -1332,7 +1332,7 @@ msgid "Log in to unlock Import material."
 msgstr "برای فعال شدن «دریافت متریال» وارد شوید."
 
 msgid "Manage SystemGroup login"
-msgstr "مدیریت ورود SystemGroup"
+msgstr "مدیریت ورود همکاران سیستم"
 
 msgid ""
 "Organization import is currently disabled. Ask the organization owner to "
@@ -1340,50 +1340,50 @@ msgid ""
 msgstr "دریافت متریال سازمانی فعلاً غیرفعال است. از مالک سازمان بخواهید آن را در تنظیمات سازمان فعال کند."
 
 msgid "SystemGroup username"
-msgstr "نام کاربری SystemGroup"
+msgstr "نام کاربری همکاران سیستم"
 
 
 msgid "SystemGroup password"
-msgstr "رمز عبور SystemGroup"
+msgstr "رمز عبور همکاران سیستم"
 
 msgid "SystemGroup login"
-msgstr "ورود به SystemGroup"
+msgstr "ورود به همکاران سیستم"
 
 msgid "Log in to SystemGroup"
-msgstr "ورود به SystemGroup"
+msgstr "ورود به همکاران سیستم"
 
 msgid "Log out of SystemGroup"
-msgstr "خروج از SystemGroup"
+msgstr "خروج از همکاران سیستم"
 
 msgid "Logged in to SystemGroup."
-msgstr "وارد SystemGroup شدید."
+msgstr "وارد همکاران سیستم شدید."
 
 msgid "Logged out of SystemGroup."
-msgstr "از SystemGroup خارج شدید."
+msgstr "از همکاران سیستم خارج شدید."
 
 #, python-format
 msgid "Logged in to SystemGroup as %(username)s."
-msgstr "به‌عنوان %(username)s وارد SystemGroup هستید."
+msgstr "به‌عنوان %(username)s وارد همکاران سیستم هستید."
 
 msgid ""
 "Log in with your SystemGroup CRM username and password to import BoMs."
-msgstr "برای دریافت متریال BoM با نام کاربری و رمز CRM سیستم‌گروپ وارد شوید."
+msgstr "برای دریافت متریال BoM با نام کاربری و رمز CRM همکاران سیستم وارد شوید."
 
 msgid ""
 "Log in with your SystemGroup CRM username and password to import BoMs. "
 "Credentials are saved on your Lithium user account."
-msgstr "برای دریافت متریال BoM با نام کاربری و رمز CRM سیستم‌گروپ وارد شوید. اعتبارنامه روی حساب کاربری لیتیوم شما ذخیره می‌شود."
+msgstr "برای دریافت متریال BoM با نام کاربری و رمز CRM همکاران سیستم وارد شوید. اعتبارنامه روی حساب کاربری لیتیوم شما ذخیره می‌شود."
 
 msgid "SystemGroup import is not available for this account."
-msgstr "دریافت متریال SystemGroup برای این حساب در دسترس نیست."
+msgstr "دریافت متریال همکاران سیستم برای این حساب در دسترس نیست."
 
 msgid "SystemGroup login is not available for this account."
-msgstr "ورود SystemGroup برای این حساب در دسترس نیست."
+msgstr "ورود همکاران سیستم برای این حساب در دسترس نیست."
 
 msgid ""
 "Set the SystemGroup CRM base URL under Settings → Organization before "
 "logging in."
-msgstr "پیش از ورود، آدرس پایه CRM سیستم‌گروپ را در تنظیمات ← سازمان تنظیم کنید."
+msgstr "پیش از ورود، آدرس پایه CRM همکاران سیستم را در تنظیمات ← سازمان تنظیم کنید."
 
 msgid "Product types"
 msgstr "انواع محصول"
@@ -1644,28 +1644,28 @@ msgstr "دستی"
 msgid ""
 "SystemGroup import is disabled for this organization. Ask the organization "
 "owner to enable it under Settings → Organization."
-msgstr "دریافت متریال SystemGroup برای این سازمان غیرفعال است. از مالک سازمان بخواهید آن را در تنظیمات ← سازمان فعال کند."
+msgstr "دریافت متریال همکاران سیستم برای این سازمان غیرفعال است. از مالک سازمان بخواهید آن را در تنظیمات ← سازمان فعال کند."
 
 msgid ""
 "Set the SystemGroup CRM base URL under Settings → Organization before "
 "importing."
-msgstr "پیش از دریافت متریال، آدرس پایه CRM سیستم‌گروپ را در تنظیمات ← سازمان تنظیم کنید."
+msgstr "پیش از دریافت متریال، آدرس پایه CRM همکاران سیستم را در تنظیمات ← سازمان تنظیم کنید."
 
 msgid ""
 "Set your SystemGroup username and password under Settings → User before "
 "importing."
-msgstr "پیش از دریافت متریال، نام کاربری و رمز SystemGroup را در تنظیمات ← کاربر تنظیم کنید."
+msgstr "پیش از دریافت متریال، نام کاربری و رمز همکاران سیستم را در تنظیمات ← کاربر تنظیم کنید."
 
 msgid "SystemGroup username and password are required."
-msgstr "نام کاربری و رمز SystemGroup الزامی است."
+msgstr "نام کاربری و رمز همکاران سیستم الزامی است."
 
 msgid "Log in to SystemGroup before importing."
-msgstr "پیش از دریافت متریال وارد SystemGroup شوید."
+msgstr "پیش از دریافت متریال وارد همکاران سیستم شوید."
 
 
 #, python-format
 msgid "Could not reach the SystemGroup CRM to load revisions: %(error)s"
-msgstr "دسترسی به CRM سیستم‌گروپ برای بارگذاری ورژن‌ها ممکن نشد: %(error)s"
+msgstr "دسترسی به CRM همکاران سیستم برای بارگذاری ورژن‌ها ممکن نشد: %(error)s"
 
 msgid "Select a CRM revision below, then import that BoM."
 msgstr "یک ورژن CRM را پایین انتخاب کنید و آن BoM را دریافت متریال کنید."
@@ -1750,12 +1750,12 @@ msgstr ""
 msgid ""
 "On Organization, review product types (Material Type) and, if you use SystemGroup import, enable it and set the CRM base URL."
 msgstr ""
-"در زبانه شرکت، نوع‌های محصول (نوع متریال) را بررسی کنید و اگر از دریافت متریال SystemGroup استفاده می‌کنید، آن را فعال کرده و آدرس پایه CRM را تنظیم کنید."
+"در زبانه شرکت، نوع‌های محصول (نوع متریال) را بررسی کنید و اگر از دریافت متریال همکاران سیستم استفاده می‌کنید، آن را فعال کرده و آدرس پایه CRM را تنظیم کنید."
 
 msgid ""
 "On User, set your language and — for SystemGroup import — open SystemGroup login with your personal CRM credentials."
 msgstr ""
-"در زبانه کاربر، زبان را تنظیم کنید و — برای دریافت متریال SystemGroup — صفحه ورود SystemGroup را با اعتبارنامه شخصی CRM باز کنید."
+"در زبانه کاربر، زبان را تنظیم کنید و — برای دریافت متریال همکاران سیستم — صفحه ورود همکاران سیستم را با اعتبارنامه شخصی CRM باز کنید."
 
 msgid ""
 "Create or upload materials, then build product trees (BoMs) for assemblies."
@@ -1770,7 +1770,7 @@ msgstr ""
 msgid ""
 "Open a product, open the Bill of Materials tab, and add subparts (or upload a CSV / Import material from SystemGroup)."
 msgstr ""
-"یک محصول را باز کنید، زبانه درخت محصول را انتخاب کنید و زیرمتریال اضافه کنید (یا CSV آپلود کنید / از SystemGroup دریافت متریال کنید)."
+"یک محصول را باز کنید، زبانه درخت محصول را انتخاب کنید و زیرمتریال اضافه کنید (یا CSV آپلود کنید / از همکاران سیستم دریافت متریال کنید)."
 
 msgid "Concepts"
 msgstr "مفاهیم"
@@ -1806,7 +1806,7 @@ msgstr "کاربران و نقش‌ها"
 msgid ""
 "Each user belongs to one organization. Viewers can search and view. Admins can create, edit, upload, and delete. The organization owner manages users, organization settings, and SystemGroup import enablement."
 msgstr ""
-"هر کاربر به یک سازمان تعلق دارد. بیننده‌ها می‌توانند جستجو و مشاهده کنند. مدیران می‌توانند ایجاد، ویرایش، آپلود و حذف کنند. مالک سازمان کاربران، تنظیمات شرکت، و فعال‌سازی دریافت متریال SystemGroup را مدیریت می‌کند."
+"هر کاربر به یک سازمان تعلق دارد. بیننده‌ها می‌توانند جستجو و مشاهده کنند. مدیران می‌توانند ایجاد، ویرایش، آپلود و حذف کنند. مالک سازمان کاربران، تنظیمات شرکت، و فعال‌سازی دریافت متریال همکاران سیستم را مدیریت می‌کند."
 
 msgid "Part numbers"
 msgstr "شماره متریال"
@@ -1841,7 +1841,7 @@ msgstr ""
 msgid ""
 "Profile, language, and a link to SystemGroup login for BoM import."
 msgstr ""
-"نمایه، زبان، و پیوند به ورود SystemGroup برای دریافت BoM."
+"نمایه، زبان، و پیوند به ورود همکاران سیستم برای دریافت BoM."
 
 msgid "Lithium / numbering"
 msgstr "لیتیوم / شماره‌گذاری"
@@ -1852,12 +1852,12 @@ msgstr "کلاس‌های متریال و طول شماره آیتم (مدیرا
 msgid ""
 "Name, product types, users (owner), Enable SystemGroup BoM import, and SystemGroup CRM base URL (for example http://192.168.x.x/)."
 msgstr ""
-"نام، نوع‌های محصول، کاربران (مالک)، فعال‌سازی دریافت BoM از SystemGroup، و آدرس پایه CRM (مثلاً http://192.168.x.x/)."
+"نام، نوع‌های محصول، کاربران (مالک)، فعال‌سازی دریافت BoM از همکاران سیستم، و آدرس پایه CRM (مثلاً http://192.168.x.x/)."
 
 msgid ""
 "Live SystemGroup import needs all three: import enabled on the organization, a CRM base URL, and your own saved CRM credentials."
 msgstr ""
-"دریافت زنده از SystemGroup هر سه مورد را لازم دارد: فعال بودن دریافت در سازمان، آدرس پایه CRM، و اعتبارنامه ذخیره‌شده خودتان."
+"دریافت زنده از همکاران سیستم هر سه مورد را لازم دارد: فعال بودن دریافت در سازمان، آدرس پایه CRM، و اعتبارنامه ذخیره‌شده خودتان."
 
 msgid "Home and materials"
 msgstr "خانه و متریال‌ها"
@@ -1865,7 +1865,7 @@ msgstr "خانه و متریال‌ها"
 msgid ""
 "After login, Home lets you jump to a part number or open the materials list. Search by part number, description, manufacturer, or MPN. Admins can create materials, upload CSV lists, and (when permitted) import from SystemGroup."
 msgstr ""
-"پس از ورود، خانه امکان پرش به کد متریال یا باز کردن فهرست متریال‌ها را می‌دهد. با کد، توضیح، تولیدکننده یا MPN جستجو کنید. مدیران می‌توانند متریال بسازند، CSV آپلود کنند و (در صورت مجوز) از SystemGroup دریافت کنند."
+"پس از ورود، خانه امکان پرش به کد متریال یا باز کردن فهرست متریال‌ها را می‌دهد. با کد، توضیح، تولیدکننده یا MPN جستجو کنید. مدیران می‌توانند متریال بسازند، CSV آپلود کنند و (در صورت مجوز) از همکاران سیستم دریافت کنند."
 
 msgid ""
 "Open a material to see revisions, specifications, BoM (for products), where-used, sourcing, and customer pricing (admins)."
@@ -1944,17 +1944,17 @@ msgstr "پیش از دریافت متریال"
 msgid ""
 "Organization owner: Settings → Organization → enable SystemGroup BoM import and set the CRM base URL."
 msgstr ""
-"مالک سازمان: تنظیمات ← شرکت ← دریافت BoM از SystemGroup را فعال کنید و آدرس پایه CRM را تنظیم کنید."
+"مالک سازمان: تنظیمات ← شرکت ← دریافت BoM از همکاران سیستم را فعال کنید و آدرس پایه CRM را تنظیم کنید."
 
 msgid ""
 "Each admin who imports: open SystemGroup login (from Settings → User or when opening Import material) and sign in with your CRM credentials."
 msgstr ""
-"هر مدیری که دریافت می‌کند: صفحه ورود SystemGroup را باز کنید (از تنظیمات ← کاربر یا هنگام باز کردن دریافت متریال) و با اعتبارنامه CRM وارد شوید."
+"هر مدیری که دریافت می‌کند: صفحه ورود همکاران سیستم را باز کنید (از تنظیمات ← کاربر یا هنگام باز کردن دریافت متریال) و با اعتبارنامه CRM وارد شوید."
 
 msgid ""
 "Open Import material from Home, or Import SystemGroup BoM from the upload menu."
 msgstr ""
-"از خانه «دریافت متریال» را باز کنید، یا از منوی آپلود «دریافت BoM از SystemGroup» را انتخاب کنید."
+"از خانه «دریافت متریال» را باز کنید، یا از منوی آپلود «دریافت BoM از همکاران سیستم» را انتخاب کنید."
 
 msgid "Preferred flow"
 msgstr "جریان پیشنهادی"
