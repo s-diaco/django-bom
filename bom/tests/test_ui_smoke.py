@@ -592,7 +592,8 @@ class TestUiSmoke(TransactionTestCase):
         # English msgids or fa_IR msgstrs (compiled .mo may be absent locally)
         self.assertTrue(
             "Import SystemGroup BoM" in html
-            or "دریافت متریال BoM از SystemGroup" in html
+            or "دریافت متریال BoM از همکاران سیستم" in html
+            or "همکاران سیستم" in html
             or "SystemGroup" in html
         )
         self.assertTrue(
