@@ -894,7 +894,8 @@ html.dark .bom-hub-atmosphere {
   position: relative;
   z-index: 1;
   display: flex;
-  width: min(40rem, 100%);
+  /* Wide enough for admin actions including Import material in one row. */
+  width: min(56rem, 100%);
   flex-direction: column;
   align-items: center;
   text-align: center;
@@ -938,9 +939,16 @@ html.dark .bom-hub-atmosphere {
 
 .bom-hub-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
   gap: 0.5rem;
+}
+
+/* Narrow viewports: allow wrap so buttons stay usable. */
+@media (max-width: 639px) {
+  .bom-hub-actions {
+    flex-wrap: wrap;
+  }
 }
 
 .bom-hub-jump {
