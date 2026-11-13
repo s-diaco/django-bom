@@ -1319,10 +1319,8 @@ msgstr "انگلیسی"
 msgid "SystemGroup CRM"
 msgstr "CRM سیستم‌گروپ"
 
-msgid ""
-"Your personal CRM login for BoM import. Required even when the organization "
-"owner has enabled SystemGroup import."
-msgstr "ورود شخصی شما به CRM برای دریافت متریال BoM. حتی وقتی مالک سازمان دریافت متریال SystemGroup را فعال کرده باشد لازم است."
+msgid "Your personal CRM login for BoM import."
+msgstr "ورود شخصی شما به CRM برای دریافت متریال BoM."
 
 
 msgid "Organization import is enabled."
