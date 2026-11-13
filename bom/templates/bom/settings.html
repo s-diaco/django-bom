@@ -69,14 +69,21 @@
                             {% if not organization.systemgroup_crm_base_url %}
                                 {% trans "Ask the organization owner to set the SystemGroup CRM base URL under Organization settings." %}
                             {% elif profile.has_systemgroup_credentials %}
-                                {% trans "You are logged in — Import material is available." %}
+                                {% blocktrans with username=profile.systemgroup_username %}Logged in to SystemGroup as {{ username }}.{% endblocktrans %}
+                                {% trans "Import material is available." %}
                             {% else %}
-                                {% trans "Log in below to unlock Import material." %}
+                                {% trans "Log in to unlock Import material." %}
                             {% endif %}
                         </p>
                         {% if organization.systemgroup_crm_base_url %}
-                            {% url 'bom:settings' tab_anchor=USER_TAB as systemgroup_form_action %}
-                            {% include 'bom/components/systemgroup-login.html' with form_action=systemgroup_form_action login_form=systemgroup_login_form %}
+                            {% url 'bom:settings' tab_anchor=USER_TAB as settings_user_url %}
+                            <a class="bom-btn-secondary" href="{% url 'bom:systemgroup-login' %}?next={{ settings_user_url|urlencode }}">
+                                {% if profile.has_systemgroup_credentials %}
+                                    {% trans "Manage SystemGroup login" %}
+                                {% else %}
+                                    {% trans "Log in to SystemGroup" %}
+                                {% endif %}
+                            </a>
                         {% endif %}
                     {% else %}
                         <p class="mb-3 text-sm text-ink-muted">{% trans "Organization import is currently disabled. Ask the organization owner to enable it under Organization settings." %}</p>

@@ -119,7 +119,7 @@ def login_systemgroup_credentials(user_meta, username: str, password: str) -> No
 
 
 def handle_systemgroup_credential_post(request, user_meta):
-    """Process login/logout POST buttons. Returns True if handled."""
+    """Process login/logout POST buttons. Returns 'login', 'logout', or None."""
     if "submit-systemgroup-logout" in request.POST:
         clear_systemgroup_credentials(user_meta)
         return "logout"
@@ -129,6 +129,20 @@ def handle_systemgroup_credential_post(request, user_meta):
         login_systemgroup_credentials(user_meta, username, password)
         return "login"
     return None
+
+
+def safe_systemgroup_next_url(request, fallback: str) -> str:
+    """Return an allowed relative next URL from GET/POST, else fallback."""
+    from django.utils.http import url_has_allowed_host_and_scheme
+
+    candidate = (request.POST.get("next") or request.GET.get("next") or "").strip()
+    if candidate and url_has_allowed_host_and_scheme(
+        url=candidate,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return candidate
+    return fallback
 
 
 def client_for_user_meta(user_meta, session=None) -> SystemGroupClient:

@@ -1,6 +1,6 @@
 {% load i18n %}
-{# Shared SystemGroup CRM login / logout controls (credentials on UserMeta). #}
-{# Expects: profile, form_action (url), optional next_url, optional login_form #}
+{# SystemGroup CRM login / logout controls (credentials on UserMeta). #}
+{# Expects: profile, form_action; optional next_url, login_form #}
 <div class="systemgroup-credential-ux">
     {% if profile.has_systemgroup_credentials %}
         <p class="mb-3 text-sm text-ink">
@@ -17,7 +17,7 @@
         <p class="mb-3 text-sm text-ink-muted">
             {% trans "Log in with your SystemGroup CRM username and password to import BoMs." %}
         </p>
-        <form action="{{ form_action }}" method="post" class="space-y-3 max-w-md">
+        <form action="{{ form_action }}" method="post" class="space-y-3">
             {% csrf_token %}
             {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
             <div>

@@ -95,6 +95,11 @@ bom_patterns = [
         views.import_systemgroup_bom,
         name="import-systemgroup-bom",
     ),
+    path(
+        "systemgroup-login/",
+        views.systemgroup_login,
+        name="systemgroup-login",
+    ),
     path("part/<int:part_id>/", views.part_info, name="part-info"),
     path(
         "part/<int:part_id>/customer-prices/create/",

@@ -918,35 +918,7 @@ def bom_settings(request, tab_anchor=None):
     if request.method == "POST":
         part_class_action_ids = request.POST.getlist("actions")
         part_class_action = request.POST.get("part-class-action")
-        if (
-            "submit-systemgroup-login" in request.POST
-            or "submit-systemgroup-logout" in request.POST
-        ):
-            tab_anchor = USER_TAB
-            from bom.systemgroup.access import (
-                handle_systemgroup_credential_post,
-            )
-            from bom.systemgroup.client import SystemGroupClientError
-
-            try:
-                action = handle_systemgroup_credential_post(request, profile)
-            except SystemGroupClientError as exc:
-                messages.error(request, str(exc))
-                from bom.systemgroup.forms import SystemGroupLoginForm
-
-                systemgroup_login_form = SystemGroupLoginForm(request.POST)
-            else:
-                if action == "login":
-                    messages.success(
-                        request, _("Logged in to SystemGroup.")
-                    )
-                elif action == "logout":
-                    messages.success(
-                        request, _("Logged out of SystemGroup.")
-                    )
-                profile.refresh_from_db()
-
-        elif "submit-edit-user" in request.POST:
+        if "submit-edit-user" in request.POST:
             tab_anchor = USER_TAB
             user_form = UserForm(request.POST, instance=user)
             if user_form.is_valid():
@@ -1171,8 +1143,6 @@ def bom_settings(request, tab_anchor=None):
         "bom:settings", kwargs={"tab_anchor": ORGANIZATION_TAB}
     )
     user_meta_form = UserMetaForm()
-    if "systemgroup_login_form" not in locals():
-        systemgroup_login_form = None
 
     organization_form = OrganizationFormEditSettings(instance=organization, user=user)
     organization.ensure_default_product_types()
@@ -2552,16 +2522,95 @@ def part_export_bom(
 
 @login_required(login_url=BOM_LOGIN_URL)
 @organization_admin
+def systemgroup_login(request):
+    """Dedicated SystemGroup CRM login/logout page (used by settings and import)."""
+    from urllib.parse import urlencode
+
+    from bom.systemgroup.access import (
+        handle_systemgroup_credential_post,
+        safe_systemgroup_next_url,
+        user_can_access_systemgroup_import,
+    )
+    from bom.systemgroup.client import SystemGroupClientError
+    from bom.systemgroup.forms import SystemGroupLoginForm
+
+    user = request.user
+    profile = user.bom_profile()
+    organization = profile.organization
+    title = _("SystemGroup login")
+    default_next = reverse("bom:settings", kwargs={"tab_anchor": "user"})
+    next_url = safe_systemgroup_next_url(request, default_next)
+    cancel_url = next_url
+    systemgroup_login_form = None
+
+    if organization is None:
+        return HttpResponseRedirect(reverse("bom:home"))
+
+    # Allow opening the page to see org setup messages even when access is incomplete.
+    if request.method == "POST":
+        if not user_can_access_systemgroup_import(user):
+            if not organization.systemgroup_import_enabled:
+                messages.error(
+                    request,
+                    _(
+                        "SystemGroup import is disabled for this organization. "
+                        "Ask the organization owner to enable it under Settings → Organization."
+                    ),
+                )
+                return HttpResponseRedirect(
+                    reverse("bom:settings", kwargs={"tab_anchor": "organization"})
+                )
+            if not (organization.systemgroup_crm_base_url or "").strip():
+                messages.error(
+                    request,
+                    _(
+                        "Set the SystemGroup CRM base URL under "
+                        "Settings → Organization before logging in."
+                    ),
+                )
+                return HttpResponseRedirect(
+                    reverse("bom:settings", kwargs={"tab_anchor": "organization"})
+                )
+            messages.error(
+                request,
+                _("SystemGroup login is not available for this account."),
+            )
+            return HttpResponseRedirect(reverse("bom:home"))
+
+        try:
+            action = handle_systemgroup_credential_post(request, profile)
+        except SystemGroupClientError as exc:
+            messages.error(request, str(exc))
+            systemgroup_login_form = SystemGroupLoginForm(request.POST)
+        else:
+            profile.refresh_from_db()
+            if action == "login":
+                messages.success(request, _("Logged in to SystemGroup."))
+                return HttpResponseRedirect(next_url)
+            if action == "logout":
+                messages.success(request, _("Logged out of SystemGroup."))
+                # Stay on the login page (with next) so the user can log in again.
+                stay = reverse("bom:systemgroup-login")
+                if next_url and next_url != stay:
+                    stay = f"{stay}?{urlencode({'next': next_url})}"
+                return HttpResponseRedirect(stay)
+
+    return TemplateResponse(request, "bom/systemgroup-login.html", locals())
+
+
+@login_required(login_url=BOM_LOGIN_URL)
+@organization_admin
 def import_systemgroup_bom(request):
     """Admin UI for SystemGroup PAC Engineering BoM import (same backend as CLI)."""
+    from urllib.parse import urlencode
+
     from bom.systemgroup.access import (
         client_for_user_meta,
-        handle_systemgroup_credential_post,
         user_can_access_systemgroup_import,
         user_meta_has_systemgroup_credentials,
     )
     from bom.systemgroup.client import SystemGroupClientError
-    from bom.systemgroup.forms import SystemGroupBomImportForm, SystemGroupLoginForm
+    from bom.systemgroup.forms import SystemGroupBomImportForm
     from bom.systemgroup.importer import (
         AmbiguousBomMatch,
         ExistingBomConflict,
@@ -2575,7 +2624,6 @@ def import_systemgroup_bom(request):
     profile = user.bom_profile()
     organization = profile.organization
     title = _("Import SystemGroup BoM")
-    systemgroup_login_form = None
     if not user_can_access_systemgroup_import(user):
         if organization is None or not organization.systemgroup_import_enabled:
             messages.error(
@@ -2607,22 +2655,12 @@ def import_systemgroup_bom(request):
         )
         return HttpResponseRedirect(reverse("bom:home"))
 
-    if request.method == "POST" and (
-        "submit-systemgroup-login" in request.POST
-        or "submit-systemgroup-logout" in request.POST
-    ):
-        try:
-            action = handle_systemgroup_credential_post(request, profile)
-        except SystemGroupClientError as exc:
-            messages.error(request, str(exc))
-            systemgroup_login_form = SystemGroupLoginForm(request.POST)
-        else:
-            profile.refresh_from_db()
-            if action == "login":
-                messages.success(request, _("Logged in to SystemGroup."))
-            elif action == "logout":
-                messages.success(request, _("Logged out of SystemGroup."))
-            return HttpResponseRedirect(reverse("bom:import-systemgroup-bom"))
+    if not user_meta_has_systemgroup_credentials(profile):
+        login_url = reverse("bom:systemgroup-login")
+        next_target = request.get_full_path()
+        return HttpResponseRedirect(
+            f"{login_url}?{urlencode({'next': next_target})}"
+        )
 
     bom_candidates = None
     revision_candidates = None
@@ -2645,22 +2683,15 @@ def import_systemgroup_bom(request):
     # Only override the form's has_bom default when the query string sets it.
     if request.GET.get("material"):
         form_initial["material"] = request.GET.get("material")
-    credentials_ready = user_meta_has_systemgroup_credentials(profile)
-    bind_import_form = (
-        request.method == "POST"
-        and credentials_ready
-        and "submit-systemgroup-login" not in request.POST
-        and "submit-systemgroup-logout" not in request.POST
-    )
     form = SystemGroupBomImportForm(
-        request.POST if bind_import_form else None,
-        request.FILES if bind_import_form else None,
+        request.POST or None,
+        request.FILES or None,
         organization=organization,
         initial=form_initial,
     )
 
     session_key = "systemgroup_import_source"
-    if bind_import_form and form.is_valid():
+    if request.method == "POST" and form.is_valid():
         cleaned = form.cleaned_data
         if cleaned.get("load_revisions"):
             pn = cleaned.get("part_id") or cleaned.get("parent_part_number")
