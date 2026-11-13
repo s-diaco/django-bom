@@ -37,9 +37,6 @@
                         {% endif %}
                     </p>
                 {% endif %}
-                <p class="mb-0 mt-3 text-sm text-ink-muted">
-                    {% blocktrans %}If this is a finished product, select "{{ organization }}" as the seller.{% endblocktrans %}
-                </p>
             </header>
 
             <form name="form" action="{% url 'bom:sellerpart-edit' sellerpart_id=seller_part.id %}" method="post">

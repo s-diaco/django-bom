@@ -1265,12 +1265,6 @@ msgstr "لیست تأمین کنندگان"
 msgid "Edit Seller Part"
 msgstr "ویرایش اطلاعات بازرگانی متریال"
 
-#, python-format
-msgid ""
-"If this is a finished product, select \"%(organization)s\" as the seller."
-msgstr ""
-"در صورت محصول بودن \"%(organization)s\" را به عنوان تأمین کننده انتخابکنید."
-
 msgid "Search sellers:"
 msgstr "جستجوی تأمین کننده:"
 
