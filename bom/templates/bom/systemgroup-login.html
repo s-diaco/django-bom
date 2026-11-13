@@ -13,9 +13,6 @@
         {% if profile.role == 'A' %}
             <div class="bom-panel-pad bom-systemgroup-login-card">
                 <h1 class="mb-2 text-lg font-semibold text-ink">{% trans "SystemGroup login" %}</h1>
-                <p class="mb-4 text-sm text-ink-muted">
-                    {% trans "Log in with your SystemGroup CRM username and password to import BoMs. Credentials are saved on your Lithium user account." %}
-                </p>
                 {% if not organization.systemgroup_import_enabled %}
                     <p class="mb-3 text-sm text-ink-muted">
                         {% trans "Organization import is currently disabled. Ask the organization owner to enable it under Organization settings." %}
