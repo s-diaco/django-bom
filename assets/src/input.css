@@ -302,6 +302,15 @@ html.dark .bom-brand-mark {
     @apply flex min-h-screen items-center justify-center px-4 py-10;
   }
 
+  /* Authenticated SystemGroup login: center under the app navbar. */
+  .bom-systemgroup-login-page {
+    @apply flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-10;
+  }
+
+  .bom-systemgroup-login-card {
+    @apply w-full max-w-xl;
+  }
+
   .bom-login {
     @apply flex w-full max-w-4xl overflow-hidden rounded-lg border border-border bg-surface;
     box-shadow: var(--shadow-panel);
@@ -885,7 +894,8 @@ html.dark .bom-hub-atmosphere {
   position: relative;
   z-index: 1;
   display: flex;
-  width: min(40rem, 100%);
+  /* Wide enough for admin actions including Import material in one row. */
+  width: min(56rem, 100%);
   flex-direction: column;
   align-items: center;
   text-align: center;
@@ -929,9 +939,16 @@ html.dark .bom-hub-atmosphere {
 
 .bom-hub-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
   gap: 0.5rem;
+}
+
+/* Narrow viewports: allow wrap so buttons stay usable. */
+@media (max-width: 639px) {
+  .bom-hub-actions {
+    flex-wrap: wrap;
+  }
 }
 
 .bom-hub-jump {

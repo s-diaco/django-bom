@@ -22,8 +22,18 @@
                     {% trans "Pull a PAC Engineering BoM from the on-LAN SystemGroup CRM into Lithium. Missing parts and revisions are created; existing ones are reused." %}
                 </p>
                 <p class="mb-4 text-sm text-ink-muted">
-                    {% trans "Enter a Part ID, load its CRM revisions, pick one, and import. Live CRM login uses your SystemGroup username/password from Settings → User, and the CRM base URL from Settings → Organization." %}
+                    {% trans "Enter a Part ID, load its CRM revisions, pick one, and import. Live CRM uses your SystemGroup login and the CRM base URL from Settings → Organization." %}
                 </p>
+
+                <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+                    <p class="text-sm text-ink-muted">
+                        {% blocktrans with username=profile.systemgroup_username %}Logged in to SystemGroup as {{ username }}.{% endblocktrans %}
+                    </p>
+                    {% url 'bom:import-systemgroup-bom' as import_url %}
+                    <a class="bom-btn-ghost" href="{% url 'bom:systemgroup-login' %}?next={{ import_url|urlencode }}">
+                        {% trans "Manage SystemGroup login" %}
+                    </a>
+                </div>
 
                 {% if existing_bom_conflict %}
                     <div class="mb-6 bom-panel-pad border border-amber-300 bg-amber-50">

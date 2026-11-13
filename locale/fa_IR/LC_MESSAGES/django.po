@@ -929,9 +929,9 @@ msgstr "انتقال BoM از همکاران سیستم به لیتیوم. اگ�
 
 msgid ""
 "Enter a Part ID, load its CRM revisions, pick one, and import. Live CRM "
-"login uses your SystemGroup username/password from Settings → User, and the "
-"CRM base URL from Settings → Organization."
-msgstr "کد متریال را وارد کنید و بعد از انتخاب ورژن، BoM آن را بارگزاری کنید."
+"uses your SystemGroup login and the CRM base URL from Settings → "
+"Organization."
+msgstr "کد متریال را وارد کنید و بعد از انتخاب ورژن، BoM آن را بارگزاری کنید. دریافت زنده از ورود SystemGroup شما و آدرس پایه CRM در تنظیمات ← سازمان استفاده می‌کند."
 
 msgid "Existing BoM found"
 msgstr "BoM موجود پیدا شد"
@@ -1313,11 +1313,8 @@ msgstr "انگلیسی"
 msgid "SystemGroup CRM"
 msgstr "CRM سیستم‌گروپ"
 
-msgid ""
-"Your personal CRM login for BoM import. Required even when the organization "
-"owner has enabled SystemGroup import. Leave the password blank to keep the "
-"saved value."
-msgstr "ورود شخصی شما به CRM برای دریافت متریال BoM. حتی وقتی مالک سازمان دریافت متریال SystemGroup را فعال کرده باشد لازم است. برای نگه داشتن رمز ذخیره‌شده، فیلد رمز را خالی بگذارید."
+msgid "Your personal CRM login for BoM import."
+msgstr "ورود شخصی شما به CRM برای دریافت متریال BoM."
 
 
 msgid "Organization import is enabled."
@@ -1328,11 +1325,14 @@ msgid ""
 "Organization settings."
 msgstr "از مالک سازمان بخواهید آدرس پایه CRM سیستم‌گروپ را در تنظیمات سازمان تنظیم کند."
 
-msgid "Your credentials are set — Import material is available."
-msgstr "اعتبارنامه شما تنظیم شده — «دریافت متریال» در دسترس است."
+msgid "Import material is available."
+msgstr "«دریافت متریال» در دسترس است."
 
-msgid "Add a username and password below to unlock Import material."
-msgstr "برای فعال شدن «دریافت متریال»، نام کاربری و رمز را پایین وارد کنید."
+msgid "Log in to unlock Import material."
+msgstr "برای فعال شدن «دریافت متریال» وارد شوید."
+
+msgid "Manage SystemGroup login"
+msgstr "مدیریت ورود SystemGroup"
 
 msgid ""
 "Organization import is currently disabled. Ask the organization owner to "
@@ -1346,11 +1346,44 @@ msgstr "نام کاربری SystemGroup"
 msgid "SystemGroup password"
 msgstr "رمز عبور SystemGroup"
 
-msgid "•••••••• (saved)"
-msgstr ""
+msgid "SystemGroup login"
+msgstr "ورود به SystemGroup"
 
-msgid "Clear saved password"
-msgstr "پاک کردن رمز ذخیره‌شده"
+msgid "Log in to SystemGroup"
+msgstr "ورود به SystemGroup"
+
+msgid "Log out of SystemGroup"
+msgstr "خروج از SystemGroup"
+
+msgid "Logged in to SystemGroup."
+msgstr "وارد SystemGroup شدید."
+
+msgid "Logged out of SystemGroup."
+msgstr "از SystemGroup خارج شدید."
+
+#, python-format
+msgid "Logged in to SystemGroup as %(username)s."
+msgstr "به‌عنوان %(username)s وارد SystemGroup هستید."
+
+msgid ""
+"Log in with your SystemGroup CRM username and password to import BoMs."
+msgstr "برای دریافت متریال BoM با نام کاربری و رمز CRM سیستم‌گروپ وارد شوید."
+
+msgid ""
+"Log in with your SystemGroup CRM username and password to import BoMs. "
+"Credentials are saved on your Lithium user account."
+msgstr "برای دریافت متریال BoM با نام کاربری و رمز CRM سیستم‌گروپ وارد شوید. اعتبارنامه روی حساب کاربری لیتیوم شما ذخیره می‌شود."
+
+msgid "SystemGroup import is not available for this account."
+msgstr "دریافت متریال SystemGroup برای این حساب در دسترس نیست."
+
+msgid "SystemGroup login is not available for this account."
+msgstr "ورود SystemGroup برای این حساب در دسترس نیست."
+
+msgid ""
+"Set the SystemGroup CRM base URL under Settings → Organization before "
+"logging in."
+msgstr "پیش از ورود، آدرس پایه CRM سیستم‌گروپ را در تنظیمات ← سازمان تنظیم کنید."
 
 msgid "Product types"
 msgstr "انواع محصول"
@@ -1623,6 +1656,12 @@ msgid ""
 "importing."
 msgstr "پیش از دریافت متریال، نام کاربری و رمز SystemGroup را در تنظیمات ← کاربر تنظیم کنید."
 
+msgid "SystemGroup username and password are required."
+msgstr "نام کاربری و رمز SystemGroup الزامی است."
+
+msgid "Log in to SystemGroup before importing."
+msgstr "پیش از دریافت متریال وارد SystemGroup شوید."
+
 
 #, python-format
 msgid "Could not reach the SystemGroup CRM to load revisions: %(error)s"
@@ -1714,9 +1753,9 @@ msgstr ""
 "در زبانه شرکت، نوع‌های محصول (نوع متریال) را بررسی کنید و اگر از دریافت متریال SystemGroup استفاده می‌کنید، آن را فعال کرده و آدرس پایه CRM را تنظیم کنید."
 
 msgid ""
-"On User, set your language and — for SystemGroup import — your personal CRM username and password."
+"On User, set your language and — for SystemGroup import — open SystemGroup login with your personal CRM credentials."
 msgstr ""
-"در زبانه کاربر، زبان را تنظیم کنید و — برای دریافت متریال SystemGroup — نام کاربری و گذرواژه شخصی CRM خود را وارد کنید."
+"در زبانه کاربر، زبان را تنظیم کنید و — برای دریافت متریال SystemGroup — صفحه ورود SystemGroup را با اعتبارنامه شخصی CRM باز کنید."
 
 msgid ""
 "Create or upload materials, then build product trees (BoMs) for assemblies."
@@ -1800,9 +1839,9 @@ msgstr ""
 "خودتان هر رشته شماره متریال را تعیین می‌کنید. برای طرح‌های قدیمی منعطف‌تر است؛ تخصیص خودکار کمتر."
 
 msgid ""
-"Profile, language, and personal SystemGroup CRM username/password for BoM import."
+"Profile, language, and a link to SystemGroup login for BoM import."
 msgstr ""
-"نمایه، زبان، و نام کاربری/گذرواژه شخصی CRM SystemGroup برای دریافت BoM."
+"نمایه، زبان، و پیوند به ورود SystemGroup برای دریافت BoM."
 
 msgid "Lithium / numbering"
 msgstr "لیتیوم / شماره‌گذاری"
@@ -1908,9 +1947,9 @@ msgstr ""
 "مالک سازمان: تنظیمات ← شرکت ← دریافت BoM از SystemGroup را فعال کنید و آدرس پایه CRM را تنظیم کنید."
 
 msgid ""
-"Each admin who imports: Settings → User → SystemGroup username and password (leave password blank to keep a saved value)."
+"Each admin who imports: open SystemGroup login (from Settings → User or when opening Import material) and sign in with your CRM credentials."
 msgstr ""
-"هر مدیری که دریافت می‌کند: تنظیمات ← کاربر ← نام کاربری و گذرواژه SystemGroup (برای نگه‌داشتن مقدار ذخیره‌شده، گذرواژه را خالی بگذارید)."
+"هر مدیری که دریافت می‌کند: صفحه ورود SystemGroup را باز کنید (از تنظیمات ← کاربر یا هنگام باز کردن دریافت متریال) و با اعتبارنامه CRM وارد شوید."
 
 msgid ""
 "Open Import material from Home, or Import SystemGroup BoM from the upload menu."

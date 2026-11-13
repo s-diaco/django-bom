@@ -27,6 +27,7 @@ from bom.systemgroup.client import (
 from bom.systemgroup.access import (
     client_for_user_meta,
     crm_base_url_from_organization,
+    user_can_access_systemgroup_import,
     user_can_import_systemgroup,
     user_meta_has_systemgroup_credentials,
 )
@@ -984,9 +985,11 @@ class SystemGroupAccessTests(TestCase):
 
     def test_requires_org_flag_url_and_credentials(self):
         self.assertFalse(user_can_import_systemgroup(self.user))
+        self.assertFalse(user_can_access_systemgroup_import(self.user))
         self.organization.systemgroup_import_enabled = True
         self.organization.save(update_fields=["systemgroup_import_enabled"])
         self.assertFalse(user_can_import_systemgroup(self.user))
+        self.assertFalse(user_can_access_systemgroup_import(self.user))
         self.profile.systemgroup_username = "u"
         self.profile.systemgroup_password = "p"
         self.profile.save(
@@ -994,10 +997,26 @@ class SystemGroupAccessTests(TestCase):
         )
         self.assertTrue(user_meta_has_systemgroup_credentials(self.profile))
         self.assertFalse(user_can_import_systemgroup(self.user))
+        self.assertFalse(user_can_access_systemgroup_import(self.user))
         self.organization.systemgroup_crm_base_url = "http://crm.example/"
         self.organization.save(update_fields=["systemgroup_crm_base_url"])
-        self.assertTrue(user_can_import_systemgroup(self.user))
+        self.assertTrue(user_can_access_systemgroup_import(self.user))
         self.assertTrue(self.profile.can_import_systemgroup())
+        self.assertTrue(user_can_import_systemgroup(self.user))
+
+    def test_access_without_credentials_still_shows_import(self):
+        self.organization.systemgroup_import_enabled = True
+        self.organization.systemgroup_crm_base_url = "http://crm.example/"
+        self.organization.save(
+            update_fields=[
+                "systemgroup_import_enabled",
+                "systemgroup_crm_base_url",
+            ]
+        )
+        self.assertFalse(user_meta_has_systemgroup_credentials(self.profile))
+        self.assertTrue(user_can_access_systemgroup_import(self.user))
+        self.assertTrue(self.profile.can_import_systemgroup())
+        self.assertFalse(user_can_import_systemgroup(self.user))
 
     def test_client_uses_organization_crm_base_url(self):
         self.organization.systemgroup_crm_base_url = "http://crm.example"
@@ -1160,7 +1179,7 @@ class SystemGroupAdminGuiTests(TestCase):
         }
         self.assertIn("500-7777-00", pns)
 
-    def test_import_disabled_without_user_credentials(self):
+    def test_import_redirects_to_login_without_user_credentials(self):
         profile = self.user.bom_profile()
         profile.systemgroup_username = ""
         profile.systemgroup_password = ""
@@ -1169,9 +1188,9 @@ class SystemGroupAdminGuiTests(TestCase):
         )
         response = self.client.get(self.url)
         self.assertIn(response.status_code, (301, 302, 303, 307, 308))
-        self.assertEqual(
-            response.url, reverse("bom:settings", kwargs={"tab_anchor": "user"})
-        )
+        login_url = reverse("bom:systemgroup-login")
+        self.assertTrue(response.url.startswith(login_url))
+        self.assertIn("next=", response.url)
 
     def test_import_disabled_when_org_flag_off(self):
         self.organization.systemgroup_import_enabled = False
@@ -1193,33 +1212,95 @@ class SystemGroupAdminGuiTests(TestCase):
             reverse("bom:settings", kwargs={"tab_anchor": "organization"}),
         )
 
-    def test_home_hides_import_without_credentials(self):
+    def test_home_shows_import_without_credentials(self):
         profile = self.user.bom_profile()
         profile.systemgroup_password = ""
         profile.save(update_fields=["systemgroup_password"])
         response = self.client.get(reverse("bom:home"))
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, _("Import material"))
+        self.assertContains(response, _("Import material"))
+        self.assertContains(response, reverse("bom:import-systemgroup-bom"))
 
-    def test_settings_saves_systemgroup_credentials(self):
+    def test_systemgroup_login_page_saves_and_returns_to_next(self):
+        profile = self.user.bom_profile()
+        profile.systemgroup_username = ""
+        profile.systemgroup_password = ""
+        profile.save(
+            update_fields=["systemgroup_username", "systemgroup_password"]
+        )
+        login_url = reverse("bom:systemgroup-login")
+        with mock.patch(
+            "bom.systemgroup.access.SystemGroupClient.login",
+            return_value=None,
+        ):
+            response = self.client.post(
+                f"{login_url}?next={self.url}",
+                {
+                    "submit-systemgroup-login": "1",
+                    "systemgroup_username": "crm-login",
+                    "systemgroup_password": "crm-secret",
+                    "next": self.url,
+                },
+            )
+        self.assertIn(response.status_code, (301, 302, 303, 307, 308))
+        self.assertEqual(response.url, self.url)
+        profile.refresh_from_db()
+        self.assertEqual(profile.systemgroup_username, "crm-login")
+        self.assertEqual(profile.systemgroup_password, "crm-secret")
+
+    def test_systemgroup_login_page_logout(self):
+        login_url = reverse("bom:systemgroup-login")
         response = self.client.post(
-            reverse("bom:settings", kwargs={"tab_anchor": "user"}),
+            login_url,
             {
-                "submit-edit-user": "1",
-                "first_name": self.user.first_name,
-                "last_name": self.user.last_name,
-                "email": self.user.email,
-                "calendar": "J",
-                "language": "en",
-                "systemgroup_username": "new-crm",
-                "systemgroup_password": "new-secret",
+                "submit-systemgroup-logout": "1",
+                "next": self.url,
             },
         )
-        self.assertIn(response.status_code, (200, 302))
+        self.assertIn(response.status_code, (301, 302, 303, 307, 308))
+        self.assertTrue(response.url.startswith(login_url))
         profile = self.user.bom_profile()
+        profile.refresh_from_db()
+        self.assertEqual(profile.systemgroup_username, "")
+        self.assertEqual(profile.systemgroup_password, "")
+
+    def test_settings_links_to_systemgroup_login_page(self):
+        profile = self.user.bom_profile()
+        profile.systemgroup_username = ""
+        profile.systemgroup_password = ""
+        profile.save(
+            update_fields=["systemgroup_username", "systemgroup_password"]
+        )
+        settings_url = reverse("bom:settings", kwargs={"tab_anchor": "user"})
+        response = self.client.get(settings_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse("bom:systemgroup-login"))
+        self.assertContains(response, "Log in to SystemGroup")
+        self.assertNotContains(response, 'name="clear_systemgroup_password"')
+        self.assertNotContains(response, 'id="id_systemgroup_password"')
+
+        with mock.patch(
+            "bom.systemgroup.access.SystemGroupClient.login",
+            return_value=None,
+        ):
+            response = self.client.post(
+                reverse("bom:systemgroup-login"),
+                {
+                    "submit-systemgroup-login": "1",
+                    "systemgroup_username": "new-crm",
+                    "systemgroup_password": "new-secret",
+                    "next": settings_url,
+                },
+            )
+        self.assertIn(response.status_code, (301, 302, 303, 307, 308))
+        self.assertEqual(response.url, settings_url)
         profile.refresh_from_db()
         self.assertEqual(profile.systemgroup_username, "new-crm")
         self.assertEqual(profile.systemgroup_password, "new-secret")
+        response = self.client.get(settings_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Manage SystemGroup login")
+        self.assertContains(response, "new-crm")
 
     def test_settings_saves_organization_crm_base_url(self):
         response = self.client.post(
