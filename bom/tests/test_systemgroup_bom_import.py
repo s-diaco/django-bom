@@ -1073,18 +1073,26 @@ class SystemGroupAdminGuiTests(TestCase):
         self.client.login(username="kasper", password="ghostpassword")
         self.url = reverse("bom:import-systemgroup-bom")
 
+    def _material(self):
+        self.organization.ensure_default_product_types()
+        return next(
+            pt.code for pt in self.organization.product_types.all() if pt.has_bom
+        )
+
     def test_admin_get_form(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Import SystemGroup BoM")
         self.assertContains(response, "Part ID")
         self.assertContains(response, "Load revisions")
-        self.assertContains(response, "Part ID + Revision")
+        self.assertNotContains(response, "Part ID + Revision")
         self.assertContains(response, "Get the BoM")
         self.assertContains(response, "More options")
         self.assertContains(response, "CRM BoM id")
         self.assertContains(response, "Settings → Organization")
         self.assertContains(response, "<details")
+        self.assertContains(response, "Select material type")
+        self.assertContains(response, "sg-load-revisions")
 
     def test_load_revisions_shows_pick_list(self):
         matches = parse_bom_list_document(
@@ -1102,7 +1110,11 @@ class SystemGroupAdminGuiTests(TestCase):
         ):
             response = self.client.post(
                 self.url,
-                {"part_id": "500-9001-00", "load_revisions": "1"},
+                {
+                    "material": self._material(),
+                    "part_id": "500-9001-00",
+                    "load_revisions": "1",
+                },
             )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "CRM revisions for")
@@ -1119,7 +1131,11 @@ class SystemGroupAdminGuiTests(TestCase):
         ):
             response = self.client.post(
                 self.url,
-                {"part_id": "1155F229", "load_revisions": "1"},
+                {
+                    "material": self._material(),
+                    "part_id": "1155F229",
+                    "load_revisions": "1",
+                },
             )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Failed to fetch login page")
@@ -1135,7 +1151,11 @@ class SystemGroupAdminGuiTests(TestCase):
         ):
             response = self.client.post(
                 self.url,
-                {"part_id": "1155F229", "load_revisions": "1"},
+                {
+                    "material": self._material(),
+                    "part_id": "1155F229",
+                    "load_revisions": "1",
+                },
             )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Missing SystemGroup CRM base URL")
@@ -1149,7 +1169,7 @@ class SystemGroupAdminGuiTests(TestCase):
         ):
             response = self.client.post(
                 self.url,
-                {"part_id_revision": "1155F229/A2"},
+                {"material": self._material(), "part_id": "1155F229/A2"},
             )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Could not reach the SystemGroup CRM")
@@ -1160,6 +1180,7 @@ class SystemGroupAdminGuiTests(TestCase):
         response = self.client.post(
             self.url,
             {
+                "material": self._material(),
                 "part_id": "500-1111-00",
                 "parent_part_number": "500-1111-00",
                 "parent_revision": "A1",
@@ -1334,6 +1355,7 @@ class SystemGroupAdminGuiTests(TestCase):
     def test_form_extracts_id_from_crm_url(self):
         form = SystemGroupBomImportForm(
             data={
+                "material": self._material(),
                 "crm_url": "http://192.168.3.193/Shell.aspx?page=PAC/Engineering/BomPages/Edit.aspx?id=39477",
             },
             organization=self.organization,
@@ -1343,23 +1365,46 @@ class SystemGroupAdminGuiTests(TestCase):
 
     def test_form_allows_parent_part_without_bom_id(self):
         form = SystemGroupBomImportForm(
-            data={"parent_part_number": "500-9001-00"},
+            data={
+                "material": self._material(),
+                "parent_part_number": "500-9001-00",
+            },
             organization=self.organization,
         )
         self.assertTrue(form.is_valid(), form.errors)
 
-    def test_form_part_id_revision_splits_pn_rev(self):
+    def test_form_part_id_with_slash_splits_pn_rev(self):
         form = SystemGroupBomImportForm(
-            data={"part_id_revision": "1155F229/A2*10-C"},
+            data={"material": self._material(), "part_id": "1155F229/A2*10-C"},
             organization=self.organization,
         )
         self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["part_id"], "1155F229")
         self.assertEqual(form.cleaned_data["parent_part_number"], "1155F229")
         self.assertEqual(form.cleaned_data["parent_revision"], "A2*10-C")
 
+    def test_form_part_id_without_slash_is_pn_only(self):
+        form = SystemGroupBomImportForm(
+            data={
+                "material": self._material(),
+                "part_id": "1155F229",
+                "load_revisions": "1",
+            },
+            organization=self.organization,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["part_id"], "1155F229")
+        self.assertEqual(form.cleaned_data["parent_part_number"], "1155F229")
+        self.assertEqual(form.cleaned_data["parent_revision"], None)
+        self.assertTrue(form.cleaned_data["load_revisions"])
+
     def test_form_part_id_with_load_revisions(self):
         form = SystemGroupBomImportForm(
-            data={"part_id": "1155F229", "load_revisions": "1"},
+            data={
+                "material": self._material(),
+                "part_id": "1155F229",
+                "load_revisions": "1",
+            },
             organization=self.organization,
         )
         self.assertTrue(form.is_valid(), form.errors)
@@ -1369,23 +1414,27 @@ class SystemGroupAdminGuiTests(TestCase):
 
     def test_form_allows_browse_list_alone(self):
         form = SystemGroupBomImportForm(
-            data={"browse_list": True},
+            data={"material": self._material(), "browse_list": True},
             organization=self.organization,
         )
         self.assertTrue(form.is_valid(), form.errors)
 
-    def test_form_defaults_material_to_first_has_bom_type(self):
+    def test_form_requires_material_type(self):
         self.organization.ensure_default_product_types()
-        expected = next(
-            pt.code for pt in self.organization.product_types.all() if pt.has_bom
-        )
         form = SystemGroupBomImportForm(
-            data={"part_id_revision": "1155F229/A2"},
+            data={"part_id": "1155F229/A2"},
             organization=self.organization,
         )
-        self.assertTrue(form.is_valid(), form.errors)
-        self.assertEqual(form.cleaned_data["material"], expected)
-        self.assertEqual(form.fields["material"].initial, expected)
+        self.assertFalse(form.is_valid())
+        self.assertIn("Select a Material Type.", form.non_field_errors())
+
+    def test_form_rejects_empty_material_selection(self):
+        form = SystemGroupBomImportForm(
+            data={"material": "", "part_id": "1155F229", "load_revisions": "1"},
+            organization=self.organization,
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn("Select a Material Type.", form.non_field_errors())
 
     def test_get_shows_material_type_dropdown(self):
         self.organization.ensure_default_product_types()
@@ -1397,6 +1446,10 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertContains(response, "Material Type")
         self.assertContains(response, 'name="material"')
         self.assertContains(
+            response, '<option value="" selected>', html=False
+        )
+        self.assertContains(response, f'value="{expected}"', html=False)
+        self.assertNotContains(
             response, f'<option value="{expected}" selected>', html=False
         )
 
@@ -1404,13 +1457,17 @@ class SystemGroupAdminGuiTests(TestCase):
         list_json = (FIXTURES / "bom_list.json").read_text(encoding="utf-8")
         parent = Part.objects.filter(organization=self.organization).first()
         matches = parse_bom_list_document(list_json, content_type="application/json")[:2]
+        # Bare PN (no /) → revision picker; query with / keeps the radio pick list.
         with mock.patch(
             "bom.systemgroup.importer.run_systemgroup_import",
-            side_effect=AmbiguousBomMatch(matches, "500-9001-00"),
+            side_effect=AmbiguousBomMatch(matches, "500-9001-00/A"),
         ) as mocked:
             response = self.client.post(
                 self.url,
-                {"parent_part_number": parent.full_part_number()},
+                {
+                    "material": self._material(),
+                    "parent_part_number": parent.full_part_number(),
+                },
             )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "pick one")
@@ -1435,7 +1492,8 @@ class SystemGroupAdminGuiTests(TestCase):
         response = self.client.post(
             self.url,
             {
-                "part_id_revision": f"{parent.full_part_number()}/{rev.revision}",
+                "material": self._material(),
+                "part_id": f"{parent.full_part_number()}/{rev.revision}",
                 "source_file": SimpleUploadedFile(
                     "bom_edit.html", html, content_type="text/html"
                 ),
@@ -1510,7 +1568,8 @@ class SystemGroupAdminGuiTests(TestCase):
         response = self.client.post(
             self.url,
             {
-                "part_id_revision": f"{parent.full_part_number()}/{rev.revision}",
+                "material": self._material(),
+                "part_id": f"{parent.full_part_number()}/{rev.revision}",
                 "source_file": SimpleUploadedFile(
                     "bom_edit.html", html, content_type="text/html"
                 ),
@@ -1527,7 +1586,8 @@ class SystemGroupAdminGuiTests(TestCase):
         response = self.client.post(
             self.url,
             {
-                "part_id_revision": f"{parent.full_part_number()}/{rev.revision}",
+                "material": self._material(),
+                "part_id": f"{parent.full_part_number()}/{rev.revision}",
                 "existing_bom_action": "replace",
                 "source_file": SimpleUploadedFile(
                     "bom_edit.html", html, content_type="text/html"
@@ -1553,7 +1613,8 @@ class SystemGroupAdminGuiTests(TestCase):
         response = self.client.post(
             self.url,
             {
-                "part_id_revision": f"{parent.full_part_number()}/{rev.revision}",
+                "material": self._material(),
+                "part_id": f"{parent.full_part_number()}/{rev.revision}",
                 "existing_bom_action": "keep",
                 "source_file": SimpleUploadedFile(
                     "bom_edit.html", html, content_type="text/html"
@@ -1581,7 +1642,8 @@ class SystemGroupAdminGuiTests(TestCase):
         response = self.client.post(
             self.url,
             {
-                "part_id_revision": "500-9001-00/A1",
+                "material": self._material(),
+                "part_id": "500-9001-00/A1",
                 "source_file": SimpleUploadedFile(
                     "bom_edit.html", html, content_type="text/html"
                 ),
