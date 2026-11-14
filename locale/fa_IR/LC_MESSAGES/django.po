@@ -109,6 +109,16 @@ msgstr "فعال‌سازی دریافت متریال BoM از همکاران س
 msgid "SystemGroup CRM base URL"
 msgstr "آدرس پایه CRM همکاران سیستم"
 
+msgid "SystemGroup Part ID search result cap"
+msgstr "سقف نتایج جستجوی شناسه متریال همکاران سیستم"
+
+msgid ""
+"Maximum CRM BoM rows shown for Part ID search (Load revisions). Default 10. "
+"When more match, the UI asks you to narrow the Part ID."
+msgstr ""
+"حداکثر ردیف‌های BoM در CRM برای جستجوی شناسه متریال (بارگذاری ورژن‌ها). پیش‌فرض ۱۰. "
+"اگر موارد بیشتری باشد، واسط از شما می‌خواهد شناسه متریال را دقیق‌تر کنید."
+
 msgid "Overhead"
 msgstr "سربار"
 
@@ -379,11 +389,13 @@ msgid "Part ID"
 msgstr "شناسه متریال"
 
 msgid ""
-"Enter a CRM part number (e.g. 1155F229) to load revisions, or "
-"part-id/revision (e.g. 1155F229/A2*10-C) to Get the BoM in one step."
+"CRM Number StartsWith search. Enter a prefix (e.g. 1155F229, "
+"1155F229/A2, or the full part-id/revision) then Load revisions. "
+"Use a full part-id/revision with Get the BoM to import one match."
 msgstr ""
-"شماره متریال CRM را وارد کنید (مثلاً 1155F229) تا ورژن‌ها بارگذاری شوند، یا "
-"شناسه/ورژن (مثلاً 1155F229/A2*10-C) تا یک‌مرحله‌ای «دریافت BoM» کنید."
+"جستجوی StartsWith روی کد BOM در CRM. یک پیشوند وارد کنید (مثلاً 1155F229، "
+"1155F229/A2 یا شناسه/ورژن کامل) سپس «بارگذاری ورژن‌ها» را بزنید. "
+"برای دریافت یک مورد، شناسه/ورژن کامل را با «دریافت BoM» بفرستید."
 
 msgid "CRM BoM id"
 msgstr "شناسه BoM در CRM"
@@ -925,11 +937,11 @@ msgid ""
 msgstr "انتقال BoM از همکاران سیستم به لیتیوم. اگر متریال از قبل تعریف شده باشد، BoM به آن افزوده و در غیر این صورت متریال جدید ایجاد می‌شود."
 
 msgid ""
-"Choose a Material Type, enter a Part ID (or part-id/revision), then Load "
-"revisions or Get the BoM. Live CRM uses your SystemGroup login and the CRM "
-"base URL from Settings → Organization."
+"Choose a Material Type, enter a Part ID prefix (Number StartsWith), then "
+"Load revisions or Get the BoM. Live CRM uses your SystemGroup login and the "
+"CRM base URL from Settings → Organization."
 msgstr ""
-"نوع متریال را انتخاب کنید، شناسه متریال (یا شناسه/ورژن) را وارد کنید، سپس "
+"نوع متریال را انتخاب کنید، پیشوند شناسه متریال (Number StartsWith) را وارد کنید، سپس "
 "«بارگذاری ورژن‌ها» یا «دریافت BoM» را بزنید. دریافت زنده از ورود همکاران "
 "سیستم شما و آدرس پایه CRM در تنظیمات ← سازمان استفاده می‌کند."
 
@@ -1658,6 +1670,20 @@ msgstr "دسترسی به CRM همکاران سیستم برای بارگذار�
 
 msgid "Select a CRM revision below, then import that BoM."
 msgstr "یک ورژن CRM را پایین انتخاب کنید و آن BoM را دریافت متریال کنید."
+
+msgid ""
+"Showing the first %(n)s CRM matches for “%(q)s”. Narrow the Part ID (add "
+"more of the part-id/revision) to see other matches."
+msgstr ""
+"نمایش %(n)s مورد اول مطابق «%(q)s» از CRM. برای دیدن موارد دیگر، شناسه متریال "
+"را دقیق‌تر کنید (بخش بیشتری از شناسه/ورژن را وارد کنید)."
+
+msgid ""
+"Results are capped at %(n)s matches. Narrow the Part ID (for example add "
+"more of the part-id/revision after “%(q)s”) to find other CRM BoMs."
+msgstr ""
+"نتایج به %(n)s مورد محدود شده‌اند. شناسه متریال را دقیق‌تر کنید (مثلاً بخش "
+"بیشتری از شناسه/ورژن بعد از «%(q)s») تا BoMهای دیگر CRM را بیابید."
 
 msgid "Several CRM BoMs matched — pick a revision below, or enter an id/URL."
 msgstr "چند BoM در CRM مطابقت داشت — ورژنی را پایین انتخاب کنید یا شناسه/آدرس وارد کنید."

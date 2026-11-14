@@ -39,8 +39,9 @@ class SystemGroupBomImportForm(forms.Form):
         required=False,
         label=_("Part ID"),
         help_text=_(
-            "Enter a CRM part number (e.g. 1155F229) to load revisions, or "
-            "part-id/revision (e.g. 1155F229/A2*10-C) to Get the BoM in one step."
+            "CRM Number StartsWith search. Enter a prefix (e.g. 1155F229, "
+            "1155F229/A2, or the full part-id/revision) then Load revisions. "
+            "Use a full part-id/revision with Get the BoM to import one match."
         ),
         widget=forms.TextInput(
             attrs={
@@ -163,8 +164,20 @@ class SystemGroupBomImportForm(forms.Form):
                 code="required",
             )
 
-        # Slash → Part ID + Revision; otherwise Part ID only (list-revisions flow).
-        if part_id and "/" in part_id:
+        # Load revisions: keep the full StartsWith query (do not strip at /).
+        # Get the BoM / import: slash still splits into parent PN + revision.
+        search_query = part_id
+        if load_revisions:
+            if not part_id and not parent_pn:
+                raise forms.ValidationError(
+                    _("Enter a Part ID to load CRM revisions."),
+                    code="required",
+                )
+            search_query = part_id or parent_pn
+            if part_id and not parent_pn:
+                code_pn, _code_rev = split_bom_code(part_id)
+                parent_pn = code_pn or part_id
+        elif part_id and "/" in part_id:
             code_pn, code_rev = split_bom_code(part_id)
             if not code_pn:
                 raise forms.ValidationError(
@@ -187,13 +200,13 @@ class SystemGroupBomImportForm(forms.Form):
             bom_id = extracted
             cleaned["bom_id"] = bom_id
 
-        if load_revisions:
-            if not part_id and not parent_pn:
-                raise forms.ValidationError(
-                    _("Enter a Part ID to load CRM revisions."),
-                    code="required",
-                )
-        elif not source_file and not bom_id and not parent_pn and not browse_list:
+        if (
+            not load_revisions
+            and not source_file
+            and not bom_id
+            and not parent_pn
+            and not browse_list
+        ):
             raise forms.ValidationError(
                 _(
                     "Enter a Part ID (then Load revisions), "
@@ -205,7 +218,7 @@ class SystemGroupBomImportForm(forms.Form):
             )
         cleaned["bom_id"] = bom_id or None
         cleaned["crm_url"] = crm_url or None
-        cleaned["part_id"] = part_id or None
+        cleaned["part_id"] = (search_query if load_revisions else part_id) or None
         cleaned["parent_part_number"] = parent_pn or None
         cleaned["parent_revision"] = parent_rev or None
         cleaned["existing_bom_action"] = existing_bom_action or None

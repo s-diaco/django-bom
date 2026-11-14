@@ -763,19 +763,24 @@ class SystemGroupListResolveImportTests(TestCase):
         rev.save()
 
     def test_list_revisions_for_part_returns_all_revs(self):
-        rows = list_revisions_for_part(
+        result = list_revisions_for_part(
             "500-9001-00",
             list_path=FIXTURES / "bom_list.json",
         )
+        rows = list(result)
         self.assertEqual({r.bom_id for r in rows}, {"39477", "40001"})
         self.assertEqual({r.revision for r in rows}, {"1", "A"})
+        self.assertFalse(getattr(result, "truncated", False))
 
-    def test_list_revisions_strips_accidental_rev_suffix(self):
-        rows = list_revisions_for_part(
+    def test_list_revisions_startswith_keeps_slash_prefix(self):
+        """Part ID with / is Number StartsWith — not stripped to all revs."""
+        result = list_revisions_for_part(
             "500-9001-00/1",
             list_path=FIXTURES / "bom_list.json",
         )
-        self.assertEqual(len(rows), 2)
+        rows = list(result)
+        self.assertEqual([r.bom_id for r in rows], ["39477"])
+        self.assertFalse(getattr(result, "truncated", False))
 
     def test_run_import_resolves_unique_pn_from_list_file(self):
         # Parent PN won't match list; resolve unique list PN via description-less
@@ -1101,9 +1106,17 @@ class SystemGroupAdminGuiTests(TestCase):
         )
         pn_matches = [m for m in matches if m.part_number == "500-9001-00"]
         self.assertGreaterEqual(len(pn_matches), 2)
+        try:
+            from lithium_systemgroup import BomSearchResult
+
+            search = BomSearchResult(
+                entries=pn_matches, truncated=False, query="500-9001-00"
+            )
+        except ImportError:  # pragma: no cover — older package pin
+            search = pn_matches
         with mock.patch(
             "bom.systemgroup.importer.list_revisions_for_part",
-            return_value=pn_matches,
+            return_value=search,
         ), mock.patch(
             "bom.systemgroup.access.client_for_user_meta",
             return_value=mock.Mock(),
@@ -1121,6 +1134,44 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertContains(response, "Import this BoM")
         self.assertContains(response, "39477")
         self.assertContains(response, "40001")
+        self.assertNotContains(response, "Results are capped")
+
+    def test_load_revisions_shows_capped_message(self):
+        matches = parse_bom_list_document(
+            (FIXTURES / "bom_list.json").read_text(encoding="utf-8"),
+            content_type="application/json",
+        )
+        pn_matches = [m for m in matches if m.part_number == "500-9001-00"]
+        from lithium_systemgroup import BomSearchResult
+
+        search = BomSearchResult(
+            entries=pn_matches[:1],
+            truncated=True,
+            query="500-9001-00",
+            max_results=1,
+        )
+        self.organization.systemgroup_part_id_max_results = 1
+        self.organization.save(update_fields=["systemgroup_part_id_max_results"])
+        with mock.patch(
+            "bom.systemgroup.importer.list_revisions_for_part",
+            return_value=search,
+        ) as mocked, mock.patch(
+            "bom.systemgroup.access.client_for_user_meta",
+            return_value=mock.Mock(),
+        ):
+            response = self.client.post(
+                self.url,
+                {
+                    "material": self._material(),
+                    "part_id": "500-9001-00",
+                    "load_revisions": "1",
+                },
+            )
+        self.assertEqual(response.status_code, 200)
+        mocked.assert_called_once()
+        self.assertEqual(mocked.call_args.kwargs.get("max_results"), 1)
+        self.assertContains(response, "Results are capped")
+        self.assertContains(response, "Narrow the Part ID")
 
     def test_load_revisions_unreachable_crm_shows_error_not_500(self):
         with mock.patch(
@@ -1335,6 +1386,7 @@ class SystemGroupAdminGuiTests(TestCase):
                 "owner": self.user.id,
                 "systemgroup_import_enabled": "on",
                 "systemgroup_crm_base_url": "http://10.0.0.5",
+                "systemgroup_part_id_max_results": "10",
             },
         )
         self.assertIn(response.status_code, (200, 302))
@@ -1343,6 +1395,7 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertEqual(
             self.organization.systemgroup_crm_base_url, "http://10.0.0.5"
         )
+        self.assertEqual(self.organization.systemgroup_part_id_max_results, 10)
 
     def test_viewer_denied(self):
         profile = self.user.bom_profile()

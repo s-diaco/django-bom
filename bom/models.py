@@ -118,6 +118,13 @@ class Organization(models.Model):
             "(e.g. http://192.168.3.193/). Required for live import."
         ),
     )
+    systemgroup_part_id_max_results = models.PositiveIntegerField(
+        default=10,
+        help_text=(
+            "Max CRM BoM rows returned for Part ID StartsWith search "
+            "(Load revisions). Default 10."
+        ),
+    )
 
     def number_cs(self):
         return "C" * self.number_class_code_len

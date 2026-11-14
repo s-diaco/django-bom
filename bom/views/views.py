@@ -2665,6 +2665,8 @@ def import_systemgroup_bom(request):
     bom_candidates = None
     revision_candidates = None
     revision_part_query = None
+    revision_truncated = False
+    revision_max_results = None
     match_query = None
     existing_bom_conflict = None
     get_parent = request.GET.get("parent_part", "")
@@ -2696,12 +2698,20 @@ def import_systemgroup_bom(request):
         cleaned = form.cleaned_data
         if cleaned.get("load_revisions"):
             pn = cleaned.get("part_id") or cleaned.get("parent_part_number")
+            max_results = getattr(
+                organization, "systemgroup_part_id_max_results", None
+            )
+            if max_results is None or int(max_results) < 1:
+                max_results = 10
+            else:
+                max_results = int(max_results)
             try:
                 # Build the client inside the try: missing CRM_BASE_URL / bad
                 # credentials raise SystemGroupClientError before list fetch.
-                revision_candidates = list_revisions_for_part(
+                search = list_revisions_for_part(
                     pn,
                     client=client_for_user_meta(profile),
+                    max_results=max_results,
                 )
             except (SystemGroupError, SystemGroupClientError) as exc:
                 messages.error(request, str(exc))
@@ -2715,13 +2725,32 @@ def import_systemgroup_bom(request):
                     % {"error": exc},
                 )
             else:
+                # lithium-systemgroup ≥0.2.4 returns BomSearchResult.
+                if hasattr(search, "entries"):
+                    revision_candidates = list(search.entries)
+                    revision_truncated = bool(getattr(search, "truncated", False))
+                else:
+                    revision_candidates = list(search)
+                    revision_truncated = False
                 revision_part_query = pn
-                messages.info(
-                    request,
-                    _(
-                        "Select a CRM revision below, then import that BoM."
-                    ),
-                )
+                revision_max_results = max_results
+                if revision_truncated:
+                    messages.warning(
+                        request,
+                        _(
+                            "Showing the first %(n)s CRM matches for “%(q)s”. "
+                            "Narrow the Part ID (add more of the part-id/revision) "
+                            "to see other matches."
+                        )
+                        % {"n": max_results, "q": pn},
+                    )
+                else:
+                    messages.info(
+                        request,
+                        _(
+                            "Select a CRM revision below, then import that BoM."
+                        ),
+                    )
         else:
             html_content = None
             json_content = None
