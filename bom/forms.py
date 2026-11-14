@@ -590,6 +590,7 @@ class ManufacturerPartForm(forms.ModelForm):
         ).order_by("name")
         self.fields["mouser_disable"].initial = True
         self.fields["manufacturer_part_number"].label = _("Manufacturer part number")
+        self.fields["manufacturer_part_number"].widget.attrs["dir"] = "ltr"
         self.fields["manufacturer"].label = _("Manufacturer")
 
 
@@ -716,6 +717,7 @@ class SellerPartForm(forms.ModelForm):
         ).order_by("name")
         self.fields["seller"].required = False
         self.fields["seller_part_number"].label = _("Seller Part Number")
+        self.fields["seller_part_number"].widget.attrs["dir"] = "ltr"
         self.fields["seller"].label = _("Seller")
     def clean(self):
         cleaned_data = super(SellerPartForm, self).clean()
@@ -1088,7 +1090,7 @@ class CustomerPriceLoadForm(forms.Form):
                     verbose_string_function=lambda part: part.verbose_str(),
                     autocomplete_min_length=0,
                     autocomplete_limit=12,
-                    attrs={"class": "bom-input"},
+                    attrs={"class": "bom-input", "dir": "ltr"},
                 ),
             )
 
@@ -1364,6 +1366,7 @@ class PartClassForm(forms.ModelForm):
         super(PartClassForm, self).__init__(*args, **kwargs)
         self.fields["code"].required = False
         self.fields["name"].required = False
+        self.fields["code"].widget.attrs["dir"] = "ltr"
         self.fields["code"].validators.extend(
             [
                 MaxLengthValidator(self.organization.number_class_code_len),
@@ -2123,6 +2126,7 @@ class PartFormIntelligent(forms.ModelForm):
         self.fields["number_item"].required = True
         self.fields["number_item"].label = _("Code")
         self.fields["number_item"].widget.attrs["oninput"] = "updateTargetInput()"
+        self.fields["number_item"].widget.attrs["dir"] = "ltr"
         del self.fields["primary_manufacturer_part"]
         # for _, value in self.fields.items():
         # value.widget.attrs["placeholder"] = value.help_text
@@ -2179,6 +2183,9 @@ class PartFormSemiIntelligent(forms.ModelForm):
         self.ignore_unique_constraint = kwargs.pop("ignore_unique_constraint", False)
         super(PartFormSemiIntelligent, self).__init__(*args, **kwargs)
         self.fields["number_item"].validators.append(alphanumeric)
+        self.fields["number_item"].widget.attrs["dir"] = "ltr"
+        if "number_variation" in self.fields:
+            self.fields["number_variation"].widget.attrs["dir"] = "ltr"
         self.fields["number_class"] = forms.CharField(
             label="Part Number Class*",
             required=True,
@@ -2307,6 +2314,7 @@ class PartRevisionForm(forms.ModelForm):
         self.fields["supply_voltage"].label = "Vsupply"
         self.fields["attribute"].label = ""
         self.fields["revision"].label = _("Revision")
+        self.fields["revision"].widget.attrs["dir"] = "ltr"
         self.fields["tolerance"].label = _("Scrap percent (LOI)")
         self.fields["material"].label = _("Material Type")
         self.fields["tolerance"].initial = 0
@@ -2543,6 +2551,7 @@ class AddSubpartForm(forms.Form):
                     self.organization, exclude_part_id=self.part_id
                 ),
                 verbose_string_function=_part_autocomplete_label,
+                attrs={"dir": "ltr"},
             ),
         )
 

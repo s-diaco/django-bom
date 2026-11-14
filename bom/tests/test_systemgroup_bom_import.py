@@ -1112,6 +1112,15 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertGreater(part_id_idx, 0)
         self.assertGreater(cancel_idx, part_id_idx)
         self.assertGreater(load_idx, cancel_idx)
+        # Latin Part ID / CRM code fields stay LTR under Persian RTL.
+        def _input_tag(field_id):
+            idx = html.find(f'id="{field_id}"')
+            self.assertGreater(idx, 0, field_id)
+            return html[html.rfind("<input", 0, idx) : html.find(">", idx) + 1]
+
+        self.assertIn('dir="ltr"', _input_tag("id_part_id"))
+        self.assertIn('dir="ltr"', _input_tag("id_bom_id"))
+        self.assertIn('dir="ltr"', _input_tag("id_crm_url"))
         # Primary fields stay compact on wide screens.
         self.assertIn("max-w-sm", html)
         self.assertIn("max-w-md", html)
