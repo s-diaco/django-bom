@@ -1108,6 +1108,9 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertGreater(part_id_idx, 0)
         self.assertGreater(cancel_idx, part_id_idx)
         self.assertGreater(load_idx, cancel_idx)
+        # Primary fields stay compact on wide screens.
+        self.assertIn("max-w-sm", html)
+        self.assertIn("max-w-md", html)
 
     def test_load_revisions_shows_pick_list(self):
         matches = parse_bom_list_document(
@@ -1145,6 +1148,12 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertContains(response, "39477")
         self.assertContains(response, "40001")
         self.assertNotContains(response, "Results are capped")
+        # Results render below the Load revisions control, not above the form.
+        html = response.content.decode("utf-8")
+        load_idx = html.find("sg-load-revisions")
+        results_idx = html.find("sg-revision-results")
+        self.assertGreater(load_idx, 0)
+        self.assertGreater(results_idx, load_idx)
 
     def test_load_revisions_shows_capped_message(self):
         matches = parse_bom_list_document(

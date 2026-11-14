@@ -57,7 +57,13 @@ class SystemGroupBomImportForm(forms.Form):
         help_text=_(
             "Optional when Part ID is set. Still accepted as a manual fallback."
         ),
-        widget=forms.TextInput(attrs={"placeholder": "39477", "autocomplete": "off"}),
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "39477",
+                "autocomplete": "off",
+                "class": "bom-input w-full",
+            }
+        ),
     )
     crm_url = forms.CharField(
         required=False,
