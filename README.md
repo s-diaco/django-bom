@@ -274,7 +274,7 @@ GUI no longer reads `CRM_BASE_URL` / `CRM_USERNAME` / `CRM_PASSWORD` from `.env.
 
 CLI still accepts optional `CRM_BASE_URL` / `CRM_USERNAME` / `CRM_PASSWORD` (see `.env.example`) for offline ops scripts.
 
-**GUI (Admin only, when org+user credentials allow):** Home → **Import material** (next to New Material). Preferred: enter **Part ID** → **Load revisions** → pick a CRM revision → **Import this BoM**. Shortcut: paste **Part ID + Revision** as `PN/rev` and **Get the BoM**. Missing Lithium parts/revisions are created; if the target revision already has a BoM tree, choose keep (append) or replace. CRM id/URL remain optional fallbacks.
+**GUI (Admin only, when org+user credentials allow):** Home → **Import material** (next to New Material). Enter **Part ID** → **Load revisions** → pick a CRM revision → **Import this BoM**. Missing Lithium parts/revisions are created; if the target revision already has a BoM tree, choose keep (append) or replace. CRM id/URL remain optional fallbacks under More options.
 
 **CLI:**
 

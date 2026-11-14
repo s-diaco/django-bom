@@ -1091,13 +1091,23 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertContains(response, "Part ID")
         self.assertContains(response, "Load revisions")
         self.assertNotContains(response, "Part ID + Revision")
-        self.assertContains(response, "Get the BoM")
+        self.assertNotContains(response, "Get the BoM")
+        self.assertContains(response, "Import BoM")
         self.assertContains(response, "More options")
         self.assertContains(response, "CRM BoM id")
         self.assertContains(response, "Settings → Organization")
         self.assertContains(response, "<details")
         self.assertContains(response, "Select material type")
         self.assertContains(response, "sg-load-revisions")
+        self.assertContains(response, "sg-import-bom")
+        # Cancel (ghost) sits left of Load revisions on the Part ID action row.
+        html = response.content.decode("utf-8")
+        part_id_idx = html.find('id="id_part_id"')
+        cancel_idx = html.find("bom-btn-ghost", part_id_idx)
+        load_idx = html.find("sg-load-revisions", part_id_idx)
+        self.assertGreater(part_id_idx, 0)
+        self.assertGreater(cancel_idx, part_id_idx)
+        self.assertGreater(load_idx, cancel_idx)
 
     def test_load_revisions_shows_pick_list(self):
         matches = parse_bom_list_document(
@@ -1211,19 +1221,20 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Missing SystemGroup CRM base URL")
 
-    def test_get_the_bom_unreachable_crm_shows_error_not_500(self):
+    def test_slash_only_part_id_does_not_direct_import(self):
+        """PN/rev alone must not skip Load revisions (no Get the BoM path)."""
         with mock.patch(
-            "bom.systemgroup.access.client_for_user_meta",
-            side_effect=SystemGroupClientError(
-                "Could not reach the SystemGroup CRM login page: Connection refused"
-            ),
-        ):
+            "bom.systemgroup.importer.run_systemgroup_import"
+        ) as mocked:
             response = self.client.post(
                 self.url,
                 {"material": self._material(), "part_id": "1155F229/A2"},
             )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Could not reach the SystemGroup CRM")
+        mocked.assert_not_called()
+        form = response.context["form"]
+        self.assertFalse(form.is_valid())
+        self.assertTrue(form.non_field_errors())
 
     def test_import_selected_revision_posts_bom_id_and_rev(self):
         html = (FIXTURES / "bom_edit.html").read_bytes()
@@ -1416,7 +1427,7 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.cleaned_data["bom_id"], "39477")
 
-    def test_form_allows_parent_part_without_bom_id(self):
+    def test_form_rejects_parent_part_without_bom_id_or_load(self):
         form = SystemGroupBomImportForm(
             data={
                 "material": self._material(),
@@ -1424,17 +1435,16 @@ class SystemGroupAdminGuiTests(TestCase):
             },
             organization=self.organization,
         )
-        self.assertTrue(form.is_valid(), form.errors)
+        self.assertFalse(form.is_valid())
+        self.assertTrue(form.non_field_errors())
 
-    def test_form_part_id_with_slash_splits_pn_rev(self):
+    def test_form_rejects_slash_only_part_id_without_import_source(self):
         form = SystemGroupBomImportForm(
             data={"material": self._material(), "part_id": "1155F229/A2*10-C"},
             organization=self.organization,
         )
-        self.assertTrue(form.is_valid(), form.errors)
-        self.assertEqual(form.cleaned_data["part_id"], "1155F229")
-        self.assertEqual(form.cleaned_data["parent_part_number"], "1155F229")
-        self.assertEqual(form.cleaned_data["parent_revision"], "A2*10-C")
+        self.assertFalse(form.is_valid())
+        self.assertTrue(form.non_field_errors())
 
     def test_form_part_id_without_slash_is_pn_only(self):
         form = SystemGroupBomImportForm(
@@ -1508,9 +1518,8 @@ class SystemGroupAdminGuiTests(TestCase):
 
     def test_post_ambiguous_list_shows_pick_list(self):
         list_json = (FIXTURES / "bom_list.json").read_text(encoding="utf-8")
-        parent = Part.objects.filter(organization=self.organization).first()
         matches = parse_bom_list_document(list_json, content_type="application/json")[:2]
-        # Bare PN (no /) → revision picker; query with / keeps the radio pick list.
+        # Browse-list More options path can still surface AmbiguousBomMatch.
         with mock.patch(
             "bom.systemgroup.importer.run_systemgroup_import",
             side_effect=AmbiguousBomMatch(matches, "500-9001-00/A"),
@@ -1519,7 +1528,7 @@ class SystemGroupAdminGuiTests(TestCase):
                 self.url,
                 {
                     "material": self._material(),
-                    "parent_part_number": parent.full_part_number(),
+                    "browse_list": "on",
                 },
             )
         self.assertEqual(response.status_code, 200)
@@ -1546,7 +1555,9 @@ class SystemGroupAdminGuiTests(TestCase):
             self.url,
             {
                 "material": self._material(),
-                "part_id": f"{parent.full_part_number()}/{rev.revision}",
+                "part_id": parent.full_part_number(),
+                "parent_part_number": parent.full_part_number(),
+                "parent_revision": rev.revision,
                 "source_file": SimpleUploadedFile(
                     "bom_edit.html", html, content_type="text/html"
                 ),
@@ -1622,7 +1633,9 @@ class SystemGroupAdminGuiTests(TestCase):
             self.url,
             {
                 "material": self._material(),
-                "part_id": f"{parent.full_part_number()}/{rev.revision}",
+                "part_id": parent.full_part_number(),
+                "parent_part_number": parent.full_part_number(),
+                "parent_revision": rev.revision,
                 "source_file": SimpleUploadedFile(
                     "bom_edit.html", html, content_type="text/html"
                 ),
@@ -1640,7 +1653,9 @@ class SystemGroupAdminGuiTests(TestCase):
             self.url,
             {
                 "material": self._material(),
-                "part_id": f"{parent.full_part_number()}/{rev.revision}",
+                "part_id": parent.full_part_number(),
+                "parent_part_number": parent.full_part_number(),
+                "parent_revision": rev.revision,
                 "existing_bom_action": "replace",
                 "source_file": SimpleUploadedFile(
                     "bom_edit.html", html, content_type="text/html"
@@ -1667,7 +1682,9 @@ class SystemGroupAdminGuiTests(TestCase):
             self.url,
             {
                 "material": self._material(),
-                "part_id": f"{parent.full_part_number()}/{rev.revision}",
+                "part_id": parent.full_part_number(),
+                "parent_part_number": parent.full_part_number(),
+                "parent_revision": rev.revision,
                 "existing_bom_action": "keep",
                 "source_file": SimpleUploadedFile(
                     "bom_edit.html", html, content_type="text/html"
@@ -1696,7 +1713,9 @@ class SystemGroupAdminGuiTests(TestCase):
             self.url,
             {
                 "material": self._material(),
-                "part_id": "500-9001-00/A1",
+                "part_id": "500-9001-00",
+                "parent_part_number": "500-9001-00",
+                "parent_revision": "A1",
                 "source_file": SimpleUploadedFile(
                     "bom_edit.html", html, content_type="text/html"
                 ),

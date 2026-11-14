@@ -22,7 +22,7 @@
                     {% trans "Pull a PAC Engineering BoM from the on-LAN SystemGroup CRM into Lithium. Missing parts and revisions are created; existing ones are reused." %}
                 </p>
                 <p class="mb-4 text-sm text-ink-muted">
-                    {% trans "Choose a Material Type, enter a Part ID prefix (Number StartsWith), then Load revisions or Get the BoM. Live CRM uses your SystemGroup login and the CRM base URL from Settings → Organization." %}
+                    {% trans "Choose a Material Type, enter a Part ID prefix (Number StartsWith), then Load revisions and pick a CRM revision to import. Live CRM uses your SystemGroup login and the CRM base URL from Settings → Organization." %}
                 </p>
 
                 <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -181,13 +181,14 @@
                     </div>
                     <p class="bom-help mb-4">{{ form.material.help_text }}</p>
 
-                    {# Part ID + Load revisions: button lines up with the input, not the help text #}
+                    {# Part ID + Cancel + Load revisions: buttons line up with the input #}
                     <div class="mb-1 flex flex-wrap items-end gap-3">
                         <div class="min-w-0 flex-1 basis-64">
                             <label class="bom-label" for="{{ form.part_id.id_for_label }}">{{ form.part_id.label }}</label>
                             {{ form.part_id }}
                             {% if form.part_id.errors %}<p class="bom-error">{{ form.part_id.errors.0 }}</p>{% endif %}
                         </div>
+                        <a href="{% url 'bom:home' %}" class="bom-btn-ghost shrink-0">{% trans "Cancel" %}</a>
                         <button class="bom-btn-primary shrink-0" type="submit" name="load_revisions" value="1" id="sg-load-revisions">{% trans "Load revisions" %}</button>
                     </div>
                     <p class="bom-help mb-4">{{ form.part_id.help_text }}</p>
@@ -218,13 +219,11 @@
                             <div>
                                 {{ form.dry_run|bom_form }}
                             </div>
+                            <div>
+                                <button class="bom-btn-primary" type="submit" id="sg-import-bom">{% trans "Import BoM" %}</button>
+                            </div>
                         </div>
                     </details>
-
-                    <div class="mt-6 flex flex-wrap items-center justify-between gap-2">
-                        <a href="{% url 'bom:home' %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
-                        <button class="bom-btn-primary" type="submit" id="sg-get-bom">{% trans "Get the BoM" %}</button>
-                    </div>
                 </form>
             </div>
         {% else %}
@@ -239,14 +238,14 @@
     var material = document.getElementById("{{ form.material.id_for_label }}");
     var partId = document.getElementById("{{ form.part_id.id_for_label }}");
     var loadBtn = document.getElementById("sg-load-revisions");
-    var getBom = document.getElementById("sg-get-bom");
+    var importBom = document.getElementById("sg-import-bom");
     if (!material || !partId) return;
 
     function syncPartIdEnabled() {
         var hasMaterial = !!(material.value && material.value.length);
         partId.disabled = !hasMaterial;
         if (loadBtn) loadBtn.disabled = !hasMaterial;
-        if (getBom) getBom.disabled = !hasMaterial;
+        if (importBom) importBom.disabled = !hasMaterial;
     }
 
     material.addEventListener("change", syncPartIdEnabled);
