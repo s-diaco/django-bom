@@ -38,11 +38,6 @@ class SystemGroupBomImportForm(forms.Form):
     part_id = forms.CharField(
         required=False,
         label=_("Part ID"),
-        help_text=_(
-            "CRM Number StartsWith search. Enter a prefix (e.g. 1155F229, "
-            "1155F229/A2, or the full part-id/revision) then Load revisions "
-            "and import the revision you pick."
-        ),
         widget=forms.TextInput(
             attrs={
                 "placeholder": "1155F229 or 1155F229/A2*10-C",

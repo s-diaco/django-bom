@@ -18,14 +18,11 @@
         {% if profile.role == 'A' %}
             <div class="bom-panel-pad">
                 <h1 class="mb-2 text-lg font-semibold text-ink">{% trans "Import SystemGroup BoM" %}</h1>
-                <p class="mb-2 text-sm text-ink-muted">
+                <p class="mb-4 text-sm text-ink-muted">
                     {% trans "Pull a PAC Engineering BoM from the on-LAN SystemGroup CRM into Lithium. Missing parts and revisions are created; existing ones are reused." %}
                 </p>
-                <p class="mb-4 text-sm text-ink-muted">
-                    {% trans "Choose a Material Type, enter a Part ID prefix (Number StartsWith), then Load revisions and pick a CRM revision to import. Live CRM uses your SystemGroup login and the CRM base URL from Settings → Organization." %}
-                </p>
 
-                <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+                <div class="mb-4 flex flex-wrap items-center gap-3">
                     <p class="text-sm text-ink-muted">
                         {% blocktrans with username=profile.systemgroup_username %}Logged in to SystemGroup as {{ username }}.{% endblocktrans %}
                     </p>
@@ -74,7 +71,7 @@
                     </div>
                     <p class="bom-help mb-4 max-w-xl">{{ form.material.help_text }}</p>
 
-                    <div class="mb-1 flex flex-wrap items-end gap-3">
+                    <div class="mb-4 flex flex-wrap items-end gap-3">
                         <div class="w-full max-w-md min-w-0">
                             <label class="bom-label" for="{{ form.part_id.id_for_label }}">{{ form.part_id.label }}</label>
                             {{ form.part_id }}
@@ -83,7 +80,6 @@
                         <a href="{% url 'bom:home' %}" class="bom-btn-ghost shrink-0">{% trans "Cancel" %}</a>
                         <button class="bom-btn-primary shrink-0" type="submit" name="load_revisions" value="1" id="sg-load-revisions">{% trans "Load revisions" %}</button>
                     </div>
-                    <p class="bom-help mb-4 max-w-xl">{{ form.part_id.help_text }}</p>
 
                     {{ form.parent_part_number }}
                     {{ form.parent_revision }}

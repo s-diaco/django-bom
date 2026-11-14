@@ -1095,7 +1095,11 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertContains(response, "Import BoM")
         self.assertContains(response, "More options")
         self.assertContains(response, "CRM BoM id")
-        self.assertContains(response, "Settings → Organization")
+        self.assertNotContains(
+            response,
+            "Choose a Material Type, enter a Part ID prefix",
+        )
+        self.assertNotContains(response, "CRM Number StartsWith search")
         self.assertContains(response, "<details")
         self.assertContains(response, "Select material type")
         self.assertContains(response, "sg-load-revisions")
@@ -1111,6 +1115,16 @@ class SystemGroupAdminGuiTests(TestCase):
         # Primary fields stay compact on wide screens.
         self.assertIn("max-w-sm", html)
         self.assertIn("max-w-md", html)
+        # Login status and Manage link sit together (not opposite edges).
+        login_block = html[
+            html.find("Logged in to SystemGroup as") : html.find(
+                "Manage SystemGroup login"
+            )
+            + len("Manage SystemGroup login")
+        ]
+        self.assertIn("Logged in to SystemGroup as", login_block)
+        self.assertIn("Manage SystemGroup login", login_block)
+        self.assertNotIn("justify-between", login_block)
 
     def test_load_revisions_shows_pick_list(self):
         matches = parse_bom_list_document(
