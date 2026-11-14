@@ -28,7 +28,7 @@
                     <div class="col s12">
                         <div class="part-info-revision-controls flex flex-wrap items-center gap-1">
                             <label class="bom-label part-info-revision-label mb-0" for="select-revision">{% trans "Revision" %}</label>
-                            <select id="select-revision" class="bom-select part-info-revision-select">
+                            <select id="select-revision" class="bom-select part-info-revision-select" dir="ltr">
                                 {% for r in revisions.all %}
                                     <option {% if part_revision.id == r.id %}selected{% endif %}
                                             value="{% if r == part.latest %}{% url 'bom:part-info' part_id=part.id %}

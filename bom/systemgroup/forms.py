@@ -43,6 +43,7 @@ class SystemGroupBomImportForm(forms.Form):
                 "placeholder": "1155F229 or 1155F229/A2*10-C",
                 "autocomplete": "off",
                 "class": "bom-input w-full",
+                "dir": "ltr",
             }
         ),
     )
@@ -57,6 +58,7 @@ class SystemGroupBomImportForm(forms.Form):
                 "placeholder": "39477",
                 "autocomplete": "off",
                 "class": "bom-input w-full",
+                "dir": "ltr",
             }
         ),
     )
@@ -72,6 +74,7 @@ class SystemGroupBomImportForm(forms.Form):
                 "placeholder": "Shell.aspx?page=PAC/Engineering/BomPages/Edit.aspx?id=39477",
                 "autocomplete": "off",
                 "class": "bom-input w-full",
+                "dir": "ltr",
             }
         ),
     )
