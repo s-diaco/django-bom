@@ -355,6 +355,14 @@ class OrganizationFormEditSettings(OrganizationForm):
                     "autocomplete": "off",
                 }
             )
+        if "systemgroup_part_id_max_results" in self.fields:
+            self.fields["systemgroup_part_id_max_results"].help_text = _(
+                "Maximum CRM BoM rows shown for Part ID search (Load revisions). "
+                "Default 10. When more match, the UI asks you to narrow the Part ID."
+            )
+            self.fields["systemgroup_part_id_max_results"].widget.attrs.update(
+                {"min": "1", "dir": "ltr"}
+            )
 
     class Meta:
         model = Organization
@@ -372,6 +380,9 @@ class OrganizationFormEditSettings(OrganizationForm):
             "name": "Organization Name",
             "systemgroup_import_enabled": _("Enable SystemGroup BoM import"),
             "systemgroup_crm_base_url": _("SystemGroup CRM base URL"),
+            "systemgroup_part_id_max_results": _(
+                "SystemGroup Part ID search result cap"
+            ),
         }
 
 

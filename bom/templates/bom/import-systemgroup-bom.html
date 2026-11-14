@@ -22,7 +22,7 @@
                     {% trans "Pull a PAC Engineering BoM from the on-LAN SystemGroup CRM into Lithium. Missing parts and revisions are created; existing ones are reused." %}
                 </p>
                 <p class="mb-4 text-sm text-ink-muted">
-                    {% trans "Choose a Material Type, enter a Part ID (or part-id/revision), then Load revisions or Get the BoM. Live CRM uses your SystemGroup login and the CRM base URL from Settings → Organization." %}
+                    {% trans "Choose a Material Type, enter a Part ID prefix (Number StartsWith), then Load revisions or Get the BoM. Live CRM uses your SystemGroup login and the CRM base URL from Settings → Organization." %}
                 </p>
 
                 <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -65,9 +65,17 @@
                         <h2 class="mb-2 text-base font-semibold text-ink">
                             {% blocktrans with q=revision_part_query %}CRM revisions for “{{ q }}”{% endblocktrans %}
                         </h2>
-                        <p class="mb-3 text-sm text-ink-muted">
-                            {% trans "Pick a revision, then import that BoM into Lithium." %}
-                        </p>
+                        {% if revision_truncated %}
+                            <p class="mb-3 text-sm text-amber-800">
+                                {% blocktrans with n=revision_max_results q=revision_part_query %}
+                                Results are capped at {{ n }} matches. Narrow the Part ID (for example add more of the part-id/revision after “{{ q }}”) to find other CRM BoMs.
+                                {% endblocktrans %}
+                            </p>
+                        {% else %}
+                            <p class="mb-3 text-sm text-ink-muted">
+                                {% trans "Pick a revision, then import that BoM into Lithium." %}
+                            </p>
+                        {% endif %}
                         <div class="overflow-x-auto">
                             <table class="bom-table w-full text-sm">
                                 <thead>
