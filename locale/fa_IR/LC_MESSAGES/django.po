@@ -388,15 +388,6 @@ msgstr " به درخت {part} افزوده شد"
 msgid "Part ID"
 msgstr "شناسه متریال"
 
-msgid ""
-"CRM Number StartsWith search. Enter a prefix (e.g. 1155F229, "
-"1155F229/A2, or the full part-id/revision) then Load revisions. "
-"Use a full part-id/revision with Get the BoM to import one match."
-msgstr ""
-"جستجوی StartsWith روی کد BOM در CRM. یک پیشوند وارد کنید (مثلاً 1155F229، "
-"1155F229/A2 یا شناسه/ورژن کامل) سپس «بارگذاری ورژن‌ها» را بزنید. "
-"برای دریافت یک مورد، شناسه/ورژن کامل را با «دریافت BoM» بفرستید."
-
 msgid "CRM BoM id"
 msgstr "شناسه BoM در CRM"
 
@@ -419,9 +410,8 @@ msgstr "از شناسه متریال یا انتخاب ورژن پر می‌شو
 msgid "Parent revision"
 msgstr "ورژن والد"
 
-msgid ""
-"Filled from Part ID with / revision or the selected CRM revision."
-msgstr "از شناسه متریال با / ورژن یا ورژن انتخاب‌شده CRM پر می‌شود."
+msgid "Filled from the selected CRM revision."
+msgstr "از ورژن انتخاب‌شده CRM پر می‌شود."
 
 msgid "Saved Edit HTML/JSON"
 msgstr "فایل ذخیره‌شده Edit (HTML/JSON)"
@@ -441,21 +431,17 @@ msgstr "فهرست BoMهای CRM را بارگذاری کنید تا یک ردی
 msgid "Dry run (parse only, no database writes)"
 msgstr "اجرای آزمایشی (فقط تجزیه، بدون نوشتن در پایگاه داده)"
 
-msgid "Part ID + Revision must include a part number."
-msgstr "شناسه متریال + ورژن باید شامل شماره متریال باشد."
-
 msgid "Enter a Part ID to load CRM revisions."
 msgstr "برای بارگذاری ورژن‌های CRM یک شناسه متریال وارد کنید."
 
 msgid ""
-"Enter a Part ID (then Load revisions), "
-"or Part ID with / revision (e.g. 1155F229/A2*10-C), "
-"a CRM BoM id / Edit URL, upload a saved HTML/JSON file, "
-"or browse the CRM BoM list."
+"Enter a Part ID then Load revisions, "
+"or use More options (a CRM BoM id / Edit URL, "
+"a saved HTML/JSON file, or browse the CRM BoM list)."
 msgstr ""
-"شناسه متریال وارد کنید (سپس بارگذاری ورژن‌ها)، یا شناسه با / ورژن "
-"(مثلاً 1155F229/A2*10-C)، یا شناسه/آدرس BoM در CRM، یا فایل HTML/JSON "
-"ذخیره‌شده، یا فهرست CRM را مرور کنید."
+"شناسه متریال وارد کنید سپس «بارگذاری ورژن‌ها» را بزنید، "
+"یا از گزینه‌های بیشتر استفاده کنید (شناسه/آدرس BoM در CRM، "
+"فایل HTML/JSON ذخیره‌شده، یا مرور فهرست CRM)."
 
 msgid "Cancel"
 msgstr "انصراف"
@@ -936,15 +922,6 @@ msgid ""
 "Missing parts and revisions are created; existing ones are reused."
 msgstr "انتقال BoM از همکاران سیستم به لیتیوم. اگر متریال از قبل تعریف شده باشد، BoM به آن افزوده و در غیر این صورت متریال جدید ایجاد می‌شود."
 
-msgid ""
-"Choose a Material Type, enter a Part ID prefix (Number StartsWith), then "
-"Load revisions or Get the BoM. Live CRM uses your SystemGroup login and the "
-"CRM base URL from Settings → Organization."
-msgstr ""
-"نوع متریال را انتخاب کنید، پیشوند شناسه متریال (Number StartsWith) را وارد کنید، سپس "
-"«بارگذاری ورژن‌ها» یا «دریافت BoM» را بزنید. دریافت زنده از ورود همکاران "
-"سیستم شما و آدرس پایه CRM در تنظیمات ← سازمان استفاده می‌کند."
-
 msgid "Existing BoM found"
 msgstr "BoM موجود پیدا شد"
 
@@ -1004,7 +981,7 @@ msgstr "بارگذاری ورژن‌ها"
 msgid "Preferred"
 msgstr "ترجیحی"
 
-msgid "Get the BoM"
+msgid "Import BoM"
 msgstr "دریافت BoM"
 
 
@@ -1986,13 +1963,6 @@ msgid ""
 "Click Load revisions, pick the revision, then Import this BoM."
 msgstr ""
 "«بارگذاری ورژن‌ها» را بزنید، ورژن را انتخاب کنید، سپس «دریافت متریال این BoM» را بزنید."
-
-msgid ""
-"Shortcut: enter part-id/revision in the same Part ID field (for example "
-"1155F229/A2*10-C, matching CRM «کد BOM») and click Get the BoM."
-msgstr ""
-"میان‌بر: در همان فیلد شناسه متریال، شناسه/ورژن را وارد کنید "
-"(مثلاً 1155F229/A2*10-C مطابق «کد BOM» در CRM) و «دریافت BoM» را بزنید."
 
 msgid "If a BoM already exists"
 msgstr "اگر BoM از قبل وجود دارد"

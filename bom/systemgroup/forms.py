@@ -38,11 +38,6 @@ class SystemGroupBomImportForm(forms.Form):
     part_id = forms.CharField(
         required=False,
         label=_("Part ID"),
-        help_text=_(
-            "CRM Number StartsWith search. Enter a prefix (e.g. 1155F229, "
-            "1155F229/A2, or the full part-id/revision) then Load revisions. "
-            "Use a full part-id/revision with Get the BoM to import one match."
-        ),
         widget=forms.TextInput(
             attrs={
                 "placeholder": "1155F229 or 1155F229/A2*10-C",
@@ -57,7 +52,13 @@ class SystemGroupBomImportForm(forms.Form):
         help_text=_(
             "Optional when Part ID is set. Still accepted as a manual fallback."
         ),
-        widget=forms.TextInput(attrs={"placeholder": "39477", "autocomplete": "off"}),
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "39477",
+                "autocomplete": "off",
+                "class": "bom-input w-full",
+            }
+        ),
     )
     crm_url = forms.CharField(
         required=False,
@@ -83,7 +84,7 @@ class SystemGroupBomImportForm(forms.Form):
     parent_revision = forms.CharField(
         required=False,
         label=_("Parent revision"),
-        help_text=_("Filled from Part ID with / revision or the selected CRM revision."),
+        help_text=_("Filled from the selected CRM revision."),
         widget=forms.HiddenInput(),
     )
     source_file = forms.FileField(
@@ -165,7 +166,7 @@ class SystemGroupBomImportForm(forms.Form):
             )
 
         # Load revisions: keep the full StartsWith query (do not strip at /).
-        # Get the BoM / import: slash still splits into parent PN + revision.
+        # Never treat a slash in Part ID as a one-shot PN/rev import.
         search_query = part_id
         if load_revisions:
             if not part_id and not parent_pn:
@@ -177,22 +178,9 @@ class SystemGroupBomImportForm(forms.Form):
             if part_id and not parent_pn:
                 code_pn, _code_rev = split_bom_code(part_id)
                 parent_pn = code_pn or part_id
-        elif part_id and "/" in part_id:
-            code_pn, code_rev = split_bom_code(part_id)
-            if not code_pn:
-                raise forms.ValidationError(
-                    _("Part ID + Revision must include a part number."),
-                    code="invalid",
-                )
-            parent_pn = code_pn
-            if code_rev:
-                parent_rev = code_rev
-            part_id = code_pn
         elif part_id and not parent_pn:
-            code_pn, code_rev = split_bom_code(part_id)
+            code_pn, _code_rev = split_bom_code(part_id)
             parent_pn = code_pn or part_id
-            if code_rev and not parent_rev:
-                parent_rev = code_rev
             part_id = parent_pn
 
         extracted = extract_bom_id_from_url(crm_url) if crm_url else None
@@ -204,15 +192,13 @@ class SystemGroupBomImportForm(forms.Form):
             not load_revisions
             and not source_file
             and not bom_id
-            and not parent_pn
             and not browse_list
         ):
             raise forms.ValidationError(
                 _(
-                    "Enter a Part ID (then Load revisions), "
-                    "or Part ID with / revision (e.g. 1155F229/A2*10-C), "
-                    "a CRM BoM id / Edit URL, upload a saved HTML/JSON file, "
-                    "or browse the CRM BoM list."
+                    "Enter a Part ID then Load revisions, "
+                    "or use More options (a CRM BoM id / Edit URL, "
+                    "a saved HTML/JSON file, or browse the CRM BoM list)."
                 ),
                 code="required",
             )
