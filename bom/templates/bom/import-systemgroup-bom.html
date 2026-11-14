@@ -22,7 +22,7 @@
                     {% trans "Pull a PAC Engineering BoM from the on-LAN SystemGroup CRM into Lithium. Missing parts and revisions are created; existing ones are reused." %}
                 </p>
                 <p class="mb-4 text-sm text-ink-muted">
-                    {% trans "Enter a Part ID, load its CRM revisions, pick one, and import. Live CRM uses your SystemGroup login and the CRM base URL from Settings → Organization." %}
+                    {% trans "Choose a Material Type, enter a Part ID (or part-id/revision), then Load revisions or Get the BoM. Live CRM uses your SystemGroup login and the CRM base URL from Settings → Organization." %}
                 </p>
 
                 <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -46,7 +46,6 @@
                         <form action="{% url 'bom:import-systemgroup-bom' %}" method="post" enctype="multipart/form-data" class="flex flex-wrap gap-3">
                             {% csrf_token %}
                             <input type="hidden" name="part_id" value="{{ form.part_id.value|default_if_none:'' }}">
-                            <input type="hidden" name="part_id_revision" value="{{ form.part_id_revision.value|default_if_none:'' }}">
                             <input type="hidden" name="parent_part_number" value="{{ form.parent_part_number.value|default_if_none:'' }}">
                             <input type="hidden" name="parent_revision" value="{{ form.parent_revision.value|default_if_none:'' }}">
                             <input type="hidden" name="bom_id" value="{{ form.bom_id.value|default_if_none:'' }}">
@@ -122,7 +121,6 @@
                         <form action="{% url 'bom:import-systemgroup-bom' %}" method="post">
                             {% csrf_token %}
                             <input type="hidden" name="part_id" value="{{ form.part_id.value|default_if_none:'' }}">
-                            <input type="hidden" name="part_id_revision" value="{{ form.part_id_revision.value|default_if_none:'' }}">
                             <input type="hidden" name="parent_part_number" value="{{ form.parent_part_number.value|default_if_none:'' }}">
                             <input type="hidden" name="parent_revision" value="{{ form.parent_revision.value|default_if_none:'' }}">
                             {% if form.dry_run.value %}<input type="hidden" name="dry_run" value="on">{% endif %}
@@ -162,7 +160,7 @@
                     </div>
                 {% endif %}
 
-                <form action="{% url 'bom:import-systemgroup-bom' %}" method="post" enctype="multipart/form-data">
+                <form action="{% url 'bom:import-systemgroup-bom' %}" method="post" enctype="multipart/form-data" id="systemgroup-import-form">
                     {% csrf_token %}
                     {% if form.non_field_errors %}
                         <div class="mb-4 text-sm text-red-700">{{ form.non_field_errors }}</div>
@@ -182,20 +180,9 @@
                             {{ form.part_id }}
                             {% if form.part_id.errors %}<p class="bom-error">{{ form.part_id.errors.0 }}</p>{% endif %}
                         </div>
-                        <button class="bom-btn-primary shrink-0" type="submit" name="load_revisions" value="1">{% trans "Load revisions" %}</button>
+                        <button class="bom-btn-primary shrink-0" type="submit" name="load_revisions" value="1" id="sg-load-revisions">{% trans "Load revisions" %}</button>
                     </div>
-                    <p class="bom-help mb-4">
-                        {% trans "Part ID only — load every CRM revision for that part, then import the one you select." %}
-                    </p>
-
-                    <div class="mb-1">
-                        <label class="bom-label" for="{{ form.part_id_revision.id_for_label }}">{{ form.part_id_revision.label }}</label>
-                        {{ form.part_id_revision }}
-                        {% if form.part_id_revision.errors %}<p class="bom-error">{{ form.part_id_revision.errors.0 }}</p>{% endif %}
-                    </div>
-                    <p class="bom-help mb-4">
-                        {% trans "Shortcut: part-id/revision (matches CRM «کد BOM») with Get the BoM below." %}
-                    </p>
+                    <p class="bom-help mb-4">{{ form.part_id.help_text }}</p>
 
                     {{ form.parent_part_number }}
                     {{ form.parent_revision }}
@@ -228,7 +215,7 @@
 
                     <div class="mt-6 flex flex-wrap items-center justify-between gap-2">
                         <a href="{% url 'bom:home' %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
-                        <button class="bom-btn-primary" type="submit">{% trans "Get the BoM" %}</button>
+                        <button class="bom-btn-primary" type="submit" id="sg-get-bom">{% trans "Get the BoM" %}</button>
                     </div>
                 </form>
             </div>
@@ -236,4 +223,26 @@
             {% include 'bom/nothing-to-see.html' with required_privilege='Admin' %}
         {% endif %}
     </div>
+{% endblock %}
+
+{% block bom-script %}
+<script>
+(function () {
+    var material = document.getElementById("{{ form.material.id_for_label }}");
+    var partId = document.getElementById("{{ form.part_id.id_for_label }}");
+    var loadBtn = document.getElementById("sg-load-revisions");
+    var getBom = document.getElementById("sg-get-bom");
+    if (!material || !partId) return;
+
+    function syncPartIdEnabled() {
+        var hasMaterial = !!(material.value && material.value.length);
+        partId.disabled = !hasMaterial;
+        if (loadBtn) loadBtn.disabled = !hasMaterial;
+        if (getBom) getBom.disabled = !hasMaterial;
+    }
+
+    material.addEventListener("change", syncPartIdEnabled);
+    syncPartIdEnabled();
+})();
+</script>
 {% endblock %}

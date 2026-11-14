@@ -2669,12 +2669,13 @@ def import_systemgroup_bom(request):
     existing_bom_conflict = None
     get_parent = request.GET.get("parent_part", "")
     get_rev = request.GET.get("parent_revision", "")
-    initial_pir = ""
-    if get_parent:
-        initial_pir = f"{get_parent}/{get_rev}" if get_rev else get_parent
+    initial_part = request.GET.get("part_id") or request.GET.get(
+        "part_id_revision", ""
+    )
+    if not initial_part and get_parent:
+        initial_part = f"{get_parent}/{get_rev}" if get_rev else get_parent
     form_initial = {
-        "part_id": request.GET.get("part_id", get_parent),
-        "part_id_revision": request.GET.get("part_id_revision", initial_pir),
+        "part_id": initial_part,
         "parent_part_number": get_parent,
         "parent_revision": get_rev,
         "bom_id": request.GET.get("bom_id", ""),

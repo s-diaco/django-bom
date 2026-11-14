@@ -39,28 +39,12 @@ class SystemGroupBomImportForm(forms.Form):
         required=False,
         label=_("Part ID"),
         help_text=_(
-            "Enter the CRM part number (left side of «کد BOM»). "
-            "Use Load revisions to list every CRM BoM revision for that part, "
-            "then import the one you pick."
+            "Enter a CRM part number (e.g. 1155F229) to load revisions, or "
+            "part-id/revision (e.g. 1155F229/A2*10-C) to Get the BoM in one step."
         ),
         widget=forms.TextInput(
             attrs={
-                "placeholder": "1155F229",
-                "autocomplete": "off",
-                "class": "bom-input w-full",
-            }
-        ),
-    )
-    part_id_revision = forms.CharField(
-        required=False,
-        label=_("Part ID + Revision"),
-        help_text=_(
-            "Optional shortcut: paste PN/rev (e.g. 1155F229/A2*10-C) to skip "
-            "the revision picker and Get the BoM in one step."
-        ),
-        widget=forms.TextInput(
-            attrs={
-                "placeholder": "1155F229/A2*10-C",
+                "placeholder": "1155F229 or 1155F229/A2*10-C",
                 "autocomplete": "off",
                 "class": "bom-input w-full",
             }
@@ -70,8 +54,7 @@ class SystemGroupBomImportForm(forms.Form):
         required=False,
         label=_("CRM BoM id"),
         help_text=_(
-            "Optional when Part ID / Part ID + Revision is set. Still accepted "
-            "as a manual fallback."
+            "Optional when Part ID is set. Still accepted as a manual fallback."
         ),
         widget=forms.TextInput(attrs={"placeholder": "39477", "autocomplete": "off"}),
     )
@@ -93,13 +76,13 @@ class SystemGroupBomImportForm(forms.Form):
     parent_part_number = forms.CharField(
         required=False,
         label=_("Parent part number"),
-        help_text=_("Filled from Part ID / Part ID + Revision / revision pick."),
+        help_text=_("Filled from Part ID or revision pick."),
         widget=forms.HiddenInput(),
     )
     parent_revision = forms.CharField(
         required=False,
         label=_("Parent revision"),
-        help_text=_("Filled from Part ID + Revision or the selected CRM revision."),
+        help_text=_("Filled from Part ID with / revision or the selected CRM revision."),
         widget=forms.HiddenInput(),
     )
     source_file = forms.FileField(
@@ -148,22 +131,12 @@ class SystemGroupBomImportForm(forms.Form):
         self.organization = organization
         super().__init__(*args, **kwargs)
         types = []
-        default_code = ""
         if organization is not None:
             organization.ensure_default_product_types()
             types = list(organization.product_types.all())
-            for pt in types:
-                if pt.has_bom:
-                    default_code = pt.code
-                    break
-            if not default_code and types:
-                default_code = types[0].code
-        self.fields["material"].choices = [
+        self.fields["material"].choices = [("", _("Select material type…"))] + [
             (pt.code, gettext(pt.name)) for pt in types
         ]
-        if default_code:
-            self.fields["material"].initial = default_code
-        self._default_material = default_code
 
     def clean(self):
         cleaned = super().clean()
@@ -173,7 +146,6 @@ class SystemGroupBomImportForm(forms.Form):
         parent_pn = (cleaned.get("parent_part_number") or "").strip()
         parent_rev = (cleaned.get("parent_revision") or "").strip()
         part_id = (cleaned.get("part_id") or "").strip()
-        part_id_rev = (cleaned.get("part_id_revision") or "").strip()
         browse_list = bool(cleaned.get("browse_list"))
         existing_bom_action = (cleaned.get("existing_bom_action") or "").strip()
         material = (cleaned.get("material") or "").strip()
@@ -182,19 +154,18 @@ class SystemGroupBomImportForm(forms.Form):
             self.data.get("load_revisions") if hasattr(self, "data") else False
         )
 
-        valid_codes = {c for c, _ in self.fields["material"].choices}
+        valid_codes = {c for c, _ in self.fields["material"].choices if c}
         if material and valid_codes and material not in valid_codes:
             raise forms.ValidationError(_("Unknown material."), code="invalid")
-        if not material:
-            material = self._default_material or None
-        if not material and valid_codes and not load_revisions:
+        if not material and valid_codes:
             raise forms.ValidationError(
                 _("Select a Material Type."),
                 code="required",
             )
 
-        if part_id_rev:
-            code_pn, code_rev = split_bom_code(part_id_rev)
+        # Slash → Part ID + Revision; otherwise Part ID only (list-revisions flow).
+        if part_id and "/" in part_id:
+            code_pn, code_rev = split_bom_code(part_id)
             if not code_pn:
                 raise forms.ValidationError(
                     _("Part ID + Revision must include a part number."),
@@ -203,11 +174,8 @@ class SystemGroupBomImportForm(forms.Form):
             parent_pn = code_pn
             if code_rev:
                 parent_rev = code_rev
-            cleaned["part_id_revision"] = part_id_rev
-            if not part_id:
-                part_id = code_pn
-
-        if part_id and not parent_pn:
+            part_id = code_pn
+        elif part_id and not parent_pn:
             code_pn, code_rev = split_bom_code(part_id)
             parent_pn = code_pn or part_id
             if code_rev and not parent_rev:
@@ -229,7 +197,7 @@ class SystemGroupBomImportForm(forms.Form):
             raise forms.ValidationError(
                 _(
                     "Enter a Part ID (then Load revisions), "
-                    "Part ID + Revision (e.g. 1155F229/A2*10-C), "
+                    "or Part ID with / revision (e.g. 1155F229/A2*10-C), "
                     "a CRM BoM id / Edit URL, upload a saved HTML/JSON file, "
                     "or browse the CRM BoM list."
                 ),
@@ -241,6 +209,6 @@ class SystemGroupBomImportForm(forms.Form):
         cleaned["parent_part_number"] = parent_pn or None
         cleaned["parent_revision"] = parent_rev or None
         cleaned["existing_bom_action"] = existing_bom_action or None
-        cleaned["material"] = material
+        cleaned["material"] = material or None
         cleaned["load_revisions"] = load_revisions
         return cleaned
