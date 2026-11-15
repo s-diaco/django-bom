@@ -1665,6 +1665,13 @@ msgstr ""
 msgid "Several CRM BoMs matched — pick a revision below, or enter an id/URL."
 msgstr "چند BoM در CRM مطابقت داشت — ورژنی را پایین انتخاب کنید یا شناسه/آدرس وارد کنید."
 
+#, python-format
+msgid ""
+"No CRM BoM on the list matched '%(query)s'. "
+"Check the parent part number/description, or enter a "
+"CRM BoM id / Edit URL."
+msgstr "جستجو برای %(query)s در لیست BoM همکاران سیستم نتیجه‌ای نداشت."
+
 msgid ""
 "This part/revision already has a BoM. Keep the existing tree (append "
 "imported lines) or replace it."
