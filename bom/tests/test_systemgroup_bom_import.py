@@ -1218,6 +1218,27 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertContains(response, "Results are capped")
         self.assertContains(response, "Narrow the Part ID")
 
+    def test_load_revisions_no_match_shows_error_not_500(self):
+        with mock.patch(
+            "bom.systemgroup.importer.list_revisions_for_part",
+            side_effect=NoBomMatch("ZZZZNOEXIST9999"),
+        ), mock.patch(
+            "bom.systemgroup.access.client_for_user_meta",
+            return_value=mock.Mock(),
+        ):
+            response = self.client.post(
+                self.url,
+                {
+                    "material": self._material(),
+                    "part_id": "ZZZZNOEXIST9999",
+                    "load_revisions": "1",
+                },
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No CRM BoM on the list matched")
+        self.assertContains(response, "ZZZZNOEXIST9999")
+        self.assertNotContains(response, "Import this BoM")
+
     def test_load_revisions_unreachable_crm_shows_error_not_500(self):
         with mock.patch(
             "bom.systemgroup.access.client_for_user_meta",
