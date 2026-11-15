@@ -2614,6 +2614,7 @@ def import_systemgroup_bom(request):
     from bom.systemgroup.importer import (
         AmbiguousBomMatch,
         ExistingBomConflict,
+        NoBomMatch,
         SystemGroupError,
         SystemGroupImportError,
         list_revisions_for_part,
@@ -2713,6 +2714,16 @@ def import_systemgroup_bom(request):
                     client=client_for_user_meta(profile),
                     max_results=max_results,
                 )
+            except NoBomMatch as exc:
+                messages.error(
+                    request,
+                    _(
+                        "No CRM BoM on the list matched '%(query)s'. "
+                        "Check the parent part number/description, or enter a "
+                        "CRM BoM id / Edit URL."
+                    )
+                    % {"query": exc.query},
+                )
             except (SystemGroupError, SystemGroupClientError) as exc:
                 messages.error(request, str(exc))
             except Exception as exc:  # noqa: BLE001 — surface CRM outages as UI errors
@@ -2811,6 +2822,16 @@ def import_systemgroup_bom(request):
                         "Several CRM BoMs matched — pick a revision below, "
                         "or enter an id/URL."
                     ),
+                )
+            except NoBomMatch as exc:
+                messages.error(
+                    request,
+                    _(
+                        "No CRM BoM on the list matched '%(query)s'. "
+                        "Check the parent part number/description, or enter a "
+                        "CRM BoM id / Edit URL."
+                    )
+                    % {"query": exc.query},
                 )
             except ExistingBomConflict as exc:
                 existing_bom_conflict = exc
