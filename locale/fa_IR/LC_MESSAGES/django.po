@@ -960,7 +960,7 @@ msgstr "شناسه CRM"
 
 
 msgid "Import this BoM"
-msgstr "دریافت متریال این BoM"
+msgstr "دریافت این BoM"
 
 
 #, python-format
