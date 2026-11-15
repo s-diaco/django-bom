@@ -1121,10 +1121,12 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertIn('dir="ltr"', _input_tag("id_part_id"))
         self.assertIn('dir="ltr"', _input_tag("id_bom_id"))
         self.assertIn('dir="ltr"', _input_tag("id_crm_url"))
-        # Material Type + Part ID: compact widths, side-by-side from sm up.
-        self.assertIn("max-w-sm", html)
-        self.assertIn("max-w-md", html)
-        self.assertIn("sm:flex-row", html)
+        # Material Type | Part ID in a two-column grid from sm up (not beside buttons).
+        material_idx = html.find('id="id_material"')
+        self.assertGreater(material_idx, 0)
+        self.assertLess(material_idx, part_id_idx)
+        self.assertIn("sm:grid-cols-2", html)
+        self.assertIn("max-w-3xl", html)
         # Login status and Manage link sit together (not opposite edges).
         login_block = html[
             html.find("Logged in to SystemGroup as") : html.find(
