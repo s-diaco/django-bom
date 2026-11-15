@@ -1104,7 +1104,7 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertContains(response, "Select material type")
         self.assertContains(response, "sg-load-revisions")
         self.assertContains(response, "sg-import-bom")
-        # Cancel (ghost) sits left of Load revisions on the Part ID action row.
+        # Cancel (ghost) sits left of Load revisions after Part ID.
         html = response.content.decode("utf-8")
         part_id_idx = html.find('id="id_part_id"')
         cancel_idx = html.find("bom-btn-ghost", part_id_idx)
@@ -1121,9 +1121,10 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertIn('dir="ltr"', _input_tag("id_part_id"))
         self.assertIn('dir="ltr"', _input_tag("id_bom_id"))
         self.assertIn('dir="ltr"', _input_tag("id_crm_url"))
-        # Primary fields stay compact on wide screens.
+        # Material Type + Part ID: compact widths, side-by-side from sm up.
         self.assertIn("max-w-sm", html)
         self.assertIn("max-w-md", html)
+        self.assertIn("sm:flex-row", html)
         # Login status and Manage link sit together (not opposite edges).
         login_block = html[
             html.find("Logged in to SystemGroup as") : html.find(

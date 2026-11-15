@@ -64,14 +64,13 @@
                         <div class="mb-4 text-sm text-red-700">{{ form.non_field_errors }}</div>
                     {% endif %}
 
-                    <div class="mb-1 max-w-sm">
-                        <label class="bom-label" for="{{ form.material.id_for_label }}">{{ form.material.label }}</label>
-                        {{ form.material }}
-                        {% if form.material.errors %}<p class="bom-error">{{ form.material.errors.0 }}</p>{% endif %}
-                    </div>
-                    <p class="bom-help mb-4 max-w-xl">{{ form.material.help_text }}</p>
-
-                    <div class="mb-4 flex flex-wrap items-end gap-3">
+                    {# Material Type + Part ID: stacked on mobile, side-by-side from sm up #}
+                    <div class="mb-1 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+                        <div class="w-full max-w-sm min-w-0">
+                            <label class="bom-label" for="{{ form.material.id_for_label }}">{{ form.material.label }}</label>
+                            {{ form.material }}
+                            {% if form.material.errors %}<p class="bom-error">{{ form.material.errors.0 }}</p>{% endif %}
+                        </div>
                         <div class="w-full max-w-md min-w-0">
                             <label class="bom-label" for="{{ form.part_id.id_for_label }}">{{ form.part_id.label }}</label>
                             {{ form.part_id }}
@@ -80,6 +79,7 @@
                         <a href="{% url 'bom:home' %}" class="bom-btn-ghost shrink-0">{% trans "Cancel" %}</a>
                         <button class="bom-btn-primary shrink-0" type="submit" name="load_revisions" value="1" id="sg-load-revisions">{% trans "Load revisions" %}</button>
                     </div>
+                    <p class="bom-help mb-4 max-w-xl">{{ form.material.help_text }}</p>
 
                     {{ form.parent_part_number }}
                     {{ form.parent_revision }}
