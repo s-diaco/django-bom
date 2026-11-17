@@ -398,6 +398,14 @@ class TestUiSmoke(TransactionTestCase):
             reverse("bom:part-revision-new", kwargs={"part_id": part.id}),
             info_html,
         )
+        self.assertIn(
+            reverse(
+                "bom:part-revision-delete",
+                kwargs={"part_id": part.id, "part_revision_id": part.latest().id},
+            ),
+            info_html,
+        )
+        self.assertIn("deletePartRevision", info_html)
         self.assertIn("bom-table", info_html)
         self.assertIn("collection", info_html)
         self.assertNotIn("متریال جدید", info_html)
@@ -497,6 +505,32 @@ class TestUiSmoke(TransactionTestCase):
         self.assertLess(table_at, cost_at)
         self.assertLess(cost_at, delete_at)
         self.assertLess(delete_at, add_at)
+
+    def test_part_info_revision_delete_admin_only(self):
+        user, organization = create_user_and_organization()
+        profile = user.bom_profile(organization=organization)
+        profile.role = "A"
+        profile.save()
+        self.client.login(username="kasper", password="ghostpassword")
+        part = create_some_fake_parts(organization=organization)[0]
+        rev = part.latest()
+        delete_url = reverse(
+            "bom:part-revision-delete",
+            kwargs={"part_id": part.id, "part_revision_id": rev.id},
+        )
+        info_url = reverse("bom:part-info", kwargs={"part_id": part.id})
+
+        admin_html = self.client.get(info_url).content.decode("utf-8")
+        self.assertIn("part-info-revision-actions", admin_html)
+        self.assertIn(delete_url, admin_html)
+        self.assertIn("deletePartRevision", admin_html)
+
+        profile.role = "V"
+        profile.save()
+        viewer_html = self.client.get(info_url).content.decode("utf-8")
+        self.assertNotIn("part-info-revision-actions", viewer_html)
+        self.assertNotIn(delete_url, viewer_html)
+        self.assertNotIn("deletePartRevision", viewer_html)
 
     def test_settings_password_reset_uses_tailwind_form_classes(self):
         user, organization = create_user_and_organization()
