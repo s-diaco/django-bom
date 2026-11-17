@@ -1,0 +1,6 @@
+{% load bom_i18n %}
+{# Shown when BoM rollup cost is omitted because materials lack prices. #}
+<span class="incomplete-bom-cost red-text" title="{% trans "Cannot calculate — materials without price" %}">
+    <i class="material-icons text-base align-middle" aria-hidden="true">error</i>
+    {% trans "Cannot calculate — materials without price" %}
+</span>

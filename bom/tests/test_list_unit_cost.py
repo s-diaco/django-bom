@@ -136,6 +136,7 @@ class ListUnitCostPrefetchTests(TestCase):
 
         self.assertGreater(bom.missing_item_costs, 0)
         self.assertIsNone(attached.list_unit_cost)
+        self.assertTrue(attached.bom_cost_incomplete)
 
     def test_attached_list_unit_cost_does_not_walk_bom_again(self):
         _raw, raw_rev = self._make_part("RAW2", "no_bom", seller_cost=7)

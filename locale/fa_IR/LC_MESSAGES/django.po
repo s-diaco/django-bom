@@ -1094,6 +1094,9 @@ msgstr "آخرین ویرایش"
 msgid "Materials without price"
 msgstr "تعداد متریال بدون قیمت"
 
+msgid "Cannot calculate — materials without price"
+msgstr "قابل محاسبه نیست — متریال بدون قیمت"
+
 msgid "BoM weight"
 msgstr "وزن BoM"
 

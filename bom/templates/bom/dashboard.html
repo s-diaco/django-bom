@@ -108,7 +108,7 @@
                                 <td>{{ part_rev.description }}</td>
                                 <td>{% if seller %}{{ seller.seller_part_number }}{% endif %}</td>
                                 <td>{% if seller and seller.seller %}{{ seller.seller }}{% endif %}</td>
-                                <td class="bom-num">{{ part_rev.list_unit_cost|default_if_none:"-" }}</td>
+                                <td class="bom-num">{% if part_rev.bom_cost_incomplete %}{% include "bom/components/incomplete-bom-cost.html" %}{% else %}{{ part_rev.list_unit_cost|default_if_none:"-" }}{% endif %}</td>
                                 <td class="printer-hide">
                                     {% if part_rev.configuration == 'W' %}
                                         <a class="bom-btn-icon" title="{% trans "Edit this revision" %}"

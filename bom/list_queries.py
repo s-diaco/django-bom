@@ -198,7 +198,9 @@ def list_unit_cost(part_rev, *, rollup_bom=True):
     """
     if rollup_bom and part_rev.is_product:
         bom = part_rev.indented()
+        part_rev.bom_cost_incomplete = bool(bom.missing_item_costs)
         return bom.cost_for_display(bom.bom_unit_cost)
+    part_rev.bom_cost_incomplete = False
     seller = part_rev.part.optimal_seller()
     return seller.unit_cost if seller else None
 
@@ -217,8 +219,10 @@ def attach_list_unit_costs(part_revs_page):
     for part_rev in part_revs_page:
         if part_rev.is_product:
             bom = part_rev.indented()
+            part_rev.bom_cost_incomplete = bool(bom.missing_item_costs)
             part_rev.list_unit_cost = bom.cost_for_display(bom.bom_unit_cost)
         else:
+            part_rev.bom_cost_incomplete = False
             seller = part_rev.part.optimal_seller()
             part_rev.list_unit_cost = (
                 seller.landed_unit_cost if seller else None
