@@ -132,6 +132,8 @@ PACKAGE_TYPES = (
     ("Other", "Other"),
 )
 
+# Legacy labels only (older docs / fallbacks). Material codes for parts are
+# Organization ProductType rows — see DEFAULT_PRODUCT_TYPES and ProductType.
 MATERIAL_TYPES = (
     # NO_CHOICE,
     ("with_loi", _("With loss (LOI) (Frit)")),
@@ -142,6 +144,7 @@ MATERIAL_TYPES = (
 
 # Seeded per organization. New types are rows, not new constants.
 # Codes with_loi / no_loi / no_bom are stable; ink / powder are additional BOM types.
+# PartRevision.material must be one of the org's ProductType.code values.
 DEFAULT_PRODUCT_TYPES = (
     ("with_loi", "Frit", True, True),
     ("no_loi", "Compound", True, False),

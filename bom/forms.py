@@ -2312,8 +2312,6 @@ class PartRevisionForm(forms.ModelForm):
             "attribute": _("Additional part attributes (free form)"),
             "value": _("Number or text"),
         }
-        widgets = {"material": forms.RadioSelect()}
-
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
         super(PartRevisionForm, self).__init__(*args, **kwargs)
@@ -2332,7 +2330,6 @@ class PartRevisionForm(forms.ModelForm):
         self.fields["revision"].label = _("Revision")
         self.fields["revision"].widget.attrs["dir"] = "ltr"
         self.fields["tolerance"].label = _("Scrap percent (LOI)")
-        self.fields["material"].label = _("Material Type")
         self.fields["tolerance"].initial = 0
         org = self.organization
         if org is None and self.instance and getattr(self.instance, "part_id", None):
@@ -2340,14 +2337,25 @@ class PartRevisionForm(forms.ModelForm):
         if org is not None:
             org.ensure_default_product_types()
             types = list(org.product_types.all())
-            self.fields["material"].choices = [
+            material_choices = [
                 (pt.code, gettext(pt.name)) for pt in types
             ]
             raw = next((pt.code for pt in types if not pt.has_bom), "no_bom")
-            self.fields["material"].initial = raw
         else:
-            self.fields["material"].choices = MATERIAL_TYPES
-            self.fields["material"].initial = "no_bom"
+            material_choices = list(MATERIAL_TYPES)
+            raw = "no_bom"
+        # ChoiceField so validation uses Product Type codes (model field is a
+        # plain CharField — no hard-coded MATERIAL_TYPES choices).
+        instance_material = None
+        if getattr(self.instance, "pk", None):
+            instance_material = self.instance.material
+        self.fields["material"] = forms.ChoiceField(
+            choices=material_choices,
+            label=_("Material Type"),
+            widget=forms.RadioSelect(),
+            required=False,
+            initial=instance_material or raw,
+        )
         self.fields["description"] = forms.CharField(
             # TODO: Delete if not working
             error_messages={"required": _("Description cannot be empty!")},
@@ -2921,11 +2929,22 @@ class BOMCSVForm(forms.Form):
 
                 try:
                     parent_part_revision = part_revision_tree[-1]
-                    if parent_part_revision.assembly is None:
-                        parent_part_revision.assembly = Assembly.objects.create()
-                        parent_part_revision.save()
                 except IndexError:
                     parent_part_revision = None
+                # Failed parent create can leave None on the tree; do not crash.
+                if parent_part_revision is None:
+                    if part_revision_tree:
+                        self.add_error(
+                            None,
+                            (
+                                f"Row {row_count} - Cannot add subpart; "
+                                "parent part was not created on a previous row."
+                            ),
+                        )
+                        continue
+                elif parent_part_revision.assembly is None:
+                    parent_part_revision.assembly = Assembly.objects.create()
+                    parent_part_revision.save()
 
                 # Check for existing objects
                 existing_part_class = PartClass.objects.filter(

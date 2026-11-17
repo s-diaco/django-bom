@@ -309,6 +309,34 @@ class TestForms(TestCase):
         labels = dict(form.fields["material"].choices)
         self.assertEqual(labels.get("ceramic"), "Ceramic paste")
 
+    def test_part_revision_form_accepts_product_type_codes(self):
+        """Material Type must accept every org ProductType code (e.g. powder)."""
+        self.organization.ensure_default_product_types()
+        for code in ("powder", "ink", "with_loi", "no_loi", "no_bom"):
+            form = PartRevisionForm(
+                {
+                    "revision": "1",
+                    "description": f"mat-{code}",
+                    "material": code,
+                    "tolerance": "0",
+                },
+                organization=self.organization,
+            )
+            self.assertTrue(form.is_valid(), form.errors)
+            self.assertEqual(form.cleaned_data["material"], code)
+
+        bad = PartRevisionForm(
+            {
+                "revision": "1",
+                "description": "bad-mat",
+                "material": "not_a_product_type",
+                "tolerance": "0",
+            },
+            organization=self.organization,
+        )
+        self.assertFalse(bad.is_valid())
+        self.assertIn("material", bad.errors)
+
     def test_normalize_grouped_number(self):
         self.assertEqual(normalize_grouped_number("1,234,567"), "1234567")
         self.assertEqual(normalize_grouped_number("1٬234٬567"), "1234567")
