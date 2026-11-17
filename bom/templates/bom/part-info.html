@@ -198,7 +198,7 @@
                         </div>
                         {% include 'bom/components/bom-flat.html' with order_by=order_by bom_items=flat_bom.parts part=part part_revision=part_revision profile=profile manage=can_manage_bom %}
                     </div>
-                    <p class="mt-3 text-sm text-ink">{% trans "Unit cost (kg, incl. overhead)" %}: {% if bom_cost_incomplete %}{% include "bom/components/incomplete-bom-cost.html" %}{% else %}{{ bom_unit_cost|default_if_none:'-' }}{% endif %}</p>
+                    <p class="mt-3 flex flex-wrap items-center gap-1 text-sm text-ink"><span>{% trans "Unit cost (kg, incl. overhead)" %}:</span>{% if bom_cost_incomplete %}{% include "bom/components/incomplete-bom-cost.html" %}{% else %}<span>{{ bom_unit_cost|default_if_none:'-' }}</span>{% endif %}</p>
                     {% if can_manage_bom %}
                     {% if part_revision.assembly.subparts.exists %}
                     <div class="mt-4 printer-hide">
@@ -407,7 +407,7 @@
                     <div id="overview-tree">
                         {% include 'bom/components/bom-indented-overview.html' with order_by=order_by bom_items=indented_bom.parts part=part part_revision=part_revision profile=profile childs_unit_cost=childs_unit_cost type_overhead=type_overhead bom_unit_cost=bom_unit_cost bom_cost_incomplete=bom_cost_incomplete total_bom_weight=total_bom_weight product_weight=product_weight material=part_revision.material %}
                     </div>
-                    <p class="overview-unit-cost mt-3 text-sm text-ink">{% trans "Unit cost (kg, incl. overhead)" %}: <span>{% if bom_cost_incomplete %}{% include "bom/components/incomplete-bom-cost.html" %}{% else %}{{ bom_unit_cost|default_if_none:'-' }}{% endif %}</span></p>
+                    <p class="overview-unit-cost mt-3 flex flex-wrap items-center gap-1 text-sm text-ink"><span>{% trans "Unit cost (kg, incl. overhead)" %}:</span>{% if bom_cost_incomplete %}{% include "bom/components/incomplete-bom-cost.html" %}{% else %}<span>{{ bom_unit_cost|default_if_none:'-' }}</span>{% endif %}</p>
                 </div>
                 {% endif %}
             </div>
