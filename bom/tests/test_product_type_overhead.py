@@ -246,16 +246,16 @@ class PartInfoSellerSpecsTest(TestCase):
             "Materials without price" in specs or "تعداد متریال بدون قیمت" in specs,
             "Materials without price label missing",
         )
-        warn_en = "Materials without price"
-        warn_fa = "تعداد متریال بدون قیمت"
-        # BoM Cost / Total show calculated value + error + Materials without price.
+        warn_en = "Missing prices in BoM"
+        warn_fa = "قیمت‌های ناقص در صورت مواد"
+        # BoM Cost / Total show calculated value + error + Missing prices in BoM.
         bom_cost_at = specs.find('id="specs-bom-cost"')
         self.assertGreater(bom_cost_at, -1)
         bom_cost_cell = specs[bom_cost_at : bom_cost_at + 400]
         self.assertIn("incomplete-bom-cost", bom_cost_cell)
         self.assertTrue(
             warn_en in bom_cost_cell or warn_fa in bom_cost_cell,
-            "Materials without price warning missing from specs-bom-cost",
+            "Missing prices in BoM warning missing from specs-bom-cost",
         )
         self.assertNotIn("Cannot calculate", bom_cost_cell)
         unit_cost_at = specs.find('id="specs-unit-cost"')
@@ -264,7 +264,7 @@ class PartInfoSellerSpecsTest(TestCase):
         self.assertIn("incomplete-bom-cost", unit_cost_cell)
         self.assertTrue(
             warn_en in unit_cost_cell or warn_fa in unit_cost_cell,
-            "Materials without price warning missing from specs-unit-cost",
+            "Missing prices in BoM warning missing from specs-unit-cost",
         )
         self.assertNotIn("IRR", unit_cost_cell)
         self.assertNotIn("USD", unit_cost_cell)
@@ -280,7 +280,7 @@ class PartInfoSellerSpecsTest(TestCase):
         self.assertIn("incomplete-bom-cost", overview_cost)
         self.assertTrue(
             warn_en in overview_cost or warn_fa in overview_cost,
-            "Materials without price warning missing from overview unit cost",
+            "Missing prices in BoM warning missing from overview unit cost",
         )
         self.assertNotIn("Cannot calculate", overview_cost)
 
