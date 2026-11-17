@@ -209,8 +209,11 @@
         const mouserStockWrapperElement = $("#mouser-stock-wrapper");
         const mouserStockElement = $("#mouser-stock");
         const currencyUnit = "{{ organization.currency }}" === "USD" ? "$" : ""; // Do this right some day...
-        updateSpecElement(mouserEstCost, unitCost, `${currencyUnit}${unitCost}`);
-        updateSpecElement(mouserEstCostPerOrder, estCostPerOrder, `${currencyUnit}${estCostPerOrder}`);
+        // Incomplete BoM (materials without price): do not overwrite Specs cost with a partial total.
+        if (!(specsMissingParts > 0)) {
+            updateSpecElement(mouserEstCost, unitCost, `${currencyUnit}${unitCost}`);
+            updateSpecElement(mouserEstCostPerOrder, estCostPerOrder, `${currencyUnit}${estCostPerOrder}`);
+        }
         updateSpecElement(mouserMissingCosts, specsMissingParts, `${specsMissingParts}`);
         updateSpecElement(mouserStockElement, mouserStock, `${mouserStock}`, mouserStockWrapperElement, false);
         mouserStockElement.append(` (<a href="${sellerLink}" target="_blank">view</a>)`)

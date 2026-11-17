@@ -66,6 +66,15 @@ class PartBom(AsDictModel):
             return False
         return self.seller_part_missing_price(bom_part.seller_part)
 
+    def cost_for_display(self, cost):
+        """Return ``cost`` for UI, or None when any material lacks a price.
+
+        Incomplete rollups are misleading; callers should show blank/`-` instead.
+        """
+        if self.missing_item_costs:
+            return None
+        return cost
+
     def append_item_and_update(self, item):
         if item.bom_id in self.parts:
             self.parts[item.bom_id].extended_quantity += item.extended_quantity

@@ -150,7 +150,7 @@
                                 </div>
                                 <div class="row{% if indented_bom.missing_item_costs > 0 %} red-text{% endif %}">
                                     <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Total" %}:</div>
-                                    <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ bom_unit_cost|default_if_none:indented_bom.unit_cost|default_if_none:'-' }}</span></div>
+                                    <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ bom_unit_cost|default_if_none:'-' }}</span></div>
                                 </div>
                                 {% if indented_bom.missing_item_costs > 0 %}
                                 <div class="row red-text">
@@ -195,7 +195,7 @@
                         </div>
                         {% include 'bom/components/bom-flat.html' with order_by=order_by bom_items=flat_bom.parts part=part part_revision=part_revision profile=profile manage=can_manage_bom %}
                     </div>
-                    <p class="mt-3 text-sm text-ink">{% trans "Unit cost (kg, incl. overhead)" %}: {{ indented_bom.unit_cost|default_if_none:'-' }}</p>
+                    <p class="mt-3 text-sm text-ink">{% trans "Unit cost (kg, incl. overhead)" %}: {{ bom_unit_cost|default_if_none:'-' }}</p>
                     {% if can_manage_bom %}
                     {% if part_revision.assembly.subparts.exists %}
                     <div class="mt-4 printer-hide">
@@ -404,7 +404,7 @@
                     <div id="overview-tree">
                         {% include 'bom/components/bom-indented-overview.html' with order_by=order_by bom_items=indented_bom.parts part=part part_revision=part_revision profile=profile childs_unit_cost=childs_unit_cost type_overhead=type_overhead bom_unit_cost=bom_unit_cost total_bom_weight=total_bom_weight product_weight=product_weight material=part_revision.material %}
                     </div>
-                    <p class="overview-unit-cost mt-3 text-sm text-ink">{% trans "Unit cost (kg, incl. overhead)" %}: <span>{{ indented_bom.unit_cost|default_if_none:'-' }}</span></p>
+                    <p class="overview-unit-cost mt-3 text-sm text-ink">{% trans "Unit cost (kg, incl. overhead)" %}: <span>{{ bom_unit_cost|default_if_none:'-' }}</span></p>
                 </div>
                 {% endif %}
             </div>

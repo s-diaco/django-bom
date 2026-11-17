@@ -224,6 +224,48 @@ class PartInfoSellerSpecsTest(TestCase):
         self.assertNotRegex(specs, r">\s*Overhead\s*:")
         self.assertNotRegex(specs, r">\s*Total\s*:")
 
+    def test_product_specs_hides_bom_cost_when_materials_lack_price(self):
+        """Materials without price > 0 → show count, omit BoM Cost / Total values."""
+        _raw, raw_rev = self._make_part("RAW3", "no_bom")  # no seller / price
+        prod, prod_rev = self._make_part("PRD3", "no_loi")
+        self._add_child(prod_rev, raw_rev, 1)
+
+        response = self.client.get(reverse("bom:part-info", kwargs={"part_id": prod.id}))
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        specs_at = html.find('id="specs"')
+        self.assertGreater(specs_at, -1)
+        next_tab = html.find('id="bom"', specs_at)
+        if next_tab < 0:
+            next_tab = html.find('id="used"', specs_at)
+        specs = html[specs_at:next_tab]
+
+        self.assertTrue(
+            "Materials without price" in specs or "مواد بدون قیمت" in specs,
+            "Materials without price row missing",
+        )
+        # BoM Cost / Total cells present but empty-state `-`, not a Money amount.
+        bom_cost_at = specs.find('id="specs-bom-cost"')
+        self.assertGreater(bom_cost_at, -1)
+        bom_cost_span = specs[bom_cost_at : bom_cost_at + 120]
+        self.assertIn(">-</span>", bom_cost_span.replace(" ", ""))
+        unit_cost_at = specs.find('id="specs-unit-cost"')
+        self.assertGreater(unit_cost_at, -1)
+        unit_cost_cell = specs[unit_cost_at : unit_cost_at + 200]
+        self.assertIn(">-</span>", unit_cost_cell.replace(" ", ""))
+        self.assertNotIn("IRR", unit_cost_cell)
+        self.assertNotIn("USD", unit_cost_cell)
+
+        overview_at = html.find('id="overview"')
+        self.assertGreater(overview_at, -1)
+        overview = html[overview_at:]
+        self.assertIn("overview-unit-cost", overview)
+        overview_cost = overview[
+            overview.find("overview-unit-cost") : overview.find("overview-unit-cost")
+            + 200
+        ]
+        self.assertIn(">-</span>", overview_cost.replace(" ", ""))
+
 
 class OverheadPricesViewTest(TestCase):
     def setUp(self):

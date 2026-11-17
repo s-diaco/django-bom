@@ -193,10 +193,12 @@ def list_unit_cost(part_rev, *, rollup_bom=True):
     """Unit cost for list/print/export rows.
 
     Raw materials use the optimal seller cost (no BOM walk). Products use the
-    rolled-up ``bom_unit_cost`` when ``rollup_bom`` is true.
+    rolled-up ``bom_unit_cost`` when ``rollup_bom`` is true, or None when the
+    BoM has materials without price (incomplete rollup).
     """
     if rollup_bom and part_rev.is_product:
-        return part_rev.bom_unit_cost
+        bom = part_rev.indented()
+        return bom.cost_for_display(bom.bom_unit_cost)
     seller = part_rev.part.optimal_seller()
     return seller.unit_cost if seller else None
 
@@ -205,7 +207,8 @@ def attach_list_unit_costs(part_revs_page):
     """Prefetch page BoM graphs and attach ``list_unit_cost`` per row.
 
     Matches ``PartRevision.bom_unit_cost``: products = indented BoM + type
-    overhead; raw materials = optimal seller landed unit cost.
+    overhead; raw materials = optimal seller landed unit cost. Product rows
+    with materials without price get ``list_unit_cost=None``.
     """
     products = [part_rev for part_rev in part_revs_page if part_rev.is_product]
     if products:
@@ -213,7 +216,8 @@ def attach_list_unit_costs(part_revs_page):
 
     for part_rev in part_revs_page:
         if part_rev.is_product:
-            part_rev.list_unit_cost = part_rev.bom_unit_cost
+            bom = part_rev.indented()
+            part_rev.list_unit_cost = bom.cost_for_display(bom.bom_unit_cost)
         else:
             seller = part_rev.part.optimal_seller()
             part_rev.list_unit_cost = (

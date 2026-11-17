@@ -100,7 +100,7 @@
                                 {% if preview.part_revision.is_product %}
                                     <div class="price-summary-list__row">
                                         <dt>{% trans "BoM Cost" %}</dt>
-                                        <dd>{{ preview.childs_unit_cost|default_if_none:preview.base_cost }}</dd>
+                                        <dd>{{ preview.childs_unit_cost|default_if_none:"-" }}</dd>
                                     </div>
                                     <div class="price-summary-list__row">
                                         <dt>{% trans "Overhead" %}</dt>
@@ -108,7 +108,7 @@
                                     </div>
                                     <div class="price-summary-list__row">
                                         <dt>{% trans "BoM + Overhead" %}</dt>
-                                        <dd>{{ preview.adjusted_base }}</dd>
+                                        <dd>{% if preview.bom_unit_cost is not None %}{{ preview.adjusted_base }}{% else %}-{% endif %}</dd>
                                     </div>
                                 {% else %}
                                     <div class="price-summary-list__row">
@@ -183,7 +183,7 @@
                                     {% if preview.part_revision.is_product %}
                                         <div class="price-summary-list__row">
                                             <dt>{% trans "BoM Cost" %}</dt>
-                                            <dd>{{ preview.childs_unit_cost|default_if_none:preview.base_cost }}</dd>
+                                            <dd>{{ preview.childs_unit_cost|default_if_none:"-" }}</dd>
                                         </div>
                                         <div class="price-summary-list__row">
                                             <dt>{% trans "Overhead" %}</dt>
@@ -191,7 +191,7 @@
                                         </div>
                                         <div class="price-summary-list__row">
                                             <dt>{% trans "BoM + Overhead" %}</dt>
-                                            <dd>{{ preview.adjusted_base }}</dd>
+                                            <dd>{% if preview.bom_unit_cost is not None %}{{ preview.adjusted_base }}{% else %}-{% endif %}</dd>
                                         </div>
                                     {% else %}
                                         <div class="price-summary-list__row">
