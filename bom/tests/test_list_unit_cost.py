@@ -124,8 +124,8 @@ class ListUnitCostPrefetchTests(TestCase):
         self.assertEqual(attached.list_unit_cost, seller.landed_unit_cost)
         self.assertEqual(attached.list_unit_cost, Money(44, self.currency))
 
-    def test_product_list_unit_cost_none_when_materials_lack_price(self):
-        """Incomplete BoM rollup: hide list Unit Cost (do not show partial)."""
+    def test_product_list_unit_cost_flags_incomplete_when_materials_lack_price(self):
+        """Incomplete BoM rollup: keep calculated cost and flag for UI warning."""
         _raw, raw_rev = self._make_part("RAW0", "no_bom")  # no seller / price
         _prod, prod_rev = self._make_part("PRD0", "no_loi")
         self._add_child(prod_rev, raw_rev, 2)
@@ -135,8 +135,9 @@ class ListUnitCostPrefetchTests(TestCase):
         bom = PartRevision.objects.get(pk=prod_rev.pk).indented()
 
         self.assertGreater(bom.missing_item_costs, 0)
-        self.assertIsNone(attached.list_unit_cost)
         self.assertTrue(attached.bom_cost_incomplete)
+        # Still expose the calculated rollup; UI warns that prices are incomplete.
+        self.assertEqual(attached.list_unit_cost, bom.bom_unit_cost)
 
     def test_attached_list_unit_cost_does_not_walk_bom_again(self):
         _raw, raw_rev = self._make_part("RAW2", "no_bom", seller_cost=7)

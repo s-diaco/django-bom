@@ -225,7 +225,7 @@ class PartInfoSellerSpecsTest(TestCase):
         self.assertNotRegex(specs, r">\s*Total\s*:")
 
     def test_product_specs_hides_bom_cost_when_materials_lack_price(self):
-        """Materials without price > 0 → show count + incomplete message, not a cost."""
+        """Materials without price > 0 → show count + calculated cost with warning."""
         _raw, raw_rev = self._make_part("RAW3", "no_bom")  # no seller / price
         prod, prod_rev = self._make_part("PRD3", "no_loi")
         self._add_child(prod_rev, raw_rev, 1)
@@ -246,23 +246,25 @@ class PartInfoSellerSpecsTest(TestCase):
             "Materials without price" in specs or "تعداد متریال بدون قیمت" in specs,
             "Materials without price label missing",
         )
-        incomplete_en = "Cannot calculate — materials without price"
-        incomplete_fa = "قابل محاسبه نیست — متریال بدون قیمت"
-        # BoM Cost / Total show an explicit incomplete message, not a Money amount.
+        warn_en = "Materials without price"
+        warn_fa = "تعداد متریال بدون قیمت"
+        # BoM Cost / Total show calculated value + error + Materials without price.
         bom_cost_at = specs.find('id="specs-bom-cost"')
         self.assertGreater(bom_cost_at, -1)
-        bom_cost_cell = specs[bom_cost_at : bom_cost_at + 280]
-        self.assertTrue(
-            incomplete_en in bom_cost_cell or incomplete_fa in bom_cost_cell,
-            "Incomplete BoM cost message missing from specs-bom-cost",
-        )
+        bom_cost_cell = specs[bom_cost_at : bom_cost_at + 400]
         self.assertIn("incomplete-bom-cost", bom_cost_cell)
+        self.assertTrue(
+            warn_en in bom_cost_cell or warn_fa in bom_cost_cell,
+            "Materials without price warning missing from specs-bom-cost",
+        )
+        self.assertNotIn("Cannot calculate", bom_cost_cell)
         unit_cost_at = specs.find('id="specs-unit-cost"')
         self.assertGreater(unit_cost_at, -1)
-        unit_cost_cell = specs[unit_cost_at : unit_cost_at + 320]
+        unit_cost_cell = specs[unit_cost_at : unit_cost_at + 400]
+        self.assertIn("incomplete-bom-cost", unit_cost_cell)
         self.assertTrue(
-            incomplete_en in unit_cost_cell or incomplete_fa in unit_cost_cell,
-            "Incomplete BoM cost message missing from specs-unit-cost",
+            warn_en in unit_cost_cell or warn_fa in unit_cost_cell,
+            "Materials without price warning missing from specs-unit-cost",
         )
         self.assertNotIn("IRR", unit_cost_cell)
         self.assertNotIn("USD", unit_cost_cell)
@@ -273,13 +275,14 @@ class PartInfoSellerSpecsTest(TestCase):
         self.assertIn("overview-unit-cost", overview)
         overview_cost = overview[
             overview.find("overview-unit-cost") : overview.find("overview-unit-cost")
-            + 320
+            + 400
         ]
-        self.assertTrue(
-            incomplete_en in overview_cost or incomplete_fa in overview_cost,
-            "Incomplete BoM cost message missing from overview unit cost",
-        )
         self.assertIn("incomplete-bom-cost", overview_cost)
+        self.assertTrue(
+            warn_en in overview_cost or warn_fa in overview_cost,
+            "Materials without price warning missing from overview unit cost",
+        )
+        self.assertNotIn("Cannot calculate", overview_cost)
 
 
 class OverheadPricesViewTest(TestCase):

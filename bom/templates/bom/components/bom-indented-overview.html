@@ -99,7 +99,7 @@
             <td class="text-normal printer-hide"></td>
             <td class="text-normal bom-num">{{ total_bom_weight|floatformat:0 }}</td>
             <td class="text-normal"></td>
-            <td class="text-normal bom-num">{% if bom_cost_incomplete %}{% include "bom/components/incomplete-bom-cost.html" %}{% elif childs_unit_cost is not None %}{{ childs_unit_cost|money_amount }}{% else %}-{% endif %}</td>
+            <td class="text-normal bom-num">{% if bom_cost_incomplete %}{% include "bom/components/incomplete-bom-cost.html" with value=childs_unit_cost %}{% elif childs_unit_cost is not None %}{{ childs_unit_cost|money_amount }}{% else %}-{% endif %}</td>
         </tr>
         <tr>
             <td class="text-normal">{% trans "Overhead" %}</td>
@@ -117,7 +117,7 @@
             <td class="text-normal printer-hide"></td>
             <td class="text-normal"></td>
             <td class="text-normal"></td>
-            <td class="text-normal bom-num">{% if bom_cost_incomplete %}{% include "bom/components/incomplete-bom-cost.html" %}{% elif bom_unit_cost is not None %}{{ bom_unit_cost|money_amount }}{% else %}-{% endif %}</td>
+            <td class="text-normal bom-num">{% if bom_cost_incomplete %}{% include "bom/components/incomplete-bom-cost.html" with value=bom_unit_cost %}{% elif bom_unit_cost is not None %}{{ bom_unit_cost|money_amount }}{% else %}-{% endif %}</td>
         </tr>
         </tfoot>
     </table>

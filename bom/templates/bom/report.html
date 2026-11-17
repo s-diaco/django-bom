@@ -130,7 +130,7 @@
                                     {% else %}
                                     {% with indented_bom=part_rev.indented %}
                                     {% if indented_bom.missing_item_costs %}
-                                    {% include "bom/components/incomplete-bom-cost.html" %}
+                                    {% include "bom/components/incomplete-bom-cost.html" with value=indented_bom.unit_cost %}
                                     {% elif indented_bom.unit_cost is not 0 %}
                                     {{ indented_bom.unit_cost }}
                                     {% endif %}
