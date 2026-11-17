@@ -46,8 +46,8 @@ class PartBomWeighted(PartBom):
                     child.quantity for child in subpart_list
                 )
 
-            # Child unit_cost already includes that child's type overhead when
-            # the child is itself a product.
+            # Nested product children contribute BoM/material rollup only;
+            # their type overhead is not included (see unit_cost).
             parent_part.childs_cost = sum(
                 (child.unit_cost or 0) * child.quantity for child in subpart_list
             )
@@ -147,6 +147,11 @@ class PartBomWeightedItem(PartIndentedBomItem):
         """
         childs = self.childs_unit_cost or Money(0, self._currency)
         if self.part_revision.is_product:
+            # Overhead only for the top-level product being priced. Nested
+            # product revisions roll up material/seller/BoM cost without their
+            # own overhead layer (avoids double-counting into the parent).
+            if self.indent_level:
+                return childs
             return childs + self.part_revision.type_overhead
         if self.seller_part and self.seller_part.landed_unit_cost is not None:
             return self.seller_part.landed_unit_cost + childs

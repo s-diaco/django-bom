@@ -243,6 +243,56 @@ def test_weighted_missing_item_costs_skips_products():
     assert bom.missing_item_costs == 0
 
 
+def test_nested_product_unit_cost_excludes_overhead():
+    """Nested product children roll up BoM cost without their type overhead."""
+    root_part = MockPart("ROOT")
+    child_part = MockPart("CHILD-PROD")
+    leaf_part = MockPart("LEAF")
+
+    root_rev = MockPartRevision(root_part, is_product=True)
+    root_rev.type_overhead = Money(20, "USD")
+    child_rev = MockPartRevision(child_part, is_product=True)
+    child_rev.type_overhead = Money(15, "USD")
+    leaf_rev = MockPartRevision(leaf_part)
+
+    bom = PartBomWeighted(part_revision=root_rev, quantity=1)
+    root = _make_item(
+        bom_id=1,
+        part=root_part,
+        part_revision=root_rev,
+        quantity=1,
+        indent_level=0,
+        parent_id=None,
+        parent_quantity=1,
+    )
+    child = _make_item(
+        bom_id=2,
+        part=child_part,
+        part_revision=child_rev,
+        quantity=1,
+        indent_level=1,
+        parent_id=1,
+        parent_quantity=1,
+    )
+    leaf = _make_item(
+        bom_id=3,
+        part=leaf_part,
+        part_revision=leaf_rev,
+        quantity=2,
+        indent_level=2,
+        parent_id=2,
+        parent_quantity=1,
+        seller_part=MockSellerPart(unit_cost=Money(10, "USD")),
+    )
+    bom.parts = {1: root, 2: child, 3: leaf}
+
+    bom.update_as_weighted_bom(leaf)
+
+    assert child.unit_cost == Money(10, "USD")  # materials only, no +15
+    assert root.childs_cost == Money(10, "USD")
+    assert root.unit_cost == Money(30, "USD")  # 10 materials + 20 root overhead
+
+
 def test_non_weighted_missing_item_costs_zero_and_no_seller():
     """Classic PartBom uses the same non-product None/0 price rule."""
     part = MockPart("LEAF")
