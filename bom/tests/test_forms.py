@@ -254,12 +254,23 @@ class TestForms(TestCase):
 
     def test_money_amount_filter_omits_currency(self):
         from bom.templatetags.bom_i18n import money_amount
+        from bom.utils import format_money_amount, money_decimal_places
 
+        self.assertEqual(money_decimal_places("IRR"), 0)
+        self.assertEqual(money_decimal_places("USD"), 2)
         self.assertEqual(money_amount(Money(98000, "IRR")), "98,000")
+        # IRR never shows a fractional part / decimal point.
+        self.assertEqual(money_amount(Money(Decimal("98000.40"), "IRR")), "98,000")
+        self.assertEqual(money_amount(Money(Decimal("98000.50"), "IRR")), "98,001")
+        self.assertEqual(money_amount(Money(Decimal("112.50"), "IRR")), "113")
+        self.assertNotIn(".", money_amount(Money(Decimal("112.50"), "IRR")))
         self.assertEqual(money_amount(Money(4310, "USD")), "4,310")
         self.assertEqual(money_amount(Money(Decimal("12.5"), "USD")), "12.5")
         self.assertEqual(money_amount(Money(Decimal("1.23"), "USD")), "1.23")
         self.assertEqual(money_amount(None), "")
+        # Plain Decimal needs an explicit currency to treat as IRR.
+        self.assertEqual(format_money_amount(Decimal("112.50"), currency="IRR"), "113")
+        self.assertEqual(format_money_amount(Decimal("112.50")), "112.5")
 
     def test_product_type_labels_translated(self):
         translation.activate("en-US")
@@ -423,6 +434,39 @@ class TestForms(TestCase):
         )
         self.assertEqual(field.prepare_value(Decimal("9.8765")), "9.88")
         self.assertEqual(field.prepare_value(Decimal("10.0000")), "10.00")
+
+    def test_seller_part_irr_form_formats_zero_decimal_places(self):
+        """IRR price/shipping widgets must not show a fractional part."""
+        from bom.models import SellerPart
+        from bom.templatetags.bom_i18n import money_amount
+
+        self.organization.currency = "IRR"
+        self.organization.save()
+        parts = create_some_fake_parts(organization=self.organization)
+        mp = parts[0].primary_manufacturer_part
+        seller = Seller.objects.filter(organization=self.organization)[0]
+        sp = SellerPart.objects.create(
+            manufacturer_part=mp,
+            seller=seller,
+            seller_part_number="IRR-0",
+            unit_cost=Money(Decimal("98000.40"), "IRR"),
+            shipping=Money(Decimal("1000.50"), "IRR"),
+            customs_duty_percent=Decimal("0"),
+            nre_cost=Money(Decimal("0"), "IRR"),
+        )
+        edit = SellerPartForm(instance=sp, organization=self.organization)
+        self.assertEqual(edit.fields["unit_cost"].decimal_places, 0)
+        self.assertEqual(edit.fields["shipping"].decimal_places, 0)
+        self.assertEqual(edit.initial["unit_cost"], Decimal("98000"))
+        self.assertEqual(edit.initial["shipping"], Decimal("1001"))
+        unit_html = str(edit["unit_cost"])
+        shipping_html = str(edit["shipping"])
+        self.assertIn('value="98000"', unit_html)
+        self.assertIn('value="1001"', shipping_html)
+        self.assertNotIn("98000.40", unit_html)
+        self.assertNotIn("1000.50", shipping_html)
+        self.assertEqual(money_amount(sp.unit_cost), "98,000")
+        self.assertEqual(money_amount(sp.shipping), "1,001")
 
     def test_grouped_decimal_field_to_python(self):
         field = GroupedDecimalField()
