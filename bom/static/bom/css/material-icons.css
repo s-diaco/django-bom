@@ -20,3 +20,16 @@
   direction: ltr;
   -webkit-font-smoothing: antialiased;
 }
+
+/* Sit level with adjacent body text (glyph sits high in the Material Symbols em box). */
+.material-icons.icon-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15em;
+  height: 1.15em;
+  font-size: 1.15em;
+  line-height: 1;
+  vertical-align: middle;
+  transform: translateY(0.08em);
+}

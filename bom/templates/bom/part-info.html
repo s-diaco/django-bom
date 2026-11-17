@@ -160,9 +160,9 @@
                                     <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Materials without price" %}:</div>
                                     <div class="col s8 l10 flex flex-wrap items-center gap-1">
                                         <span id="mouser-missing-item-costs"></span>
-                                        <span class="inline-flex items-center gap-1">
-                                            <span>{{ indented_bom.missing_item_costs }}</span>
-                                            <i class="material-icons text-base leading-none red-text" aria-hidden="true">error</i>
+                                        <span class="inline-flex items-center gap-1 leading-none">
+                                            <span class="leading-none tabular-nums">{{ indented_bom.missing_item_costs }}</span>
+                                            <i class="material-icons icon-inline red-text" aria-hidden="true">error</i>
                                         </span>
                                     </div>
                                 </div>
