@@ -143,17 +143,17 @@
                         </li>
                         <li class="collection-item">
                             {% if part_revision.is_product %}
-                                <div class="row{% if bom_cost_incomplete %} red-text{% endif %}">
+                                <div class="row{% if bom_cost_incomplete %} red-text flex flex-wrap items-center{% endif %}">
                                     <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "BoM Cost" %}:</div>
-                                    <div id="specs-bom-cost" class="col s8 l10">{% if bom_cost_incomplete %}{% include "bom/components/incomplete-bom-cost.html" %}{% else %}<span>{{ childs_unit_cost|default_if_none:'-' }}</span>{% endif %}</div>
+                                    <div id="specs-bom-cost" class="col s8 l10{% if bom_cost_incomplete %} flex flex-wrap items-center{% endif %}">{% if bom_cost_incomplete %}{% include "bom/components/incomplete-bom-cost.html" %}{% else %}<span>{{ childs_unit_cost|default_if_none:'-' }}</span>{% endif %}</div>
                                 </div>
                                 <div class="row">
                                     <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Overhead" %}:</div>
                                     <div id="specs-overhead" class="col s8 l10">{{ type_overhead|default_if_none:part_revision.type_overhead }}</div>
                                 </div>
-                                <div class="row{% if bom_cost_incomplete %} red-text{% endif %}">
+                                <div class="row{% if bom_cost_incomplete %} red-text flex flex-wrap items-center{% endif %}">
                                     <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Total" %}:</div>
-                                    <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span>{% if bom_cost_incomplete %}{% include "bom/components/incomplete-bom-cost.html" %}{% else %}<span>{{ bom_unit_cost|default_if_none:'-' }}</span>{% endif %}</div>
+                                    <div id="specs-unit-cost" class="col s8 l10{% if bom_cost_incomplete %} flex flex-wrap items-center gap-1{% endif %}"><span id="mouser-est-cost"></span>{% if bom_cost_incomplete %}{% include "bom/components/incomplete-bom-cost.html" %}{% else %}<span>{{ bom_unit_cost|default_if_none:'-' }}</span>{% endif %}</div>
                                 </div>
                                 {% if indented_bom.missing_item_costs > 0 %}
                                 <div class="row red-text flex flex-wrap items-center">
