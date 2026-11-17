@@ -678,6 +678,26 @@ class SystemGroupImportSemanticsTests(TestCase):
         child = Part.from_part_number("500-7777-00", self.organization)
         self.assertEqual(child.latest().material, raw_code)
 
+    def test_import_powder_material_creates_new_parent(self):
+        """Regression LI-88: powder/ink ProductTypes must not 500 on import."""
+        self.organization.ensure_default_product_types()
+        self.assertTrue(
+            self.organization.product_types.filter(code="powder").exists()
+        )
+        bom = parse_bom_document(
+            (FIXTURES / "bom_edit.json").read_text(encoding="utf-8"),
+            content_type="application/json",
+        )
+        result = import_parsed_bom(
+            self.organization, bom, material="powder"
+        )
+        self.assertTrue(result.ok, result.errors)
+        parent = Part.from_part_number("500-9001-00", self.organization)
+        self.assertIsNotNone(parent)
+        self.assertEqual(parent.latest().material, "powder")
+        child = Part.from_part_number("500-7777-00", self.organization)
+        self.assertEqual(child.latest().material, "no_bom")
+
     def test_dry_run_does_not_write(self):
         before = Part.objects.filter(organization=self.organization).count()
         bom = parse_bom_document(
