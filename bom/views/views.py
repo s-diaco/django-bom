@@ -2288,6 +2288,7 @@ def part_info(request, part_id, part_revision_id=None):
     childs_unit_cost = bom_ctx.get("childs_unit_cost")
     type_overhead = bom_ctx.get("type_overhead")
     bom_unit_cost = bom_ctx.get("bom_unit_cost")
+    bom_cost_incomplete = bom_ctx.get("bom_cost_incomplete", False)
     if bom_ctx.get("bom_error") == "infinite_recursion":
         messages.error(
             request,

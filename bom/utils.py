@@ -456,6 +456,7 @@ def bom_overview_context(part_revision, quantity=1):
         "childs_unit_cost": None,
         "type_overhead": None,
         "bom_unit_cost": None,
+        "bom_cost_incomplete": False,
         "bom_error": None,
     }
     if part_revision is None:
@@ -465,16 +466,16 @@ def bom_overview_context(part_revision, quantity=1):
         indented_bom = part_revision.indented(top_level_quantity=quantity)
         revision_key = str(part_revision.id)
         revision_part = indented_bom.parts[revision_key]
+        incomplete = bool(indented_bom.missing_item_costs)
         return {
             "indented_bom": indented_bom,
             "total_bom_weight": revision_part.childs_quantity,
             "product_weight": revision_part.childs_product_quantity,
-            # Hide rollup totals when materials lack prices (incomplete BoM cost).
-            "childs_unit_cost": indented_bom.cost_for_display(
-                revision_part.childs_unit_cost
-            ),
+            # Still show calculated rollups when incomplete; UI flags with a warning.
+            "childs_unit_cost": revision_part.childs_unit_cost,
             "type_overhead": part_revision.type_overhead,
-            "bom_unit_cost": indented_bom.cost_for_display(indented_bom.unit_cost),
+            "bom_unit_cost": indented_bom.unit_cost,
+            "bom_cost_incomplete": incomplete,
             "bom_error": None,
         }
     except (RuntimeError, RecursionError):

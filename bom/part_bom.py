@@ -67,9 +67,10 @@ class PartBom(AsDictModel):
         return self.seller_part_missing_price(bom_part.seller_part)
 
     def cost_for_display(self, cost):
-        """Return ``cost`` for UI, or None when any material lacks a price.
+        """Return ``cost`` for UI helpers that still omit incomplete rollups.
 
-        Incomplete rollups are misleading; callers should show blank/`-` instead.
+        Prefer showing the calculated value with a ``bom_cost_incomplete`` warning
+        in templates; this helper remains for callers that need a None sentinel.
         """
         if self.missing_item_costs:
             return None

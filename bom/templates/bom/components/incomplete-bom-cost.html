@@ -1,0 +1,9 @@
+{% load bom_i18n %}
+{# Incomplete BoM rollup: show calculated value with warning (materials lack prices). #}
+<span class="incomplete-bom-cost inline-flex items-center gap-1 align-middle leading-none red-text" title="{% trans "Missing prices in BoM" %}">
+    {% if value is not None %}
+        <span class="leading-none tabular-nums">{{ value|money_amount }}</span>
+    {% endif %}
+    <i class="material-icons icon-inline" aria-hidden="true">error</i>
+    <span class="leading-none">{% trans "Missing prices in BoM" %}</span>
+</span>

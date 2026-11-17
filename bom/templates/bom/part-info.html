@@ -95,12 +95,17 @@
                                     <div class="col s8 l10">{{ part.number_class }}</div>
                                 </div>
                             {% endif %}
-                            <div class="row">
+                            <div class="row flex flex-wrap items-center">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Code" %}:</div>
-                                <div class="col s8 l10"><span class="right">{{ part.full_part_number }}</span>
-                                    {% if profile.role == 'A' %}
-                                        <a href="{% url 'bom:part-edit' part_id=part.id %}"><i class="material-icons">edit</i></a>
-                                    {% endif %}
+                                <div class="col s8 l10 flex flex-wrap items-center gap-1">
+                                    <span class="inline-flex items-center gap-1 leading-none">
+                                        {% if profile.role == 'A' %}
+                                            <a class="inline-flex items-center leading-none" href="{% url 'bom:part-edit' part_id=part.id %}" title="{% trans "Edit" %}" aria-label="{% trans "Edit" %}">
+                                                <i class="material-icons icon-inline" aria-hidden="true">edit</i>
+                                            </a>
+                                        {% endif %}
+                                        <span class="leading-none">{{ part.full_part_number }}</span>
+                                    </span>
                                 </div>
                             </div>
                             <div class="row">
@@ -140,22 +145,28 @@
                         </li>
                         <li class="collection-item">
                             {% if part_revision.is_product %}
-                                <div class="row{% if indented_bom.missing_item_costs > 0 %} red-text{% endif %}">
+                                <div class="row{% if bom_cost_incomplete %} red-text flex flex-wrap items-center{% endif %}">
                                     <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "BoM Cost" %}:</div>
-                                    <div id="specs-bom-cost" class="col s8 l10"><span>{{ childs_unit_cost|default_if_none:'-' }}</span></div>
+                                    <div id="specs-bom-cost" class="col s8 l10{% if bom_cost_incomplete %} flex flex-wrap items-center{% endif %}">{% if bom_cost_incomplete %}{% include "bom/components/incomplete-bom-cost.html" with value=childs_unit_cost %}{% else %}<span>{{ childs_unit_cost|default_if_none:'-' }}</span>{% endif %}</div>
                                 </div>
                                 <div class="row">
                                     <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Overhead" %}:</div>
                                     <div id="specs-overhead" class="col s8 l10">{{ type_overhead|default_if_none:part_revision.type_overhead }}</div>
                                 </div>
-                                <div class="row{% if indented_bom.missing_item_costs > 0 %} red-text{% endif %}">
+                                <div class="row{% if bom_cost_incomplete %} red-text flex flex-wrap items-center{% endif %}">
                                     <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Total" %}:</div>
-                                    <div id="specs-unit-cost" class="col s8 l10"><span id="mouser-est-cost"></span><span>{{ bom_unit_cost|default_if_none:'-' }}</span></div>
+                                    <div id="specs-unit-cost" class="col s8 l10{% if bom_cost_incomplete %} flex flex-wrap items-center gap-1{% endif %}"><span id="mouser-est-cost"></span>{% if bom_cost_incomplete %}{% include "bom/components/incomplete-bom-cost.html" with value=bom_unit_cost %}{% else %}<span>{{ bom_unit_cost|default_if_none:'-' }}</span>{% endif %}</div>
                                 </div>
                                 {% if indented_bom.missing_item_costs > 0 %}
-                                <div class="row red-text">
+                                <div class="row red-text flex flex-wrap items-center">
                                     <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Materials without price" %}:</div>
-                                    <div class="col s8 l10"><span id="mouser-missing-item-costs"></span><span><span class="right">{{ indented_bom.missing_item_costs }} </span><i class="material-icons red-text">error</i></span></div>
+                                    <div class="col s8 l10 flex flex-wrap items-center gap-1">
+                                        <span id="mouser-missing-item-costs"></span>
+                                        <span class="inline-flex items-center gap-1 leading-none">
+                                            <i class="material-icons icon-inline red-text" aria-hidden="true">error</i>
+                                            <span class="leading-none tabular-nums">{{ indented_bom.missing_item_costs }}</span>
+                                        </span>
+                                    </div>
                                 </div>
                                 {% endif %}
                                 <div class="row">
@@ -195,7 +206,7 @@
                         </div>
                         {% include 'bom/components/bom-flat.html' with order_by=order_by bom_items=flat_bom.parts part=part part_revision=part_revision profile=profile manage=can_manage_bom %}
                     </div>
-                    <p class="mt-3 text-sm text-ink">{% trans "Unit cost (kg, incl. overhead)" %}: {{ bom_unit_cost|default_if_none:'-' }}</p>
+                    <p class="mt-3 flex flex-wrap items-center gap-1 text-sm text-ink"><span>{% trans "Unit cost (kg, incl. overhead)" %}:</span>{% if bom_cost_incomplete %}{% include "bom/components/incomplete-bom-cost.html" with value=bom_unit_cost %}{% else %}<span>{{ bom_unit_cost|default_if_none:'-' }}</span>{% endif %}</p>
                     {% if can_manage_bom %}
                     {% if part_revision.assembly.subparts.exists %}
                     <div class="mt-4 printer-hide">
@@ -402,9 +413,9 @@
                     <h4 class="printer-show">{% trans "Overview" %}</h4>
                     <br />
                     <div id="overview-tree">
-                        {% include 'bom/components/bom-indented-overview.html' with order_by=order_by bom_items=indented_bom.parts part=part part_revision=part_revision profile=profile childs_unit_cost=childs_unit_cost type_overhead=type_overhead bom_unit_cost=bom_unit_cost total_bom_weight=total_bom_weight product_weight=product_weight material=part_revision.material %}
+                        {% include 'bom/components/bom-indented-overview.html' with order_by=order_by bom_items=indented_bom.parts part=part part_revision=part_revision profile=profile childs_unit_cost=childs_unit_cost type_overhead=type_overhead bom_unit_cost=bom_unit_cost bom_cost_incomplete=bom_cost_incomplete total_bom_weight=total_bom_weight product_weight=product_weight material=part_revision.material %}
                     </div>
-                    <p class="overview-unit-cost mt-3 text-sm text-ink">{% trans "Unit cost (kg, incl. overhead)" %}: <span>{{ bom_unit_cost|default_if_none:'-' }}</span></p>
+                    <p class="overview-unit-cost mt-3 flex flex-wrap items-center gap-1 text-sm text-ink"><span>{% trans "Unit cost (kg, incl. overhead)" %}:</span>{% if bom_cost_incomplete %}{% include "bom/components/incomplete-bom-cost.html" with value=bom_unit_cost %}{% else %}<span>{{ bom_unit_cost|default_if_none:'-' }}</span>{% endif %}</p>
                 </div>
                 {% endif %}
             </div>
