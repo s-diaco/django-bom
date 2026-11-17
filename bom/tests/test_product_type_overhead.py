@@ -76,10 +76,11 @@ class ProductTypeOverheadTest(TestCase):
         cost = prod_rev.bom_unit_cost_at_quantity(1)
         self.assertEqual(cost, Money(30, self.currency))  # 10 + 20 overhead
 
-    def test_nested_product_overhead_rolls_into_parent(self):
+    def test_nested_product_overhead_not_applied_to_parent(self):
         _raw_child, raw_child_rev = self._make_part("RAWC", "no_bom", seller_cost=100)
         _child, child_rev = self._make_part("CHLD", "no_loi")
         self._add_child(child_rev, raw_child_rev, 1)
+        # Standalone child still includes its own type overhead.
         self.assertEqual(child_rev.bom_unit_cost_at_quantity(1), Money(120, self.currency))
 
         _raw_parent, raw_parent_rev = self._make_part("RAWP", "no_bom", seller_cost=5)
@@ -87,9 +88,10 @@ class ProductTypeOverheadTest(TestCase):
         self._add_child(parent_rev, child_rev, 1)
         self._add_child(parent_rev, raw_parent_rev, 1)
 
-        # child unit 120 + raw 5 = 125 over qty 2 → 62.5, plus parent overhead 20
+        # Nested child contributes material only (100), not child overhead 20.
+        # child 100 + raw 5 = 105 over qty 2 → 52.5, plus parent overhead 20
         cost = parent_rev.bom_unit_cost_at_quantity(1)
-        self.assertEqual(cost.amount, Decimal("82.5"))
+        self.assertEqual(cost.amount, Decimal("72.5"))
 
     def test_new_product_type_overhead(self):
         ProductType.objects.create(

@@ -108,8 +108,10 @@ class ListUnitCostPrefetchTests(TestCase):
 
         self.assertEqual(by_pk[parent_rev.pk].list_unit_cost, fresh_parent.bom_unit_cost)
         self.assertEqual(by_pk[child_rev.pk].list_unit_cost, fresh_child.bom_unit_cost)
+        # Child as its own list row keeps child overhead; parent rollup does not.
+        self.assertEqual(by_pk[child_rev.pk].list_unit_cost, Money(120, self.currency))
         self.assertEqual(
-            by_pk[parent_rev.pk].list_unit_cost.amount, Decimal("82.5")
+            by_pk[parent_rev.pk].list_unit_cost.amount, Decimal("72.5")
         )
 
     def test_raw_material_uses_landed_seller_cost(self):
