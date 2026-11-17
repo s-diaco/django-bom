@@ -98,12 +98,17 @@
                                     <div class="col s8 l10">{{ part.number_class }}</div>
                                 </div>
                             {% endif %}
-                            <div class="row">
+                            <div class="row flex flex-wrap items-center">
                                 <div class="col s4 l2 text-right" style="padding-left: 0px;">{% trans "Code" %}:</div>
-                                <div class="col s8 l10"><span class="right">{{ part.full_part_number }}</span>
-                                    {% if profile.role == 'A' %}
-                                        <a href="{% url 'bom:part-edit' part_id=part.id %}"><i class="material-icons">edit</i></a>
-                                    {% endif %}
+                                <div class="col s8 l10 flex flex-wrap items-center gap-1">
+                                    <span class="inline-flex items-center gap-1 leading-none">
+                                        {% if profile.role == 'A' %}
+                                            <a class="inline-flex items-center leading-none" href="{% url 'bom:part-edit' part_id=part.id %}" title="{% trans "Edit" %}" aria-label="{% trans "Edit" %}">
+                                                <i class="material-icons icon-inline" aria-hidden="true">edit</i>
+                                            </a>
+                                        {% endif %}
+                                        <span class="leading-none">{{ part.full_part_number }}</span>
+                                    </span>
                                 </div>
                             </div>
                             <div class="row">
