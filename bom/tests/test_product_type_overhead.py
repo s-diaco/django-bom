@@ -247,7 +247,7 @@ class PartInfoSellerSpecsTest(TestCase):
             "Materials without price label missing",
         )
         warn_en = "Missing prices in BoM"
-        warn_fa = "قیمت‌های ناقص در صورت مواد"
+        warn_fa = "نقص قیمت در BoM"
         # BoM Cost / Total show calculated value + error + Missing prices in BoM.
         bom_cost_at = specs.find('id="specs-bom-cost"')
         self.assertGreater(bom_cost_at, -1)

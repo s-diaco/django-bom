@@ -1095,7 +1095,7 @@ msgid "Materials without price"
 msgstr "تعداد متریال بدون قیمت"
 
 msgid "Missing prices in BoM"
-msgstr "قیمت‌های ناقص در صورت مواد"
+msgstr "نقص قیمت در BoM"
 
 msgid "BoM weight"
 msgstr "وزن BoM"
