@@ -129,7 +129,9 @@
                                     {{ seller.landed_unit_cost }}
                                     {% else %}
                                     {% with indented_bom=part_rev.indented %}
-                                    {% if indented_bom.unit_cost is not 0 %}
+                                    {% if indented_bom.missing_item_costs %}
+                                    -
+                                    {% elif indented_bom.unit_cost is not 0 %}
                                     {{ indented_bom.unit_cost }}
                                     {% endif %}
                                     {% endwith %}

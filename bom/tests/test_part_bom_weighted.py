@@ -324,3 +324,16 @@ def test_non_weighted_missing_item_costs_zero_and_no_seller():
     assert not PartBom.seller_part_missing_price(
         MockSellerPart(unit_cost=Money(10, "USD"))
     )
+
+
+def test_cost_for_display_hides_when_missing_item_costs():
+    """UI must not show a partial BoM cost when materials lack prices."""
+    bom = setup_bom()
+    cost = Money(42, "USD")
+
+    assert bom.missing_item_costs == 0
+    assert bom.cost_for_display(cost) == cost
+
+    bom.missing_item_costs = 1
+    assert bom.cost_for_display(cost) is None
+    assert bom.cost_for_display(None) is None
