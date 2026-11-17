@@ -240,9 +240,11 @@ class PartInfoSellerSpecsTest(TestCase):
             next_tab = html.find('id="used"', specs_at)
         specs = html[specs_at:next_tab]
 
+        # Language-stable: row only rendered when missing_item_costs > 0.
+        self.assertIn('id="mouser-missing-item-costs"', specs)
         self.assertTrue(
-            "Materials without price" in specs or "مواد بدون قیمت" in specs,
-            "Materials without price row missing",
+            "Materials without price" in specs or "تعداد متریال بدون قیمت" in specs,
+            "Materials without price label missing",
         )
         # BoM Cost / Total cells present but empty-state `-`, not a Money amount.
         bom_cost_at = specs.find('id="specs-bom-cost"')
