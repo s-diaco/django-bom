@@ -2617,6 +2617,7 @@ def import_systemgroup_bom(request):
         NoBomMatch,
         SystemGroupError,
         SystemGroupImportError,
+        annotate_revision_candidates_with_lithium_boms,
         list_revisions_for_part,
         run_systemgroup_import,
     )
@@ -2743,6 +2744,9 @@ def import_systemgroup_bom(request):
                 else:
                     revision_candidates = list(search)
                     revision_truncated = False
+                revision_candidates = annotate_revision_candidates_with_lithium_boms(
+                    organization, revision_candidates
+                )
                 revision_part_query = pn
                 revision_max_results = max_results
                 if revision_truncated:
@@ -2810,9 +2814,12 @@ def import_systemgroup_bom(request):
                     and "/" not in match_query
                     and match_query != "(all)"
                 ):
-                    revision_candidates = sorted(
-                        exc.matches,
-                        key=lambda e: ((e.revision or "").casefold(), e.bom_id),
+                    revision_candidates = annotate_revision_candidates_with_lithium_boms(
+                        organization,
+                        sorted(
+                            exc.matches,
+                            key=lambda e: ((e.revision or "").casefold(), e.bom_id),
+                        ),
                     )
                     revision_part_query = match_query
                     bom_candidates = None

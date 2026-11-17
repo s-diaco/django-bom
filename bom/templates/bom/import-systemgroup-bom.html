@@ -124,16 +124,20 @@
                                             <td dir="ltr">{{ entry.part_number }}</td>
                                             <td>{{ entry.description }}</td>
                                             <td class="text-right">
-                                                <form action="{% url 'bom:import-systemgroup-bom' %}" method="post" class="inline">
-                                                    {% csrf_token %}
-                                                    <input type="hidden" name="part_id" value="{{ entry.part_number }}">
-                                                    <input type="hidden" name="parent_part_number" value="{{ entry.part_number }}">
-                                                    <input type="hidden" name="parent_revision" value="{{ entry.revision }}">
-                                                    <input type="hidden" name="bom_id" value="{{ entry.bom_id }}">
-                                                    {% if form.dry_run.value %}<input type="hidden" name="dry_run" value="on">{% endif %}
-                                                    <input type="hidden" name="material" value="{{ form.material.value|default_if_none:'' }}">
-                                                    <button class="bom-btn-primary" type="submit">{% trans "Import this BoM" %}</button>
-                                                </form>
+                                                {% if entry.lithium_bom_url %}
+                                                    <a class="bom-btn-secondary" href="{{ entry.lithium_bom_url }}">{% trans "Open existing BoM" %}</a>
+                                                {% else %}
+                                                    <form action="{% url 'bom:import-systemgroup-bom' %}" method="post" class="inline">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="part_id" value="{{ entry.part_number }}">
+                                                        <input type="hidden" name="parent_part_number" value="{{ entry.part_number }}">
+                                                        <input type="hidden" name="parent_revision" value="{{ entry.revision }}">
+                                                        <input type="hidden" name="bom_id" value="{{ entry.bom_id }}">
+                                                        {% if form.dry_run.value %}<input type="hidden" name="dry_run" value="on">{% endif %}
+                                                        <input type="hidden" name="material" value="{{ form.material.value|default_if_none:'' }}">
+                                                        <button class="bom-btn-primary" type="submit">{% trans "Import this BoM" %}</button>
+                                                    </form>
+                                                {% endif %}
                                             </td>
                                         </tr>
                                     {% endfor %}

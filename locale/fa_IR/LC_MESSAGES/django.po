@@ -962,6 +962,9 @@ msgstr "شناسه CRM"
 msgid "Import this BoM"
 msgstr "دریافت این BoM"
 
+msgid "Open existing BoM"
+msgstr "باز کردن BoM موجود"
+
 
 #, python-format
 msgid "Multiple CRM BoMs matched “%(q)s” — pick one"

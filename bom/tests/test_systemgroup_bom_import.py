@@ -36,8 +36,10 @@ from bom.systemgroup.importer import (
     AmbiguousBomMatch,
     ExistingBomConflict,
     NoBomMatch,
+    find_existing_lithium_bom,
     import_parsed_bom,
     list_revisions_for_part,
+    lithium_bom_page_url,
     parsed_bom_to_csv_bytes,
     resolve_bom_from_list,
     run_systemgroup_import,
@@ -728,6 +730,33 @@ class SystemGroupImportSemanticsTests(TestCase):
                 parent_part=self.parent,
             )
 
+    def test_find_existing_lithium_bom_when_revision_has_lines(self):
+        found = find_existing_lithium_bom(
+            self.organization,
+            self.parent.full_part_number(),
+            self.parent.latest().revision,
+        )
+        self.assertIsNotNone(found)
+        part, rev = found
+        self.assertEqual(part.id, self.parent.id)
+        self.assertEqual(rev.id, self.parent.latest().id)
+        self.assertGreater(rev.assembly.subparts.count(), 0)
+
+    def test_find_existing_lithium_bom_none_when_missing_part(self):
+        self.assertIsNone(
+            find_existing_lithium_bom(self.organization, "500-9001-00", "1")
+        )
+
+    def test_lithium_bom_page_url_for_latest_revision(self):
+        url = lithium_bom_page_url(
+            self.organization,
+            self.parent.full_part_number(),
+            self.parent.latest().revision,
+        )
+        self.assertEqual(
+            url, reverse("bom:part-info", kwargs={"part_id": self.parent.id})
+        )
+
 
 class SystemGroupManagementCommandTests(TestCase):
     def setUp(self):
@@ -1191,6 +1220,7 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "CRM revisions for")
         self.assertContains(response, "Import this BoM")
+        self.assertNotContains(response, "Open existing BoM")
         self.assertContains(response, "39477")
         self.assertContains(response, "40001")
         self.assertNotContains(response, "Results are capped")
@@ -1200,6 +1230,92 @@ class SystemGroupAdminGuiTests(TestCase):
         results_idx = html.find("sg-revision-results")
         self.assertGreater(load_idx, 0)
         self.assertGreater(results_idx, load_idx)
+
+    def _create_lithium_bom_for_crm_revision(self, part_number, revision):
+        from bom.helpers import (
+            create_a_fake_assembly_with_subpart,
+            create_a_fake_part_revision,
+        )
+        from bom.models import PartClass
+
+        # CRM fixture uses 500-9001-00/1 and /A; class 500 comes from fixtures.
+        number_class, number_item, number_variation = Part.parse_part_number(
+            part_number, self.organization
+        )
+        pc = PartClass.objects.get(
+            code=number_class, organization=self.organization
+        )
+        part = Part(
+            number_class=pc,
+            number_item=number_item,
+            number_variation=number_variation,
+            organization=self.organization,
+        )
+        part.save()
+        other = (
+            Part.objects.filter(organization=self.organization)
+            .exclude(id=part.id)
+            .first()
+        )
+        assy = create_a_fake_assembly_with_subpart(other.latest())
+        rev = create_a_fake_part_revision(
+            part=part, assembly=assy, revision=revision
+        )
+        self.assertGreater(rev.assembly.subparts.count(), 0)
+        return part, rev
+
+    def test_load_revisions_opens_existing_lithium_bom(self):
+        matches = parse_bom_list_document(
+            (FIXTURES / "bom_list.json").read_text(encoding="utf-8"),
+            content_type="application/json",
+        )
+        pn_matches = [m for m in matches if m.part_number == "500-9001-00"]
+        self.assertGreaterEqual(len(pn_matches), 2)
+        part, rev = self._create_lithium_bom_for_crm_revision("500-9001-00", "1")
+        existing_url = reverse("bom:part-info", kwargs={"part_id": part.id})
+        try:
+            from lithium_systemgroup import BomSearchResult
+
+            search = BomSearchResult(
+                entries=pn_matches, truncated=False, query="500-9001-00"
+            )
+        except ImportError:  # pragma: no cover — older package pin
+            search = pn_matches
+        with mock.patch(
+            "bom.systemgroup.importer.list_revisions_for_part",
+            return_value=search,
+        ), mock.patch(
+            "bom.systemgroup.access.client_for_user_meta",
+            return_value=mock.Mock(),
+        ):
+            response = self.client.post(
+                self.url,
+                {
+                    "material": self._material(),
+                    "part_id": "500-9001-00",
+                    "load_revisions": "1",
+                },
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Open existing BoM")
+        self.assertContains(response, existing_url)
+        # Rev A still has no Lithium BoM → keep Import for that row.
+        self.assertContains(response, "Import this BoM")
+        html = response.content.decode("utf-8")
+        # Existing-rev row links out; does not post Import for bom_id 39477.
+        row_39477 = html[
+            html.find("39477") : html.find("</tr>", html.find("39477"))
+        ]
+        self.assertIn("Open existing BoM", row_39477)
+        self.assertIn(existing_url, row_39477)
+        self.assertNotIn("Import this BoM", row_39477)
+        row_40001 = html[
+            html.find("40001") : html.find("</tr>", html.find("40001"))
+        ]
+        self.assertIn("Import this BoM", row_40001)
+        self.assertNotIn("Open existing BoM", row_40001)
+        # Sanity: linked revision is the one we seeded.
+        self.assertEqual(rev.revision, "1")
 
     def test_load_revisions_shows_capped_message(self):
         matches = parse_bom_list_document(
