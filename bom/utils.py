@@ -19,6 +19,44 @@ def currency_label(code):
     return code
 
 
+def money_decimal_places(currency=None):
+    """Display/quantize decimal places for a currency code.
+
+    IRR is a whole-unit currency in this app — never show a fractional part.
+    Other currencies keep UNIT_COST_DECIMAL_PLACES (2).
+    """
+    if currency is not None and str(currency) == "IRR":
+        return 0
+    return UNIT_COST_DECIMAL_PLACES
+
+
+def format_money_amount(value, currency=None):
+    """Format a Money/Decimal as grouped digits without a currency code.
+
+    When ``value`` is Money, its currency drives decimal places (IRR → 0).
+    Plain Decimals use ``currency`` if given, else UNIT_COST_DECIMAL_PLACES.
+    """
+    if value is None or value == "":
+        return ""
+    places = money_decimal_places(
+        value.currency if hasattr(value, "currency") else currency
+    )
+    amount = value.amount if hasattr(value, "amount") else value
+    try:
+        amount = Decimal(amount)
+    except Exception:
+        return value
+    quant = Decimal("1").scaleb(-places) if places else Decimal("1")
+    amount = amount.quantize(quant, rounding=ROUND_HALF_UP)
+    if places == 0:
+        return f"{int(amount):,}"
+    formatted = f"{amount:,.{places}f}"
+    # Keep whole-currency amounts tidy (98,000) while preserving real fractions.
+    if "." in formatted:
+        formatted = formatted.rstrip("0").rstrip(".")
+    return formatted
+
+
 def normalize_grouped_number(value):
     """Strip thousands separators / localized digits from a typed amount string."""
     if value is None or isinstance(value, (int, float, Decimal)):
@@ -311,7 +349,7 @@ def _money_amount(value):
 def apply_profit(base_cost, profit_percent, currency=None):
     """Markup on cost: price = base_cost * (1 + profit_percent / 100).
 
-    Quantizes to UNIT_COST_DECIMAL_PLACES with ROUND_HALF_UP.
+    Quantizes with ROUND_HALF_UP using money_decimal_places (IRR → 0, else 2).
     Returns a Money when ``currency`` is given or ``base_cost`` is Money;
     otherwise returns a Decimal.
     """
@@ -320,12 +358,13 @@ def apply_profit(base_cost, profit_percent, currency=None):
         return None
     percent = Decimal("0") if profit_percent is None else Decimal(profit_percent)
     price_amount = amount * (Decimal("1") + percent / Decimal("100"))
-    quantize_exp = Decimal("1").scaleb(-UNIT_COST_DECIMAL_PLACES)
-    price_amount = price_amount.quantize(quantize_exp, rounding=ROUND_HALF_UP)
 
     resolved_currency = currency
     if resolved_currency is None and isinstance(base_cost, Money):
         resolved_currency = base_cost.currency
+    places = money_decimal_places(resolved_currency)
+    quantize_exp = Decimal("1").scaleb(-places) if places else Decimal("1")
+    price_amount = price_amount.quantize(quantize_exp, rounding=ROUND_HALF_UP)
     if resolved_currency is not None:
         return Money(price_amount, resolved_currency)
     return price_amount

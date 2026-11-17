@@ -33,7 +33,6 @@ from .constants import (
     POWER_UNITS,
     ROLE_TYPE_VIEWER,
     TEMPERATURE_UNITS,
-    UNIT_COST_DECIMAL_PLACES,
     VALUE_UNITS,
     VOLTAGE_UNITS,
     WAVELENGTH_UNITS,
@@ -68,6 +67,7 @@ from .utils import (
     currency_label,
     implied_profit_percent,
     listify_string,
+    money_decimal_places,
     normalize_grouped_number,
     stringify_list,
 )
@@ -394,11 +394,15 @@ class ProductTypeForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
         super().__init__(*args, **kwargs)
+        overhead_places = money_decimal_places(
+            self.organization.currency if self.organization else None
+        )
         self.fields["overhead"] = GroupedDecimalField(
             required=False,
             label=_("Overhead"),
             initial=0,
             min_value=0,
+            decimal_places=overhead_places,
         )
         self.fields["overhead"].widget.attrs["class"] = "bom-input bom-price-input"
         self.fields["overhead"].widget.attrs["dir"] = "ltr"
@@ -484,11 +488,15 @@ class ProductTypeOverheadForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.organization = kwargs.pop("organization", None)
         super().__init__(*args, **kwargs)
+        overhead_places = money_decimal_places(
+            self.organization.currency if self.organization else None
+        )
         self.fields["overhead"] = GroupedDecimalField(
             required=False,
             label=_("Overhead price"),
             initial=0,
             min_value=0,
+            decimal_places=overhead_places,
         )
         self.fields["overhead"].widget.attrs["class"] = "bom-input bom-price-input"
         self.fields["overhead"].widget.attrs["dir"] = "ltr"
@@ -662,12 +670,19 @@ class SellerPartForm(forms.ModelForm):
             label=_("Currency"),
             initial=org_currency,
         )
+        instance = kwargs.get("instance")
+        price_currency = (
+            str(instance.unit_cost.currency)
+            if instance is not None and instance.unit_cost is not None
+            else str(org_currency)
+        )
+        price_places = money_decimal_places(price_currency)
         self.base_fields["unit_cost"] = GroupedDecimalField(
             required=True,
             label=_("Price"),
             initial=0,
             max_digits=19,
-            decimal_places=UNIT_COST_DECIMAL_PLACES,
+            decimal_places=price_places,
             min_value=0,
             help_text=_("Converted with the market exchange rate."),
         )
@@ -676,7 +691,7 @@ class SellerPartForm(forms.ModelForm):
             label=_("Shipping"),
             initial=0,
             max_digits=19,
-            decimal_places=UNIT_COST_DECIMAL_PLACES,
+            decimal_places=price_places,
             min_value=0,
             help_text=_("Converted with the market exchange rate."),
         )
@@ -690,10 +705,11 @@ class SellerPartForm(forms.ModelForm):
             help_text=_("Converted with the customs exchange rate."),
         )
 
-        instance = kwargs.get("instance")
         if instance:
             initial = kwargs.get("initial", {})
-            quant = Decimal("1").scaleb(-UNIT_COST_DECIMAL_PLACES)
+            quant = (
+                Decimal("1").scaleb(-price_places) if price_places else Decimal("1")
+            )
             unit_amount = instance.unit_cost.amount if instance.unit_cost is not None else Decimal(0)
             shipping_amount = (
                 instance.shipping.amount if instance.shipping is not None else Decimal(0)

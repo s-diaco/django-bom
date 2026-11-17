@@ -115,6 +115,7 @@
 <script>
     let partMatchData = {};
     const mouserImage = '<img height="18" style="padding: 4px 4px 0 4px;" alt="Mouser" title="Via Mouser.com" src="{% static 'bom/img/mouser.png' %}">';
+    const priceDecimals = "{{ organization.currency }}" === "IRR" ? 0 : 2;
     let specsUnitCost;
     let specsEstCostPerOrder;
     let specsMissingParts;
@@ -134,8 +135,8 @@
                         const sourcingParts = mouserInfo['seller_parts'];
                         const stockParsed = mouserInfo['stock_parsed'];
                         const optimalSellerPart = flatBom['parts']['{{ part_revision.id }}']['seller_part'];
-                        specsUnitCost = parseFloat(flatBom['unit_cost']).toFixed(2);
-                        specsEstCostPerOrder = parseFloat(flatBom['out_of_pocket_cost']).toFixed(2);
+                        specsUnitCost = parseFloat(flatBom['unit_cost']).toFixed(priceDecimals);
+                        specsEstCostPerOrder = parseFloat(flatBom['out_of_pocket_cost']).toFixed(priceDecimals);
                         specsMissingParts = flatBom['missing_item_costs'];
                         dataSheet = mouserInfo['data_sheet'];
                         mouserStock = mouserInfo['stock'];
@@ -171,7 +172,7 @@
                     const pn = sellerPart['seller_part_number'];
                     const moq = sellerPart['minimum_order_quantity'];
                     const mpq = sellerPart['minimum_pack_quantity'];
-                    const price = parseFloat(sellerPart['landed_unit_cost'] ?? sellerPart['unit_cost']).toFixed(2);
+                    const price = parseFloat(sellerPart['landed_unit_cost'] ?? sellerPart['unit_cost']).toFixed(priceDecimals);
                     const leadTime = `${sellerPart['lead_time_days']}`;
                     const nre = parseFloat(sellerPart['nre_cost']).toFixed(4);
                     const ncnr = "True";
@@ -259,9 +260,9 @@
                 const sellerNameElement = $(sellerNameId);
                 if (unitCost && sourcingInfo && sellerLink) {
                     unitCostElement.text('');
-                    unitCostElement.html(`<a href="${sellerLink}" target="_blank">${unitCost.toFixed(2)}</a>`);
+                    unitCostElement.html(`<a href="${sellerLink}" target="_blank">${unitCost.toFixed(priceDecimals)}</a>`);
                 } else if (unitCost && sourcingInfo) {
-                    unitCostElement.text(`${unitCost.toFixed(2)}`);
+                    unitCostElement.text(`${unitCost.toFixed(priceDecimals)}`);
                 }
                 if (unitCost && sourcingInfo && bomParts[partRevId]['seller_part']['data_source'] === 'Mouser') unitCostElement.append(mouserImage);
                 if (isMouser && sellerName) sellerNameElement.text('Mouser');
