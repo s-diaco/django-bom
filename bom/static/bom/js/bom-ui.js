@@ -270,9 +270,14 @@
   $.fn.collapsible = function () {
     return this.each(function () {
       var $root = $(this);
-      $root.find(".collapsible-header").on("click", function () {
-        $(this).closest("li").toggleClass("active");
-      });
+      // Namespaced + off first so repeated inits (bom-ui + page scripts) do not
+      // stack handlers — double toggle looks like "click does nothing".
+      $root
+        .find(".collapsible-header")
+        .off("click.bomCollapsible")
+        .on("click.bomCollapsible", function () {
+          $(this).closest("li").toggleClass("active");
+        });
     });
   };
 

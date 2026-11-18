@@ -2310,7 +2310,7 @@ def part_info(request, part_id, part_revision_id=None):
     try:
         where_used = part_revision.where_used()
     except AttributeError:
-        where_used = []
+        where_used = PartRevision.objects.none()
 
     try:
         mouser_parts = len(flat_bom.mouser_parts().keys()) > 0
@@ -2333,7 +2333,12 @@ def part_info(request, part_id, part_revision_id=None):
         )
         upload_subparts_csv_form = FileForm()
 
-    where_used_part = part.where_used()
+    # Stable order for offset pagination (revision where_used already orders by -revision).
+    where_used_part = part.where_used().order_by("-id")
+    where_used = paginate_queryset(request, where_used)
+    where_used_part = paginate_queryset(request, where_used_part)
+    querystring_except_page = build_querystring_except_page(request)
+
     seller_parts = part.seller_parts()
     # Customer prices are organization-admin only (read + write).
     if profile.role == "A":

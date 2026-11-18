@@ -251,8 +251,8 @@
                 <div id="used" class="col s12">
                     <h4 class="printer-show">{% trans "Where used" %}</h4>
                     <br>
-                    <div class="bom-table-wrap responsive-table-wrapper">
-                        <ul class="collapsible" data-collapsible="expandable" style="overflow: scroll;">
+                    <div class="bom-table-wrap bom-table-wrap--fit responsive-table-wrapper">
+                        <ul class="collapsible expandable" data-collapsible="expandable">
                             <li class="active">
                                 <div class="collapsible-header"><i class="material-icons">my_location</i>{% trans "Where this revision is used" %}</div>
                                 <div class="collapsible-body">
@@ -285,6 +285,7 @@
                                         {% endfor %}
                                         </tbody>
                                     </table>
+                                    {% include 'bom/ui/pagination.html' with page_obj=where_used extra_query=querystring_except_page fragment="used" pager_id="where-used-rev" %}
                                 </div>
                             </li>
                             <li>
@@ -323,6 +324,7 @@
                                         {% endfor %}
                                         </tbody>
                                     </table>
+                                    {% include 'bom/ui/pagination.html' with page_obj=where_used_part extra_query=querystring_except_page fragment="used" pager_id="where-used-all" %}
                                 </div>
                             </li>
                         </ul>
@@ -423,18 +425,7 @@
     </div>
 {% endblock %}
 {% block bom-script %}
-    <!-- Materialize initializer -->
-    <script>
-        $(document).ready(function () {
-            $('.collapsible').collapsible({
-                accordion: false
-            });
-        });
-        var elem = document.querySelector('.collapsible.expandable');
-        var instance = M.Collapsible.init(elem, {
-            accordion: false
-        });
-    </script>
+    <!-- Collapsible: single init via bom-ui.js ($.fn.collapsible is idempotent). -->
 
     <!-- Handle if there's an anchor, select tab -->
     <script type='text/javascript'>
