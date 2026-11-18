@@ -5,6 +5,7 @@ from copy import deepcopy
 from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
+from django.utils import translation
 
 from bom.helpers import (
     create_a_fake_assembly_with_subpart,
@@ -302,9 +303,7 @@ class PartInfoTestsMixin:
         self.assertFalse(response.context["where_used"].has_other_pages())
         html = response.content.decode("utf-8")
         self.assertNotIn("bom-pagination", html)
-        self.assertTrue(
-            "not used in any product" in html
-            or "در هیچ محصولی استفاده نشده" in html
-            or "استفاده نشده" in html,
-            "empty where-used message missing",
-        )
+        # Client follows LANGUAGE_CODE (fa-IR); match compiled gettext, not English msgid.
+        with translation.override(settings.LANGUAGE_CODE):
+            empty_msg = translation.gettext("This material is not used in any product.")
+        self.assertIn(empty_msg, html)
