@@ -1652,7 +1652,7 @@ msgid "Could not reach the SystemGroup CRM to load revisions: %(error)s"
 msgstr "دسترسی به CRM همکاران سیستم برای بارگذاری ورژن‌ها ممکن نشد: %(error)s"
 
 msgid "Select a CRM revision below, then import that BoM."
-msgstr "یک ورژن CRM را پایین انتخاب کنید و آن BoM را دریافت متریال کنید."
+msgstr "یک ورژن را پایین انتخاب و BoM آن را دریافت کنید."
 
 msgid ""
 "Showing the first %(n)s CRM matches for “%(q)s”. Narrow the Part ID (add "
