@@ -28,7 +28,7 @@ package = false
 managed = true
 
 [tool.uv.sources]
-lithium-systemgroup = { git = "https://github.com/s-diaco/lithium-systemgroup.git", rev = "bbc6544ba8ad8413a3c52eb0bdd107fb767f6ef8" }
+lithium-systemgroup = { git = "https://github.com/s-diaco/lithium-systemgroup.git", rev = "617e5b8b3828ddabb76b6f6d8955414288a6514c" }
 [dependency-groups]
 dev = [
     "pytest>=8.3.5",
