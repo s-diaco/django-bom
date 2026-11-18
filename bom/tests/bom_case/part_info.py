@@ -245,6 +245,17 @@ class PartInfoTestsMixin:
 
             html = page1.content.decode("utf-8")
             self.assertIn('id="used"', html)
+            used_start = html.find('id="used"')
+            used_end = html.find('id="sourcing"', used_start)
+            if used_end == -1:
+                used_end = html.find('id="customers"', used_start)
+            if used_end == -1:
+                used_end = html.find('id="overview"', used_start)
+            used_html = html[used_start:used_end] if used_end != -1 else html[used_start:]
+            # Paginate like materials: no inner vertical scrollbar on the table body.
+            self.assertNotIn("overflow: scroll", used_html)
+            self.assertNotIn("overflow-y", used_html)
+            self.assertIn("responsive-table-wrapper", used_html)
             self.assertIn("bom-pagination", html)
             self.assertIn("?page=2", html)
             self.assertIn("#used", html)
