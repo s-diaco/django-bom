@@ -135,6 +135,59 @@ def _revision_subpart_count(part_revision: PartRevision | None) -> int:
     return part_revision.assembly.subparts.count()
 
 
+def find_existing_lithium_bom(
+    organization: Organization,
+    part_number: str | None,
+    revision: str | None,
+) -> tuple[Part, PartRevision] | None:
+    """Return (part, revision) when Lithium already has BoM lines for that PN/rev."""
+    part = resolve_parent_part(organization, part_number)
+    if part is None:
+        return None
+    rev = (revision or "").strip()
+    if rev:
+        part_revision = PartRevision.objects.filter(part=part, revision=rev).first()
+    else:
+        part_revision = part.latest()
+    if part_revision is None or _revision_subpart_count(part_revision) == 0:
+        return None
+    return part, part_revision
+
+
+def lithium_bom_page_url(
+    organization: Organization,
+    part_number: str | None,
+    revision: str | None,
+) -> str | None:
+    """URL of the Lithium revision page when that revision already has a BoM."""
+    from django.urls import reverse
+
+    found = find_existing_lithium_bom(organization, part_number, revision)
+    if found is None:
+        return None
+    part, part_revision = found
+    if part_revision == part.latest():
+        return reverse("bom:part-info", kwargs={"part_id": part.id})
+    return reverse(
+        "bom:part-info-history",
+        kwargs={"part_id": part.id, "part_revision_id": part_revision.id},
+    )
+
+
+def annotate_revision_candidates_with_lithium_boms(
+    organization: Organization,
+    entries: list,
+) -> list:
+    """Attach ``lithium_bom_url`` on each CRM revision row (None if no Lithium BoM)."""
+    for entry in entries:
+        entry.lithium_bom_url = lithium_bom_page_url(
+            organization,
+            getattr(entry, "part_number", None),
+            getattr(entry, "revision", None),
+        )
+    return entries
+
+
 def first_product_type_code(organization: Organization, *, has_bom: bool) -> str | None:
     """Return the first org product-type code with the given has_bom flag."""
     organization.ensure_default_product_types()
