@@ -304,14 +304,16 @@ class PartInfoTestsMixin:
         self.assertFalse(response.context["where_used"].has_other_pages())
         html = response.content.decode("utf-8")
         self.assertNotIn("bom-pagination", html)
-        # Both accordion sections start open so empty copy is visible without a click.
+        # Only the revision section starts open; all-usage stays collapsed until click.
         used_start = html.find('id="used"')
         used_end = html.find('id="sourcing"', used_start)
         if used_end == -1:
             used_end = html.find('id="customers"', used_start)
         used_html = html[used_start:used_end] if used_end != -1 else html[used_start:]
-        self.assertEqual(used_html.count('<li class="active">'), 2)
+        self.assertEqual(used_html.count('<li class="active">'), 1)
+        self.assertIn("location_searching", used_html)
         # Client follows LANGUAGE_CODE (fa-IR); match compiled gettext, not English msgid.
+        # Empty copy is still in the HTML for both sections (second hidden until expand).
         with translation.override(settings.LANGUAGE_CODE):
             empty_msg = translation.gettext("This material is not used in any product.")
             empty_msg_long = translation.gettext(
