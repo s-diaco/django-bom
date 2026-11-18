@@ -1,9 +1,18 @@
 """BOM tests: part info."""
 
+from copy import deepcopy
+
+from django.conf import settings
+from django.test import override_settings
 from django.urls import reverse
+
 from bom.helpers import (
+    create_a_fake_assembly_with_subpart,
+    create_a_fake_part_revision,
+    create_some_fake_part_classes,
     create_some_fake_parts,
 )
+from bom.models import Part
 
 
 class PartInfoTestsMixin:
@@ -189,3 +198,102 @@ class PartInfoTestsMixin:
 
         response = self.client.post(reverse("bom:export-part-list"))
         self.assertEqual(response.status_code, 200)
+
+    def _create_part_with_many_parents(self, parent_count):
+        """Child part used by parent_count distinct parent revisions."""
+        pc1 = create_some_fake_part_classes(self.organization)[0]
+        child = Part(
+            number_class=pc1,
+            number_item="9001",
+            organization=self.organization,
+        )
+        child.save()
+        child_rev = create_a_fake_part_revision(child, None)
+
+        parents = []
+        for i in range(parent_count):
+            parent = Part(
+                number_class=pc1,
+                number_item=str(9100 + i),
+                organization=self.organization,
+            )
+            parent.save()
+            assy = create_a_fake_assembly_with_subpart(child_rev, reference=f"R{i}")
+            parent_rev = create_a_fake_part_revision(
+                parent, assy, description=f"Parent {i}", revision="1"
+            )
+            parents.append(parent_rev)
+        return child, parents
+
+    def test_part_info_where_used_pagination(self):
+        child, parents = self._create_part_with_many_parents(12)
+        url = reverse("bom:part-info", kwargs={"part_id": child.id})
+
+        config = deepcopy(settings.BOM_CONFIG_DEFAULT)
+        config["admin_dashboard"]["page_size"] = 10
+
+        with override_settings(BOM_CONFIG=config):
+            page1 = self.client.get(url, {"tab_anchor": "used"})
+            self.assertEqual(page1.status_code, 200)
+            where_used = page1.context["where_used"]
+            where_used_part = page1.context["where_used_part"]
+            self.assertEqual(len(where_used), 10)
+            self.assertEqual(where_used.paginator.count, 12)
+            self.assertTrue(where_used.has_other_pages())
+            self.assertEqual(len(where_used_part), 10)
+            self.assertTrue(where_used_part.has_other_pages())
+
+            html = page1.content.decode("utf-8")
+            self.assertIn('id="used"', html)
+            self.assertIn("bom-pagination", html)
+            self.assertIn("?page=2", html)
+            self.assertIn("#used", html)
+            self.assertIn("per_page=", html)
+            # Columns and parent part-info links preserved.
+            self.assertIn(parents[0].part.full_part_number(), html)
+            self.assertIn(
+                reverse(
+                    "bom:part-info-history",
+                    kwargs={
+                        "part_id": parents[0].part.id,
+                        "part_revision_id": parents[0].id,
+                    },
+                ),
+                html,
+            )
+
+            page2 = self.client.get(url, {"page": 2, "tab_anchor": "used"})
+            self.assertEqual(page2.status_code, 200)
+            self.assertEqual(len(page2.context["where_used"]), 2)
+            self.assertEqual(len(page2.context["where_used_part"]), 2)
+
+            larger = self.client.get(url, {"per_page": 25, "tab_anchor": "used"})
+            self.assertEqual(len(larger.context["where_used"]), 12)
+            self.assertFalse(larger.context["where_used"].has_other_pages())
+            self.assertNotIn("bom-pagination", larger.content.decode("utf-8"))
+
+    def test_part_info_where_used_empty_state(self):
+        pc1 = create_some_fake_part_classes(self.organization)[0]
+        orphan = Part(
+            number_class=pc1,
+            number_item="9999",
+            organization=self.organization,
+        )
+        orphan.save()
+        create_a_fake_part_revision(orphan, None)
+
+        response = self.client.get(
+            reverse("bom:part-info", kwargs={"part_id": orphan.id}),
+            {"tab_anchor": "used"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["where_used"].paginator.count, 0)
+        self.assertFalse(response.context["where_used"].has_other_pages())
+        html = response.content.decode("utf-8")
+        self.assertNotIn("bom-pagination", html)
+        self.assertTrue(
+            "not used in any product" in html
+            or "در هیچ محصولی استفاده نشده" in html
+            or "استفاده نشده" in html,
+            "empty where-used message missing",
+        )
