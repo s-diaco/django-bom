@@ -304,7 +304,19 @@ class PartInfoTestsMixin:
         self.assertFalse(response.context["where_used"].has_other_pages())
         html = response.content.decode("utf-8")
         self.assertNotIn("bom-pagination", html)
+        # Both accordion sections start open so empty copy is visible without a click.
+        used_start = html.find('id="used"')
+        used_end = html.find('id="sourcing"', used_start)
+        if used_end == -1:
+            used_end = html.find('id="customers"', used_start)
+        used_html = html[used_start:used_end] if used_end != -1 else html[used_start:]
+        self.assertEqual(used_html.count('<li class="active">'), 2)
         # Client follows LANGUAGE_CODE (fa-IR); match compiled gettext, not English msgid.
         with translation.override(settings.LANGUAGE_CODE):
             empty_msg = translation.gettext("This material is not used in any product.")
-        self.assertIn(empty_msg, html)
+            empty_msg_long = translation.gettext(
+                "This material is not used in any product. To add it to a product, "
+                "go to that product's bill of materials and add the subpart."
+            )
+        self.assertIn(empty_msg, used_html)
+        self.assertIn(empty_msg_long, used_html)
