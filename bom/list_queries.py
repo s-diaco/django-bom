@@ -96,29 +96,48 @@ def prefetch_bom_graphs(part_revisions):
     can reuse the prefetch cache instead of querying per assembly node.
     """
     frontier = [pr for pr in part_revisions if pr.assembly_id is not None]
-    seen_assembly_ids = set()
+    # Deduplicate database loading, not model-instance cache coverage. Multiple
+    # revisions/branches can hold distinct Assembly objects for the same PK.
+    subparts_by_assembly = {}
+    assemblies_by_id = {}
     subpart_qs = Subpart.objects.select_related(
         *_BOM_SUBPART_SELECT_RELATED
     ).prefetch_related(_seller_nested_prefetch())
 
     while frontier:
-        to_prefetch = []
+        to_prefetch = {}
         for part_rev in frontier:
-            if part_rev.assembly_id in seen_assembly_ids:
-                continue
-            seen_assembly_ids.add(part_rev.assembly_id)
-            to_prefetch.append(part_rev)
-        if not to_prefetch:
-            break
+            assembly_id = part_rev.assembly_id
+            if assembly_id not in subparts_by_assembly:
+                to_prefetch.setdefault(assembly_id, part_rev)
 
         prefetch_related_objects(
-            to_prefetch,
+            list(to_prefetch.values()),
             Prefetch("assembly__subparts", queryset=subpart_qs),
         )
+        for assembly_id, part_rev in to_prefetch.items():
+            assemblies_by_id[assembly_id] = part_rev.assembly
+            subparts_by_assembly[assembly_id] = (
+                part_rev.assembly._prefetched_objects_cache["subparts"]
+            )
+
+        # Include duplicates from this wave AND assemblies seen in earlier
+        # waves. Cached empty QuerySets are just as important as populated ones.
+        for part_rev in frontier:
+            # Reuse a loaded FK only when this revision has no assembly cached;
+            # preserve distinct already-loaded instances and populate them too.
+            if "assembly" not in part_rev._state.fields_cache:
+                part_rev.assembly = assemblies_by_id[part_rev.assembly_id]
+            assembly = part_rev.assembly
+            if not hasattr(assembly, "_prefetched_objects_cache"):
+                assembly._prefetched_objects_cache = {}
+            assembly._prefetched_objects_cache["subparts"] = (
+                subparts_by_assembly[part_rev.assembly_id]
+            )
 
         next_frontier = []
-        for part_rev in to_prefetch:
-            for subpart in part_rev.assembly.subparts.all():
+        for assembly_id in to_prefetch:
+            for subpart in subparts_by_assembly[assembly_id]:
                 child = subpart.part_revision
                 if child is not None and child.assembly_id is not None:
                     next_frontier.append(child)
@@ -212,6 +231,17 @@ def attach_list_unit_costs(part_revs_page):
     overhead; raw materials = optimal seller landed unit cost. Product rows
     with materials without price keep the rollup and set ``bom_cost_incomplete``.
     """
+    # select_related creates separate Organization instances per row. Reuse
+    # type data only within this preparation call, keyed by tenant, before
+    # is_product triggers a lookup on every instance. indented() propagates the
+    # root's map to descendants; seller decisions remain quantity-dependent.
+    type_maps = {}
+    for part_rev in part_revs_page:
+        organization = part_rev.part.organization
+        if organization.pk not in type_maps:
+            type_maps[organization.pk] = organization.product_types_by_code()
+        organization._product_types_by_code = type_maps[organization.pk]
+
     products = [part_rev for part_rev in part_revs_page if part_rev.is_product]
     if products:
         prefetch_bom_graphs(products)

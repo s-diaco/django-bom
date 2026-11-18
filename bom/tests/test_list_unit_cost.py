@@ -21,9 +21,10 @@ from bom.list_queries import (
     LIST_PAGE_SELECT_RELATED,
     UnpaginatedPartRevList,
     attach_list_unit_costs,
+    prefetch_bom_graphs,
     prepare_part_revs_for_list_page,
 )
-from bom.models import ManufacturerPart, Part, PartRevision, Subpart
+from bom.models import ManufacturerPart, Organization, Part, PartRevision, Subpart
 
 
 class ListUnitCostPrefetchTests(TestCase):
@@ -205,6 +206,147 @@ class ListUnitCostPrefetchTests(TestCase):
         attach_list_unit_costs(page)
         fresh = PartRevision.objects.get(pk=prod_rev.pk)
         self.assertEqual(list(page)[0].list_unit_cost, fresh.bom_unit_cost)
+
+    def test_shared_graph_price_walks_use_no_sql_after_preparation(self):
+        """Repeated roots/branches and empty leaves all need instance caches."""
+        _raw, raw = self._make_part("SHRAW", "no_bom", seller_cost=7)
+        _empty, empty = self._make_part("EMPTY", "no_loi")
+        _shared, shared = self._make_part("SHARED", "with_loi")
+        self._add_child(shared, raw, 2)
+        self._add_child(shared, empty, 1)
+        roots = [shared, empty]
+        for number, quantity in [("LEFT", 1), ("RIGHT", 3)]:
+            _part, root = self._make_part(number, "no_loi")
+            self._add_child(root, shared, quantity)
+            self._add_child(root, empty, 2)
+            roots.append(root)
+        # The same assembly also appears at a different BFS depth.
+        self._add_child(roots[-1], roots[-2], 1)
+        baseline = {rev.pk: PartRevision.objects.get(pk=rev.pk).indented() for rev in roots}
+        original_indented = PartRevision.indented
+
+        def query_free_indented(rev, *args, **kwargs):
+            with self.assertNumQueries(0):
+                return original_indented(rev, *args, **kwargs)
+
+        # Check the FIRST pricing walk too, not just a warmed second walk.
+        with patch.object(PartRevision, "indented", query_free_indented):
+            page = self._prepare(roots)
+        with self.assertNumQueries(0):
+            for rev in page:
+                bom = rev.indented()
+                expected = baseline[rev.pk]
+                self.assertEqual(bom.bom_unit_cost, expected.bom_unit_cost)
+                self.assertEqual(bom.missing_item_costs, expected.missing_item_costs)
+                self.assertEqual(len(bom.parts), len(expected.parts))
+
+    def test_graph_prefetch_covers_distinct_instances_and_empty_assemblies(self):
+        _part, root = self._make_part("DUPROOT", "no_loi")
+        _raw, raw = self._make_part("DUPRAW", "no_bom", seller_cost=3)
+        self._add_child(root, raw, 1)
+        # select_related creates distinct assembly instances for the same PK.
+        instances = [
+            PartRevision.objects.select_related("assembly").get(pk=root.pk)
+            for _ in range(2)
+        ]
+        self.assertIsNot(instances[0].assembly, instances[1].assembly)
+        prefetch_bom_graphs(instances)
+        with self.assertNumQueries(0):
+            for rev in instances:
+                children = rev._bom_walk_subparts()
+                self.assertEqual(len(children), 1)
+                self.assertEqual(children[0].part_revision._bom_walk_subparts(), [])
+
+    def test_graph_prefetch_reuses_uncached_duplicate_root_assembly_fks(self):
+        _part, root = self._make_part("DUPFK", "no_loi")
+        _raw, raw = self._make_part("DUPFKRAW", "no_bom", seller_cost=3)
+        self._add_child(root, raw, 1)
+
+        def load_roots(count):
+            return [PartRevision.objects.get(pk=root.pk) for _ in range(count)]
+
+        single = load_roots(1)
+        duplicates = load_roots(5)
+        with CaptureQueriesContext(connection) as single_queries:
+            prefetch_bom_graphs(single)
+        with CaptureQueriesContext(connection) as duplicate_queries:
+            prefetch_bom_graphs(duplicates)
+        self.assertEqual(len(single_queries), len(duplicate_queries))
+        with self.assertNumQueries(0):
+            for rev in duplicates:
+                children = rev._bom_walk_subparts()
+                self.assertEqual(len(children), 1)
+                self.assertEqual(children[0].part_revision._bom_walk_subparts(), [])
+
+    def test_query_count_does_not_grow_with_shared_graph_occurrences(self):
+        _raw, raw = self._make_part("SCALE_RAW", "no_bom", seller_cost=4)
+        _mid, mid = self._make_part("SCALE_MID", "no_loi")
+        self._add_child(mid, raw, 1)
+        roots = []
+        for i in range(5):
+            _part, root = self._make_part(f"SCALE{i}", "no_loi")
+            self._add_child(root, mid, i + 1)
+            roots.append(root)
+        with CaptureQueriesContext(connection) as single:
+            self._prepare(roots[:1])
+        with CaptureQueriesContext(connection) as multiple:
+            self._prepare(roots)
+        self.assertEqual(len(single), len(multiple))
+
+    def test_shared_seller_relations_still_select_by_extended_quantity(self):
+        raw_part, raw = self._make_part("QRAW", "no_bom", seller_cost=10)
+        bulk = create_a_fake_seller_part(
+            self.seller, raw_part.primary_manufacturer_part, 500, 1,
+            Money(2, self.currency), 1, Money(0, self.currency),
+        )
+        _mid, mid = self._make_part("QMID", "with_loi")
+        self._add_child(mid, raw, 1)
+        roots = []
+        for number, quantity in [("QLOW", 1), ("QHIGH", 10)]:
+            _part, root = self._make_part(number, "no_loi")
+            self._add_child(root, mid, quantity)
+            roots.append(root)
+        # Also retain the do_not_load occurrence and compare its rollup.
+        unloaded = Subpart.objects.create(part_revision=raw, count=4, do_not_load=True)
+        roots[0].assembly.subparts.add(unloaded)
+        expected = {rev.pk: PartRevision.objects.get(pk=rev.pk).indented() for rev in roots}
+        page = self._prepare(roots)
+        with self.assertNumQueries(0):
+            for rev in page:
+                actual = rev.indented()
+                self.assertEqual(actual.bom_unit_cost, expected[rev.pk].bom_unit_cost)
+                self.assertEqual(actual.missing_item_costs, expected[rev.pk].missing_item_costs)
+                child = rev._bom_walk_subparts()[0].part_revision
+                leaf = child._bom_walk_subparts()[0].part_revision.part
+                self.assertNotEqual(leaf.optimal_seller(100).pk, bulk.pk)
+                self.assertEqual(leaf.optimal_seller(1000).pk, bulk.pk)
+                # Revisit a lower quantity after the same instance chose bulk.
+                self.assertNotEqual(leaf.optimal_seller(100).pk, bulk.pk)
+
+    def test_type_maps_are_scoped_by_organization_and_preparation_call(self):
+        _part, first = self._make_part("ORG1", "no_loi")
+        other_org = Organization.objects.create(name="Other", owner=self.user)
+        other_type = other_org.product_types.get(code="no_loi")
+        other_type.overhead = Money(77, other_org.currency)
+        other_type.save()
+        other_part = Part.objects.create(organization=other_org, number_item="ORG2")
+        second = PartRevision.objects.create(part=other_part, material="no_loi")
+        page = self._prepare([first, second])
+        by_pk = {rev.pk: rev for rev in page}
+        self.assertEqual(by_pk[first.pk].type_overhead, Money(20, self.currency))
+        self.assertEqual(by_pk[second.pk].type_overhead, Money(77, other_org.currency))
+        other_type.overhead = Money(88, other_org.currency)
+        other_type.save()
+        fresh_page = self._prepare([second])
+        self.assertEqual(list(fresh_page)[0].type_overhead, Money(88, other_org.currency))
+
+    def test_product_types_loaded_once_per_organization_not_per_row(self):
+        revs = [self._make_part(f"TYPE{i}", "no_bom", seller_cost=1)[1] for i in range(4)]
+        with CaptureQueriesContext(connection) as queries:
+            self._prepare(revs)
+        type_queries = [q for q in queries if '"bom_producttype"' in q["sql"]]
+        # Preserve default-type initialization: one existence check and one load.
+        self.assertEqual(len(type_queries), 2)
 
     def test_materials_search_survives_foreign_sellerpart_missing_customs_rate(self):
         """Regression: dual FX must not 500 materials search for non-org quotes.
