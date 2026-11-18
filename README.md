@@ -34,6 +34,7 @@ cd project_dir
 
 ```
 docker compose --env-file .env.prod up -d db
+until docker compose --env-file .env.prod exec -T db pg_isready -U bom_user -d bom_db; do sleep 1; done
 gunzip < dump_file.sql.gz | docker compose --env-file .env.prod exec -T db psql -U bom_user -d bom_db
 ```
 
@@ -98,6 +99,7 @@ Use this when setting up from scratch or after `down --volumes`:
 ```
 docker compose --env-file .env.prod down --volumes --rmi local
 docker compose --env-file .env.prod up -d db
+until docker compose --env-file .env.prod exec -T db pg_isready -U bom_user -d bom_db; do sleep 1; done
 gunzip < dump_file.sql.gz | docker compose --env-file .env.prod exec -T db psql -U bom_user -d bom_db 2>&1 | tee restore.log
 grep -iE 'error|fatal|violates' restore.log
 ```
