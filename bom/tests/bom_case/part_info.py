@@ -253,9 +253,10 @@ class PartInfoTestsMixin:
             if used_end == -1:
                 used_end = html.find('id="overview"', used_start)
             used_html = html[used_start:used_end] if used_end != -1 else html[used_start:]
-            # Paginate like materials: no inner vertical scrollbar on the table body.
+            # Paginate like materials: no max-height/overflow scroll viewport on the wrap.
             self.assertNotIn("overflow: scroll", used_html)
             self.assertNotIn("overflow-y", used_html)
+            self.assertIn("bom-table-wrap--fit", used_html)
             self.assertIn("responsive-table-wrapper", used_html)
             self.assertIn("bom-pagination", html)
             self.assertIn("?page=2", html)
