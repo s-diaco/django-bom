@@ -232,6 +232,7 @@ class SystemGroupBomParseTests(TestCase):
 
 class SystemGroupBomListParseTests(TestCase):
     def test_split_bom_code(self):
+        # Legacy: no کد کالا — first-/ or whole string.
         self.assertEqual(split_bom_code("500-9001-00/1"), ("500-9001-00", "1"))
         self.assertEqual(split_bom_code("500-9001-00/A"), ("500-9001-00", "A"))
         self.assertEqual(split_bom_code("1155F229/A2*10-C"), ("1155F229", "A2*10-C"))
@@ -239,6 +240,16 @@ class SystemGroupBomListParseTests(TestCase):
         self.assertEqual(split_bom_code("2183S914*2-C"), ("2183S914*2-C", ""))
         self.assertEqual(split_bom_code("500-9001-00"), ("500-9001-00", ""))
         self.assertEqual(split_bom_code(""), ("", ""))
+        # With کد کالا: slash and concatenated PN+rev Number tails.
+        self.assertEqual(
+            split_bom_code("1155F229/A2*10-C", "1155F229"),
+            ("1155F229", "A2*10-C"),
+        )
+        self.assertEqual(
+            split_bom_code("2183S914*2-C", "2183S914"),
+            ("2183S914", "*2-C"),
+        )
+        self.assertEqual(split_bom_code("CGM5883", "CGM5883"), ("CGM5883", ""))
 
     def test_parse_list_html_fixture(self):
         html = (FIXTURES / "bom_list.html").read_text(encoding="utf-8")
@@ -258,14 +269,17 @@ class SystemGroupBomListParseTests(TestCase):
         entries = parse_bom_list_document(html, content_type="text/html")
         self.assertEqual(len(entries), 4)
         self.assertEqual(entries[0].bom_id, "39485")
+        # کد کالا / PartCode → PN; Number tail after PN (+ optional /) → rev.
         self.assertEqual(entries[0].part_number, "1155F229")
         self.assertEqual(entries[0].revision, "A2*10-C")
         self.assertIn("1155F229", entries[0].description)
-        # Number without slash → whole value is PN, empty revision
+        # Number equals PartCode → empty revision.
         self.assertEqual(entries[1].bom_id, "39484")
         self.assertEqual(entries[1].part_number, "CGM5883")
         self.assertEqual(entries[1].revision, "")
-        self.assertEqual(entries[3].part_number, "2183S914*2-C")
+        # Concatenated Number (no slash): PartCode is PN, remainder is rev.
+        self.assertEqual(entries[3].part_number, "2183S914")
+        self.assertEqual(entries[3].revision, "*2-C")
 
     def test_parse_telerik_list_json_fixture(self):
         raw = (FIXTURES / "bom_list_telerik.json").read_text(encoding="utf-8")
@@ -275,6 +289,11 @@ class SystemGroupBomListParseTests(TestCase):
         self.assertEqual(entries[0].part_number, "1155F229")
         self.assertEqual(entries[0].revision, "A2*10-C")
         self.assertEqual(entries[1].part_number, "CGM5883")
+        self.assertEqual(entries[1].revision, "")
+        by_id = {e.bom_id: e for e in entries}
+        concat = by_id["39482"]
+        self.assertEqual(concat.part_number, "2183S914")
+        self.assertEqual(concat.revision, "*2-C")
 
     def test_match_telerik_number_slash_and_bare(self):
         entries = parse_bom_list_document(
@@ -290,6 +309,16 @@ class SystemGroupBomListParseTests(TestCase):
         self.assertEqual([h.bom_id for h in hits_full], ["39485"])
         hits_bare = match_bom_list_entries(entries, part_number="CGM5883")
         self.assertEqual([h.bom_id for h in hits_bare], ["39484"])
+
+    def test_resolve_telerik_concatenated_number_uses_partcode(self):
+        """PartCode is PN; concatenated Number tail is rev (not whole Number as PN)."""
+        entry = resolve_bom_from_list(
+            part_number="2183S914",
+            list_path=FIXTURES / "bom_list_telerik.json",
+        )
+        self.assertEqual(entry.bom_id, "39482")
+        self.assertEqual(entry.part_number, "2183S914")
+        self.assertEqual(entry.revision, "*2-C")
 
     def test_parse_list_json_fixture(self):
         raw = (FIXTURES / "bom_list.json").read_text(encoding="utf-8")
