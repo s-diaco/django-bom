@@ -125,9 +125,9 @@ class SystemGroupBomImportForm(forms.Form):
         required=False,
         label=_("Material Type"),
         help_text=_(
-            "Used for the parent part when it is created. "
+            "Applied to the parent revision (created or existing). "
             "New child parts use the first raw-material type "
-            "(has BoM off). Existing parts keep their current type."
+            "(has BoM off). Existing child parts keep their current type."
         ),
         widget=forms.Select(attrs={"class": "bom-input w-full"}),
     )

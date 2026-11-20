@@ -205,10 +205,17 @@ def ensure_parent_revision(
     description: str = "",
     material: str | None = None,
 ) -> PartRevision:
-    """Return existing PartRevision or create one (with empty assembly)."""
+    """Return existing PartRevision or create one (with empty assembly).
+
+    When ``material`` is set, apply it to the parent revision — including
+    overwriting an already-existing revision so the import form selection wins.
+    """
     rev = (revision or "").strip() or "1"
     existing = PartRevision.objects.filter(part=part, revision=rev).first()
     if existing is not None:
+        if material and existing.material != material:
+            existing.material = material
+            existing.save(update_fields=["material"])
         return existing
     assembly = Assembly.objects.create()
     kwargs = {
@@ -277,12 +284,13 @@ def import_parsed_bom(
         target_rev = rev or (
             resolved.latest().revision if resolved.latest() is not None else "1"
         )
+        # Skip material writes on dry_run so existing parents stay unchanged.
         parent_part_revision = ensure_parent_revision(
             organization,
             part=resolved,
             revision=target_rev,
             description=parsed.parent_description or "",
-            material=parent_material,
+            material=None if dry_run else parent_material,
         )
         count = _revision_subpart_count(parent_part_revision)
         if count > 0 and action not in ("keep", "replace"):

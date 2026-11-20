@@ -652,7 +652,7 @@ class SystemGroupImportSemanticsTests(TestCase):
         self.assertIsNotNone(parent.latest())
         self.assertGreaterEqual(parent.latest().assembly.subparts.count(), 1)
 
-    def test_import_applies_material_to_new_revisions_only(self):
+    def test_import_overwrites_existing_parent_material_keeps_children(self):
         self.organization.ensure_default_product_types()
         product_code = next(
             pt.code for pt in self.organization.product_types.all() if pt.has_bom
@@ -662,6 +662,11 @@ class SystemGroupImportSemanticsTests(TestCase):
             for pt in self.organization.product_types.all()
             if not pt.has_bom
         )
+        # Existing parent starts as raw; import form selection overwrites it.
+        parent_rev = self.parent.latest()
+        parent_rev.material = raw_code
+        parent_rev.save(update_fields=["material"])
+
         # Existing child keeps its material; new child gets first has_bom=False.
         existing = Part.from_part_number("200-3333-00", self.organization)
         existing_rev = existing.latest()
@@ -680,13 +685,16 @@ class SystemGroupImportSemanticsTests(TestCase):
         )
         self.assertTrue(result.ok, result.errors)
 
+        parent_rev.refresh_from_db()
+        self.assertEqual(parent_rev.material, product_code)
+
         existing_rev.refresh_from_db()
         self.assertEqual(existing_rev.material, raw_code)
 
         new_part = Part.from_part_number("500-7777-00", self.organization)
         self.assertEqual(new_part.latest().material, raw_code)
 
-    def test_import_dropdown_material_applies_to_new_parent_only(self):
+    def test_import_dropdown_material_applies_to_new_parent(self):
         self.organization.ensure_default_product_types()
         product_code = next(
             pt.code for pt in self.organization.product_types.all() if pt.has_bom
