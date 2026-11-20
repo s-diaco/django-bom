@@ -526,6 +526,9 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn("max-w-2xl", html)
         self.assertIn("gap-y-5", html)
         self.assertIn('id="fx-rate-panel"', html)
+        self.assertIn('id="sellerpart-landed-fields"', html)
+        self.assertIn("refreshIrrLandedFields", html)
+        self.assertIn('currencySelect.value === "IRR"', html)
         self.assertIn("formatWholeRate", html)
         self.assertIn("bomPriceInput.formatWhole", html)
         self.assertIn("fx-customs-rate-value", html)
@@ -542,6 +545,25 @@ class TestUiSmoke(TransactionTestCase):
         # Wider fields (m6) — not the old cramped l2 strip.
         self.assertIn("md:col-span-6", html)
         self.assertNotIn("lg:col-span-2", html)
+
+    def test_add_sellerpart_hides_landed_fields_for_irr_js(self):
+        user, organization = create_user_and_organization()
+        self.client.login(username="kasper", password="ghostpassword")
+        parts = create_some_fake_parts(organization=organization)
+        mp = parts[0].primary_manufacturer_part
+        response = self.client.get(
+            reverse(
+                "bom:manufacturer-part-add-sellerpart",
+                kwargs={"manufacturer_part_id": mp.id},
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        self.assertIn('id="sellerpart-landed-fields"', html)
+        self.assertIn("refreshIrrLandedFields", html)
+        self.assertIn('currencySelect.value === "IRR"', html)
+        self.assertIn('id="id_shipping"', html)
+        self.assertIn('id="id_customs_duty_percent"', html)
 
     def test_exchange_rates_uses_spaced_panel_layout(self):
         user, organization = create_user_and_organization()
