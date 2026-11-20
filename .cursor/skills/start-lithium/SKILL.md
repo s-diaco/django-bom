@@ -1,7 +1,7 @@
 ---
 name: start-lithium
 description: >-
-  Start the django-bom Docker stack locally. Use when the user asks to start
+  Start the lithium-bom Docker stack locally. Use when the user asks to start
   the stack, bring up services, run docker compose, or start the app locally.
 ---
 

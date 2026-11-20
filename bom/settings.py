@@ -134,7 +134,7 @@ LOGGING = {
             "level": "ERROR",
             "propagate": False,
         },
-        # django-bom app
+        # lithium-bom app
         "bom": {
             "handlers": ["logfile"],
             "level": "INFO",  # Or maybe INFO or DEBUG
@@ -180,7 +180,7 @@ LOGOUT_REDIRECT_URL = "/"
 CURRENCY_DECIMAL_PLACES = 0
 EXCHANGE_BACKEND = "bom.exchange.ManualExchangeBackend"
 
-# django-bom configuration
+# lithium-bom configuration
 BOM_CONFIG_DEFAULT = {
     "base_template": "base.html",
     "mouser_api_key": None,

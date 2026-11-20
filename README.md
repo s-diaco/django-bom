@@ -4,10 +4,10 @@ BoM is a Django app to manage a bill of materials. It supports multiple part num
 
 BoM can be added to an existing (or new) Django project, or stand alone on its own, which can be more convenient if you're interested in tweaking the tool. 
 
-If you already have a django project, you can skip to [Add Django Bom To Your App](#add-django-bom-to-your-app), otherwise [Start From Scratch: Add to new Django project](#start-from-scratch-add-to-a-new-django-project) to add it to a new django project, or [Start From Scratch: Use as standalone Django project](#start-from-scratch-use-as-a-standalone-django-project).
+If you already have a django project, you can skip to [Add Lithium BoM To Your App](#add-lithium-bom-to-your-app), otherwise [Start From Scratch: Add to new Django project](#start-from-scratch-add-to-a-new-django-project) to add it to a new django project, or [Start From Scratch: Use as standalone Django project](#start-from-scratch-use-as-a-standalone-django-project).
 
 ## Table of contents
-   * [Add Django Bom To Your App](#add-django-bom-to-your-app)
+   * [Add Lithium BoM To Your App](#add-lithium-bom-to-your-app)
    * [Start From Scratch: Use as standalone Django project](#start-from-scratch-use-as-a-standalone-django-project)
    * [Start from docker](#start-from-docker-recommended)
    * [Production operations](#production-operations)
@@ -15,7 +15,6 @@ If you already have a django project, you can skip to [Add Django Bom To Your Ap
    * [Uninstall](#uninstall)
    * [Run the tests](#run-the-tests)
    * [Customize Base Template](#customize-base-template)
-   * [Add To Your App](#add-to-your-app)
    * [Integrations](#integrations)
    * [Contributing](#contributing)
    * [Installation pitfalls](#installation-pitfalls)
@@ -186,11 +185,11 @@ Cleanup after running the tests:
 docker compose -f docker-compose.test.yml down -v --rmi local
 ```
 
-## Add To Your App
-django-bom is a [reusable django application](https://docs.djangoproject.com/en/1.11/intro/reusable-apps/). If you don't already have a django project, you can follow some quick steps below to get up and running, or read about creating your first django app [here](https://docs.djangoproject.com/en/1.11/intro/tutorial01/).
+## Add Lithium BoM To Your App
+lithium-bom is a [reusable django application](https://docs.djangoproject.com/en/1.11/intro/reusable-apps/). If you don't already have a django project, you can follow some quick steps below to get up and running, or read about creating your first django app [here](https://docs.djangoproject.com/en/1.11/intro/tutorial01/).
 
 ```
-pip install django-bom
+pip install lithium-bom
 ```
 
 1. Add "bom" to your INSTALLED_APPS setting like this::
