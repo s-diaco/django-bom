@@ -529,6 +529,9 @@ class TestUiSmoke(TransactionTestCase):
         self.assertIn('id="sellerpart-landed-fields"', html)
         self.assertIn("refreshIrrLandedFields", html)
         self.assertIn('currencySelect.value === "IRR"', html)
+        # .row { display:grid } beats .hidden — must use inline style / col wrappers.
+        self.assertIn('landedFields.style.display = isIrr ? "none" : ""', html)
+        self.assertIn("fieldCol", html)
         self.assertIn("formatWholeRate", html)
         self.assertIn("bomPriceInput.formatWhole", html)
         self.assertIn("fx-customs-rate-value", html)
