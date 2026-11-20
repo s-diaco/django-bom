@@ -49,20 +49,20 @@ class SellersTestsMixin:
         self.assertEqual(response.status_code, 302)
         self.assertTrue("/part/" in response.url)
 
-    def test_add_sellerpart_allows_custom_seller_for_product(self):
+    def test_add_sellerpart_blocked_for_product(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
         rev = p1.latest()
         rev.material = "no_loi"
         rev.save()
-        mp_id = p1.primary_manufacturer_part.id
+        before = p1.primary_manufacturer_part.sellerpart_set.count()
         url = reverse(
             "bom:manufacturer-part-add-sellerpart",
-            kwargs={"manufacturer_part_id": mp_id},
+            kwargs={"manufacturer_part_id": p1.primary_manufacturer_part.id},
         )
 
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, "readonly")
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(f"/part/{p1.id}", response.url)
 
         response = self.client.post(
             url,
@@ -76,8 +76,9 @@ class SellersTestsMixin:
             },
         )
         self.assertEqual(response.status_code, 302)
-        seller_part = p1.primary_manufacturer_part.sellerpart_set.latest("id")
-        self.assertEqual(seller_part.seller.name, "Tampered Seller")
+        self.assertEqual(
+            p1.primary_manufacturer_part.sellerpart_set.count(), before
+        )
 
     def test_add_sellerpart_allows_custom_seller_for_raw_material(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)

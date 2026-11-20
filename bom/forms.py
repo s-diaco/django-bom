@@ -2035,7 +2035,8 @@ class PartCSVForm(forms.Form):
                     if seller_part_number is None:
                         seller_part_number = ""
 
-                    if manufacturer_part is None:
+                    # Products use BoM cost — never attach SellerParts to them.
+                    if manufacturer_part is None or part_revision.is_product:
                         pass
                     elif seller_name and unit_cost and nre_cost:
                         nre_cost = Money(nre_cost, self.organization.currency)
