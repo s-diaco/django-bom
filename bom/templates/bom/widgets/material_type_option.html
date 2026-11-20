@@ -1,0 +1,4 @@
+<label class="bom-type-picker-option" data-kind="{{ widget.kind }}">
+  <input type="{{ widget.type }}" name="{{ widget.name }}"{% if widget.value != None %} value="{{ widget.value|stringformat:'s' }}"{% endif %}{% include "django/forms/widgets/attrs.html" %}{% if widget.selected %} checked{% endif %}>
+  <span class="bom-type-picker-option-label">{{ widget.label }}</span>
+</label>

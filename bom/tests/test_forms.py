@@ -337,6 +337,21 @@ class TestForms(TestCase):
         self.assertFalse(bad.is_valid())
         self.assertIn("material", bad.errors)
 
+    def test_material_type_picker_groups_product_and_raw(self):
+        """Create/edit material field uses compact Product|Raw picker, not a flat list."""
+        self.organization.ensure_default_product_types()
+        form = PartRevisionForm(organization=self.organization)
+        html = str(form["material"])
+        self.assertIn("data-bom-type-picker", html)
+        self.assertIn('data-kind="product"', html)
+        self.assertIn('data-kind="raw"', html)
+        self.assertIn('value="with_loi"', html)
+        self.assertIn('value="no_bom"', html)
+        self.assertIn("bom-type-picker-kind", html)
+        self.assertIn("data-subtype-select", html)
+        # Flat legacy radio list markup should not appear.
+        self.assertNotIn("<ul", html)
+
     def test_normalize_grouped_number(self):
         self.assertEqual(normalize_grouped_number("1,234,567"), "1234567")
         self.assertEqual(normalize_grouped_number("1٬234٬567"), "1234567")
