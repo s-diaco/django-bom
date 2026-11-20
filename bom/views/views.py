@@ -3495,9 +3495,26 @@ def remove_all_subparts(request, part_id, part_revision_id):
     return HttpResponseRedirect(part_info_tab_url(part_revision.part, part_revision))
 
 
+def _redirect_if_product_sellerpart_blocked(request, part):
+    """Products use BoM cost — block creating/editing SellerParts on them."""
+    part_revision = part.latest()
+    if part_revision is None or not part_revision.is_product:
+        return None
+    messages.error(
+        request,
+        _("Products cannot have seller parts. Cost comes from the bill of materials."),
+    )
+    return HttpResponseRedirect(
+        reverse("bom:part-info", kwargs={"part_id": part.id})
+    )
+
+
 @login_required(login_url=BOM_LOGIN_URL)
 def add_sellerpart_for_part(request, part_id):
     part = get_object_or_404(Part, pk=part_id)
+    blocked = _redirect_if_product_sellerpart_blocked(request, part)
+    if blocked:
+        return blocked
     manufacturer_part = part.manufacturer_part_for_new_seller()
     return HttpResponseRedirect(
         reverse(
@@ -3515,6 +3532,9 @@ def add_sellerpart(request, manufacturer_part_id):
 
     manufacturer_part = get_object_or_404(ManufacturerPart, pk=manufacturer_part_id)
     part = manufacturer_part.part
+    blocked = _redirect_if_product_sellerpart_blocked(request, part)
+    if blocked:
+        return blocked
     title = _("Seller")
     title += f" | <span dir='ltr'>{part.full_part_number()}</span>"
 
@@ -3742,6 +3762,9 @@ def sellerpart_edit(request, sellerpart_id):
     seller_part = get_object_or_404(SellerPart, pk=sellerpart_id)
     manufacturer_part = seller_part.manufacturer_part
     part = manufacturer_part.part
+    blocked = _redirect_if_product_sellerpart_blocked(request, part)
+    if blocked:
+        return blocked
     title = _("Edit Seller Part")
     title += f" | <span dir='ltr'>{part.full_part_number()}</span>"
 
