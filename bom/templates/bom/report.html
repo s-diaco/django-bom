@@ -142,12 +142,14 @@
                                         <a class="green-text text-lighten-1" title="{% trans "Edit this revision" %}"
                                             href="{% url 'bom:part-revision-edit' part_id=part.id part_revision_id=part_rev.id %}">
                                             <i class="material-icons green-text text-lighten-1 right">edit</i></a>
+                                        {% if not part_rev.is_product %}
                                         {% if seller.id %}
                                         <a class="green-text text-lighten-1" href="{% url 'bom:sellerpart-edit' sellerpart_id=seller.id %}">
                                             <i class="material-icons green-text text-lighten-1 right" title="{% trans "Cost and Seller" %}">attach_money</i></a>
                                         {% else %}
                                         <a class="green-text text-lighten-1" href="{% url 'bom:part-info' part_id=part.id %}?tab_anchor=sourcing">
                                             <i class="material-icons green-text text-lighten-1 right" title="{% trans "Seller" %}">local_airport</i></a>
+                                        {% endif %}
                                         {% endif %}
                                         <a class="green-text text-lighten-1" title="{% trans "Edit bill of materials (BOM)" %}" href="{% url 'bom:part-info-history' part_id=part.id part_revision_id=part_rev.id %}?tab_anchor=bom">
                                             <i class="material-icons green-text text-lighten-1 right">format_list_numbered</i></a>
