@@ -55,8 +55,10 @@
                     <div class="row gap-y-3">
                         {{ seller_part_form.currency|bom_form:'m3 s6' }}
                         {{ seller_part_form.unit_cost|bom_form:'m3 s6' }}
-                        {{ seller_part_form.shipping|bom_form:'m3 s6' }}
-                        {{ seller_part_form.customs_duty_percent|bom_form:'m3 s6' }}
+                        <div id="sellerpart-landed-fields" class="contents">
+                            {{ seller_part_form.shipping|bom_form:'m3 s6' }}
+                            {{ seller_part_form.customs_duty_percent|bom_form:'m3 s6' }}
+                        </div>
                     </div>
                     <div class="row mt-2">
                         {% include 'bom/components/sellerpart-fx-hint.html' %}

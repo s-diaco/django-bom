@@ -751,6 +751,13 @@ class SellerPartForm(forms.ModelForm):
             raise forms.ValidationError("Invalid unit cost.", code="invalid")
         self.instance.unit_cost = Money(unit_cost, currency)
 
+        # IRR quotes need no import landed-cost adders / FX conversion.
+        if str(currency) == "IRR":
+            shipping = Decimal(0)
+            customs_duty_percent = Decimal(0)
+            cleaned_data["shipping"] = shipping
+            cleaned_data["customs_duty_percent"] = customs_duty_percent
+
         if shipping is None:
             shipping = Decimal(0)
         self.instance.shipping = Money(shipping, currency)

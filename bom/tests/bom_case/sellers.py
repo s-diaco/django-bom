@@ -129,6 +129,44 @@ class SellersTestsMixin:
         )
         self.assertEqual(response.status_code, 302)
 
+    def test_sellerpart_irr_edit_zeros_shipping_and_customs(self):
+        from decimal import Decimal
+
+        from djmoney.money import Money
+
+        from bom.models import SellerPart
+
+        self.organization.currency = "IRR"
+        self.organization.save()
+        (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+        # Avoid optimal_seller() — foreign-currency helpers need FX rates.
+        seller_part = SellerPart.objects.filter(
+            manufacturer_part__part=p1
+        ).first()
+        self.assertIsNotNone(seller_part)
+        seller_part.unit_cost = Money(1000, "IRR")
+        seller_part.shipping = Money(50, "IRR")
+        seller_part.customs_duty_percent = Decimal("10")
+        seller_part.nre_cost = Money(0, "IRR")
+        seller_part.save()
+
+        response = self.client.post(
+            reverse("bom:sellerpart-edit", kwargs={"sellerpart_id": seller_part.id}),
+            {
+                "name": seller_part.seller.name if seller_part.seller else "Seller",
+                "seller_part_number": seller_part.seller_part_number or "IRR-EDIT",
+                "currency": "IRR",
+                "unit_cost": "2000",
+                "shipping": "99",
+                "customs_duty_percent": "12.5",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        seller_part.refresh_from_db()
+        self.assertEqual(seller_part.unit_cost.amount, Decimal("2000"))
+        self.assertEqual(seller_part.shipping.amount, Decimal("0"))
+        self.assertEqual(seller_part.customs_duty_percent, Decimal("0"))
+
     def test_sellerpart_delete(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
         response = self.client.post(

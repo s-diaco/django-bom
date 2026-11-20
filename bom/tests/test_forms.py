@@ -496,6 +496,62 @@ class TestForms(TestCase):
         self.assertEqual(money_amount(sp.unit_cost), "98,000")
         self.assertEqual(money_amount(sp.shipping), "1,001")
 
+    def test_seller_part_irr_forces_zero_shipping_and_customs(self):
+        """IRR quotes persist shipping=0 and customs_duty_percent=0."""
+        from bom.exchange import RATE_KIND_MARKET, set_org_per_unit_rate
+        from bom.models import SellerPart
+
+        self.organization.currency = "IRR"
+        self.organization.save()
+        parts = create_some_fake_parts(organization=self.organization)
+        mp = parts[0].primary_manufacturer_part
+        seller = Seller.objects.filter(organization=self.organization)[0]
+
+        form = SellerPartForm(
+            {
+                "seller": seller.id,
+                "seller_part_number": "IRR-ZERO",
+                "currency": "IRR",
+                "unit_cost": "50000",
+                "shipping": "1234",
+                "customs_duty_percent": "15",
+            },
+            organization=self.organization,
+            manufacturer_part=mp,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["shipping"], Decimal("0"))
+        self.assertEqual(form.cleaned_data["customs_duty_percent"], Decimal("0"))
+        sp = form.save()
+        sp.refresh_from_db()
+        self.assertEqual(sp.shipping.amount, Decimal("0"))
+        self.assertEqual(str(sp.shipping.currency), "IRR")
+        self.assertEqual(sp.customs_duty_percent, Decimal("0"))
+        self.assertEqual(sp.unit_cost.amount, Decimal("50000"))
+
+        # Non-IRR currencies still keep submitted shipping/customs.
+        # Widget decimal places follow org currency (IRR → 0); use whole units.
+        set_org_per_unit_rate("USD", "IRR", Decimal("42000"), kind=RATE_KIND_MARKET)
+        usd_form = SellerPartForm(
+            {
+                "seller": seller.id,
+                "seller_part_number": "USD-KEEP",
+                "currency": "USD",
+                "unit_cost": "10",
+                "shipping": "3",
+                "customs_duty_percent": "0",
+            },
+            organization=self.organization,
+            manufacturer_part=mp,
+        )
+        self.assertTrue(usd_form.is_valid(), usd_form.errors)
+        self.assertEqual(usd_form.cleaned_data["shipping"], Decimal("3"))
+        usd_sp = usd_form.save()
+        usd_sp.refresh_from_db()
+        self.assertEqual(usd_sp.shipping.amount, Decimal("3"))
+        self.assertEqual(str(usd_sp.shipping.currency), "USD")
+        self.assertEqual(SellerPart.objects.filter(pk=sp.pk).count(), 1)
+
     def test_grouped_decimal_field_to_python(self):
         field = GroupedDecimalField()
         self.assertEqual(field.clean("1,234,567"), Decimal("1234567"))

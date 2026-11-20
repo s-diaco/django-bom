@@ -40,6 +40,10 @@
     const modalCurrency = document.querySelector("#modal-update-fx [name='currency']");
     const modalRate = document.querySelector("#modal-update-fx [name='rate']");
     const modalCustomsRate = document.querySelector("#modal-update-fx [name='customs_rate']");
+    const landedFields = document.getElementById("sellerpart-landed-fields");
+    const shippingInput = document.getElementById("id_shipping");
+    const customsInput = document.getElementById("id_customs_duty_percent");
+    const unitCostInput = document.getElementById("id_unit_cost");
     const orgCurrency = "{{ organization.currency }}";
     let rates = {};
     try {
@@ -74,6 +78,34 @@
             : formatWholeRate(rate);
     }
 
+    function fieldCol(input) {
+        return input ? input.closest('[class*="col-span"]') : null;
+    }
+
+    function fieldHelp(input) {
+        const wrap = fieldCol(input);
+        return wrap ? wrap.querySelector(".bom-help") : null;
+    }
+
+    function refreshIrrLandedFields() {
+        if (!currencySelect) return;
+        const isIrr = currencySelect.value === "IRR";
+        // Hide each field's col wrapper — not #sellerpart-landed-fields when it
+        // also has .row (display:grid wins over .hidden display:none).
+        [shippingInput, customsInput].forEach(function (input) {
+            const wrap = fieldCol(input);
+            if (wrap) wrap.classList.toggle("hidden", isIrr);
+            if (isIrr && input) input.value = "0";
+        });
+        if (landedFields && !landedFields.classList.contains("contents")) {
+            // Edit form: also collapse the empty .row so gap/margin disappears.
+            // Use inline style so .row { display:grid } cannot override .hidden.
+            landedFields.style.display = isIrr ? "none" : "";
+        }
+        const unitHelp = fieldHelp(unitCostInput);
+        if (unitHelp) unitHelp.classList.toggle("hidden", isIrr);
+    }
+
     function refreshFxHint() {
         if (!currencySelect || !panel) return;
         const code = currencySelect.value;
@@ -97,9 +129,14 @@
         }
     }
 
-    if (currencySelect) {
-        currencySelect.addEventListener("change", refreshFxHint);
+    function refreshSellerPartCurrencyUi() {
         refreshFxHint();
+        refreshIrrLandedFields();
+    }
+
+    if (currencySelect) {
+        currencySelect.addEventListener("change", refreshSellerPartCurrencyUi);
+        refreshSellerPartCurrencyUi();
     }
 })();
 </script>
