@@ -3133,8 +3133,9 @@ class BOMCSVForm(forms.Form):
 
                 # Blank manufacturer+MPN used to insert Manufacturer(name="") +
                 # ManufacturerPart(mpn="") per CSV row and overwrite primary.
-                # Skip that path; a default manufacturer part is created later
-                # if a seller price is added.
+                # Skip that path for raw materials; a default manufacturer part
+                # is created later if a seller price is added. Products (has_bom)
+                # get an org-owned ManufacturerPart like create_part.
                 has_manufacturer_info = (manufacturer_name or "").strip() or (
                     manufacturer_part_number or ""
                 ).strip()
@@ -3180,6 +3181,29 @@ class BOMCSVForm(forms.Form):
 
                     part.primary_manufacturer_part = manufacturer_part
                     part.save()
+                else:
+                    material = (part_revision.material or "").strip()
+                    if material in self.organization.product_type_codes(has_bom=True):
+                        # Match create_part products: org Manufacturer, MPN=Code,
+                        # primary set; no SellerPart.
+                        (
+                            manufacturer,
+                            _created_mfr,
+                        ) = Manufacturer.objects.get_or_create(
+                            name__iexact=self.organization.name,
+                            organization=self.organization,
+                            defaults={"name": self.organization.name},
+                        )
+                        (
+                            manufacturer_part,
+                            _created_mp,
+                        ) = ManufacturerPart.objects.get_or_create(
+                            part=part,
+                            manufacturer_part_number=part.number_item or "",
+                            manufacturer=manufacturer,
+                        )
+                        part.primary_manufacturer_part = manufacturer_part
+                        part.save()
 
                 last_part_revision = part_revision
                 last_level = level
