@@ -602,6 +602,109 @@ html.dark .bom-brand-mark {
   @apply border-border text-primary focus:ring-primary;
 }
 
+/* Material type: Product | Raw, then subtypes only when needed */
+.bom-type-picker {
+  @apply flex flex-col gap-3;
+}
+
+.bom-type-picker-kind {
+  @apply relative inline-grid max-w-md grid-cols-2 rounded-md border border-border bg-surface-muted p-0.5;
+}
+
+.bom-type-picker-thumb {
+  @apply pointer-events-none absolute inset-y-0.5 w-[calc(50%-0.125rem)] rounded-[0.3125rem] bg-surface shadow-sm transition-[inset-inline-start,transform] duration-200 ease-out;
+  inset-inline-start: 0.125rem;
+}
+
+.bom-type-picker-thumb[data-at="raw"] {
+  inset-inline-start: calc(50% + 0.0625rem);
+}
+
+.bom-type-picker-kind-btn {
+  @apply relative z-10 h-9 rounded-[0.3125rem] px-3 text-sm font-medium text-ink-muted transition-colors duration-200;
+}
+
+.bom-type-picker-kind-btn:hover {
+  @apply text-ink;
+}
+
+.bom-type-picker-kind-btn[aria-pressed="true"] {
+  @apply text-ink;
+}
+
+.bom-type-picker-kind-btn:focus-visible {
+  @apply outline-2 outline-offset-2 outline-primary;
+}
+
+.bom-type-picker-subtypes {
+  @apply max-w-xl;
+}
+
+.bom-type-picker-subtypes.is-open {
+  animation: bom-type-picker-subtypes-in 220ms ease-out;
+}
+
+@keyframes bom-type-picker-subtypes-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.35rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bom-type-picker-options {
+  @apply flex flex-wrap gap-x-1 gap-y-1 border-b border-border-subtle;
+}
+
+.bom-type-picker-option {
+  @apply relative inline-flex min-h-9 cursor-pointer items-center border-b-2 border-transparent px-2.5 text-sm text-ink-muted transition-[color,border-color] duration-150;
+  margin-bottom: -1px;
+}
+
+.bom-type-picker-option:hover {
+  @apply text-ink;
+}
+
+.bom-type-picker-option:has(input:checked) {
+  @apply border-primary text-ink;
+}
+
+.bom-type-picker-option:has(input:focus-visible) {
+  @apply outline-2 outline-offset-2 outline-primary;
+}
+
+.bom-type-picker-option input[type="radio"] {
+  @apply absolute opacity-0;
+  pointer-events: none;
+  width: 1px;
+  height: 1px;
+}
+
+.bom-type-picker-option-label {
+  @apply font-medium;
+}
+
+.bom-type-picker-option.is-visible {
+  animation: bom-type-picker-option-in 180ms ease-out;
+}
+
+@keyframes bom-type-picker-option-in {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Avoid legacy Materialize radioSelect rule hiding option text */
+.bom-type-picker .bom-type-picker-option-label {
+  display: inline !important;
+}
+
 ul.errorlist {
   @apply mt-1 list-none p-0 text-xs text-danger;
   padding-inline-start: 0;

@@ -44,6 +44,7 @@ from .csv_headers import (
     PartClassesCSVHeaders,
 )
 from .form_fields import AutocompleteTextInput
+from .widgets import MaterialTypePicker
 from .models import (
     Assembly,
     AssemblySubparts,
@@ -2340,9 +2341,11 @@ class PartRevisionForm(forms.ModelForm):
             material_choices = [
                 (pt.code, gettext(pt.name)) for pt in types
             ]
-            raw = next((pt.code for pt in types if not pt.has_bom), "no_bom")
+            raw_codes = [pt.code for pt in types if not pt.has_bom]
+            raw = next(iter(raw_codes), "no_bom")
         else:
             material_choices = list(MATERIAL_TYPES)
+            raw_codes = ["no_bom"]
             raw = "no_bom"
         # ChoiceField so validation uses Product Type codes (model field is a
         # plain CharField — no hard-coded MATERIAL_TYPES choices).
@@ -2352,7 +2355,7 @@ class PartRevisionForm(forms.ModelForm):
         self.fields["material"] = forms.ChoiceField(
             choices=material_choices,
             label=_("Material Type"),
-            widget=forms.RadioSelect(),
+            widget=MaterialTypePicker(raw_codes=raw_codes),
             required=False,
             initial=instance_material or raw,
         )

@@ -511,6 +511,10 @@ class PartsTestsMixin:
         self.assertIn("data-create-part-toggles", html)
         self.assertIn('id="create-part-loi-row"', html)
         self.assertIn('id="create-part-seller-section"', html)
+        self.assertIn("data-bom-type-picker", html)
+        self.assertIn("bom/js/material-type-picker.js", html)
+        self.assertIn('data-kind="product"', html)
+        self.assertIn('data-kind="raw"', html)
         for code in self.organization.product_type_codes(has_bom=False):
             self.assertIn(code, html)
         self.assertNotIn("Part Revision", html)
