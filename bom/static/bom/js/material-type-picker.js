@@ -8,6 +8,7 @@
     const kindBtns = root.querySelectorAll("[data-kind].bom-type-picker-kind-btn");
     const thumb = root.querySelector("[data-kind-thumb]");
     const subtypes = root.querySelector("[data-subtypes]");
+    const select = root.querySelector("[data-subtype-select]");
     const options = Array.from(
       root.querySelectorAll(".bom-type-picker-option[data-kind]")
     );
@@ -18,6 +19,35 @@
 
     function checkedRadio() {
       return root.querySelector('input[name="material"]:checked');
+    }
+
+    function syncSelect(kind) {
+      if (!select) {
+        return;
+      }
+      const visible = radiosFor(kind);
+      select.replaceChildren();
+      visible.forEach((el) => {
+        const input = el.querySelector('input[type="radio"]');
+        if (!input) {
+          return;
+        }
+        const opt = document.createElement("option");
+        opt.value = input.value;
+        opt.textContent = (
+          el.querySelector(".bom-type-picker-option-label") || el
+        ).textContent.trim();
+        if (input.checked) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+      const checked = checkedRadio();
+      if (checked && checked.getAttribute("data-kind") === kind) {
+        select.value = checked.value;
+      } else if (select.options.length) {
+        select.selectedIndex = 0;
+      }
     }
 
     function setKind(kind, { user } = {}) {
@@ -33,11 +63,6 @@
       });
 
       const visible = radiosFor(kind);
-      options.forEach((el) => {
-        const match = el.getAttribute("data-kind") === kind;
-        el.hidden = !match;
-        el.classList.toggle("is-visible", match);
-      });
 
       // One subtype: kind alone is enough (progressive disclosure).
       if (subtypes) {
@@ -59,6 +84,8 @@
       } else if (user && checked) {
         checked.dispatchEvent(new Event("change", { bubbles: true }));
       }
+
+      syncSelect(kind);
     }
 
     kindBtns.forEach((btn) => {
@@ -66,6 +93,21 @@
         setKind(btn.getAttribute("data-kind"), { user: true });
       });
     });
+
+    if (select) {
+      select.addEventListener("change", () => {
+        const radio = root.querySelector(
+          'input[name="material"][value="' +
+            CSS.escape(select.value) +
+            '"]'
+        );
+        if (!radio) {
+          return;
+        }
+        radio.checked = true;
+        radio.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+    }
 
     const initial =
       root.dataset.selectedKind ||

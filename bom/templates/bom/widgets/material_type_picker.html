@@ -16,12 +16,20 @@
     >{{ widget.raw_label }}</button>
   </div>
   <div class="bom-type-picker-subtypes" data-subtypes hidden>
-    <div class="bom-type-picker-options"{% if widget.attrs.id %} id="{{ widget.attrs.id }}"{% endif %}>
-      {% for group, options, index in widget.optgroups %}
-        {% for option in options %}
-          {% include option.template_name with widget=option %}
-        {% endfor %}
+    <label class="bom-label" for="{{ widget.attrs.id }}-subtype">{% trans "Product type" %}</label>
+    <select
+      id="{{ widget.attrs.id }}-subtype"
+      class="bom-input bom-type-picker-select"
+      data-subtype-select
+      aria-label="{% trans 'Product type' %}"
+    ></select>
+  </div>
+  {# Real form field: keep radios for POST + create-part toggles; select mirrors them. #}
+  <div class="bom-type-picker-radios"{% if widget.attrs.id %} id="{{ widget.attrs.id }}"{% endif %} hidden>
+    {% for group, options, index in widget.optgroups %}
+      {% for option in options %}
+        {% include option.template_name with widget=option %}
       {% endfor %}
-    </div>
+    {% endfor %}
   </div>
 </div>

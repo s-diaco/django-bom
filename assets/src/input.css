@@ -637,7 +637,7 @@ html.dark .bom-brand-mark {
 }
 
 .bom-type-picker-subtypes {
-  @apply max-w-xl;
+  @apply max-w-sm;
 }
 
 .bom-type-picker-subtypes.is-open {
@@ -647,7 +647,7 @@ html.dark .bom-brand-mark {
 @keyframes bom-type-picker-subtypes-in {
   from {
     opacity: 0;
-    transform: translateY(-0.35rem);
+    transform: translateY(-0.25rem);
   }
   to {
     opacity: 1;
@@ -655,54 +655,12 @@ html.dark .bom-brand-mark {
   }
 }
 
-.bom-type-picker-options {
-  @apply flex flex-wrap gap-x-1 gap-y-1 border-b border-border-subtle;
+.bom-type-picker-select {
+  @apply w-full max-w-sm;
 }
 
-.bom-type-picker-option {
-  @apply relative inline-flex min-h-9 cursor-pointer items-center border-b-2 border-transparent px-2.5 text-sm text-ink-muted transition-[color,border-color] duration-150;
-  margin-bottom: -1px;
-}
-
-.bom-type-picker-option:hover {
-  @apply text-ink;
-}
-
-.bom-type-picker-option:has(input:checked) {
-  @apply border-primary text-ink;
-}
-
-.bom-type-picker-option:has(input:focus-visible) {
-  @apply outline-2 outline-offset-2 outline-primary;
-}
-
-.bom-type-picker-option input[type="radio"] {
-  @apply absolute opacity-0;
-  pointer-events: none;
-  width: 1px;
-  height: 1px;
-}
-
-.bom-type-picker-option-label {
-  @apply font-medium;
-}
-
-.bom-type-picker-option.is-visible {
-  animation: bom-type-picker-option-in 180ms ease-out;
-}
-
-@keyframes bom-type-picker-option-in {
-  from {
-    opacity: 0.35;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Avoid legacy Materialize radioSelect rule hiding option text */
-.bom-type-picker .bom-type-picker-option-label {
-  display: inline !important;
+.bom-type-picker-radios {
+  /* Keep material radios in the form for POST / radio.js; select is the visible control. */
 }
 
 ul.errorlist {

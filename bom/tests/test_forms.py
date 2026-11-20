@@ -348,6 +348,7 @@ class TestForms(TestCase):
         self.assertIn('value="with_loi"', html)
         self.assertIn('value="no_bom"', html)
         self.assertIn("bom-type-picker-kind", html)
+        self.assertIn("data-subtype-select", html)
         # Flat legacy radio list markup should not appear.
         self.assertNotIn("<ul", html)
 
