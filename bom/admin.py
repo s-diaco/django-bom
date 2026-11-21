@@ -34,7 +34,8 @@ class UserMetaAdminForm(forms.ModelForm):
         label="Birthday (surprise)",
         help_text=(
             "Gregorian or Jalali YYYY/MM/DD (year used only to interpret the "
-            "calendar), or MM/DD Gregorian. Leave blank to clear. Hidden from users."
+            "calendar; Jalali keeps Jalali month/day), or MM/DD Gregorian. "
+            "Leave blank to clear. Hidden from users."
         ),
     )
 
@@ -54,12 +55,15 @@ class UserMetaAdminForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.pk:
             self.fields["birthday"].initial = format_birthday_md(
-                self.instance.birthday_month, self.instance.birthday_day
+                self.instance.birthday_month,
+                self.instance.birthday_day,
+                self.instance.birthday_jalali,
             )
 
     def clean_birthday(self):
         # Bound forms that omit this key leave the stored birthday alone.
-        if self.is_bound and "birthday" not in self.data:
+        # Use add_prefix so User admin TabularInline (usermeta_set-0-birthday) works.
+        if self.is_bound and self.add_prefix("birthday") not in self.data:
             return "__unchanged__"
         return parse_birthday_input(self.cleaned_data.get("birthday"))
 
@@ -70,8 +74,11 @@ class UserMetaAdminForm(forms.ModelForm):
             if parsed is None:
                 instance.birthday_month = None
                 instance.birthday_day = None
+                instance.birthday_jalali = False
             else:
-                instance.birthday_month, instance.birthday_day = parsed
+                instance.birthday_month = parsed.month
+                instance.birthday_day = parsed.day
+                instance.birthday_jalali = parsed.jalali
         if commit:
             instance.save()
         return instance
@@ -122,7 +129,12 @@ class UserMetaAdmin(admin.ModelAdmin):
 
     @admin.display(description="Birthday")
     def birthday_display(self, obj):
-        return format_birthday_md(obj.birthday_month, obj.birthday_day) or "—"
+        return (
+            format_birthday_md(
+                obj.birthday_month, obj.birthday_day, obj.birthday_jalali
+            )
+            or "—"
+        )
 
 
 class OrganizationAdmin(admin.ModelAdmin):
