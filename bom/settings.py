@@ -64,6 +64,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "django.template.context_processors.media",
                 "bom.context_processors.bom_config",
+                "bom.context_processors.birthday_surprise",
                 "bom.context_processors.project_version",
             ],
             "builtins": ["django.templatetags.i18n"],

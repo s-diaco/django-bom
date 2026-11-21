@@ -1,6 +1,9 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
+
+from bom.birthday import format_birthday_md, parse_birthday_input
 
 from .models import (
     Assembly,
@@ -23,14 +26,103 @@ from .models import (
 User = get_user_model()
 
 
+class UserMetaAdminForm(forms.ModelForm):
+    """Admin-only birthday entry: Gregorian or Jalali date → month/day stored."""
+
+    birthday = forms.CharField(
+        required=False,
+        label="Birthday (surprise)",
+        help_text=(
+            "Gregorian or Jalali YYYY/MM/DD (year used only to interpret the "
+            "calendar), or MM/DD Gregorian. Leave blank to clear. Hidden from users."
+        ),
+    )
+
+    class Meta:
+        model = UserMeta
+        fields = (
+            "organization",
+            "role",
+            "calendar",
+            "language",
+            "birthday",
+            "systemgroup_username",
+            "systemgroup_password",
+        )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields["birthday"].initial = format_birthday_md(
+                self.instance.birthday_month, self.instance.birthday_day
+            )
+
+    def clean_birthday(self):
+        # Bound forms that omit this key leave the stored birthday alone.
+        if self.is_bound and "birthday" not in self.data:
+            return "__unchanged__"
+        return parse_birthday_input(self.cleaned_data.get("birthday"))
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        parsed = self.cleaned_data.get("birthday")
+        if parsed != "__unchanged__":
+            if parsed is None:
+                instance.birthday_month = None
+                instance.birthday_day = None
+            else:
+                instance.birthday_month, instance.birthday_day = parsed
+        if commit:
+            instance.save()
+        return instance
+
+
 class UserMetaInline(admin.TabularInline):
     model = UserMeta
+    form = UserMetaAdminForm
+    fields = (
+        "organization",
+        "role",
+        "calendar",
+        "language",
+        "birthday",
+    )
     raw_id_fields = ("organization",)
     can_delete = False
+    extra = 0
 
 
 class UserAdmin(UserAdmin):
     inlines = (UserMetaInline,)
+
+
+class UserMetaAdmin(admin.ModelAdmin):
+    form = UserMetaAdminForm
+    list_display = (
+        "user",
+        "organization",
+        "role",
+        "birthday_display",
+        "calendar",
+        "language",
+    )
+    list_filter = ("role", "calendar", "language")
+    search_fields = ("user__username", "user__email", "user__first_name", "user__last_name")
+    raw_id_fields = ("user", "organization")
+    fields = (
+        "user",
+        "organization",
+        "role",
+        "calendar",
+        "language",
+        "birthday",
+        "systemgroup_username",
+        "systemgroup_password",
+    )
+
+    @admin.display(description="Birthday")
+    def birthday_display(self, obj):
+        return format_birthday_md(obj.birthday_month, obj.birthday_day) or "—"
 
 
 class OrganizationAdmin(admin.ModelAdmin):
@@ -225,6 +317,7 @@ except admin.sites.NotRegistered:
     pass
 
 admin.site.register(User, UserAdmin)
+admin.site.register(UserMeta, UserMetaAdmin)
 admin.site.register(Organization, OrganizationAdmin)
 admin.site.register(Seller, SellerAdmin)
 admin.site.register(SellerPart, SellerPartAdmin)

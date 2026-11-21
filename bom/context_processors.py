@@ -31,5 +31,17 @@ def bom_config(request):
     }
 
 
+def birthday_surprise(request):
+    """Expose is_birthday for subtle theme accents; never leaks the stored date."""
+    user = getattr(request, "user", None)
+    if user is None or not getattr(user, "is_authenticated", False):
+        return {"is_birthday": False}
+    try:
+        profile = user.bom_profile()
+    except Exception:
+        return {"is_birthday": False}
+    return {"is_birthday": bool(profile.is_birthday())}
+
+
 def project_version(request):
     return {"PROJECT_VERSION": get_project_version()}

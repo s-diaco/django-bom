@@ -265,6 +265,22 @@ class UserMeta(models.Model):
     )
     systemgroup_username = models.CharField(max_length=255, blank=True, default="")
     systemgroup_password = models.CharField(max_length=255, blank=True, default="")
+    # Surprise birthday: Gregorian month/day only; set via Django admin, never user forms.
+    birthday_month = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(1), MaxValueValidator(12)],
+    )
+    birthday_day = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(1), MaxValueValidator(31)],
+    )
+
+    def is_birthday(self, on_date=None) -> bool:
+        from bom.birthday import matches_birthday
+
+        return matches_birthday(self.birthday_month, self.birthday_day, on_date)
 
     def has_systemgroup_credentials(self) -> bool:
         return bool(

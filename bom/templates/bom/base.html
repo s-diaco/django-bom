@@ -37,7 +37,7 @@
     {% block head %}{% endblock head %}
     <link rel="shortcut icon" type="image/png" href="{% static 'bom/img/favicon.ico' %}"/>
 </head>
-<body class="flex min-h-screen flex-col">
+<body class="flex min-h-screen flex-col{% if is_birthday %} is-birthday{% endif %}">
 {% include 'bom/ui/page-loading.html' %}
 <script src="{% static 'bom/js/jquery-3.4.1.min.js' %}"></script>
 <script src="{% static 'bom/js/jquery.autocomplete-bom.js' %}"></script>
