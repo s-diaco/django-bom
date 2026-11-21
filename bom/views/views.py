@@ -3854,9 +3854,6 @@ def part_revision_release(request, part_id, part_revision_id):
         "Deactivate {} revision {} {} from <b>active</b> to <b>inactive</b>?"
     ).format(part.full_part_number(), part_revision.revision, part_revision.synopsis())
 
-    subparts = part_revision.assembly.subparts.filter(part_revision__configuration="W")
-    release_warning = subparts.count() > 0
-
     if request.method == "POST":
         part_revision.configuration = "R"
         part_revision.save()

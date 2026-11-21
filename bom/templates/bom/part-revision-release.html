@@ -17,26 +17,13 @@
         <form name="seller" action="{{ action }}" method="post" class="col s12">
             {% csrf_token %}
             <div class="row">
-                {% if subparts.count > 0 %}
-                    <div class="col s12 m8 push-m2">
-                        <h5><b>Warning!</b> This part has {{ subparts.count }} unreleased subparts. It is strongly recommended to release the below subparts before proceeding:</h5>
-                        <div class="collection">
-                            {% for s in subparts %}
-                                <a href="{% url 'bom:part-info-history' part_id=s.part_revision.part.id part_revision_id=s.part_revision.id %}" target="_blank"
-                                   class="collection-item hoverable">{{ s.part_revision.part.full_part_number }} Rev {{ s.part_revision.revision }} {{ s.part_revision.description }}</a>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% endif %}
-            </div>
-            <div class="row">
                 <div class="col s6 m4 push-m2">
                     <a href="javascript:history.back()"
-                       class="{% if release_warning %}bom-btn-primary{% else %}bom-btn-ghost{% endif %}">{% trans "Cancel" %}</a>
+                       class="bom-btn-ghost">{% trans "Cancel" %}</a>
                 </div>
                 <div class="col s6 m4 push-m2 right-align">
-                    <button class="{% if not release_warning %}bom-btn-primary{% else %}bom-btn-ghost{% endif %}" type="submit"
-                            name="action">Release{% if release_warning %} Anyway{% endif %}</button>
+                    <button class="bom-btn-primary" type="submit"
+                            name="action">{% trans "Deactivate" %}</button>
                 </div>
             </div>
         </form>
