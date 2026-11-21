@@ -2,37 +2,33 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Prefetch, prefetch_related_objects
+from django.db.models import Max, Prefetch, Q, Subquery, prefetch_related_objects
+from django.db.models.functions import Coalesce
 
-from bom.models import ManufacturerPart, Part, PartRevision, SellerPart, Subpart
+from bom.constants import CONFIGURATION_TYPE_WORKING
+from bom.models import ManufacturerPart, PartRevision, SellerPart, Subpart
 
 
 def latest_part_revision_ids(part_ids):
-    """PartRevision ids matching :meth:`bom.models.Part.latest` per part.
+    """Active-preferred max PartRevision.id per part (list/report Subquery).
 
-    Active (W) preferred when any exist; else all revisions. Among that set,
-    cost > 0 over missing/zero, then highest id.
+    Prefer highest Active (``W``) id when any exist; else highest id among all
+    revisions. Matches :meth:`bom.models.Part.latest` whenever cost does not
+    change the pick (raw materials share part-level seller cost; single Active;
+    tied costs). Full cost>0 ranking stays on ``Part.latest()`` for import/UI
+    so materials/report keep a single Subquery within the list query budget.
     """
-    from collections import defaultdict
-
-    if not part_ids:
-        return []
-
-    revisions = PartRevision.objects.filter(part_id__in=part_ids).select_related(
-        "part",
-        "part__organization",
-        "part__primary_manufacturer_part",
+    return Subquery(
+        PartRevision.objects.filter(part_id__in=part_ids)
+        .values("part_id")
+        .annotate(
+            preferred_id=Coalesce(
+                Max("id", filter=Q(configuration=CONFIGURATION_TYPE_WORKING)),
+                Max("id"),
+            )
+        )
+        .values("preferred_id")
     )
-    by_part = defaultdict(list)
-    for rev in revisions:
-        by_part[rev.part_id].append(rev)
-
-    chosen = []
-    for revs in by_part.values():
-        pick = Part.pick_latest_revision(revs)
-        if pick is not None:
-            chosen.append(pick.id)
-    return chosen
 
 PAGE_SIZE_CHOICES = (10, 25, 50, 100)
 

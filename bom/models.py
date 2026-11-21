@@ -626,8 +626,19 @@ class Part(models.Model):
 
         Fallback when no Active revision exists: same cost-then-id ranking among
         all revisions (previous max-id behavior when costs do not differentiate).
+
+        Materials/report list rows use ``latest_part_revision_ids`` (Active then
+        max id) for query budget; cost ranking here still applies to import/UI
+        callers of ``latest()``.
         """
-        return self.pick_latest_revision(self.revisions())
+        cached = self.__dict__.get("_cached_latest", _UNSET)
+        if cached is not _UNSET:
+            return cached
+        result = self.pick_latest_revision(
+            self.revisions().select_related("part", "part__organization")
+        )
+        self.__dict__["_cached_latest"] = result
+        return result
 
     @classmethod
     def pick_latest_revision(cls, revisions):
@@ -635,20 +646,30 @@ class Part(models.Model):
         revisions = list(revisions)
         if not revisions:
             return None
+        # select_related duplicates Organization per row; share type maps.
+        type_maps = {}
+        for rev in revisions:
+            org = rev.part.organization
+            if org.pk not in type_maps:
+                type_maps[org.pk] = org.product_types_by_code()
+            org._product_types_by_code = type_maps[org.pk]
         active = [
             rev
             for rev in revisions
             if rev.configuration == CONFIGURATION_TYPE_WORKING
         ]
         pool = active if active else revisions
+        by_id_desc = sorted(pool, key=lambda rev: rev.id, reverse=True)
         if len(pool) == 1:
-            return pool[0]
+            return by_id_desc[0]
         # Seller cost is part-level, so raw-material revs cannot differ on cost.
         if not any(rev.is_product for rev in pool):
-            return max(pool, key=lambda rev: rev.id)
-        return max(
-            pool, key=lambda rev: (cls._revision_has_usable_cost(rev), rev.id)
-        )
+            return by_id_desc[0]
+        # Lazy cost: highest id with a usable cost wins; only walk BoM until found.
+        for rev in by_id_desc:
+            if cls._revision_has_usable_cost(rev):
+                return rev
+        return by_id_desc[0]
 
     @staticmethod
     def _revision_has_usable_cost(rev):

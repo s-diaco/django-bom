@@ -170,12 +170,30 @@ class PartLatestTests(TestCase):
         self.assertGreater(newer.id, older.id)
         self.assertEqual(part.latest().id, newer.id)
 
-    def test_latest_part_revision_ids_matches_latest(self):
+    def test_latest_part_revision_ids_prefers_active(self):
+        """List Subquery skips Inactive; matches latest() when cost does not matter."""
         part, _mp = self._make_part("LIST1")
         active = self._make_rev(part, "1", "no_bom")
         self._make_rev(
             part, "2", "no_bom", configuration=CONFIGURATION_TYPE_RELEASED
         )
-        ids = latest_part_revision_ids([part.id])
-        self.assertEqual(ids, [active.id])
+        chosen = PartRevision.objects.filter(
+            id__in=latest_part_revision_ids([part.id])
+        ).get()
+        self.assertEqual(chosen.id, active.id)
         self.assertEqual(part.latest().id, active.id)
+
+    def test_latest_part_revision_ids_falls_back_when_no_active(self):
+        part, _mp = self._make_part("LIST2")
+        older = self._make_rev(
+            part, "1", "no_bom", configuration=CONFIGURATION_TYPE_RELEASED
+        )
+        newer = self._make_rev(
+            part, "2", "no_bom", configuration=CONFIGURATION_TYPE_RELEASED
+        )
+        chosen = PartRevision.objects.filter(
+            id__in=latest_part_revision_ids([part.id])
+        ).get()
+        self.assertEqual(chosen.id, newer.id)
+        self.assertEqual(part.latest().id, newer.id)
+        self.assertGreater(newer.id, older.id)
