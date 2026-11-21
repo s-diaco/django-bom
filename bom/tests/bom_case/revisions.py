@@ -29,14 +29,60 @@ class RevisionsTestsMixin:
 
     def test_part_revision_revert(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+        rev = p1.latest()
+        rev.configuration = "R"
+        rev.save()
+
+        # Activate control on part info for Inactive revisions.
+        response = self.client.get(
+            reverse("bom:part-info-history", kwargs={"part_id": p1.id, "part_revision_id": rev.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse(
+                "bom:part-revision-revert",
+                kwargs={"part_id": p1.id, "part_revision_id": rev.id},
+            ),
+        )
+        self.assertNotContains(
+            response,
+            reverse(
+                "bom:part-revision-release",
+                kwargs={"part_id": p1.id, "part_revision_id": rev.id},
+            ),
+        )
+
+        # One-click activate (same pattern as deactivate); no confirm page.
         response = self.client.get(
             reverse(
                 "bom:part-revision-revert",
-                kwargs={"part_id": p1.id, "part_revision_id": p1.latest().id},
+                kwargs={"part_id": p1.id, "part_revision_id": rev.id},
             )
         )
-
         self.assertEqual(response.status_code, 302)
+        rev.refresh_from_db()
+        self.assertEqual(rev.configuration, "W")
+
+        # Active revisions unlock specs/BoM edit (same gate as Deactivate locks).
+        response = self.client.get(
+            reverse("bom:part-info", kwargs={"part_id": p1.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse(
+                "bom:part-revision-edit",
+                kwargs={"part_id": p1.id, "part_revision_id": rev.id},
+            ),
+        )
+        self.assertContains(
+            response,
+            reverse(
+                "bom:part-revision-release",
+                kwargs={"part_id": p1.id, "part_revision_id": rev.id},
+            ),
+        )
 
     def test_part_revision_new(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)

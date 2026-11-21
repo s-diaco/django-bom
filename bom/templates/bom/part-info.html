@@ -47,6 +47,11 @@
                                            href="{% url 'bom:part-revision-release' part_id=part.id part_revision_id=part_revision.id %}">
                                             <i class="material-icons text-base">check</i>{% trans "Deactivate" %}
                                         </a>
+                                    {% else %}
+                                        <a class="bom-btn-secondary"
+                                           href="{% url 'bom:part-revision-revert' part_id=part.id part_revision_id=part_revision.id %}">
+                                            <i class="material-icons text-base">undo</i>{% trans "Activate" %}
+                                        </a>
                                     {% endif %}
                                     <a class="bom-btn-secondary"
                                        href="{% url 'bom:part-revision-new' part_id=part.id %}">

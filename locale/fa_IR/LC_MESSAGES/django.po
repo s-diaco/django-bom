@@ -1051,6 +1051,9 @@ msgstr "ورژن: %(rev)s"
 msgid "Deactivate"
 msgstr "غیرفعال کردن"
 
+msgid "Activate"
+msgstr "فعال کردن"
+
 msgid "New"
 msgstr "جدید"
 

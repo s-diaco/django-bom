@@ -3872,10 +3872,7 @@ def part_revision_release(request, part_id, part_revision_id):
 
 @login_required(login_url=BOM_LOGIN_URL)
 def part_revision_revert(request, part_id, part_revision_id):
-    # user = request.user
-    # profile = user.bom_profile()
-    # organization = profile.organization
-
+    # One-click activate (same pattern as deactivate/release); no confirm page.
     part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
     part_revision.configuration = "W"
     part_revision.save()
