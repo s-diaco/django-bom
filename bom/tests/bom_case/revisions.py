@@ -9,23 +9,17 @@ from bom.helpers import (
 class RevisionsTestsMixin:
     def test_part_revision_release(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
-
+        # One-click deactivate (same pattern as revert); no confirm page.
+        rev = p2.latest()
         response = self.client.get(
             reverse(
                 "bom:part-revision-release",
-                kwargs={"part_id": p1.id, "part_revision_id": p1.latest().id},
+                kwargs={"part_id": p2.id, "part_revision_id": rev.id},
             )
         )
-        self.assertEqual(response.status_code, 200)
-
-        response = self.client.post(
-            reverse(
-                "bom:part-revision-release",
-                kwargs={"part_id": p1.id, "part_revision_id": p1.latest().id},
-            )
-        )
-
         self.assertEqual(response.status_code, 302)
+        rev.refresh_from_db()
+        self.assertEqual(rev.configuration, "R")
 
     def test_part_revision_revert(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)

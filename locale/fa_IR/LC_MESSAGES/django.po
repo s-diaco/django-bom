@@ -1721,9 +1721,6 @@ msgstr "زیرشاخه"
 msgid " {} was added to part {}."
 msgstr " {} به متریال {} اضافه شد."
 
-msgid "Deactivate {} revision {} {} from <b>active</b> to <b>inactive</b>?"
-msgstr "غیرفعال کردن {} ورژن {} {} از <b>فعال</b> به <b>غیر فعال</b>؟"
-
 msgid "New revision for {}"
 msgstr "ورژن جدید برای {}"
 
