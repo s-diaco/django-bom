@@ -224,6 +224,41 @@ class PartInfoSellerSpecsTest(TestCase):
         self.assertNotRegex(specs, r">\s*Overhead\s*:")
         self.assertNotRegex(specs, r">\s*Total\s*:")
 
+    def test_specs_shows_material_type_and_empty_dash(self):
+        """Specs Material details lists Material Type; empty material shows '-'."""
+        raw, _raw_rev = self._make_part("RAWMT", "no_bom", seller_cost=1)
+        response = self.client.get(reverse("bom:part-info", kwargs={"part_id": raw.id}))
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        specs_at = html.find('id="specs"')
+        self.assertGreater(specs_at, -1)
+        next_tab = html.find('id="used"', specs_at)
+        specs = html[specs_at:next_tab]
+        self.assertIn('id="specs-material-type"', specs)
+        self.assertTrue(
+            "Material Type" in specs or "نوع متریال" in specs,
+            "Material Type label missing in specs",
+        )
+        mt_at = specs.find('id="specs-material-type"')
+        mt_cell = specs[mt_at : mt_at + 120]
+        self.assertIn("Raw Material", mt_cell)
+
+        empty, empty_rev = self._make_part("EMPTYMT", "no_bom")
+        empty_rev.material = None
+        empty_rev.save(update_fields=["material"])
+        response = self.client.get(
+            reverse("bom:part-info", kwargs={"part_id": empty.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        specs_at = html.find('id="specs"')
+        next_tab = html.find('id="used"', specs_at)
+        specs = html[specs_at:next_tab]
+        mt_at = specs.find('id="specs-material-type"')
+        self.assertGreater(mt_at, -1)
+        mt_cell = specs[mt_at : mt_at + 80]
+        self.assertRegex(mt_cell, r">\s*-\s*<")
+
     def test_product_specs_hides_bom_cost_when_materials_lack_price(self):
         """Materials without price > 0 → show count + calculated cost with warning."""
         _raw, raw_rev = self._make_part("RAW3", "no_bom")  # no seller / price
