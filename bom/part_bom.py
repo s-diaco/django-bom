@@ -61,8 +61,17 @@ class PartBom(AsDictModel):
         ) or cls.cost_is_missing_or_zero(seller_part.landed_unit_cost)
 
     def counts_as_missing_item_cost(self, bom_part):
-        """Non-product leaf with no seller_part or None/0 unit/landed cost."""
+        """True when a leaf material lacks a usable seller price.
+
+        Products and revisions with BoM children are priced from rollup (same
+        as the child's own #bom page), so they do not need a SellerPart.
+        Incomplete nested leaves still count via their own rows.
+        """
         if bom_part.part_revision.is_product:
+            return False
+        # material=None / non-product assemblies still roll up from children.
+        walk = getattr(bom_part.part_revision, "_bom_walk_subparts", None)
+        if callable(walk) and walk():
             return False
         return self.seller_part_missing_price(bom_part.seller_part)
 

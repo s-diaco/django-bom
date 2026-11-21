@@ -243,6 +243,117 @@ def test_weighted_missing_item_costs_skips_products():
     assert bom.missing_item_costs == 0
 
 
+def test_weighted_missing_item_costs_skips_bom_assembly_without_seller():
+    """Non-product child with BoM children is priced from rollup, not SellerPart.
+
+    Regression LI-120: parent flagged Missing prices when a child (material=None,
+    is_product=False) had a complete BoM and no SellerPart.
+    """
+    root_part = MockPart("PARENT")
+    child_part = MockPart("ASSY-CHILD")
+    leaf_part = MockPart("LEAF")
+
+    root_rev = MockPartRevision(root_part, is_product=True)
+    child_rev = MockPartRevision(child_part, is_product=False)
+    leaf_rev = MockPartRevision(leaf_part, is_product=False)
+    child_rev._bom_walk_subparts = lambda: [object()]
+    leaf_rev._bom_walk_subparts = lambda: []
+
+    bom = PartBomWeighted(part_revision=root_rev, quantity=1)
+    root = _make_item(
+        bom_id=1,
+        part=root_part,
+        part_revision=root_rev,
+        quantity=1,
+        indent_level=0,
+        parent_id=None,
+        parent_quantity=1,
+    )
+    child = _make_item(
+        bom_id=2,
+        part=child_part,
+        part_revision=child_rev,
+        quantity=1,
+        indent_level=1,
+        parent_id=1,
+        parent_quantity=1,
+        seller_part=None,
+    )
+    leaf = _make_item(
+        bom_id=3,
+        part=leaf_part,
+        part_revision=leaf_rev,
+        quantity=2,
+        indent_level=2,
+        parent_id=2,
+        parent_quantity=1,
+        seller_part=MockSellerPart(unit_cost=Money(10, "USD")),
+    )
+    leaf.total_extended_quantity = 2
+    child.total_extended_quantity = 1
+    bom.parts = {1: root, 2: child, 3: leaf}
+
+    bom.update_bom_for_part(child)
+    bom.update_bom_for_part(leaf)
+
+    assert not bom.counts_as_missing_item_cost(child)
+    assert bom.missing_item_costs == 0
+
+
+def test_weighted_incomplete_nested_bom_still_counts_leaf():
+    """Incomplete nested BoM still increments missing via the unpriced leaf."""
+    root_part = MockPart("PARENT")
+    child_part = MockPart("ASSY-CHILD")
+    leaf_part = MockPart("LEAF")
+
+    root_rev = MockPartRevision(root_part, is_product=True)
+    child_rev = MockPartRevision(child_part, is_product=False)
+    leaf_rev = MockPartRevision(leaf_part, is_product=False)
+    child_rev._bom_walk_subparts = lambda: [object()]
+    leaf_rev._bom_walk_subparts = lambda: []
+
+    bom = PartBomWeighted(part_revision=root_rev, quantity=1)
+    root = _make_item(
+        bom_id=1,
+        part=root_part,
+        part_revision=root_rev,
+        quantity=1,
+        indent_level=0,
+        parent_id=None,
+        parent_quantity=1,
+    )
+    child = _make_item(
+        bom_id=2,
+        part=child_part,
+        part_revision=child_rev,
+        quantity=1,
+        indent_level=1,
+        parent_id=1,
+        parent_quantity=1,
+        seller_part=None,
+    )
+    leaf = _make_item(
+        bom_id=3,
+        part=leaf_part,
+        part_revision=leaf_rev,
+        quantity=1,
+        indent_level=2,
+        parent_id=2,
+        parent_quantity=1,
+        seller_part=None,
+    )
+    leaf.total_extended_quantity = 1
+    child.total_extended_quantity = 1
+    bom.parts = {1: root, 2: child, 3: leaf}
+
+    bom.update_bom_for_part(child)
+    bom.update_bom_for_part(leaf)
+
+    assert not bom.counts_as_missing_item_cost(child)
+    assert bom.counts_as_missing_item_cost(leaf)
+    assert bom.missing_item_costs == 1
+
+
 def test_nested_product_unit_cost_excludes_overhead():
     """Nested product children roll up BoM cost without their type overhead."""
     root_part = MockPart("ROOT")
