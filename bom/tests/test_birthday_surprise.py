@@ -148,7 +148,12 @@ class TestBirthdayAdminAndUi(TestCase):
             response = self.client.get(reverse("bom:home"))
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context["is_birthday"])
-        self.assertIn("is-birthday", response.content.decode("utf-8"))
+        html = response.content.decode("utf-8")
+        self.assertIn("is-birthday", html)
+        # Loading mark wrap is the birthday spinner hook; keep surprise (no spoilers).
+        self.assertIn("bom-page-loading-mark-wrap", html)
+        self.assertNotIn("happy birthday", html.lower())
+        self.assertNotIn("تولدت مبارک", html)
 
     def test_jalali_birthday_ui_class_when_jalali_today(self):
         # 1403/08/30 stores Jalali 8/30; 2026-11-21 is Jalali 1405/08/30.
