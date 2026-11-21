@@ -275,8 +275,9 @@ def materials(request):
             material__in=organization.product_type_codes(has_bom=True)
         )
     elif request.GET.get("product") == "0":
-        part_revs = part_revs.filter(
-            material__in=organization.product_type_codes(has_bom=False)
+        # Complement of product=1: raw codes plus null/blank/unknown material.
+        part_revs = part_revs.exclude(
+            material__in=organization.product_type_codes(has_bom=True)
         )
     # Materials typeahead uses GET materials-part-number-suggest (part numbers
     # only). Do not embed the full-catalog enable_autocomplete dict here.
