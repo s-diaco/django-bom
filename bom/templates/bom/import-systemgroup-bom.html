@@ -19,7 +19,7 @@
             <div class="bom-panel-pad">
                 <h1 class="mb-2 text-lg font-semibold text-ink">{% trans "Import SystemGroup BoM" %}</h1>
                 <p class="mb-4 text-sm text-ink-muted">
-                    {% trans "Pull a PAC Engineering BoM from the on-LAN SystemGroup CRM into Lithium. Missing parts and revisions are created; existing ones are reused." %}
+                    {% trans "Pull a PAC Engineering BoM from the on-LAN SystemGroup CRM into Lithium. Missing child parts are resolved from the same CRM BoM list first (recursively); existing parts are reused. If a nested dependency cannot be found, the import is aborted." %}
                 </p>
 
                 <div class="mb-4 flex flex-wrap items-center gap-3">

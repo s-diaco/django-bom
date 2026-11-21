@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import transaction
+from django.utils.translation import gettext as _
 
 from bom.forms import BOMCSVForm
 from bom.models import Assembly, Organization, Part, PartRevision
@@ -75,6 +77,18 @@ class ExistingBomConflict(SystemGroupImportError):
             f"Part {pn} revision {rev} already has {subpart_count} BoM line(s). "
             "Choose keep (append) or replace."
         )
+
+
+class NestedBomDependencyError(SystemGroupImportError):
+    """A missing child (or nested child) could not be resolved from the CRM BoM list."""
+
+    def __init__(self, part_number: str, *, detail: str | None = None):
+        self.part_number = part_number
+        message = detail or _(
+            "Child part '%(pn)s' is not in Lithium and no CRM BoM matched. "
+            "Import aborted; nothing was written."
+        ) % {"pn": part_number}
+        super().__init__(message)
 
 
 def parsed_bom_to_csv_bytes(
@@ -220,6 +234,275 @@ def ensure_parent_revision(
     if material:
         kwargs["material"] = material
     return PartRevision.objects.create(**kwargs)
+
+
+@dataclass
+class _NestedImportContext:
+    """Shared state while resolving missing child BoMs depth-first."""
+
+    organization: Organization
+    client: SystemGroupClient | None = None
+    list_html: str | None = None
+    list_json: str | None = None
+    list_path: str | Path | None = None
+    list_entries: list[BomListEntry] | None = None
+    dry_run: bool = False
+    visiting: set[str] = field(default_factory=set)
+    result: ImportResult = field(default_factory=ImportResult)
+    # Optional offline map bom_id → (body, content_type) for tests.
+    bom_documents: dict[str, tuple[str, str]] | None = None
+
+
+def _missing_child_part_numbers(organization: Organization, parsed: ParsedBom) -> list[tuple[str, str | None]]:
+    """Return unique (part_number, line_revision) for lines whose Part is absent."""
+    seen: set[str] = set()
+    out: list[tuple[str, str | None]] = []
+    for line in parsed.lines:
+        pn = (line.part_number or "").strip()
+        if not pn or pn in seen:
+            continue
+        seen.add(pn)
+        if resolve_parent_part(organization, pn) is not None:
+            continue
+        rev = (line.revision or "").strip() or None
+        out.append((pn, rev))
+    return out
+
+
+def _offline_list_available(ctx: _NestedImportContext) -> bool:
+    return ctx.list_entries is not None or any(
+        x is not None for x in (ctx.list_html, ctx.list_json, ctx.list_path)
+    )
+
+
+def _load_list_entries_for_nested(ctx: _NestedImportContext) -> list[BomListEntry]:
+    """Cache offline / already-loaded CRM BoM list rows for nested lookups."""
+    if ctx.list_entries is not None:
+        return ctx.list_entries
+    if not _offline_list_available(ctx):
+        raise SystemGroupImportError(
+            _(
+                "Cannot resolve missing child parts without the CRM BoM list. "
+                "Log in to SystemGroup or provide a BoM list."
+            )
+        )
+    ctx.list_entries = load_bom_list_entries(
+        client=ctx.client,
+        list_html=ctx.list_html,
+        list_json=ctx.list_json,
+        list_path=ctx.list_path,
+    )
+    return ctx.list_entries
+
+
+def _resolve_child_bom_list_entry(
+    ctx: _NestedImportContext,
+    part_number: str,
+    revision: str | None,
+) -> BomListEntry:
+    """Find a CRM BoM list row for a missing child PN.
+
+    When ``revision`` is unset, uses the first match (revision then bom_id sort)
+    and records a warning. When set, requires an exact revision match.
+
+    Offline list fixtures are scanned once and cached; live CRM uses a
+    per-PN Number Contains search (no full catalog walk).
+    """
+    pn = (part_number or "").strip()
+    rev = (revision or "").strip() or None
+    if not _offline_list_available(ctx) and ctx.client is None:
+        raise SystemGroupImportError(
+            _(
+                "Cannot resolve missing child parts without the CRM BoM list. "
+                "Log in to SystemGroup or provide a BoM list."
+            )
+        )
+    try:
+        if _offline_list_available(ctx):
+            search = list_revisions_for_part(
+                pn,
+                entries=_load_list_entries_for_nested(ctx),
+                max_results=None,
+            )
+        else:
+            search = list_revisions_for_part(
+                pn,
+                client=ctx.client,
+                max_results=None,
+            )
+    except NoBomMatch as exc:
+        raise NestedBomDependencyError(pn) from exc
+    except SystemGroupError as exc:
+        raise NestedBomDependencyError(pn, detail=str(exc)) from exc
+
+    rows = list(search.entries)
+    if not rows:
+        raise NestedBomDependencyError(pn)
+
+    if rev:
+        by_rev = [
+            e
+            for e in rows
+            if (e.revision or "").strip().casefold() == rev.casefold()
+        ]
+        if not by_rev:
+            raise NestedBomDependencyError(
+                pn,
+                detail=_(
+                    "Child part '%(pn)s' revision '%(rev)s' is not in Lithium and "
+                    "no CRM BoM matched that revision. Import aborted; nothing "
+                    "was written."
+                )
+                % {"pn": pn, "rev": rev},
+            )
+        return by_rev[0]
+
+    entry = rows[0]
+    ctx.result.warnings.append(
+        _(
+            "No revision selected for child '%(pn)s'; imported CRM revision "
+            "'%(rev)s' (first match)."
+        )
+        % {"pn": pn, "rev": entry.revision or ""}
+    )
+    return entry
+
+
+def _fetch_parsed_bom_for_entry(
+    ctx: _NestedImportContext,
+    entry: BomListEntry,
+) -> ParsedBom:
+    bom_id = (entry.bom_id or "").strip()
+    if not bom_id:
+        raise NestedBomDependencyError(
+            entry.part_number or "?",
+            detail=_(
+                "CRM BoM list row for '%(pn)s' has no BoM id."
+            )
+            % {"pn": entry.part_number or "?"},
+        )
+    if ctx.bom_documents and bom_id in ctx.bom_documents:
+        body, ctype = ctx.bom_documents[bom_id]
+        return parse_bom_document(body, content_type=ctype)
+    if ctx.client is None:
+        raise SystemGroupImportError(
+            _(
+                "Cannot fetch nested BoM %(bom_id)s for '%(pn)s' without a "
+                "SystemGroup client."
+            )
+            % {"bom_id": bom_id, "pn": entry.part_number or "?"}
+        )
+    try:
+        body, ctype = ctx.client.fetch_bom(bom_id)
+        return parse_bom_document(body, content_type=ctype)
+    except (SystemGroupClientError, SystemGroupParseError, OSError) as exc:
+        raise NestedBomDependencyError(
+            entry.part_number or "?",
+            detail=_(
+                "Failed to fetch nested CRM BoM %(bom_id)s for '%(pn)s': %(err)s. "
+                "Import aborted; nothing was written."
+            )
+            % {
+                "bom_id": bom_id,
+                "pn": entry.part_number or "?",
+                "err": exc,
+            },
+        ) from exc
+
+
+def import_missing_child_boms(
+    organization: Organization,
+    parsed: ParsedBom,
+    *,
+    client: SystemGroupClient | None = None,
+    list_html: str | None = None,
+    list_json: str | None = None,
+    list_path: str | Path | None = None,
+    list_entries: list[BomListEntry] | None = None,
+    bom_documents: dict[str, tuple[str, str]] | None = None,
+    dry_run: bool = False,
+    _ctx: _NestedImportContext | None = None,
+) -> ImportResult:
+    """Import CRM BoMs for children missing in Lithium, depth-first.
+
+    For each child PN absent from Lithium, search the same CRM BoM list. If
+    found, import that child's BoM first (recursing for its missing children).
+    If not found, raise ``NestedBomDependencyError`` so the caller can abort
+    without writing the parent BoM.
+    """
+    ctx = _ctx or _NestedImportContext(
+        organization=organization,
+        client=client,
+        list_html=list_html,
+        list_json=list_json,
+        list_path=list_path,
+        list_entries=list_entries,
+        bom_documents=bom_documents,
+        dry_run=dry_run,
+    )
+    nested_material = first_product_type_code(organization, has_bom=True)
+
+    for pn, line_rev in _missing_child_part_numbers(organization, parsed):
+        # Re-check: a sibling import may have just created this part.
+        if resolve_parent_part(organization, pn) is not None:
+            continue
+        if pn in ctx.visiting:
+            raise NestedBomDependencyError(
+                pn,
+                detail=_(
+                    "Circular BoM dependency while importing nested child "
+                    "'%(pn)s'. Import aborted; nothing was written."
+                )
+                % {"pn": pn},
+            )
+        entry = _resolve_child_bom_list_entry(ctx, pn, line_rev)
+        child_parsed = _fetch_parsed_bom_for_entry(ctx, entry)
+        if not child_parsed.parent_part_number:
+            child_parsed.parent_part_number = pn
+        if not child_parsed.parent_revision:
+            child_parsed.parent_revision = (entry.revision or "").strip() or "1"
+
+        ctx.visiting.add(pn)
+        try:
+            import_missing_child_boms(
+                organization,
+                child_parsed,
+                _ctx=ctx,
+            )
+            child_result = import_parsed_bom(
+                organization,
+                child_parsed,
+                parent_part_number=pn,
+                parent_revision=child_parsed.parent_revision,
+                material=nested_material,
+                dry_run=ctx.dry_run,
+            )
+        finally:
+            ctx.visiting.discard(pn)
+
+        ctx.result.successes.extend(child_result.successes)
+        ctx.result.warnings.extend(child_result.warnings)
+        ctx.result.errors.extend(child_result.errors)
+        if not child_result.ok:
+            raise NestedBomDependencyError(
+                pn,
+                detail=_(
+                    "Nested import of child '%(pn)s' failed: %(err)s. "
+                    "Import aborted; nothing was written."
+                )
+                % {
+                    "pn": pn,
+                    "err": "; ".join(child_result.errors) or "unknown error",
+                },
+            )
+        ctx.result.successes.append(
+            _(
+                "Imported nested BoM for '%(pn)s' revision '%(rev)s' before parent."
+            )
+            % {"pn": pn, "rev": child_parsed.parent_revision or entry.revision or ""}
+        )
+
+    return ctx.result
 
 
 def import_parsed_bom(
@@ -400,6 +683,7 @@ def run_systemgroup_import(
     parent_description: str | None = None,
     existing_bom_action: str | None = None,
     material: str | None = None,
+    bom_documents: dict[str, tuple[str, str]] | None = None,
 ) -> ImportResult:
     """Shared entry used by the management command and Admin UI.
 
@@ -415,6 +699,11 @@ def run_systemgroup_import(
     suffix). Missing Lithium parts/revisions are created. If the target
     revision already has a BoM tree, ``existing_bom_action`` must be
     ``keep`` or ``replace`` (else ``ExistingBomConflict``).
+
+    Missing child parts are resolved from the same CRM BoM list first
+    (recursive, child-before-parent). Unresolved nested dependencies abort
+    the whole import (no partial parent BoM). ``bom_documents`` supplies
+    offline ``bom_id → (body, content_type)`` for nested fetches in tests.
     """
     from .access import client_for_user_meta
 
@@ -508,16 +797,54 @@ def run_systemgroup_import(
     if parent_rev and not parsed.parent_revision:
         parsed.parent_revision = parent_rev
 
-    result = import_parsed_bom(
-        organization,
-        parsed,
-        parent_part=parent_part,
-        parent_part_number=parent_pn,
-        parent_revision=parent_rev,
-        existing_bom_action=existing_bom_action,
-        material=material,
-        dry_run=dry_run,
-    )
+    # Nested child-first: resolve missing children via CRM BoM list before
+    # writing the parent. Atomic so an unresolved dependency rolls back any
+    # nested writes (and never leaves a partial parent BoM).
+    def _do_import() -> ImportResult:
+        # Prefer an already-built client; otherwise try credentials when
+        # nested resolution may need live list/fetch (no offline list).
+        nested_client = client
+        if (
+            nested_client is None
+            and not (list_html or list_json or list_path)
+            and _missing_child_part_numbers(organization, parsed)
+        ):
+            try:
+                nested_client = ensure_client()
+            except SystemGroupImportError:
+                nested_client = None
+
+        nested = import_missing_child_boms(
+            organization,
+            parsed,
+            client=nested_client,
+            list_html=list_html,
+            list_json=list_json,
+            list_path=list_path,
+            bom_documents=bom_documents,
+            dry_run=dry_run,
+        )
+        result = import_parsed_bom(
+            organization,
+            parsed,
+            parent_part=parent_part,
+            parent_part_number=parent_pn,
+            parent_revision=parent_rev,
+            existing_bom_action=existing_bom_action,
+            material=material,
+            dry_run=dry_run,
+        )
+        result.successes = nested.successes + result.successes
+        result.warnings = nested.warnings + result.warnings
+        # Nested errors already raised; keep parent errors as-is.
+        return result
+
+    if dry_run:
+        result = _do_import()
+    else:
+        with transaction.atomic():
+            result = _do_import()
+
     result.resolved_bom_id = resolved_bom_id
     if list_entry is not None:
         result.successes.insert(
