@@ -14,7 +14,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from bom.helpers import create_some_fake_parts, create_user_and_organization
-from bom.models import Part
+from bom.models import Manufacturer, ManufacturerPart, Part, SellerPart
 from bom.systemgroup.client import (
     SystemGroupClient,
     SystemGroupClientError,
@@ -708,6 +708,38 @@ class SystemGroupImportSemanticsTests(TestCase):
         self.assertEqual(parent.latest().material, product_code)
         child = Part.from_part_number("500-7777-00", self.organization)
         self.assertEqual(child.latest().material, raw_code)
+
+    def test_import_new_product_gets_org_manufacturer_part(self):
+        """New product parent (no CRM mfr) matches create-part org MP; no SellerPart."""
+        self.organization.ensure_default_product_types()
+        product_code = next(
+            pt.code for pt in self.organization.product_types.all() if pt.has_bom
+        )
+        # Parent comes from CRM header / synthetic level-0 row — no mfr fields.
+        # Child lines may carry mfr; only the product parent must get org MP.
+        bom = parse_bom_document(
+            (FIXTURES / "bom_edit.json").read_text(encoding="utf-8"),
+            content_type="application/json",
+        )
+        result = import_parsed_bom(
+            self.organization, bom, material=product_code
+        )
+        self.assertTrue(result.ok, result.errors)
+
+        parent = Part.from_part_number("500-9001-00", self.organization)
+        self.assertEqual(parent.latest().material, product_code)
+        self.assertFalse(
+            SellerPart.objects.filter(manufacturer_part__part=parent).exists()
+        )
+        manufacturer = Manufacturer.objects.get(
+            organization=self.organization, name=self.organization.name
+        )
+        manufacturer_part = ManufacturerPart.objects.get(
+            part=parent,
+            manufacturer_part_number=parent.number_item or "",
+            manufacturer=manufacturer,
+        )
+        self.assertEqual(parent.primary_manufacturer_part_id, manufacturer_part.id)
 
     def test_import_powder_material_creates_new_parent(self):
         """Regression LI-88: powder/ink ProductTypes must not 500 on import."""
