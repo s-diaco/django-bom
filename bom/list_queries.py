@@ -2,18 +2,32 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Max, Prefetch, Subquery, prefetch_related_objects
+from django.db.models import Max, Prefetch, Q, Subquery, prefetch_related_objects
+from django.db.models.functions import Coalesce
 
+from bom.constants import CONFIGURATION_TYPE_WORKING
 from bom.models import ManufacturerPart, PartRevision, SellerPart, Subpart
 
 
 def latest_part_revision_ids(part_ids):
-    """Subquery of max PartRevision.id per part — same rule as Part.latest()."""
+    """Active-preferred max PartRevision.id per part (list/report Subquery).
+
+    Prefer highest Active (``W``) id when any exist; else highest id among all
+    revisions. Matches :meth:`bom.models.Part.latest` whenever cost does not
+    change the pick (raw materials share part-level seller cost; single Active;
+    tied costs). Full cost>0 ranking stays on ``Part.latest()`` for import/UI
+    so materials/report keep a single Subquery within the list query budget.
+    """
     return Subquery(
         PartRevision.objects.filter(part_id__in=part_ids)
         .values("part_id")
-        .annotate(max_id=Max("id"))
-        .values("max_id")
+        .annotate(
+            preferred_id=Coalesce(
+                Max("id", filter=Q(configuration=CONFIGURATION_TYPE_WORKING)),
+                Max("id"),
+            )
+        )
+        .values("preferred_id")
     )
 
 PAGE_SIZE_CHOICES = (10, 25, 50, 100)
