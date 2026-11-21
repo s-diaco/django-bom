@@ -329,7 +329,7 @@ class HomeTestsMixin:
         self.assertIn("lithium_parts", response["Content-Disposition"])
 
     def test_materials_list_shows_latest_rev_and_links_to_it(self):
-        """List rows are Part.latest() (max id); part link opens that revision."""
+        """List rows are Part.latest(); part link opens that revision."""
         (p1, _p2, _p3, _p4) = create_some_fake_parts(organization=self.organization)
         old_rev = p1.latest()
         new_rev = create_a_fake_part_revision(

@@ -21,6 +21,7 @@ from .base_classes import AsDictModel
 from .constants import (
     CALENDAR_JALALI,
     CALENDAR_TYPES,
+    CONFIGURATION_TYPE_WORKING,
     CONFIGURATION_TYPES,
     CURRENT_UNITS,
     DEFAULT_PRODUCT_TYPES,
@@ -615,7 +616,47 @@ class Part(models.Model):
         return self.latest().description if self.latest() is not None else ""
 
     def latest(self):
-        return self.revisions().order_by("-id").first()
+        """Preferred revision: Active first, then usable cost, then highest id.
+
+        Prefer Active (``configuration == "W"``) over Inactive (``"R"``). Among
+        that set, prefer a usable unit/BoM cost (> 0) over missing or zero cost,
+        then highest id. Cost matches the app's usual price signal: seller unit
+        cost for materials (via ``PartBom.seller_part_missing_price``), BoM unit
+        cost for products.
+
+        Fallback when no Active revision exists: same cost-then-id ranking among
+        all revisions (previous max-id behavior when costs do not differentiate).
+        """
+        return self.pick_latest_revision(self.revisions())
+
+    @classmethod
+    def pick_latest_revision(cls, revisions):
+        """Pick one revision using the same rules as :meth:`latest`."""
+        revisions = list(revisions)
+        if not revisions:
+            return None
+        active = [
+            rev
+            for rev in revisions
+            if rev.configuration == CONFIGURATION_TYPE_WORKING
+        ]
+        pool = active if active else revisions
+        if len(pool) == 1:
+            return pool[0]
+        # Seller cost is part-level, so raw-material revs cannot differ on cost.
+        if not any(rev.is_product for rev in pool):
+            return max(pool, key=lambda rev: rev.id)
+        return max(
+            pool, key=lambda rev: (cls._revision_has_usable_cost(rev), rev.id)
+        )
+
+    @staticmethod
+    def _revision_has_usable_cost(rev):
+        from bom.part_bom import PartBom
+
+        if rev.is_product:
+            return not PartBom.cost_is_missing_or_zero(rev.bom_unit_cost)
+        return not PartBom.seller_part_missing_price(rev.part.optimal_seller())
 
     def revisions(self):
         return PartRevision.objects.filter(part=self)

@@ -2,19 +2,37 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Max, Prefetch, Subquery, prefetch_related_objects
+from django.db.models import Prefetch, prefetch_related_objects
 
-from bom.models import ManufacturerPart, PartRevision, SellerPart, Subpart
+from bom.models import ManufacturerPart, Part, PartRevision, SellerPart, Subpart
 
 
 def latest_part_revision_ids(part_ids):
-    """Subquery of max PartRevision.id per part — same rule as Part.latest()."""
-    return Subquery(
-        PartRevision.objects.filter(part_id__in=part_ids)
-        .values("part_id")
-        .annotate(max_id=Max("id"))
-        .values("max_id")
+    """PartRevision ids matching :meth:`bom.models.Part.latest` per part.
+
+    Active (W) preferred when any exist; else all revisions. Among that set,
+    cost > 0 over missing/zero, then highest id.
+    """
+    from collections import defaultdict
+
+    if not part_ids:
+        return []
+
+    revisions = PartRevision.objects.filter(part_id__in=part_ids).select_related(
+        "part",
+        "part__organization",
+        "part__primary_manufacturer_part",
     )
+    by_part = defaultdict(list)
+    for rev in revisions:
+        by_part[rev.part_id].append(rev)
+
+    chosen = []
+    for revs in by_part.values():
+        pick = Part.pick_latest_revision(revs)
+        if pick is not None:
+            chosen.append(pick.id)
+    return chosen
 
 PAGE_SIZE_CHOICES = (10, 25, 50, 100)
 
