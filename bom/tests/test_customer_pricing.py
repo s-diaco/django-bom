@@ -734,6 +734,8 @@ class TestCustomerPricing(TransactionTestCase):
         seller_part.unit_cost = Money(80, self.organization.currency)
         seller_part.save()
         self.part.latest().clear_bom_unit_cost_cache()
+        self.part.__dict__.pop("_optimal_seller_result", None)
+        self.part.__dict__.pop("_optimal_seller_qty", None)
 
         refreshed = attach_current_profit_percents(
             CustomerPrice.objects.filter(pk=row.pk).select_related("part"),
@@ -764,6 +766,8 @@ class TestCustomerPricing(TransactionTestCase):
         seller_part.unit_cost = Money(80, self.organization.currency)
         seller_part.save()
         self.part.latest().clear_bom_unit_cost_cache()
+        self.part.__dict__.pop("_optimal_seller_result", None)
+        self.part.__dict__.pop("_optimal_seller_qty", None)
 
         response = self.client.get(
             reverse("bom:part-info", kwargs={"part_id": self.part.id})

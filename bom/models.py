@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import Max, Prefetch, Subquery
+from django.db.models import Count, Max, Prefetch, Subquery
 from django.forms import ValidationError
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -613,7 +613,8 @@ class Part(models.Model):
             raise ValueError("Too many objects found")
 
     def description(self):
-        return self.latest().description if self.latest() is not None else ""
+        latest = self.latest()
+        return latest.description if latest is not None else ""
 
     def latest(self):
         """Preferred revision: Active first, then usable cost, then highest id.
@@ -631,13 +632,23 @@ class Part(models.Model):
         max id) for query budget; cost ranking here still applies to import/UI
         callers of ``latest()``.
         """
-        cached = self.__dict__.get("_cached_latest", _UNSET)
-        if cached is not _UNSET:
-            return cached
+        # Fingerprint the revision set so a new rev invalidates the pick, and
+        # rebind revision.part to this Part so seller/BoM helpers use this
+        # instance's caches (not a select_related duplicate).
+        stats = self.revisions().aggregate(n=Count("id"), mx=Max("id"))
+        key = (stats["n"] or 0, stats["mx"])
+        if self.__dict__.get("_cached_latest_key") == key:
+            rev = self.__dict__.get("_cached_latest_rev")
+            if rev is not None:
+                rev.part = self
+            return rev
         result = self.pick_latest_revision(
             self.revisions().select_related("part", "part__organization")
         )
-        self.__dict__["_cached_latest"] = result
+        if result is not None:
+            result.part = self
+        self.__dict__["_cached_latest_key"] = key
+        self.__dict__["_cached_latest_rev"] = result
         return result
 
     @classmethod
