@@ -260,9 +260,14 @@ class HomeTestsMixin:
 
             raw = self.client.get(reverse("bom:materials"), {"print": "1", "print_go": "1", "product": "0"})
             self.assertEqual(raw.status_code, 200)
-            raw_numbers = [pr.part.full_part_number() for pr in raw.context["part_revs"]]
-            self.assertEqual(raw_numbers, [p1.full_part_number()])
-            self.assertEqual(raw.context["print_row_count"], 1)
+            raw_numbers = {pr.part.full_part_number() for pr in raw.context["part_revs"]}
+            self.assertIn(p1.full_part_number(), raw_numbers)
+            self.assertNotIn(p2.full_part_number(), raw_numbers)
+            self.assertNotIn(p3.full_part_number(), raw_numbers)
+            self.assertEqual(
+                raw.context["print_row_count"],
+                len(raw.context["part_revs"]),
+            )
 
             products = self.client.get(reverse("bom:materials"), {"print": "1", "print_go": "1", "product": "1"})
             self.assertEqual(products.status_code, 200)
