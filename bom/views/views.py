@@ -3840,31 +3840,15 @@ def sellerpart_delete(request, sellerpart_id):
 
 @login_required(login_url=BOM_LOGIN_URL)
 def part_revision_release(request, part_id, part_revision_id):
-    user = request.user
-    profile = user.bom_profile()
-    organization = profile.organization
-
-    part = get_object_or_404(Part, pk=part_id)
     part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
-    action = reverse(
-        "bom:part-revision-release",
-        kwargs={"part_id": part.id, "part_revision_id": part_revision.id},
-    )
-    title = _(
-        "Deactivate {} revision {} {} from <b>active</b> to <b>inactive</b>?"
-    ).format(part.full_part_number(), part_revision.revision, part_revision.synopsis())
-
-    if request.method == "POST":
-        part_revision.configuration = "R"
-        part_revision.save()
-        return HttpResponseRedirect(
-            reverse(
-                "bom:part-info-history",
-                kwargs={"part_id": part.id, "part_revision_id": part_revision.id},
-            )
+    part_revision.configuration = "R"
+    part_revision.save()
+    return HttpResponseRedirect(
+        reverse(
+            "bom:part-info-history",
+            kwargs={"part_id": part_id, "part_revision_id": part_revision_id},
         )
-
-    return TemplateResponse(request, "bom/part-revision-release.html", locals())
+    )
 
 
 @login_required(login_url=BOM_LOGIN_URL)
