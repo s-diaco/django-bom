@@ -2620,6 +2620,7 @@ def import_systemgroup_bom(request):
     from bom.systemgroup.importer import (
         AmbiguousBomMatch,
         ExistingBomConflict,
+        NestedBomDependencyError,
         NoBomMatch,
         SystemGroupError,
         SystemGroupImportError,
@@ -2855,6 +2856,8 @@ def import_systemgroup_bom(request):
                         "(append imported lines) or replace it."
                     ),
                 )
+            except NestedBomDependencyError as exc:
+                messages.error(request, str(exc))
             except (SystemGroupError, SystemGroupClientError) as exc:
                 messages.error(request, str(exc))
             else:

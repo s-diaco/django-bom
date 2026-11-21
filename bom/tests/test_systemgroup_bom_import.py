@@ -35,6 +35,7 @@ from bom.systemgroup.forms import SystemGroupBomImportForm
 from bom.systemgroup.importer import (
     AmbiguousBomMatch,
     ExistingBomConflict,
+    NestedBomDependencyError,
     NoBomMatch,
     find_existing_lithium_bom,
     import_parsed_bom,
@@ -63,6 +64,32 @@ from bom.systemgroup.rsa_login import (
 )
 
 FIXTURES = Path("bom/test_files/systemgroup")
+
+
+def _ensure_lithium_part(organization, part_number: str):
+    """Create a bare Part+rev when missing (legacy run_import tests)."""
+    from bom.helpers import create_a_fake_part_revision
+    from bom.models import PartClass
+
+    try:
+        return Part.from_part_number(part_number, organization)
+    except Part.DoesNotExist:
+        pass
+    number_class_code, number_item, number_variation = Part.parse_partial_part_number(
+        part_number, organization
+    )
+    number_class = PartClass.objects.get(
+        organization=organization, code=number_class_code
+    )
+    part = Part(
+        organization=organization,
+        number_class=number_class,
+        number_item=number_item,
+        number_variation=number_variation,
+    )
+    part.save()
+    create_a_fake_part_revision(part, None)
+    return part
 
 
 @override_settings()
@@ -823,6 +850,8 @@ class SystemGroupManagementCommandTests(TestCase):
     def setUp(self):
         self.user, self.organization = create_user_and_organization()
         create_some_fake_parts(organization=self.organization)
+        # Fixture child must already exist when not exercising nested CRM resolve.
+        _ensure_lithium_part(self.organization, "500-7777-00")
 
     def test_import_from_html_file(self):
         from bom.helpers import create_a_fake_assembly
@@ -832,7 +861,9 @@ class SystemGroupManagementCommandTests(TestCase):
         parent = [
             p
             for p in parts
-            if p.full_part_number() != "200-3333-00" and p.latest() is not None
+            if p.full_part_number()
+            not in ("200-3333-00", "500-7777-00")
+            and p.latest() is not None
         ][0]
         rev = parent.latest()
         rev.assembly = create_a_fake_assembly()
@@ -871,6 +902,9 @@ class SystemGroupListResolveImportTests(TestCase):
         rev = self.parent.latest()
         rev.assembly = create_a_fake_assembly()
         rev.save()
+        # Nested resolve only runs for PNs absent from Lithium; keep fixture
+        # child present so these list-resolve tests stay focused on parents.
+        _ensure_lithium_part(self.organization, "500-7777-00")
 
     def test_list_revisions_for_part_returns_all_revs(self):
         result = list_revisions_for_part(
@@ -1164,6 +1198,8 @@ class SystemGroupAdminGuiTests(TestCase):
     def setUp(self):
         self.user, self.organization = create_user_and_organization()
         create_some_fake_parts(organization=self.organization)
+        # Avoid nested CRM lookups for fixture children on HTML-only uploads.
+        _ensure_lithium_part(self.organization, "500-7777-00")
         self.organization.systemgroup_import_enabled = True
         self.organization.systemgroup_crm_base_url = "http://192.168.3.193/"
         self.organization.save(
@@ -1203,6 +1239,9 @@ class SystemGroupAdminGuiTests(TestCase):
         self.assertNotContains(response, "Part ID + Revision")
         self.assertNotContains(response, "Get the BoM")
         self.assertContains(response, "Import BoM")
+        self.assertContains(
+            response, "Missing child parts are resolved from the same CRM BoM list"
+        )
         self.assertContains(response, "More options")
         self.assertContains(response, "CRM BoM id")
         self.assertNotContains(
@@ -1984,3 +2023,273 @@ class SystemGroupAdminGuiTests(TestCase):
             for sp in created.latest().assembly.subparts.all()
         }
         self.assertIn("500-7777-00", pns)
+
+
+class SystemGroupNestedBomImportTests(TestCase):
+    """Child-first CRM BoM resolve: recursive import, first-rev notify, abort."""
+
+    def setUp(self):
+        from bom.helpers import create_a_fake_assembly
+
+        self.user, self.organization = create_user_and_organization()
+        self.parts = create_some_fake_parts(organization=self.organization)
+        self.parent = self.parts[1]
+        rev = self.parent.latest()
+        rev.assembly = create_a_fake_assembly()
+        rev.save()
+        self.organization.ensure_default_product_types()
+
+    def _parent_json(self, child_pn, child_rev=""):
+        import json
+
+        line = {
+            "part_number": child_pn,
+            "quantity": 1,
+            "description": "Nested child",
+            "reference": "X1",
+        }
+        if child_rev:
+            line["revision"] = child_rev
+        return json.dumps(
+            {
+                "bom_id": "90001",
+                "parent": {
+                    "part_number": self.parent.full_part_number(),
+                    "revision": self.parent.latest().revision,
+                    "description": "Parent with nested child",
+                },
+                "lines": [line],
+            }
+        )
+
+    def _child_json(self, child_pn, child_rev, leaf_pn="200-3333-00"):
+        import json
+
+        return json.dumps(
+            {
+                "bom_id": "90002",
+                "parent": {
+                    "part_number": child_pn,
+                    "revision": child_rev or "1",
+                    "description": "Child assembly from CRM",
+                },
+                "lines": [
+                    {
+                        "part_number": leaf_pn,
+                        "quantity": 1,
+                        "revision": "1",
+                        "description": "Existing leaf",
+                        "reference": "R1",
+                    }
+                ],
+            }
+        )
+
+    def _list_json(self, rows):
+        import json
+
+        return json.dumps({"rows": rows})
+
+    def test_recursive_child_first_import(self):
+        """Missing child found on CRM list is imported before the parent."""
+        child_pn = "500-8888-00"
+        self.assertFalse(
+            Part.objects.filter(
+                organization=self.organization, number_item="8888"
+            ).exists()
+        )
+        list_json = self._list_json(
+            [
+                {
+                    "id": "90002",
+                    "part_number": child_pn,
+                    "revision": "1",
+                    "description": "Child assembly",
+                    "edit_url": "Edit.aspx?id=90002",
+                }
+            ]
+        )
+        result = run_systemgroup_import(
+            self.organization,
+            bom_id="90001",
+            parent_part_number=self.parent.full_part_number(),
+            parent_revision=self.parent.latest().revision,
+            json_content=self._parent_json(child_pn, child_rev="1"),
+            list_json=list_json,
+            bom_documents={
+                "90002": (self._child_json(child_pn, "1"), "application/json"),
+            },
+            existing_bom_action="keep",
+        )
+        self.assertTrue(result.ok, result.errors)
+        child = Part.from_part_number(child_pn, self.organization)
+        self.assertIsNotNone(child.latest())
+        self.assertGreaterEqual(child.latest().assembly.subparts.count(), 1)
+        leaf_pns = {
+            sp.part_revision.part.full_part_number()
+            for sp in child.latest().assembly.subparts.all()
+        }
+        self.assertIn("200-3333-00", leaf_pns)
+        parent_pns = {
+            sp.part_revision.part.full_part_number()
+            for sp in self.parent.latest().assembly.subparts.all()
+        }
+        self.assertIn(child_pn, parent_pns)
+        self.assertTrue(
+            any("Imported nested BoM" in s and child_pn in s for s in result.successes),
+            result.successes,
+        )
+
+    def test_first_revision_when_none_selected_notifies(self):
+        """No child revision → first CRM list match + warning."""
+        child_pn = "500-8889-00"
+        list_json = self._list_json(
+            [
+                {
+                    "id": "90012",
+                    "part_number": child_pn,
+                    "revision": "B",
+                    "description": "Second sorted rev",
+                    "edit_url": "Edit.aspx?id=90012",
+                },
+                {
+                    "id": "90011",
+                    "part_number": child_pn,
+                    "revision": "A",
+                    "description": "First sorted rev",
+                    "edit_url": "Edit.aspx?id=90011",
+                },
+            ]
+        )
+        result = run_systemgroup_import(
+            self.organization,
+            bom_id="90001",
+            parent_part_number=self.parent.full_part_number(),
+            parent_revision=self.parent.latest().revision,
+            # No revision on the child line → auto-pick first CRM rev.
+            json_content=self._parent_json(child_pn, child_rev=""),
+            list_json=list_json,
+            bom_documents={
+                "90011": (self._child_json(child_pn, "A"), "application/json"),
+                "90012": (self._child_json(child_pn, "B"), "application/json"),
+            },
+            existing_bom_action="keep",
+        )
+        self.assertTrue(result.ok, result.errors)
+        child = Part.from_part_number(child_pn, self.organization)
+        self.assertEqual(child.latest().revision, "A")
+        self.assertTrue(
+            any(
+                "No revision selected" in w and child_pn in w and "'A'" in w
+                for w in result.warnings
+            ),
+            result.warnings,
+        )
+
+    def test_abort_when_child_not_on_bom_list(self):
+        """Missing child absent from CRM list aborts; parent BoM unchanged."""
+        child_pn = "500-8890-00"
+        before_count = self.parent.latest().assembly.subparts.count()
+        list_json = self._list_json(
+            [
+                {
+                    "id": "91000",
+                    "part_number": "500-1111-00",
+                    "revision": "1",
+                    "description": "Unrelated",
+                    "edit_url": "Edit.aspx?id=91000",
+                }
+            ]
+        )
+        with self.assertRaises(NestedBomDependencyError) as ctx:
+            run_systemgroup_import(
+                self.organization,
+                bom_id="90001",
+                parent_part_number=self.parent.full_part_number(),
+                parent_revision=self.parent.latest().revision,
+                json_content=self._parent_json(child_pn, child_rev="1"),
+                list_json=list_json,
+                existing_bom_action="keep",
+            )
+        self.assertIn(child_pn, str(ctx.exception))
+        self.assertFalse(
+            Part.objects.filter(
+                organization=self.organization, number_item="8890"
+            ).exists()
+        )
+        self.assertEqual(
+            self.parent.latest().assembly.subparts.count(), before_count
+        )
+
+    def test_abort_rolls_back_nested_writes(self):
+        """Earlier nested imports roll back when a later missing child is unresolved."""
+        import json
+
+        first_pn = "500-8891-00"
+        second_pn = "500-8892-00"
+        list_json = self._list_json(
+            [
+                {
+                    "id": "92001",
+                    "part_number": first_pn,
+                    "revision": "1",
+                    "description": "First nested",
+                    "edit_url": "Edit.aspx?id=92001",
+                },
+                # second_pn intentionally absent from list
+            ]
+        )
+        parent_payload = json.dumps(
+            {
+                "bom_id": "90001",
+                "parent": {
+                    "part_number": self.parent.full_part_number(),
+                    "revision": self.parent.latest().revision,
+                    "description": "Parent",
+                },
+                "lines": [
+                    {
+                        "part_number": first_pn,
+                        "quantity": 1,
+                        "revision": "1",
+                        "description": "First",
+                        "reference": "A1",
+                    },
+                    {
+                        "part_number": second_pn,
+                        "quantity": 1,
+                        "revision": "1",
+                        "description": "Second missing from list",
+                        "reference": "A2",
+                    },
+                ],
+            }
+        )
+        with self.assertRaises(NestedBomDependencyError) as ctx:
+            run_systemgroup_import(
+                self.organization,
+                bom_id="90001",
+                parent_part_number=self.parent.full_part_number(),
+                parent_revision=self.parent.latest().revision,
+                json_content=parent_payload,
+                list_json=list_json,
+                bom_documents={
+                    "92001": (
+                        self._child_json(first_pn, "1"),
+                        "application/json",
+                    ),
+                },
+                existing_bom_action="keep",
+            )
+        self.assertIn(second_pn, str(ctx.exception))
+        self.assertFalse(
+            Part.objects.filter(
+                organization=self.organization, number_item="8891"
+            ).exists()
+        )
+        self.assertFalse(
+            Part.objects.filter(
+                organization=self.organization, number_item="8892"
+            ).exists()
+        )
+        self.assertEqual(self.parent.latest().assembly.subparts.count(), 0)

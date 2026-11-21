@@ -919,8 +919,13 @@ msgstr ""
 
 msgid ""
 "Pull a PAC Engineering BoM from the on-LAN SystemGroup CRM into Lithium. "
-"Missing parts and revisions are created; existing ones are reused."
-msgstr "انتقال BoM از همکاران سیستم به لیتیوم. اگر متریال از قبل تعریف شده باشد، BoM به آن افزوده و در غیر این صورت متریال جدید ایجاد می‌شود."
+"Missing child parts are resolved from the same CRM BoM list first "
+"(recursively); existing parts are reused. If a nested dependency cannot be "
+"found, the import is aborted."
+msgstr ""
+"انتقال BoM از همکاران سیستم به لیتیوم. متریال‌های فرزندِ ناموجود ابتدا از همان "
+"فهرست BoM در CRM (به‌صورت بازگشتی) دریافت می‌شوند؛ متریال‌های موجود دوباره "
+"استفاده می‌شوند. اگر وابستگی تو در تو پیدا نشود، کل دریافت لغو می‌شود."
 
 msgid "Existing BoM found"
 msgstr "BoM موجود پیدا شد"
@@ -1688,6 +1693,44 @@ msgstr "این متریال/ورژن از قبل BoM دارد. درخت موجو
 
 msgid "Dry run completed; nothing was written."
 msgstr "اجرای آزمایشی تمام شد؛ چیزی نوشته نشد."
+
+#, python-format
+msgid ""
+"Child part '%(pn)s' is not in Lithium and no CRM BoM matched. "
+"Import aborted; nothing was written."
+msgstr ""
+"متریال فرزند «%(pn)s» در لیتیوم نیست و در فهرست BoM همکاران سیستم هم پیدا "
+"نشد. دریافت لغو شد؛ چیزی نوشته نشد."
+
+#, python-format
+msgid ""
+"Child part '%(pn)s' revision '%(rev)s' is not in Lithium and "
+"no CRM BoM matched that revision. Import aborted; nothing "
+"was written."
+msgstr ""
+"متریال فرزند «%(pn)s» ورژن «%(rev)s» در لیتیوم نیست و BoM متناظر آن ورژن در "
+"فهرست CRM پیدا نشد. دریافت لغو شد؛ چیزی نوشته نشد."
+
+#, python-format
+msgid ""
+"No revision selected for child '%(pn)s'; imported CRM revision "
+"'%(rev)s' (first match)."
+msgstr ""
+"برای متریال فرزند «%(pn)s» ورژنی انتخاب نشده بود؛ ورژن «%(rev)s» از CRM "
+"(اولین مورد) دریافت شد."
+
+#, python-format
+msgid ""
+"Imported nested BoM for '%(pn)s' revision '%(rev)s' before parent."
+msgstr ""
+"BoM تو در تو برای «%(pn)s» ورژن «%(rev)s» پیش از والد دریافت شد."
+
+msgid ""
+"Cannot resolve missing child parts without the CRM BoM list. "
+"Log in to SystemGroup or provide a BoM list."
+msgstr ""
+"بدون فهرست BoM همکاران سیستم نمی‌توان متریال‌های فرزندِ ناموجود را حل کرد. "
+"وارد همکاران سیستم شوید یا فهرست BoM را فراهم کنید."
 
 msgid "Upload product tree (BOM)"
 msgstr "آپلود درخت محصول (BOM)"
