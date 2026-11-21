@@ -27,7 +27,9 @@
                     </p>
                 </header>
 
-                <form name="part-revision-new" action="{{ action }}" method="post">
+                <form name="part-revision-new" action="{{ action }}" method="post"
+                      data-create-part-toggles
+                      data-raw-material-codes="{{ raw_material_codes|join:',' }}">
                     {% csrf_token %}
                     {{ part_revision_new_form.non_field_errors }}
 
@@ -73,6 +75,7 @@
                         <a href="{% url 'bom:part-info' part_id=part.id %}" class="bom-btn-ghost">{% trans "Cancel" %}</a>
                         <button class="bom-btn-primary" type="submit" name="action">{% trans "Save" %}</button>
                     </div>
+                    <script src="{% static 'bom/js/radio.js' %}"></script>
                 </form>
             </div>
         {% else %}

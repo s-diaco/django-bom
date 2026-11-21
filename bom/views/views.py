@@ -3896,6 +3896,7 @@ def part_revision_new(request, part_id):
     part = get_object_or_404(Part, pk=part_id)
     title = _("New revision for {}").format(part.full_part_number())
     action = reverse("bom:part-revision-new", kwargs={"part_id": part_id})
+    raw_material_codes = list(organization.product_type_codes(has_bom=False))
 
     latest_revision = part.latest()
     next_revision_number = latest_revision.next_revision() if latest_revision else None
@@ -3980,6 +3981,7 @@ def part_revision_edit(request, part_id, part_revision_id):
     part = get_object_or_404(Part, pk=part_id)
     part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
     title = "Edit {} Rev {}".format(part.full_part_number(), part_revision.revision)
+    raw_material_codes = list(organization.product_type_codes(has_bom=False))
 
     action = reverse(
         "bom:part-revision-edit",
