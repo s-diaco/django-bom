@@ -33,16 +33,7 @@ class RevisionsTestsMixin:
         rev.configuration = "R"
         rev.save()
 
-        response = self.client.get(
-            reverse(
-                "bom:part-revision-revert",
-                kwargs={"part_id": p1.id, "part_revision_id": rev.id},
-            )
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Activate")
-        self.assertContains(response, "Cancel")
-
+        # Activate control on part info for Inactive revisions.
         response = self.client.get(
             reverse("bom:part-info-history", kwargs={"part_id": p1.id, "part_revision_id": rev.id})
         )
@@ -62,7 +53,8 @@ class RevisionsTestsMixin:
             ),
         )
 
-        response = self.client.post(
+        # One-click activate (same pattern as deactivate); no confirm page.
+        response = self.client.get(
             reverse(
                 "bom:part-revision-revert",
                 kwargs={"part_id": p1.id, "part_revision_id": rev.id},
