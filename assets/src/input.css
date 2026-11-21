@@ -189,7 +189,7 @@ body.is-birthday {
 body.is-birthday .bom-navbar {
   position: relative;
   border-bottom-color: #b8955a;
-  box-shadow: inset 0 -2px 0 color-mix(in srgb, #c4a574 55%, transparent);
+  /* Underline accent lives on ::after (shimmer); avoid inset box-shadow — smoke forbids it. */
   background-color: color-mix(in srgb, #f7e8d4 70%, transparent);
 }
 
@@ -413,10 +413,6 @@ body.is-birthday .bom-page-loading-label {
   body.is-birthday .bom-page-loading-mark-wrap::before,
   body.is-birthday .bom-page-loading-mark-wrap::after {
     display: none;
-  }
-
-  body.is-birthday .bom-navbar {
-    box-shadow: none;
   }
 
   body.is-birthday .bom-navbar .bom-brand-mark {
