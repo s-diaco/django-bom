@@ -1051,6 +1051,9 @@ msgstr "ورژن: %(rev)s"
 msgid "Deactivate"
 msgstr "غیرفعال کردن"
 
+msgid "Activate"
+msgstr "فعال کردن"
+
 msgid "New"
 msgstr "جدید"
 
@@ -1720,6 +1723,9 @@ msgstr " {} به متریال {} اضافه شد."
 
 msgid "Deactivate {} revision {} {} from <b>active</b> to <b>inactive</b>?"
 msgstr "غیرفعال کردن {} ورژن {} {} از <b>فعال</b> به <b>غیر فعال</b>؟"
+
+msgid "Activate {} revision {} {} from <b>inactive</b> to <b>active</b>?"
+msgstr "فعال کردن {} ورژن {} {} از <b>غیر فعال</b> به <b>فعال</b>؟"
 
 msgid "New revision for {}"
 msgstr "ورژن جدید برای {}"

@@ -3872,19 +3872,31 @@ def part_revision_release(request, part_id, part_revision_id):
 
 @login_required(login_url=BOM_LOGIN_URL)
 def part_revision_revert(request, part_id, part_revision_id):
-    # user = request.user
-    # profile = user.bom_profile()
-    # organization = profile.organization
+    user = request.user
+    profile = user.bom_profile()
+    organization = profile.organization
 
+    part = get_object_or_404(Part, pk=part_id)
     part_revision = get_object_or_404(PartRevision, pk=part_revision_id)
-    part_revision.configuration = "W"
-    part_revision.save()
-    return HttpResponseRedirect(
-        reverse(
-            "bom:part-info-history",
-            kwargs={"part_id": part_id, "part_revision_id": part_revision_id},
-        )
+    action = reverse(
+        "bom:part-revision-revert",
+        kwargs={"part_id": part.id, "part_revision_id": part_revision.id},
     )
+    title = _(
+        "Activate {} revision {} {} from <b>inactive</b> to <b>active</b>?"
+    ).format(part.full_part_number(), part_revision.revision, part_revision.synopsis())
+
+    if request.method == "POST":
+        part_revision.configuration = "W"
+        part_revision.save()
+        return HttpResponseRedirect(
+            reverse(
+                "bom:part-info-history",
+                kwargs={"part_id": part.id, "part_revision_id": part_revision.id},
+            )
+        )
+
+    return TemplateResponse(request, "bom/part-revision-revert.html", locals())
 
 
 @login_required(login_url=BOM_LOGIN_URL)
