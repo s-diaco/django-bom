@@ -241,7 +241,10 @@ class PartInfoSellerSpecsTest(TestCase):
         )
         mt_at = specs.find('id="specs-material-type"')
         mt_cell = specs[mt_at : mt_at + 120]
-        self.assertIn("Raw Material", mt_cell)
+        self.assertTrue(
+            "Raw Material" in mt_cell or "مواد اولیه" in mt_cell,
+            f"Material Type value missing in specs cell: {mt_cell!r}",
+        )
 
         empty, empty_rev = self._make_part("EMPTYMT", "no_bom")
         empty_rev.material = None
