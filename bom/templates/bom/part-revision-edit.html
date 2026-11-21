@@ -15,7 +15,9 @@
 {% if profile.role == 'A' %}
     {% block content %}
         <div class="row container-app">
-            <form action="{% url 'bom:part-revision-edit' part_id=part.id part_revision_id=part_revision.id %}" method="post" class="col s12">
+            <form action="{% url 'bom:part-revision-edit' part_id=part.id part_revision_id=part_revision.id %}" method="post" class="col s12"
+                  data-create-part-toggles
+                  data-raw-material-codes="{{ raw_material_codes|join:',' }}">
                 {% csrf_token %}
                 {{ part_form.non_field_errors }}
                 <div class="row">
@@ -35,6 +37,7 @@
                         <button class="bom-btn-primary" type="submit" name="action">{% trans "Save" %}</button>
                     </div>
                 </div>
+                <script src="{% static 'bom/js/radio.js' %}"></script>
             </form>
         </div>
     {% endblock %}

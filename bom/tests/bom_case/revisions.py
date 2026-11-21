@@ -120,6 +120,37 @@ class RevisionsTestsMixin:
 
         self.assertEqual(response.status_code, 302)
 
+    def test_revision_pages_mark_loi_toggles_like_create_part(self):
+        """Edit/add revision hide Scrap percent for Product via the same radio.js toggles."""
+        (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
+        self.organization.ensure_default_product_types()
+        raw_codes = list(self.organization.product_type_codes(has_bom=False))
+
+        edit_response = self.client.get(
+            reverse(
+                "bom:part-revision-edit",
+                kwargs={"part_id": p1.id, "part_revision_id": p1.latest().id},
+            )
+        )
+        self.assertEqual(edit_response.status_code, 200)
+        edit_html = edit_response.content.decode()
+        self.assertIn("data-create-part-toggles", edit_html)
+        self.assertIn('id="create-part-loi-row"', edit_html)
+        self.assertIn("bom/js/radio.js", edit_html)
+        for code in raw_codes:
+            self.assertIn(code, edit_html)
+
+        new_response = self.client.get(
+            reverse("bom:part-revision-new", kwargs={"part_id": p1.id})
+        )
+        self.assertEqual(new_response.status_code, 200)
+        new_html = new_response.content.decode()
+        self.assertIn("data-create-part-toggles", new_html)
+        self.assertIn('id="create-part-loi-row"', new_html)
+        self.assertIn("bom/js/radio.js", new_html)
+        for code in raw_codes:
+            self.assertIn(code, new_html)
+
     def test_part_revision_delete(self):
         (p1, p2, p3, p4) = create_some_fake_parts(organization=self.organization)
         response = self.client.post(
