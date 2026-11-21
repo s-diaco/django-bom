@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from datetime import date, datetime
+from typing import NamedTuple
 
 import jdatetime
 from django.core.exceptions import ValidationError
@@ -17,12 +18,20 @@ _DATE_RE = re.compile(
 )
 
 
-def parse_birthday_input(value: str) -> tuple[int, int] | None:
-    """Parse admin birthday entry into Gregorian (month, day).
+class BirthdayMD(NamedTuple):
+    """Month/day only; ``jalali`` selects which calendar is used for matching."""
+
+    month: int
+    day: int
+    jalali: bool = False
+
+
+def parse_birthday_input(value: str) -> BirthdayMD | None:
+    """Parse admin birthday entry into month/day (+ calendar).
 
     Accepts:
-    - ``YYYY/MM/DD`` or ``YYYY-MM-DD`` — year < 1700 ⇒ Jalali (converted);
-      otherwise Gregorian. Year is used only for calendar detection / conversion.
+    - ``YYYY/MM/DD`` or ``YYYY-MM-DD`` — year < 1700 ⇒ Jalali month/day stored
+      (year used only to detect calendar / validate); otherwise Gregorian.
     - ``MM/DD`` — Gregorian month/day.
     - Empty / whitespace ⇒ ``None`` (clear birthday).
     """
@@ -42,21 +51,22 @@ def parse_birthday_input(value: str) -> tuple[int, int] | None:
     if c is None:
         month, day = int(a), int(b)
         _validate_month_day(month, day)
-        return month, day
+        return BirthdayMD(month, day, False)
 
     year, month, day = int(a), int(b), int(c)
     if year < _JALALI_YEAR_MAX:
         try:
-            g = jdatetime.date(year, month, day).togregorian()
+            jdatetime.date(year, month, day)
         except ValueError as exc:
             raise ValidationError(f"Invalid Jalali date: {text}") from exc
-        return g.month, g.day
+        # Year is calendar detection only — keep Jalali month/day as entered.
+        return BirthdayMD(month, day, True)
 
     try:
         date(year, month, day)
     except ValueError as exc:
         raise ValidationError(f"Invalid Gregorian date: {text}") from exc
-    return month, day
+    return BirthdayMD(month, day, False)
 
 
 def _validate_month_day(month: int, day: int) -> None:
@@ -69,10 +79,13 @@ def _validate_month_day(month: int, day: int) -> None:
         raise ValidationError(f"Invalid month/day: {month}/{day}") from exc
 
 
-def format_birthday_md(month: int | None, day: int | None) -> str:
+def format_birthday_md(
+    month: int | None, day: int | None, jalali: bool = False
+) -> str:
     if not month or not day:
         return ""
-    return f"{month}/{day}"
+    suffix = " (Jalali)" if jalali else ""
+    return f"{month}/{day}{suffix}"
 
 
 def today_local(when: date | datetime | None = None) -> date:
@@ -90,8 +103,12 @@ def matches_birthday(
     birthday_month: int | None,
     birthday_day: int | None,
     on_date: date | datetime | None = None,
+    jalali: bool = False,
 ) -> bool:
     if not birthday_month or not birthday_day:
         return False
     today = today_local(on_date)
+    if jalali:
+        jtoday = jdatetime.date.fromgregorian(date=today)
+        return jtoday.month == birthday_month and jtoday.day == birthday_day
     return today.month == birthday_month and today.day == birthday_day
